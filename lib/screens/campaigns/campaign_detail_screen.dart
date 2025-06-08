@@ -61,7 +61,9 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
         .eq('role', 'agent');
     final allAgents =
         allAgentsResponse.map((json) => AppUser.fromJson(json)).toList();
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     showDialog(
       context: context,
       builder:
@@ -158,9 +160,12 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                       decoration: const InputDecoration(labelText: 'Points'),
                       keyboardType: TextInputType.number,
                       validator: (value) {
-                        if (value == null || value.isEmpty) return 'Required';
-                        if (int.tryParse(value) == null)
+                        if (value == null || value.isEmpty) {
+                          return 'Required';
+                        }
+                        if (int.tryParse(value) == null) {
                           return 'Must be a number';
+                        }
                         return null;
                       },
                     ),
@@ -208,7 +213,9 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
         setState(() => _tasksFuture = _fetchTasks());
       }
     } catch (e) {
-      if (mounted) context.showSnackBar('Failed to add task.', isError: true);
+      if (mounted) {
+        context.showSnackBar('Failed to add task.', isError: true);
+      }
     }
   }
 
@@ -309,19 +316,21 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     return FutureBuilder<List<Task>>(
       future: _tasksFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting)
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return preloader;
+        }
         if (snapshot.hasError) {
           return Text('Error: ${snapshot.error}');
         }
         final tasks = snapshot.data!;
-        if (tasks.isEmpty)
+        if (tasks.isEmpty) {
           return const Center(
             child: Padding(
               padding: EdgeInsets.all(16),
               child: Text('No tasks created for this campaign yet.'),
             ),
           );
+        }
 
         return ListView.builder(
           shrinkWrap: true,
@@ -351,17 +360,21 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     return FutureBuilder<List<AppUser>>(
       future: _assignedAgentsFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting)
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return preloader;
-        if (snapshot.hasError) return Text('Error: ${snapshot.error}');
+        }
+        if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        }
         final agents = snapshot.data!;
-        if (agents.isEmpty)
+        if (agents.isEmpty) {
           return const Center(
             child: Padding(
               padding: EdgeInsets.all(16),
               child: Text('No agents assigned to this campaign yet.'),
             ),
           );
+        }
 
         return ListView.builder(
           shrinkWrap: true,
