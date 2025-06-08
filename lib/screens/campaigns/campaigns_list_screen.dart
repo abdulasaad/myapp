@@ -5,9 +5,10 @@ import 'package:intl/intl.dart';
 // ====================================================================
 //  FIX: Add this import statement for the detail screen
 // ====================================================================
-import 'campaign_detail_screen.dart';
 // ====================================================================
 import '../../models/campaign.dart';
+import 'campaign_detail_screen.dart';
+// ====================================================================
 import '../../utils/constants.dart';
 
 class CampaignsListScreen extends StatefulWidget {

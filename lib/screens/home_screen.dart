@@ -1,6 +1,7 @@
 // lib/screens/home_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:myapp/services/profile_service.dart';
 import 'campaigns/campaigns_list_screen.dart';
 import 'campaigns/create_campaign_screen.dart';
 import 'login_screen.dart';
@@ -14,10 +15,14 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // A GlobalKey to access the state of CampaignsListScreen and call its refresh method.
   final GlobalKey<CampaignsListScreenState> _campaignsListKey = GlobalKey<CampaignsListScreenState>();
 
   Future<void> _signOut() async {
+    // ===============================================
+    //  NEW: Clear profile data on sign out
+    // ===============================================
+    ProfileService.instance.clearProfile();
+    // ===============================================
     try {
       await supabase.auth.signOut();
     } catch (e) {
@@ -34,10 +39,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Check the user's role from our service
+    final isManager = ProfileService.instance.role == 'manager' || ProfileService.instance.role == 'admin';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Campaigns'),
-        automaticallyImplyLeading: true,
       ),
       body: CampaignsListScreen(key: _campaignsListKey),
       drawer: Drawer(
@@ -56,19 +63,20 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      // ===============================================
+      //  NEW: Only show the button if user is a manager/admin
+      // ===============================================
+      floatingActionButton: isManager ? FloatingActionButton.extended(
         onPressed: () async {
-          // Navigate to the create screen
           await Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => const CreateCampaignScreen()),
           );
-          // When we come back, refresh the list of campaigns
           _campaignsListKey.currentState?.refreshCampaigns();
         },
         label: const Text('New Campaign'),
         icon: const Icon(Icons.add),
         backgroundColor: primaryColor,
-      ),
+      ) : null, // If not a manager, show nothing
     );
   }
 }
