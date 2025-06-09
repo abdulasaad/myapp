@@ -221,9 +221,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isManager =
-        ProfileService.instance.role == 'manager' ||
-        ProfileService.instance.role == 'admin';
+    final isManager = ProfileService.instance.canManageCampaigns;
 
     return Scaffold(
       appBar: AppBar(title: Text(widget.campaign.name)),

@@ -23,25 +23,26 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> _redirect() async {
     await Future.delayed(Duration.zero);
     final session = supabase.auth.currentSession;
+    if (!mounted) return;
 
     if (session != null) {
-      // ===============================================
-      //  NEW: Load user profile before navigating
-      // ===============================================
+      // Fetch the profile
       await ProfileService.instance.loadProfile();
+      
       // ===============================================
-
+      //  NEW: Set user status to 'active' on login
+      // ===============================================
+      await ProfileService.instance.updateUserStatus('active');
+      
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
       }
     } else {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
-        );
-      }
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
     }
   }
 

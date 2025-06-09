@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/profile_service.dart';
 import './home_screen.dart';
 import './signup_screen.dart';
 import '../utils/constants.dart';
@@ -33,6 +34,9 @@ class _LoginScreenState extends State<LoginScreen> {
           password: _passwordController.text.trim(),
         );
 
+        // Load the user profile to get the role
+        await ProfileService.instance.loadProfile();
+        
         if (mounted) {
           context.showSnackBar('Login successful!');
           Navigator.of(context).pushReplacement(

@@ -2,9 +2,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:myapp/screens/agent/agent_campaign_view_screen.dart'; // <-- NEW IMPORT
+import 'package:myapp/screens/agent/agent_campaign_view_screen.dart';
 import 'package:myapp/screens/campaigns/campaign_detail_screen.dart';
-import 'package:myapp/services/user_service.dart'; // <-- NEW IMPORT
+// ===============================================
+//  THE FIX: Import ProfileService instead of UserService
+// ===============================================
+import 'package:myapp/services/profile_service.dart';
 import '../../models/campaign.dart';
 import '../../utils/constants.dart';
 
@@ -90,12 +93,11 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
                     ),
                   ),
                   trailing: const Icon(Icons.arrow_forward_ios),
-                  // ===============================================
-                  //  UPDATED: Role-based navigation logic
-                  // ===============================================
                   onTap: () {
-                    // If the user is a manager, go to the detail/management screen.
-                    if (UserService.canManageCampaigns) {
+                    // ===============================================
+                    //  THE FIX: Use the logic from ProfileService
+                    // ===============================================
+                    if (ProfileService.instance.canManageCampaigns) {
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder:
