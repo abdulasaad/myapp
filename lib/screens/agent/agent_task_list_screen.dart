@@ -58,49 +58,50 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
 
   Future<void> _uploadEvidence(AgentTask task) async {
     final picker = ImagePicker();
-    final imageFile = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 70,
-    );
-
-    if (imageFile == null) return;
-    if (!mounted) return;
+    final imageFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    if (imageFile == null || !mounted) return;
 
     try {
       final fileBytes = await imageFile.readAsBytes();
-      
-      // --- THE FIX: We use the file's header bytes for highly accurate MIME type detection ---
       final mimeType = lookupMimeType(imageFile.path, headerBytes: fileBytes);
-      final fileExt = extensionFromMime(mimeType ?? 'image/jpeg'); // Get extension like 'jpg' or 'png'
-
+      final fileExt = extensionFromMime(mimeType ?? 'image/jpeg');
       final fileName = '${supabase.auth.currentUser!.id}/${DateTime.now().millisecondsSinceEpoch}.$fileExt';
 
       await supabase.storage.from('task-evidence').uploadBinary(
-        fileName,
-        fileBytes,
-        fileOptions: FileOptions(contentType: mimeType ?? 'image/jpeg'),
-      );
+        fileName, fileBytes, fileOptions: FileOptions(contentType: mimeType ?? 'image/jpeg'));
       
       final imageUrl = supabase.storage.from('task-evidence').getPublicUrl(fileName);
-
       final updatedUrls = List<String>.from(task.evidenceUrls)..add(imageUrl);
-      await supabase
-          .from('task_assignments')
-          .update({'evidence_urls': updatedUrls})
+
+      await supabase.from('task_assignments').update({'evidence_urls': updatedUrls})
           .match({'task_id': task.taskId, 'agent_id': supabase.auth.currentUser!.id});
       
       if(mounted) context.showSnackBar('Evidence uploaded successfully!');
       _refreshTasks();
-
     } catch (e) {
       if(mounted) context.showSnackBar('Failed to upload evidence: $e', isError: true);
     }
   }
 
   Future<void> _markTaskAsCompleted(AgentTask task) async {
+    final shouldComplete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Completion'),
+        content: const Text('Are you sure you want to mark this task as complete?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
+          ElevatedButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Confirm')),
+        ],
+      ),
+    );
+
+    if (shouldComplete != true) {
+      return;
+    }
+
     try {
-      await supabase
-          .from('task_assignments')
+      await supabase.from('task_assignments')
           .update({'status': 'completed', 'completed_at': DateTime.now().toIso8601String()})
           .match({'task_id': task.taskId, 'agent_id': supabase.auth.currentUser!.id});
       
@@ -127,9 +128,13 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                 if (snapshot.connectionState == ConnectionState.waiting) return preloader;
                 if (snapshot.hasError) return Center(child: Text('Error: ${snapshot.error}'));
                 
-                final tasks = snapshot.data!;
-                if (tasks.isEmpty) return const Center(child: Text('No tasks found for this campaign.'));
+                // --- THE FIX: Check for data presence and emptiness BEFORE declaring the variable ---
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('No tasks found for this campaign.'));
+                }
 
+                // Now it's safe to declare and use the 'tasks' variable
+                final tasks = snapshot.data!;
                 return RefreshIndicator(
                   onRefresh: () async => _refreshTasks(),
                   child: ListView.builder(
