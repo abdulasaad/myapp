@@ -4,13 +4,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/campaign.dart';
-import '../../services/location_service.dart'; // <-- Now uses GeofenceStatus
+import '../../services/location_service.dart';
 import '../../services/profile_service.dart';
 import '../../utils/constants.dart';
 import 'campaign_detail_screen.dart';
+import '../agent/agent_task_list_screen.dart';
 
 class CampaignsListScreen extends StatefulWidget {
-  // --- FIX: Pass the location service from HomeScreen ---
   final LocationService locationService;
   const CampaignsListScreen({super.key, required this.locationService});
 
@@ -21,22 +21,19 @@ class CampaignsListScreen extends StatefulWidget {
 class CampaignsListScreenState extends State<CampaignsListScreen> {
   late Future<List<Campaign>> _campaignsFuture;
   StreamSubscription<GeofenceStatus>? _geofenceStatusSubscription;
-
   final Map<String, bool> _geofenceStatuses = {};
 
   @override
   void initState() {
     super.initState();
     _campaignsFuture = _fetchCampaigns();
-
-    // Only agents listen to geofence updates
     if (!ProfileService.instance.canManageCampaigns) {
-      // --- FIX: The stream now provides GeofenceStatus objects ---
       _geofenceStatusSubscription = widget.locationService.geofenceStatusStream.listen((status) {
-        // When a new status comes in, update our map and rebuild the UI
-        setState(() {
-          _geofenceStatuses[status.campaignId] = status.isInside;
-        });
+        if (mounted) {
+          setState(() {
+            _geofenceStatuses[status.campaignId] = status.isInside;
+          });
+        }
       });
     }
   }
@@ -54,23 +51,29 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
   }
 
   Future<List<Campaign>> _fetchCampaigns() async {
-    // Agents should only see their own assigned campaigns
     if (!ProfileService.instance.canManageCampaigns) {
       final userId = supabase.auth.currentUser?.id;
       if (userId == null) return [];
       
-      final agentCampaignsResponse = await supabase
-          .from('campaign_agents')
-          .select('campaign_id')
-          .eq('agent_id', userId);
-      
+      final agentCampaignsResponse = await supabase.from('campaign_agents').select('campaign_id').eq('agent_id', userId);
       final campaignIds = agentCampaignsResponse.map((e) => e['campaign_id'] as String).toList();
       if (campaignIds.isEmpty) return [];
 
-      final response = await supabase.from('campaigns').select().inFilter('id', campaignIds).order('created_at', ascending: false);
+      // --- THE FIX: Replace the failing .in_() method ---
+      // We now use the universal .filter() method, which is more robust.
+      // The value needs to be in the format '(id1,id2,id3)'
+      final idsFilter = '(${campaignIds.join(',')})';
+      
+      final response = await supabase
+          .from('campaigns')
+          .select()
+          .filter('id', 'in', idsFilter) // <-- This is the robust solution
+          .order('created_at', ascending: false);
+      
       return response.map((json) => Campaign.fromJson(json)).toList();
+
     } else {
-      // Managers see all campaigns
+      // Manager's view remains the same
       final response = await supabase.from('campaigns').select().order('created_at', ascending: false);
       return response.map((json) => Campaign.fromJson(json)).toList();
     }
@@ -83,7 +86,7 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) return preloader;
         if (snapshot.hasError) return Center(child: Text('Error: ${snapshot.error}'));
-        if (!snapshot.hasData || snapshot.data!.isEmpty) return const Center(child: Text('No campaigns assigned.'));
+        if (!snapshot.hasData || snapshot.data!.isEmpty) return const Center(child: Text('No campaigns found.'));
 
         final campaigns = snapshot.data!;
         return RefreshIndicator(
@@ -97,13 +100,12 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
                 campaign: campaign,
                 isInsideGeofence: _geofenceStatuses[campaign.id],
                 onTap: () {
-                  if (!ProfileService.instance.canManageCampaigns) {
-                    // --- FIX: Use the correct method name ---
+                  if (ProfileService.instance.canManageCampaigns) {
+                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => CampaignDetailScreen(campaign: campaign)));
+                  } else {
                     widget.locationService.setActiveCampaign(campaign.id);
+                    Navigator.of(context).push(MaterialPageRoute(builder: (context) => AgentTaskListScreen(campaign: campaign)));
                   }
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => CampaignDetailScreen(campaign: campaign)),
-                  );
                 },
               );
             },
