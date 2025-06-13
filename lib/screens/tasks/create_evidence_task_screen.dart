@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../models/task.dart';
 import '../../utils/constants.dart';
 import './task_geofence_editor_screen.dart';
+import './standalone_tasks_screen.dart'; // Added import for navigation
 
 class CreateEvidenceTaskScreen extends StatefulWidget {
   final Task? task;
@@ -119,19 +120,28 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
       if (!mounted) {
         return;
       }
-
-      context.showSnackBar('Task details saved. You can now define a geofence.');
       
-      final bool isEditing = widget.task != null;
+      final bool isNewTask = widget.task == null;
+      final Task newlySavedTask = Task.fromJson(response);
+
       setState(() {
-        _createdTask = Task.fromJson(response);
+        _createdTask = newlySavedTask; // Update state
       });
 
-      if (isEditing && mounted) {
-        Navigator.of(context).pop(); // Go back after saving edits
+      if (isNewTask) {
+        // For a new task
+        context.showSnackBar('Task created successfully.');
+        // Navigate to the tasks screen, replacing the current screen
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const StandaloneTasksScreen()),
+        );
+      } else {
+        // For an existing task (editing)
+        context.showSnackBar('Task details saved.');
+        Navigator.of(context).pop(); // Pop back as before
       }
     } catch (e) {
-      if (mounted) context.showSnackBar('Failed to create task: $e', isError: true);
+      if (mounted) context.showSnackBar('Failed to save task: $e', isError: true); // Generic error message
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
