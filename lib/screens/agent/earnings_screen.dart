@@ -3,7 +3,9 @@
 import 'package:flutter/material.dart';
 import '../../utils/constants.dart';
 
-// A simple data class to hold the earnings info for one campaign
+// --- DATA MODELS ---
+
+// Model for campaign-specific earnings, remains unchanged.
 class CampaignEarnings {
   final String campaignName;
   final int totalEarned;
@@ -18,10 +20,27 @@ class CampaignEarnings {
   });
 }
 
-// Data class to hold the complete earnings summary
+// ===================================================================
+// NEW: A model to hold the detailed earnings for a single standalone task.
+// ===================================================================
+class StandaloneTaskEarning {
+  final String taskName;
+  final int pointsEarned;
+  final int pointsPaid;
+  final int outstandingBalance;
+
+  StandaloneTaskEarning({
+    required this.taskName,
+    required this.pointsEarned,
+    required this.pointsPaid,
+    required this.outstandingBalance,
+  });
+}
+
+
+// The summary now holds two lists: one for campaigns and one for tasks.
 class EarningsSummary {
   final List<CampaignEarnings> campaignEarnings;
-  // final int standaloneTasksTotal; // Will be replaced by standaloneTaskEarnings
   final List<StandaloneTaskEarning> standaloneTaskEarnings;
 
   EarningsSummary({
@@ -30,16 +49,7 @@ class EarningsSummary {
   });
 }
 
-// A simple data class to hold the earnings info for one standalone task
-class StandaloneTaskEarning {
-  final String taskName;
-  final int balance;
-
-  StandaloneTaskEarning({
-    required this.taskName,
-    required this.balance,
-  });
-}
+// --- MAIN WIDGET ---
 
 class EarningsScreen extends StatefulWidget {
   const EarningsScreen({super.key});
@@ -49,7 +59,6 @@ class EarningsScreen extends StatefulWidget {
 }
 
 class _EarningsScreenState extends State<EarningsScreen> {
-  // The future now returns our new summary object
   late Future<EarningsSummary> _earningsFuture;
 
   @override
@@ -58,21 +67,23 @@ class _EarningsScreenState extends State<EarningsScreen> {
     _earningsFuture = _fetchEarningsData();
   }
 
-  /// Fetches earnings data for all campaigns AND standalone tasks.
+  // ===================================================================
+  // THE FIX: This function is overhauled to fetch and calculate balances
+  // for each standalone task individually.
+  // ===================================================================
   Future<EarningsSummary> _fetchEarningsData() async {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) {
-      // Updated to reflect new EarningsSummary structure
       return EarningsSummary(campaignEarnings: [], standaloneTaskEarnings: []);
     }
 
-    // --- Step 1: Fetch Campaign Earnings (existing logic) ---
+    // --- Step 1: Fetch Campaign Earnings (logic is unchanged) ---
     final agentCampaignsResponse = await supabase
         .from('campaign_agents')
         .select('campaign:campaigns(id, name)')
         .eq('agent_id', userId);
 
-    final earningsList = <CampaignEarnings>[];
+    final campaignEarningsList = <CampaignEarnings>[];
     for (final agentCampaign in agentCampaignsResponse) {
       final campaignData = agentCampaign['campaign'];
       if (campaignData == null) continue;
@@ -80,11 +91,10 @@ class _EarningsScreenState extends State<EarningsScreen> {
       final campaignId = campaignData['id'];
       final campaignName = campaignData['name'];
 
-      final earningsResponse = await supabase.rpc(
-          'get_agent_earnings_for_campaign',
+      final earningsResponse = await supabase.rpc('get_agent_earnings_for_campaign',
           params: {'p_agent_id': userId, 'p_campaign_id': campaignId}).single();
 
-      earningsList.add(CampaignEarnings(
+      campaignEarningsList.add(CampaignEarnings(
         campaignName: campaignName,
         totalEarned: earningsResponse['total_earned'],
         totalPaid: earningsResponse['total_paid'],
@@ -92,31 +102,45 @@ class _EarningsScreenState extends State<EarningsScreen> {
       ));
     }
 
-    // --- Step 2: Fetch details for completed standalone tasks ---
+    // --- Step 2: Fetch Completed Standalone Tasks ---
     final standaloneTasksResponse = await supabase
         .from('task_assignments')
-        .select('tasks!inner(title, points)') // Fetch title and points
+        .select('tasks!inner(id, title, points)')
         .eq('agent_id', userId)
         .eq('status', 'completed')
-        .isFilter(
-            'tasks.campaign_id', null); // The key filter for standalone tasks
+        .isFilter('tasks.campaign_id', null);
 
     final standaloneEarningsList = <StandaloneTaskEarning>[];
     for (final item in standaloneTasksResponse) {
-      if (item['tasks'] != null &&
-          item['tasks']['title'] != null &&
-          item['tasks']['points'] != null) {
-        standaloneEarningsList.add(StandaloneTaskEarning(
-          taskName: item['tasks']['title'] as String,
-          balance: item['tasks']['points'] as int,
-        ));
-      }
+      final taskData = item['tasks'];
+      if (taskData == null) continue;
+
+      final taskId = taskData['id'] as String;
+      final taskName = taskData['title'] as String;
+      final pointsEarned = taskData['points'] as int;
+
+      // --- Step 3: For each task, find its specific payments ---
+      final paymentsResponse = await supabase
+          .from('payments')
+          .select('amount')
+          .eq('agent_id', userId)
+          .eq('task_id', taskId);
+      
+      final pointsPaid = paymentsResponse.fold<int>(0, (sum, payment) => sum + (payment['amount'] as int));
+      final outstandingBalance = pointsEarned - pointsPaid;
+      
+      standaloneEarningsList.add(StandaloneTaskEarning(
+        taskName: taskName,
+        pointsEarned: pointsEarned,
+        pointsPaid: pointsPaid,
+        outstandingBalance: outstandingBalance,
+      ));
     }
 
-    // --- Step 3: Return the complete summary object ---
+    // --- Step 4: Return the complete summary ---
     return EarningsSummary(
-      campaignEarnings: earningsList,
-      standaloneTaskEarnings: standaloneEarningsList, // Use the new list
+      campaignEarnings: campaignEarningsList,
+      standaloneTaskEarnings: standaloneEarningsList,
     );
   }
 
@@ -131,32 +155,26 @@ class _EarningsScreenState extends State<EarningsScreen> {
             return preloader;
           }
           if (snapshot.hasError) {
-            return Center(
-                child: Text('Error fetching earnings: ${snapshot.error}'));
+            return Center(child: Text('Error fetching earnings: ${snapshot.error}'));
           }
-          if (!snapshot.hasData || (snapshot.data!.campaignEarnings.isEmpty && snapshot.data!.standaloneTaskEarnings.isEmpty)) {
+          
+          final summary = snapshot.data;
+          if (summary == null || (summary.campaignEarnings.isEmpty && summary.standaloneTaskEarnings.isEmpty)) {
             return const Center(child: Text('No earnings data found.'));
           }
 
-          final summary = snapshot.data!;
-          final campaignEarnings = summary.campaignEarnings;
+          // Calculate overall totals from both lists
+          final totalCampaignEarned = summary.campaignEarnings.fold<int>(0, (sum, e) => sum + e.totalEarned);
+          final totalTaskEarned = summary.standaloneTaskEarnings.fold<int>(0, (sum, e) => sum + e.pointsEarned);
+          final overallTotal = totalCampaignEarned + totalTaskEarned;
+          
+          final totalCampaignOutstanding = summary.campaignEarnings.fold<int>(0, (sum, e) => sum + e.outstandingBalance);
+          final totalTaskOutstanding = summary.standaloneTaskEarnings.fold<int>(0, (sum, e) => sum + e.outstandingBalance);
+          final overallOutstanding = totalCampaignOutstanding + totalTaskOutstanding;
 
-          // Calculate overall totals including both campaigns and standalone tasks
-          final campaignTotal = campaignEarnings.fold<int>(
-              0, (sum, item) => sum + item.totalEarned);
-          // Calculate total from standalone tasks
-          final standaloneTasksTotal = summary.standaloneTaskEarnings.fold<int>(0, (sum, item) => sum + item.balance);
-          final overallTotal = campaignTotal + standaloneTasksTotal;
-          // Assuming standalone tasks also contribute to outstanding balance directly
-          final campaignOutstanding = campaignEarnings.fold<int>(0, (sum, item) => sum + item.outstandingBalance);
-          final overallOutstanding = campaignOutstanding + standaloneTasksTotal; // Add standalone task balances to outstanding
 
           return RefreshIndicator(
-            onRefresh: () async {
-              setState(() {
-                _earningsFuture = _fetchEarningsData();
-              });
-            },
+            onRefresh: () async => setState(() => _earningsFuture = _fetchEarningsData()),
             child: Column(
               children: [
                 // Summary Cards
@@ -164,67 +182,28 @@ class _EarningsScreenState extends State<EarningsScreen> {
                   padding: const EdgeInsets.all(16.0),
                   child: Row(
                     children: [
-                      _buildSummaryCard(context, 'Total Earned',
-                          overallTotal.toString(), Colors.blue),
+                      _buildSummaryCard(context, 'Total Earned', overallTotal.toString(), Colors.blue),
                       formSpacerHorizontal,
-                      _buildSummaryCard(context, 'Outstanding Balance',
-                          overallOutstanding.toString(), Colors.green),
+                      _buildSummaryCard(context, 'Outstanding Balance', overallOutstanding.toString(), Colors.green),
                     ],
                   ),
                 ),
                 const Divider(),
-                // List of earnings
+                // ===================================================================
+                // THE FIX: Use a single unified ListView for all earnings.
+                // ===================================================================
                 Expanded(
                   child: ListView(
+                    padding: const EdgeInsets.only(bottom: 16),
                     children: [
                       // List of earnings per campaign
-                      ...campaignEarnings.map((earning) => Card(
-                            margin: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(earning.campaignName,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .headlineSmall),
-                                  const SizedBox(height: 12),
-                                  _buildEarningRow('Total for Campaign:',
-                                      earning.totalEarned.toString()),
-                                  _buildEarningRow('Already Paid:',
-                                      earning.totalPaid.toString()),
-                                  const Divider(height: 20),
-                                  _buildEarningRow('Balance for Campaign:',
-                                      earning.outstandingBalance.toString(),
-                                      isBold: true),
-                                ],
-                              ),
-                            ),
-                          )),
-                      // Display each standalone task as a card
-                      if (summary.standaloneTaskEarnings.isNotEmpty)
-                        ...summary.standaloneTaskEarnings.map((taskEarning) => Card(
-                              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(taskEarning.taskName,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleLarge), // Using titleLarge for task name
-                                    const SizedBox(height: 8),
-                                    _buildEarningRow(
-                                        'Balance for Task:',
-                                        taskEarning.balance.toString(),
-                                        isBold: true),
-                                  ],
-                                ),
-                              ),
-                            )),
+                      ...summary.campaignEarnings.map((earning) =>
+                        _buildCampaignEarningCard(context, earning)
+                      ),
+                      // List of earnings per standalone task
+                      ...summary.standaloneTaskEarnings.map((earning) =>
+                        _buildTaskEarningCard(context, earning)
+                      )
                     ],
                   ),
                 ),
@@ -236,8 +215,53 @@ class _EarningsScreenState extends State<EarningsScreen> {
     );
   }
 
-  Widget _buildSummaryCard(
-      BuildContext context, String title, String value, Color color) {
+  // --- WIDGET BUILDERS ---
+
+  Widget _buildCampaignEarningCard(BuildContext context, CampaignEarnings earning) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(earning.campaignName, style: Theme.of(context).textTheme.headlineSmall),
+            const SizedBox(height: 12),
+            _buildEarningRow('Total for Campaign:', earning.totalEarned.toString()),
+            _buildEarningRow('Already Paid:', earning.totalPaid.toString()),
+            const Divider(height: 20),
+            _buildEarningRow('Balance for Campaign:', earning.outstandingBalance.toString(), isBold: true),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ===================================================================
+  // NEW: A dedicated card widget for displaying individual task earnings.
+  // ===================================================================
+  Widget _buildTaskEarningCard(BuildContext context, StandaloneTaskEarning earning) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(earning.taskName, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            _buildEarningRow('Points Earned:', earning.pointsEarned.toString()),
+            _buildEarningRow('Points Paid:', earning.pointsPaid.toString()),
+             const Divider(height: 20),
+            _buildEarningRow('Outstanding Balance:', earning.outstandingBalance.toString(), isBold: true),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+  Widget _buildSummaryCard(BuildContext context, String title, String value, Color color) {
     return Expanded(
       child: Card(
         color: color.withAlpha(50),

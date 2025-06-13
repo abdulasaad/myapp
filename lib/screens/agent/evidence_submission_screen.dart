@@ -9,11 +9,14 @@ import '../../utils/constants.dart';
 import '../full_screen_image_viewer.dart';
 
 class Evidence {
+  final String id;
   final String title;
   final String fileUrl;
-  Evidence({required this.title, required this.fileUrl});
-  factory Evidence.fromJson(Map<String, dynamic> json) =>
-      Evidence(title: json['title'], fileUrl: json['file_url']);
+
+  Evidence({required this.id, required this.title, required this.fileUrl});
+
+  factory Evidence.fromJson(Map<String, dynamic> json) => Evidence(
+      id: json['id'], title: json['title'], fileUrl: json['file_url']);
 }
 
 class EvidenceSubmissionScreen extends StatefulWidget {
@@ -28,9 +31,6 @@ class EvidenceSubmissionScreen extends StatefulWidget {
 class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
   late Future<List<Evidence>> _evidenceFuture;
   String _taskAssignmentId = '';
-  // ===================================================================
-  // NEW: State variables to track assignment status
-  // ===================================================================
   String _assignmentStatus = 'pending';
   bool _isLoading = true;
 
@@ -42,7 +42,6 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
 
   Future<void> _loadInitialData() async {
     try {
-      // Also fetch the 'status' of the assignment
       final assignment = await supabase
           .from('task_assignments')
           .select('id, status')
@@ -51,11 +50,10 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
             'agent_id': supabase.auth.currentUser!.id
           })
           .single();
-          
+
       _taskAssignmentId = assignment['id'];
       _assignmentStatus = assignment['status'];
       _evidenceFuture = _fetchEvidence();
-
     } catch (e) {
       if (mounted) {
         context.showSnackBar('Error loading task assignment: $e', isError: true);
@@ -68,21 +66,77 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
   Future<List<Evidence>> _fetchEvidence() async {
     final response = await supabase
         .from('evidence')
-        .select('title, file_url')
+        .select('id, title, file_url')
         .eq('task_assignment_id', _taskAssignmentId)
         .order('created_at', ascending: false);
     return response.map((json) => Evidence.fromJson(json)).toList();
   }
-  
-  // ===================================================================
-  // NEW: Function to mark the task as completed in the database
-  // ===================================================================
+
+  Future<void> _deleteEvidence(Evidence evidence) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Deletion'),
+        content: Text('Are you sure you want to delete "${evidence.title}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete != true || !mounted) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final uri = Uri.parse(evidence.fileUrl);
+      final filePath = uri.pathSegments.sublist(uri.pathSegments.indexOf('task-evidence') + 1).join('/');
+      await supabase.storage.from('task-evidence').remove([filePath]);
+      await supabase.from('evidence').delete().eq('id', evidence.id);
+      
+      if (mounted) {
+        context.showSnackBar('Evidence deleted successfully.');
+        final remainingEvidence = await _fetchEvidence();
+        if (remainingEvidence.isEmpty && _assignmentStatus == 'completed') {
+          await supabase.from('task_assignments').update({
+            'status': 'pending',
+            'completed_at': null,
+          }).eq('id', _taskAssignmentId);
+
+          if (mounted) {
+            context.showSnackBar('Task status reverted to pending.');
+            setState(() {
+              _assignmentStatus = 'pending';
+              _evidenceFuture = Future.value(remainingEvidence);
+            });
+          }
+        } else {
+           setState(() {
+            _evidenceFuture = Future.value(remainingEvidence);
+           });
+        }
+      }
+    } catch (e) {
+      if (mounted) context.showSnackBar('Failed to delete evidence: $e', isError: true);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _markTaskAsCompleted() async {
     final shouldComplete = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Confirm Completion'),
-        content: const Text('Are you sure you want to mark this task as done? This cannot be undone.'),
+        content: const Text(
+            'Are you sure you want to mark this task as done? This cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -99,7 +153,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
     if (shouldComplete != true || !mounted) {
       return;
     }
-    
+
     setState(() => _isLoading = true);
     try {
       await supabase.from('task_assignments').update({
@@ -107,7 +161,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
         'completed_at': DateTime.now().toIso8601String(),
       }).eq('id', _taskAssignmentId);
 
-      if(mounted) {
+      if (mounted) {
         context.showSnackBar('Task marked as completed!');
         setState(() {
           _assignmentStatus = 'completed';
@@ -116,7 +170,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
     } catch (e) {
       if (mounted) context.showSnackBar('Failed to update task: $e', isError: true);
     } finally {
-      if(mounted) setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -129,10 +183,10 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
     );
 
     if (imageFile == null || !mounted) return;
-    await _showConfirmUploadDialog(imageFile); // Pass XFile directly
+    await _showConfirmUploadDialog(imageFile);
   }
 
-  Future<void> _showConfirmUploadDialog(XFile file) async { // Accept XFile
+  Future<void> _showConfirmUploadDialog(XFile file) async {
     final formKey = GlobalKey<FormState>();
     final titleController = TextEditingController();
     final dialogContext = context;
@@ -170,34 +224,18 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
     );
   }
 
-  Future<void> _uploadEvidence(String title, XFile xFile) async { // Accept XFile
+  Future<void> _uploadEvidence(String title, XFile xFile) async {
     setState(() => _isLoading = true);
     try {
       final fileBytes = await xFile.readAsBytes();
-      String? mimeType = xFile.mimeType; // Provided by image_picker
-
-      if (mimeType == null || mimeType.isEmpty) {
-        // Fallback if image_picker doesn't provide it
-        List<int> headerBytes = fileBytes.length > 256 ? fileBytes.sublist(0, 256) : fileBytes;
-        mimeType = lookupMimeType(xFile.name, headerBytes: headerBytes);
-      }
-      
-      final String finalMimeType = mimeType ?? 'image/jpeg'; // Default to image/jpeg
-
-      String fileExt = extensionFromMime(finalMimeType); // Analyzer indicates extensionFromMime(finalMimeType) is not null.
-      if (fileExt.isEmpty) { // If the result is an empty string, default to 'jpg'.
-        fileExt = 'jpg'; // Ensure not empty and provide default.
-      }
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}.$fileExt'; // Simplified filename
+      final mimeType = lookupMimeType(xFile.name, headerBytes: fileBytes);
+      final fileExt = extensionFromMime(mimeType ?? 'image/jpeg');
+      final fileName = '${supabase.auth.currentUser!.id}/${DateTime.now().millisecondsSinceEpoch}.$fileExt';
 
       await supabase.storage.from('task-evidence').uploadBinary(
             fileName,
             fileBytes,
-            fileOptions: FileOptions(
-                contentType: finalMimeType, 
-                upsert: false, 
-                cacheControl: 'max-age=3600'
-            ),
+            fileOptions: FileOptions(contentType: mimeType, upsert: false),
           );
 
       final fileUrl =
@@ -212,35 +250,9 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
 
       if (mounted) {
         context.showSnackBar('Evidence uploaded successfully.');
-        
-        // Re-fetch evidence to update the list and count for UI
-        List<Evidence> updatedEvidenceList = await _fetchEvidence();
-        _evidenceFuture = Future.value(updatedEvidenceList);
-        
-        // Check if task completion criteria are met after upload
-        final requiredCount = widget.task.requiredEvidenceCount ?? 1;
-        final bool evidenceNowComplete = updatedEvidenceList.length >= requiredCount;
-        
-        // If all evidence is uploaded and task is not yet marked completed in DB, mark it.
-        if (evidenceNowComplete && _assignmentStatus != 'completed') {
-          // Call _markTaskAsCompleted but without the dialog, as this is an automatic step.
-          // We need to inline the core logic of _markTaskAsCompleted or refactor it.
-          // For now, let's inline the DB update part.
-          // Note: _markTaskAsCompleted shows a dialog, which we don't want here.
-          // We'll directly update the status.
-          try {
-            await supabase.from('task_assignments').update({
-              'status': 'completed',
-              'completed_at': DateTime.now().toIso8601String(),
-            }).eq('id', _taskAssignmentId);
-            _assignmentStatus = 'completed'; // Update local status
-            // No separate snackbar here, as _markTaskAsCompleted might show its own if called manually.
-          } catch (e) {
-            // Log or handle error if automatic status update fails
-            if (mounted) context.showSnackBar('Failed to auto-update task status: $e', isError: true);
-          }
-        }
-        setState(() {}); // Trigger a rebuild to update the UI
+        setState(() {
+          _evidenceFuture = _fetchEvidence();
+        });
       }
     } catch (e) {
       if (mounted) context.showSnackBar('Upload failed: $e', isError: true);
@@ -266,16 +278,16 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
                 }
 
                 final evidenceList = snapshot.data ?? [];
-                final requiredCount = widget.task.requiredEvidenceCount ?? 1;
-                // Evidence upload is complete
-                final evidenceComplete = evidenceList.length >= requiredCount;
-                // The entire task assignment is marked as completed in the DB
+                final requiredCount = widget.task.requiredEvidenceCount!;
                 final taskIsCompleted = _assignmentStatus == 'completed';
 
-                final progressValue = requiredCount > 0
-                    ? evidenceList.length / requiredCount
-                    : 1.0;
-
+                final progressValue =
+                    requiredCount > 0 ? evidenceList.length / requiredCount : 1.0;
+                    
+                // ===================================================================
+                // THE FIX: Move the "Mark as Done" button to the bottomNavigationBar
+                // of the Scaffold to prevent it from overlapping with the FAB.
+                // ===================================================================
                 return Column(
                   children: [
                     Padding(
@@ -295,7 +307,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
                                 'Progress: ${evidenceList.length} of $requiredCount uploaded'),
                           ),
                           if (taskIsCompleted)
-                             Padding(
+                            Padding(
                               padding: const EdgeInsets.only(top: 8.0),
                               child: Text('Status: Completed',
                                   style: TextStyle(
@@ -308,7 +320,8 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
                     const Divider(),
                     Expanded(
                       child: evidenceList.isEmpty
-                          ? const Center(child: Text('No evidence submitted yet.'))
+                          ? const Center(
+                              child: Text('No evidence submitted yet.'))
                           : ListView.builder(
                               itemCount: evidenceList.length,
                               itemBuilder: (context, index) {
@@ -317,50 +330,77 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
                                   leading:
                                       const Icon(Icons.file_present_rounded),
                                   title: Text(evidence.title),
-                                  trailing:
-                                      const Icon(Icons.visibility_outlined),
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            FullScreenImageViewer(
-                                          imageUrl: evidence.fileUrl,
-                                          heroTag: evidence.fileUrl,
-                                        ),
+                                  trailing: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: const Icon(
+                                            Icons.visibility_outlined),
+                                        tooltip: 'View Evidence',
+                                        onPressed: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  FullScreenImageViewer(
+                                                imageUrl: evidence.fileUrl,
+                                                heroTag: evidence.fileUrl,
+                                              ),
+                                            ),
+                                          );
+                                        },
                                       ),
-                                    );
-                                  },
+                                      IconButton(
+                                        icon: Icon(Icons.delete_outline,
+                                            color: Colors.red[300]),
+                                        tooltip: 'Delete Evidence',
+                                        onPressed: () =>
+                                            _deleteEvidence(evidence),
+                                      ),
+                                    ],
+                                  ),
                                 );
                               },
                             ),
                     ),
-                    // ===================================================================
-                    // NEW: Conditionally show the "Mark as Done" button
-                    // ===================================================================
-                    if (evidenceComplete && !taskIsCompleted)
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: ElevatedButton.icon(
-                          onPressed: _markTaskAsCompleted,
-                          icon: const Icon(Icons.check_circle_outline),
-                          label: const Text('Mark as Done'),
-                          style: ElevatedButton.styleFrom(
-                            minimumSize: const Size(double.infinity, 50),
-                            backgroundColor: Colors.green,
-                          ),
-                        ),
-                      )
                   ],
                 );
               },
             ),
+      bottomNavigationBar: FutureBuilder<List<Evidence>>(
+        future: _evidenceFuture,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData || snapshot.connectionState == ConnectionState.waiting) {
+            return const SizedBox.shrink(); // Return nothing while loading
+          }
+          final evidenceList = snapshot.data!;
+          final requiredCount = widget.task.requiredEvidenceCount!;
+          final evidenceComplete = evidenceList.length >= requiredCount;
+          final taskIsCompleted = _assignmentStatus == 'completed';
+
+          if (evidenceComplete && !taskIsCompleted) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: ElevatedButton.icon(
+                onPressed: _markTaskAsCompleted,
+                icon: const Icon(Icons.check_circle_outline),
+                label: const Text('Mark as Done'),
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  backgroundColor: Colors.green,
+                ),
+              ),
+            );
+          }
+          return const SizedBox.shrink(); // Return an empty box if conditions aren't met
+        },
+      ),
       floatingActionButton: _assignmentStatus == 'completed'
-        ? null // Hide FAB if task is already completed
-        : FloatingActionButton.extended(
-            onPressed: _pickFileAndShowUploadDialog,
-            label: const Text('Upload Evidence'),
-            icon: const Icon(Icons.upload_file),
-          ),
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: _pickFileAndShowUploadDialog,
+              label: const Text('Upload Evidence'),
+              icon: const Icon(Icons.upload_file),
+            ),
     );
   }
 }
