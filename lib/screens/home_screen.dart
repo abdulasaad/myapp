@@ -5,14 +5,12 @@ import '../services/location_service.dart';
 import '../services/profile_service.dart';
 import './campaigns/campaigns_list_screen.dart';
 import './campaigns/create_campaign_screen.dart';
-import './login_screen.dart'; // <-- FIX: Correct import path
+import './login_screen.dart';
 import '../utils/constants.dart';
 import './map/live_map_screen.dart';
 import './agent/calibration_screen.dart';
 import './agent/earnings_screen.dart';
 import './tasks/standalone_tasks_screen.dart';
-import '../models/task.dart';
-import './agent/evidence_submission_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,7 +18,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver, SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with WidgetsBindingObserver, SingleTickerProviderStateMixin {
   final LocationService _locationService = LocationService();
   late TabController _tabController;
   int _currentTabIndex = 0;
@@ -37,7 +36,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver, Si
     }
     _initServicesBasedOnRole();
   }
-  
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (ProfileService.instance.canManageCampaigns) return;
@@ -47,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver, Si
       ProfileService.instance.updateUserStatus('away');
     }
   }
-  
+
   Future<void> _initServicesBasedOnRole() async {
     if (!ProfileService.instance.canManageCampaigns) {
       _locationService.start();
@@ -67,7 +66,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver, Si
         );
       }
     } catch (e) {
-      if (mounted) context.showSnackBar('Error signing out. Please try again.', isError: true);
+      if (mounted) {
+        context.showSnackBar('Error signing out. Please try again.',
+            isError: true);
+      }
     }
   }
 
@@ -93,7 +95,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver, Si
       appBar: AppBar(
         title: const Text('Main Dashboard'),
         actions: [
-          IconButton(icon: const Icon(Icons.map_outlined), tooltip: 'Live Map', onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const LiveMapScreen()))),
+          IconButton(
+              icon: const Icon(Icons.map_outlined),
+              tooltip: 'Live Map',
+              onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const LiveMapScreen()))),
         ],
         bottom: TabBar(
           controller: _tabController,
@@ -113,7 +119,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver, Si
       drawer: _buildDrawer(),
       floatingActionButton: _currentTabIndex == 0
           ? FloatingActionButton.extended(
-              onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CreateCampaignScreen())),
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const CreateCampaignScreen())),
               label: const Text('New Campaign'),
               icon: const Icon(Icons.add),
             )
@@ -121,6 +128,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver, Si
     );
   }
 
+  /// This is the corrected Agent Dashboard view.
   Widget _buildAgentDashboard() {
     return Scaffold(
       appBar: AppBar(
@@ -131,83 +139,45 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver, Si
             tooltip: 'GPS Calibration',
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (context) => CalibrationScreen(locationService: _locationService),
+                builder: (context) =>
+                    CalibrationScreen(locationService: _locationService),
               ),
             ),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: CampaignsListScreen(locationService: _locationService),
-          ),
-          Expanded(
-            child: FutureBuilder<List<Task>>(
-              future: _fetchStandaloneTasks(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return preloader;
-                }
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
-                final tasks = snapshot.data ?? [];
-                if (tasks.isEmpty) {
-                  return const Center(child: Text('No standalone tasks assigned.'));
-                }
-                return ListView.builder(
-                  itemCount: tasks.length,
-                  itemBuilder: (context, index) {
-                    final task = tasks[index];
-                    return Card(
-                      child: ListTile(
-                        leading: const Icon(Icons.assignment_turned_in),
-                        title: Text(task.title),
-                        subtitle: Text('${task.points} points'),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => EvidenceSubmissionScreen(task: task),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+      // --- THE FIX ---
+      // The body is now simply the CampaignsListScreen.
+      // It handles its own tabs and data fetching internally.
+      // The redundant Column and FutureBuilder have been removed.
+      body: CampaignsListScreen(locationService: _locationService),
       drawer: _buildDrawer(),
     );
   }
 
-  Future<List<Task>> _fetchStandaloneTasks() async {
-    final response = await supabase
-        .from('tasks')
-        .select()
-        .eq('created_by', supabase.auth.currentUser!.id)
-        .order('created_at', ascending: false);
-    return response.map((json) => Task.fromJson(json)).toList();
-  }
-  
   Drawer _buildDrawer() {
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          const DrawerHeader(decoration: BoxDecoration(color: primaryColor), child: Text('Al-Tijwal App', style: TextStyle(color: Colors.white, fontSize: 24))),
+          const DrawerHeader(
+              decoration: BoxDecoration(color: primaryColor),
+              child: Text('Al-Tijwal App',
+                  style: TextStyle(color: Colors.white, fontSize: 24))),
           if (!ProfileService.instance.canManageCampaigns)
             ListTile(
               leading: const Icon(Icons.account_balance_wallet_outlined),
               title: const Text('My Earnings'),
               onTap: () {
-                Navigator.pop(context); 
-                Navigator.of(context).push(MaterialPageRoute(builder: (context) => const EarningsScreen()));
+                Navigator.pop(context);
+                Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const EarningsScreen()));
               },
             ),
-          ListTile(leading: const Icon(Icons.logout), title: const Text('Logout'), onTap: _signOut)
+          ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Logout'),
+              onTap: _signOut)
         ],
       ),
     );
