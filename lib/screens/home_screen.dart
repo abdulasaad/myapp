@@ -10,7 +10,9 @@ import '../utils/constants.dart';
 import './map/live_map_screen.dart';
 import './agent/calibration_screen.dart';
 import './agent/earnings_screen.dart';
-import './tasks/standalone_tasks_screen.dart'; 
+import './tasks/standalone_tasks_screen.dart';
+import '../models/task.dart';
+import './agent/evidence_submission_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -124,12 +126,70 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver, Si
       appBar: AppBar(
         title: const Text('My Work'),
         actions: [
-          IconButton(icon: const Icon(Icons.satellite_alt_outlined), tooltip: 'GPS Calibration', onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => CalibrationScreen(locationService: _locationService)))),
+          IconButton(
+            icon: const Icon(Icons.satellite_alt_outlined),
+            tooltip: 'GPS Calibration',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => CalibrationScreen(locationService: _locationService),
+              ),
+            ),
+          ),
         ],
       ),
-      body: CampaignsListScreen(locationService: _locationService),
+      body: Column(
+        children: [
+          Expanded(
+            child: CampaignsListScreen(locationService: _locationService),
+          ),
+          Expanded(
+            child: FutureBuilder<List<Task>>(
+              future: _fetchStandaloneTasks(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return preloader;
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+                final tasks = snapshot.data ?? [];
+                if (tasks.isEmpty) {
+                  return const Center(child: Text('No standalone tasks assigned.'));
+                }
+                return ListView.builder(
+                  itemCount: tasks.length,
+                  itemBuilder: (context, index) {
+                    final task = tasks[index];
+                    return Card(
+                      child: ListTile(
+                        leading: const Icon(Icons.assignment_turned_in),
+                        title: Text(task.title),
+                        subtitle: Text('${task.points} points'),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => EvidenceSubmissionScreen(task: task),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
       drawer: _buildDrawer(),
     );
+  }
+
+  Future<List<Task>> _fetchStandaloneTasks() async {
+    final response = await supabase
+        .from('tasks')
+        .select()
+        .eq('created_by', supabase.auth.currentUser!.id)
+        .order('created_at', ascending: false);
+    return response.map((json) => Task.fromJson(json)).toList();
   }
   
   Drawer _buildDrawer() {

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../../models/task.dart';
 import '../../utils/constants.dart';
 import './standalone_task_detail_screen.dart';
+// --- FIX: Import the new creation screen we will be navigating to ---
+import './create_evidence_task_screen.dart'; 
 
 class StandaloneTasksScreen extends StatefulWidget {
   const StandaloneTasksScreen({super.key});
@@ -25,62 +27,38 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
     final response = await supabase
         .from('tasks')
         .select()
-        // --- FIX: Use the correct .filter() syntax for NULL checks ---
         .filter('campaign_id', 'is', null) 
         .order('created_at', ascending: false);
     return response.map((json) => Task.fromJson(json)).toList();
   }
 
-  Future<void> _showCreateTaskDialog() async {
-    final formKey = GlobalKey<FormState>();
-    final titleController = TextEditingController();
-    final pointsController = TextEditingController();
-    final descriptionController = TextEditingController();
-
-    // Show the dialog and wait for it to pop with a true/false result
-    final result = await showDialog<bool>(
+  // --- NEW: A menu to choose which task template to use ---
+  // This replaces the old _showCreateTaskDialog method entirely.
+  void _showCreateTaskMenu() {
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Create Standalone Task'),
-        content: Form(
-          key: formKey,
-          child: SingleChildScrollView(
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              TextFormField(controller: titleController, decoration: const InputDecoration(labelText: 'Task Title'), validator: (v) => v!.isEmpty ? 'Required' : null),
-              formSpacer,
-              TextFormField(controller: descriptionController, decoration: const InputDecoration(labelText: 'Description (Optional)')),
-              formSpacer,
-              TextFormField(controller: pointsController, decoration: const InputDecoration(labelText: 'Points'), keyboardType: TextInputType.number, validator: (v) => v!.isEmpty ? 'Required' : null),
-            ]),
-          ),
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.file_present_rounded),
+              title: const Text('Evidence Submission Task'),
+              subtitle: const Text('Agent uploads files and can be geofenced.'),
+              onTap: () async {
+                Navigator.pop(context); // Close the sheet first
+                
+                // Navigate to the new, detailed creation screen
+                await Navigator.of(context).push(MaterialPageRoute(builder: (context) => const CreateEvidenceTaskScreen()));
+                
+                // After returning from the creation screen, refresh the list
+                setState(() { _tasksFuture = _fetchTasks(); });
+              },
+            ),
+            // You can add more ListTile widgets here for other task templates in the future
+          ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-          ElevatedButton(
-            onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                await supabase.from('tasks').insert({
-                  'title': titleController.text,
-                  'description': descriptionController.text,
-                  'points': int.parse(pointsController.text),
-                  'created_by': supabase.auth.currentUser!.id,
-                });
-                // Ensure the context is still valid before popping.
-                if (mounted && context.mounted) Navigator.of(context).pop(true);
-              }
-            },
-            child: const Text('Create Task'),
-          )
-        ],
       ),
     );
-
-    // --- FIX: Check for the result AND if the widget is still mounted ---
-    // This resolves the "Don't use 'BuildContext's across async gaps" warning.
-    if (result == true && mounted) {
-      context.showSnackBar('Task created successfully!');
-      setState(() { _tasksFuture = _fetchTasks(); });
-    }
   }
 
   @override
@@ -103,13 +81,61 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
                 final task = tasks[index];
                 return Card(
                   child: ListTile(
+                    leading: const Icon(Icons.assignment_turned_in),
                     title: Text(task.title),
                     subtitle: Text('${task.points} points'),
-                    trailing: const Icon(Icons.arrow_forward_ios),
+                    trailing: PopupMenuButton<String>(
+                      onSelected: (value) async {
+                        if (value == 'edit') {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => CreateEvidenceTaskScreen(task: task),
+                            ),
+                          );
+                          setState(() {
+                            _tasksFuture = _fetchTasks();
+                          });
+                        } else if (value == 'delete') {
+                          final shouldDelete = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Confirm Delete'),
+                              content: const Text('Are you sure you want to delete this task?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(false),
+                                  child: const Text('Cancel'),
+                                ),
+                                ElevatedButton(
+                                  onPressed: () => Navigator.of(context).pop(true),
+                                  child: const Text('Delete'),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (shouldDelete == true) {
+                            await _deleteTask(task);
+                            setState(() {
+                              _tasksFuture = _fetchTasks();
+                            });
+                          }
+                        }
+                      },
+                      itemBuilder: (BuildContext context) {
+                        return [
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Text('Edit Task Details'),
+                          ),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Text('Delete Task'),
+                          ),
+                        ];
+                      },
+                    ),
                     onTap: () async {
-                      // It's safe to use context before an await
                       await Navigator.of(context).push(MaterialPageRoute(builder: (context) => StandaloneTaskDetailScreen(task: task)));
-                      // Refresh list when returning
                       setState(() { _tasksFuture = _fetchTasks(); });
                     },
                   ),
@@ -120,10 +146,22 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showCreateTaskDialog,
+        // --- FIX: The button now calls the correct menu function ---
+        onPressed: _showCreateTaskMenu,
         label: const Text('New Task'),
         icon: const Icon(Icons.add),
       ),
     );
+  }
+
+  Future<void> _deleteTask(Task task) async {
+    try {
+      await supabase.from('task_assignments').delete().eq('task_id', task.id);
+      await supabase.from('evidence').delete().eq('task_assignment_id', task.id);
+      await supabase.from('tasks').delete().eq('id', task.id);
+      if (mounted) context.showSnackBar('Task deleted successfully.');
+    } catch (e) {
+      if (mounted) context.showSnackBar('Failed to delete task: $e', isError: true);
+    }
   }
 }
