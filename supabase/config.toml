@@ -1,0 +1,33 @@
+# Supabase project configuration
+# See https://supabase.com/docs/guides/cli/config
+
+# Your project_id (obtainable from your Supabase project's dashboard URL or General Settings)
+project_id = "jnuzpixgfskjcoqmgkxb"
+
+[api]
+# The API port for the local Supabase stack (when running `supabase start`)
+port = 54321
+# The default schema for the API
+schemas = ["public", "storage", "graphql"]
+# The maximum number of rows to return from a view, table, or function call
+max_rows = 1000
+
+[db]
+# The database port for the local Supabase stack
+port = 54322
+# The major version of PostgreSQL to use for the local Supabase stack
+major_version = 15
+
+[studio]
+# The Studio port for the local Supabase stack
+port = 54323
+
+# Email testing / local email server (Inbucket)
+[inbucket]
+port = 54324
+smtp_port = 54325
+pop3_port = 54326
+
+[functions]
+# Set this to true if you want to use the new Deno relay for functions.
+# deno_relay = false

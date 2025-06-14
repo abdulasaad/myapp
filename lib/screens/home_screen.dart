@@ -11,6 +11,7 @@ import './map/live_map_screen.dart';
 import './agent/calibration_screen.dart';
 import './agent/earnings_screen.dart';
 import './tasks/standalone_tasks_screen.dart';
+import './admin/user_management_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -172,6 +173,16 @@ class _HomeScreenState extends State<HomeScreen>
                 Navigator.pop(context);
                 Navigator.of(context).push(
                     MaterialPageRoute(builder: (context) => const EarningsScreen()));
+              },
+            ),
+          if (ProfileService.instance.canManageCampaigns)
+            ListTile(
+              leading: const Icon(Icons.manage_accounts),
+              title: const Text('User Management'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => const UserManagementScreen()));
               },
             ),
           ListTile(
