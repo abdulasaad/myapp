@@ -66,70 +66,157 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
     // --- FIX: Use the accuracy from the Position object ---
     final double accuracy = _latestPosition?.accuracy ?? 9999.0;
     
-    String statusText;
-    String instructionText;
-    Color statusColor;
+    // String statusText; // Unused variable removed
+    // String instructionText; // Unused variable removed
 
     if (accuracy <= 15) {
-      statusText = "Excellent Accuracy";
-      instructionText = "GPS lock is strong. Ready to go!";
-      statusColor = Colors.green;
+      // statusText = "Excellent Accuracy"; // Unused assignment removed
+      // instructionText = "GPS lock is strong. Ready to go!"; // Unused assignment removed
     } else if (accuracy <= 40) {
-      statusText = "Good Accuracy";
-      instructionText = "GPS lock is acceptable. Remain in an open area for best results.";
-      statusColor = Colors.orange;
+      // statusText = "Good Accuracy"; // Unused assignment removed
+      // instructionText = "GPS lock is acceptable. Remain in an open area for best results."; // Unused assignment removed
     } else {
-      statusText = "Poor Accuracy";
-      instructionText = "Signal is weak. Please go outside with a clear view of the sky.";
-      statusColor = Colors.red;
+      // statusText = "Poor Accuracy"; // Unused assignment removed
+      // instructionText = "Signal is weak. Please go outside with a clear view of the sky."; // Unused assignment removed
     }
 
+    // Helper to determine text for accuracy (e.g., "Poor", "Good")
+    String getAccuracyText(double acc) {
+      if (acc <= 10) return "Excellent";
+      if (acc <= 20) return "Good";
+      if (acc <= 35) return "Moderate";
+      if (acc <= 50) return "Poor";
+      return "Very Poor";
+    }
+
+    // Helper to determine signal strength text and value (e.g., "Poor", "1/5")
+    Map<String, String> getSignalStrength(double acc) {
+      if (acc <= 10) return {"text": "Excellent", "value": "5/5"};
+      if (acc <= 20) return {"text": "Good", "value": "4/5"};
+      if (acc <= 35) return {"text": "Moderate", "value": "3/5"};
+      if (acc <= 50) return {"text": "Poor", "value": "2/5"};
+      return {"text": "Very Poor", "value": "1/5"};
+    }
+    
+    final accuracyText = getAccuracyText(accuracy);
+    final signalStrengthInfo = getSignalStrength(accuracy);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('GPS Calibration')),
-      body: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: statusColor,
-            child: Row(
-              children: [
-                const Icon(Icons.satellite_alt, color: Colors.white, size: 40),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(statusText, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-                      Text('Accuracy: ${accuracy.toStringAsFixed(1)} meters', style: const TextStyle(color: Colors.white, fontSize: 16)),
-                    ],
-                  ),
+      appBar: AppBar(title: const Text('GPS Accuracy')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Map View
+            SizedBox(
+              height: 200, // Adjust height as needed
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12.0),
+                child: GoogleMap(
+                  mapType: MapType.normal,
+                  initialCameraPosition: _latestPosition != null
+                      ? CameraPosition(target: LatLng(_latestPosition!.latitude, _latestPosition!.longitude), zoom: 16)
+                      : const CameraPosition(target: LatLng(33.3152, 44.3661), zoom: 10), // Default if no position yet
+                  markers: _markers,
+                  myLocationButtonEnabled: false, // Design doesn't show it
+                  myLocationEnabled: false, // Markers are used instead
+                  zoomControlsEnabled: false,
+                  onMapCreated: (GoogleMapController controller) {
+                    if (!_controller.isCompleted) {
+                       _controller.complete(controller);
+                    }
+                    // If we have a position, update map once created
+                    if (_latestPosition != null) {
+                      _updateMapWithNewData(_latestPosition!);
+                    }
+                  },
                 ),
-              ],
-            ),
-          ),
-          Expanded(
-            flex: 3,
-            child: GoogleMap(
-              mapType: MapType.normal,
-              initialCameraPosition: const CameraPosition(target: LatLng(33.3152, 44.3661), zoom: 14),
-              myLocationButtonEnabled: true,
-              markers: _markers,
-              onMapCreated: (GoogleMapController controller) {
-                _controller.complete(controller);
-              },
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Text(instructionText, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+
+            // GPS Accuracy Section Title
+            Text(
+              'GPS Accuracy',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+
+            // Accuracy Display
+            _buildAccuracyRow(
+              context,
+              label: 'Accuracy',
+              valueText: accuracyText,
+              numericValue: '${accuracy.toStringAsFixed(0)}m',
+            ),
+            const SizedBox(height: 8),
+
+            // Signal Strength Display
+            _buildAccuracyRow(
+              context,
+              label: 'Signal Strength',
+              valueText: signalStrengthInfo['text']!,
+              numericValue: signalStrengthInfo['value']!,
+            ),
+            const SizedBox(height: 24),
+
+            // Improve GPS Accuracy Section Title
+            Text(
+              'Improve GPS Accuracy',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            _buildTipRow(context, 'Move to an open area'),
+            _buildTipRow(context, 'Avoid tall buildings'),
+            _buildTipRow(context, 'Ensure clear sky view'),
+            
+            const Spacer(), // Pushes button to the bottom
+
+            // Refresh Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue, // As per image
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  textStyle: const TextStyle(fontSize: 18, color: Colors.white),
+                ),
+                onPressed: () {
+                  // Action for refresh, e.g., re-fetch location or simply update UI
+                  // For a stream, just calling setState might be enough if new data is expected
+                  // Or call a method on locationService if it supports manual refresh
+                  setState(() {}); 
+                },
+                child: const Text('Refresh', style: TextStyle(color: Colors.white)),
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildAccuracyRow(BuildContext context, {required String label, required String valueText, required String numericValue}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: Theme.of(context).textTheme.titleMedium),
+            Text(valueText, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600])),
+          ],
+        ),
+        Text(numericValue, style: Theme.of(context).textTheme.titleMedium),
+      ],
+    );
+  }
+
+  Widget _buildTipRow(BuildContext context, String tip) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Text(tip, style: Theme.of(context).textTheme.titleMedium),
     );
   }
 }
