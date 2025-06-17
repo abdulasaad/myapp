@@ -2,10 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../models/campaign.dart'; // Import Campaign model
 import '../../utils/constants.dart';
 
 class CreateCampaignScreen extends StatefulWidget {
-  const CreateCampaignScreen({super.key});
+  final Campaign? campaignToEdit; // Optional campaign for editing
+
+  const CreateCampaignScreen({super.key, this.campaignToEdit});
 
   @override
   State<CreateCampaignScreen> createState() => _CreateCampaignScreenState();
@@ -19,6 +22,20 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
   final _descriptionController = TextEditingController();
   DateTime? _startDate;
   DateTime? _endDate;
+
+  bool get _isEditing => widget.campaignToEdit != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isEditing) {
+      final campaign = widget.campaignToEdit!;
+      _nameController.text = campaign.name;
+      _descriptionController.text = campaign.description ?? '';
+      _startDate = campaign.startDate;
+      _endDate = campaign.endDate;
+    }
+  }
 
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
     final initialDate = DateTime.now();
@@ -59,18 +76,30 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
 
       setState(() => _isLoading = true);
       try {
-        final userId = supabase.auth.currentUser!.id;
-        await supabase.from('campaigns').insert({
+        final campaignData = {
           'name': _nameController.text.trim(),
           'description': _descriptionController.text.trim(),
           'start_date': _startDate!.toIso8601String(),
           'end_date': _endDate!.toIso8601String(),
-          'created_by': userId,
-        });
+        };
 
-        if (mounted) {
-          context.showSnackBar('Campaign created successfully!');
-          Navigator.of(context).pop(); // Go back to the previous screen
+        if (_isEditing) {
+          await supabase
+              .from('campaigns')
+              .update(campaignData)
+              .eq('id', widget.campaignToEdit!.id);
+          if (mounted) {
+            context.showSnackBar('Campaign updated successfully!');
+            Navigator.of(context).pop(true); // Return true to indicate success
+          }
+        } else {
+          final userId = supabase.auth.currentUser!.id;
+          campaignData['created_by'] = userId; // Add created_by only for new campaigns
+          await supabase.from('campaigns').insert(campaignData);
+          if (mounted) {
+            context.showSnackBar('Campaign created successfully!');
+            Navigator.of(context).pop(true); // Return true to indicate success
+          }
         }
       } catch (e) {
         if (mounted) {
@@ -88,7 +117,7 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Create New Campaign')),
+      appBar: AppBar(title: Text(_isEditing ? 'Edit Campaign' : 'Create New Campaign')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(

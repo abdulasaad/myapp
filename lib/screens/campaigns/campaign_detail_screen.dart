@@ -6,7 +6,9 @@ import 'package:logger/logger.dart';
 import '../../models/app_user.dart';
 import '../../models/campaign.dart';
 import '../../models/task.dart';
+import '../../services/profile_service.dart'; // Added for role check
 import '../../utils/constants.dart';
+import 'geofence_editor_screen.dart'; // Added for navigation
 
 class CampaignDetailScreen extends StatefulWidget {
   final Campaign campaign;
@@ -154,14 +156,21 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   Future<void> _assignAgent(String agentId) async {
     try {
       final currentUserId = supabase.auth.currentUser!.id;
-      await supabase.from('campaign_agents').insert({
+      // Use upsert to prevent errors if agent is already assigned.
+      // If onConflict is not specified, it defaults to ignoring duplicates for insert.
+      // For more explicit control, you could specify onConflict: 'campaign_id, agent_id'.
+      await supabase.from('campaign_agents').upsert({
         'campaign_id': widget.campaign.id,
         'agent_id': agentId,
         'assigned_by': currentUserId
-      });
+      }); // Removed .select() as we don't need the result here.
+
       if (mounted) {
+        // Check if the agent was newly added or already existed to provide a more accurate message.
+        // This requires a select after upsert or checking the result of upsert if it provides it.
+        // For simplicity, using a generic success message.
         context.showSnackBar(
-            'Agent assigned successfully! Existing tasks have been auto-assigned.');
+            'Agent processed for campaign. Existing tasks are auto-assigned if newly added.');
         setState(() => _assignedAgentsFuture = _fetchAssignedAgents());
       }
     } catch (e) {
@@ -351,6 +360,19 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
             const SizedBox(width: 8),
             Text('Status: ${widget.campaign.status}'),
           ]),
+          if (ProfileService.instance.canManageCampaigns) ...[
+            formSpacer,
+            ElevatedButton.icon(
+              icon: const Icon(Icons.map_outlined),
+              label: const Text('Set/Edit Geofence'),
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => GeofenceEditorScreen(campaign: widget.campaign),
+                ));
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: primaryColor.withAlpha((0.8 * 255).round())),
+            ),
+          ],
         ]),
       ),
     );

@@ -9,6 +9,7 @@ import '../../models/task.dart';
 import '../../services/location_service.dart';
 import '../../services/profile_service.dart';
 import '../../utils/constants.dart';
+import './create_campaign_screen.dart'; // Added for navigation to edit
 import 'campaign_detail_screen.dart';
 import '../agent/agent_task_list_screen.dart';
 import '../agent/evidence_submission_screen.dart';
@@ -167,9 +168,85 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
               final campaign = campaigns[index];
               return CampaignCard(
                 campaign: campaign,
+                showAdminActions: true,
                 onTap: () => Navigator.of(context).push(MaterialPageRoute(
                     builder: (context) =>
                         CampaignDetailScreen(campaign: campaign))),
+                onEdit: () async {
+                  // Navigate to CreateCampaignScreen for editing
+                  final result = await Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => CreateCampaignScreen(campaignToEdit: campaign),
+                  ));
+                  if (result == true && mounted) {
+                    refreshAll(); // Refresh list if campaign was saved
+                  }
+                },
+                onDelete: () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Confirm Delete'),
+                        content: Text('Are you sure you want to delete "${campaign.name}"? This action cannot be undone.'),
+                        actions: <Widget>[
+                          TextButton(
+                            child: const Text('Cancel'),
+                            onPressed: () => Navigator.of(context).pop(false),
+                          ),
+                          TextButton(
+                            style: TextButton.styleFrom(foregroundColor: Colors.red),
+                            child: const Text('Delete'),
+                            onPressed: () => Navigator.of(context).pop(true),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+
+                  if (confirm == true && mounted) {
+                    try {
+                      // Placeholder for actual delete logic
+                      // await supabase.from('campaigns').delete().match({'id': campaign.id});
+                      // For now, just show a snackbar and refresh
+                      // In a real app, handle related data (tasks, assignments) deletion as well.
+                      // This might involve a Supabase Edge Function for cascading deletes or complex logic.
+                      
+                      // Delete related records in order of dependency
+                      await supabase.from('payments').delete().eq('campaign_id', campaign.id); // Added this line
+                      await supabase.from('tasks').delete().eq('campaign_id', campaign.id);
+                      await supabase.from('campaign_agents').delete().eq('campaign_id', campaign.id);
+                      // Finally, delete the campaign itself
+                      await supabase.from('campaigns').delete().eq('id', campaign.id);
+
+                      // If the CampaignsListScreenState is no longer mounted, we shouldn't proceed.
+                      if (!mounted) return; // 'mounted' refers to CampaignsListScreenState.mounted
+
+                      // If the BuildContext of the CampaignCard is still mounted, show the success SnackBar.
+                      // This 'context.mounted' check is required by the linter for using 'context' after an async gap.
+                      if (context.mounted) { // 'context' is CampaignCard's context
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Campaign "${campaign.name}" deleted successfully.')),
+                        );
+                      }
+                      // refreshAll is a method of CampaignsListScreenState, guarded by the 'if (!mounted) return;' above.
+                      refreshAll();
+                    } catch (e) {
+                      // If the CampaignsListScreenState is no longer mounted, we shouldn't proceed.
+                      if (!mounted) return;
+
+                      // If the BuildContext of the CampaignCard is still mounted, show the error SnackBar.
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error deleting campaign: ${e.toString()}')),
+                        );
+                      }
+                      // Optionally, log to console if context is not mounted but state is.
+                      // else {
+                      //   print('Error deleting campaign: $e. UI context for SnackBar not available.');
+                      // }
+                    }
+                  }
+                },
               );
             },
           ),
@@ -293,12 +370,19 @@ class CampaignCard extends StatelessWidget {
   final Campaign campaign;
   final bool? isInsideGeofence;
   final VoidCallback onTap;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+  final bool showAdminActions;
 
-  const CampaignCard(
-      {super.key,
-      required this.campaign,
-      this.isInsideGeofence,
-      required this.onTap});
+  const CampaignCard({
+    super.key,
+    required this.campaign,
+    this.isInsideGeofence,
+    required this.onTap,
+    this.onEdit,
+    this.onDelete,
+    this.showAdminActions = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -354,8 +438,27 @@ class CampaignCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(Icons.arrow_forward_ios,
-                    color: Colors.grey, size: 16),
+                if (showAdminActions) ...[
+                  IconButton(
+                    icon: const Icon(Icons.edit_outlined, size: 20),
+                    color: Colors.blue[300],
+                    tooltip: 'Edit Campaign',
+                    onPressed: onEdit,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(width: 8), // Spacing between buttons
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, size: 20),
+                    color: Colors.red[300],
+                    tooltip: 'Delete Campaign',
+                    onPressed: onDelete,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ] else ...[
+                  const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
+                ]
               ]),
             ),
             if (statusWidget != null) statusWidget,
