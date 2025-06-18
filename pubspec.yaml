@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # Your other packages will be listed here
+  # Your existing packages
   cupertino_icons: ^1.0.8
   supabase_flutter: any
   logger: ^2.5.0
@@ -20,6 +20,11 @@ dependencies:
   image_picker: ^1.1.2
   mime: ^1.0.5
   intl: ^0.18.1
+
+  # --- ADD THESE TWO NEW PACKAGES ---
+  flutter_colorpicker: ^1.0.3
+  uuid: ^4.3.3
+  # ----------------------------------
 
 dev_dependencies:
   flutter_test:
