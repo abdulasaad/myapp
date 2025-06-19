@@ -171,7 +171,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
         // For simplicity, using a generic success message.
         context.showSnackBar(
             'Agent processed for campaign. Existing tasks are auto-assigned if newly added.');
-        setState(() => _assignedAgentsFuture = _fetchAssignedAgents());
+        _refreshAll();
       }
     } catch (e) {
       if (mounted) {

@@ -11,6 +11,7 @@ import './map/live_map_screen.dart';
 import './agent/calibration_screen.dart';
 import './agent/earnings_screen.dart';
 import './tasks/standalone_tasks_screen.dart';
+import './calendar_screen.dart'; // Import the new calendar screen
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -95,6 +96,17 @@ class _HomeScreenState extends State<HomeScreen>
       appBar: AppBar(
         title: const Text('Main Dashboard'),
         actions: [
+          // ========== THE NEW CALENDAR BUTTON IS ADDED HERE ==========
+          IconButton(
+            icon: const Icon(Icons.calendar_month_outlined),
+            tooltip: 'Events Calendar',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const CalendarScreen()),
+              );
+            },
+          ),
+          // ==========================================================
           IconButton(
               icon: const Icon(Icons.map_outlined),
               tooltip: 'Live Map',
@@ -128,7 +140,6 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  /// This is the corrected Agent Dashboard view.
   Widget _buildAgentDashboard() {
     return Scaffold(
       appBar: AppBar(
@@ -146,10 +157,6 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ],
       ),
-      // --- THE FIX ---
-      // The body is now simply the CampaignsListScreen.
-      // It handles its own tabs and data fetching internally.
-      // The redundant Column and FutureBuilder have been removed.
       body: CampaignsListScreen(locationService: _locationService),
       drawer: _buildDrawer(),
     );
@@ -174,7 +181,8 @@ class _HomeScreenState extends State<HomeScreen>
                     MaterialPageRoute(builder: (context) => const EarningsScreen()));
               },
             ),
-          // Removed User/Group Management ListTile
+          // The User/Group Management link that was previously here
+          // is assumed to be handled by an admin-only web panel now.
           ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Logout'),

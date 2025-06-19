@@ -68,7 +68,6 @@ class _GeofenceEditorScreenState extends State<GeofenceEditorScreen> {
   Future<void> _loadGeofences() async {
     setState(() => _isLoading = true);
     try {
-      // --- FIX: Call the new, robust database function ---
       final parentId = widget.campaign?.id ?? widget.task!.id;
       final response = await supabase.rpc('get_geofences_for_parent', params: {'parent_id': parentId});
 
@@ -152,7 +151,6 @@ class _GeofenceEditorScreenState extends State<GeofenceEditorScreen> {
     if (_selectedZone != null) {
       setState(() => _selectedZone!.points.add(point));
     } else {
-      // If no zone is selected, deselect any active zone when map is tapped.
       setState(() => _selectedZoneId = null);
     }
   }
@@ -188,7 +186,9 @@ class _GeofenceEditorScreenState extends State<GeofenceEditorScreen> {
     setState(() => _isSaving = true);
     try {
       if (_deletedZoneIds.isNotEmpty) {
-        await supabase.from('geofences').delete().contains('id', _deletedZoneIds);
+        for (final zoneId in _deletedZoneIds) {
+          await supabase.from('geofences').delete().eq('id', zoneId);
+        }
       }
       final zonesToUpsert = _zones.where((z) => z.points.length >= 3).map((zone) {
         return {
@@ -196,7 +196,8 @@ class _GeofenceEditorScreenState extends State<GeofenceEditorScreen> {
           'campaign_id': widget.campaign?.id,
           'task_id': widget.task?.id,
           'name': zone.name,
-          'color': '#${zone.color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2)}',
+          // ========== FIX 2: Use modern, non-deprecated method for hex conversion ==========
+          'color': '#${((zone.color.r * 255.0).round() & 0xff).toRadixString(16).padLeft(2, '0')}${((zone.color.g * 255.0).round() & 0xff).toRadixString(16).padLeft(2, '0')}${((zone.color.b * 255.0).round() & 0xff).toRadixString(16).padLeft(2, '0')}',
           'area': _wktFromPoints(zone.points),
         };
       }).toList();
@@ -238,14 +239,13 @@ class _GeofenceEditorScreenState extends State<GeofenceEditorScreen> {
                 if (_selectedZone != null) _buildEditingControls(),
               ],
             ),
-      // --- FIX: The FAB is now hidden when a zone is selected for editing ---
       floatingActionButton: _selectedZoneId == null
           ? FloatingActionButton.extended(
               onPressed: _addNewZone,
               label: const Text('New Zone'),
               icon: const Icon(Icons.add_location_alt_outlined),
             )
-          : null, // Hide FAB when editing a zone
+          : null,
     );
   }
 
@@ -261,6 +261,7 @@ class _GeofenceEditorScreenState extends State<GeofenceEditorScreen> {
           points: zone.points,
           strokeWidth: _selectedZoneId == zone.id ? 3 : 1,
           strokeColor: zone.color,
+          // ========== FIX 3: Use .withAlpha() as the modern replacement ==========
           fillColor: zone.color.withAlpha(80),
           consumeTapEvents: true,
           onTap: () => setState(() => _selectedZoneId = zone.id),
@@ -295,7 +296,8 @@ class _GeofenceEditorScreenState extends State<GeofenceEditorScreen> {
                     final zone = _zones[index];
                     final isSelected = zone.id == _selectedZoneId;
                     return Material(
-                      color: isSelected ? primaryColor.withValues(alpha: 0.3) : Colors.transparent,
+                      // ========== FIX 3: Use .withAlpha() as the modern replacement ==========
+                      color: isSelected ? primaryColor.withAlpha(75) : Colors.transparent,
                       borderRadius: BorderRadius.circular(4),
                       child: ListTile(
                         leading: Icon(Icons.label, color: zone.color, size: 20),
@@ -357,7 +359,6 @@ class _GeofenceEditorScreenState extends State<GeofenceEditorScreen> {
                 children: [
                   ElevatedButton.icon(icon: const Icon(Icons.drive_file_rename_outline), label: const Text('Rename'), onPressed: _renameSelectedZone),
                   ElevatedButton.icon(icon: const Icon(Icons.color_lens_outlined), label: const Text('Color'), onPressed: _changeSelectedZoneColor),
-                  // --- FIX: Removed the incorrect "New Zone" button from this panel ---
                   ElevatedButton.icon(
                     icon: const Icon(Icons.delete_forever_outlined, color: Colors.white),
                     label: const Text('Delete Zone', style: TextStyle(color: Colors.white)),
