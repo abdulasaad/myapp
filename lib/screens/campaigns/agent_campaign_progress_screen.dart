@@ -42,7 +42,7 @@ class _AgentCampaignProgressScreenState
   }
 
   Future<AgentCampaignDetails> _fetchDetails() {
-    return supabase.rpc('get_agent_campaign_details', params: {
+    return supabase.rpc('get_agent_campaign_details_fixed', params: {
       'p_campaign_id': widget.campaign.id,
       'p_agent_id': widget.agent.id,
     }).then((data) => AgentCampaignDetails.fromJson(data));
