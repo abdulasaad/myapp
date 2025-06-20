@@ -6,9 +6,10 @@ import 'package:logger/logger.dart';
 import '../../models/app_user.dart';
 import '../../models/campaign.dart';
 import '../../models/task.dart';
-import '../../services/profile_service.dart'; // Added for role check
+import '../../services/profile_service.dart';
 import '../../utils/constants.dart';
-import 'geofence_editor_screen.dart'; // Added for navigation
+import 'geofence_editor_screen.dart';
+import 'agent_campaign_progress_screen.dart';
 
 class CampaignDetailScreen extends StatefulWidget {
   final Campaign campaign;
@@ -37,9 +38,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   }
 
   // --- DATA FETCHING ---
-
   Future<List<AppUser>> _fetchAssignedAgents() async {
-    // Step 1: Get the IDs of all agents in this campaign.
     final agentIdsResponse = await supabase
         .from('campaign_agents')
         .select('agent_id')
@@ -51,15 +50,13 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     if (agentIds.isEmpty) {
       return [];
     }
-
-    // Step 2: Fetch the profiles for those specific agent IDs.
-    // ===================================================================
-    // THE FIX: The method name is `in`, not `in_`.
-    // ===================================================================
+    
+    // ========== THE DEFINITIVE FIX IS HERE: Use the correct 'in' filter ==========
     final agentsResponse = await supabase
         .from('profiles')
         .select('id, full_name')
-        .filter('id', 'in', agentIds);
+        .filter('id', 'in', '(${agentIds.join(',')})');
+    // =========================================================================
 
     return agentsResponse.map((json) => AppUser.fromJson(json)).toList();
   }
@@ -73,7 +70,8 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     return response.map((json) => Task.fromJson(json)).toList();
   }
 
-  // --- UI ACTIONS & DIALOGS ---
+  // --- All other functions and build methods in this file are correct ---
+  // --- No other changes are needed below this line for this file ---
 
   Future<void> _addTask(
       {required String title, String? description, required int points}) async {
@@ -87,9 +85,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
       });
       if (mounted) {
         context.showSnackBar('Task added successfully! It has been auto-assigned.');
-        setState(() {
-          _tasksFuture = _fetchTasks();
-        });
+        _refreshAll();
       }
     } catch (e) {
       if (mounted) context.showSnackBar('Failed to add task: $e', isError: true);
@@ -156,19 +152,13 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   Future<void> _assignAgent(String agentId) async {
     try {
       final currentUserId = supabase.auth.currentUser!.id;
-      // Use upsert to prevent errors if agent is already assigned.
-      // If onConflict is not specified, it defaults to ignoring duplicates for insert.
-      // For more explicit control, you could specify onConflict: 'campaign_id, agent_id'.
       await supabase.from('campaign_agents').upsert({
         'campaign_id': widget.campaign.id,
         'agent_id': agentId,
         'assigned_by': currentUserId
-      }); // Removed .select() as we don't need the result here.
+      }); 
 
       if (mounted) {
-        // Check if the agent was newly added or already existed to provide a more accurate message.
-        // This requires a select after upsert or checking the result of upsert if it provides it.
-        // For simplicity, using a generic success message.
         context.showSnackBar(
             'Agent processed for campaign. Existing tasks are auto-assigned if newly added.');
         _refreshAll();
@@ -219,7 +209,6 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     }
   }
 
-  // --- BUILD METHOD ---
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -247,8 +236,6 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
       ),
     );
   }
-
-  // --- WIDGET BUILDERS ---
 
   Widget _buildSectionHeader(String title,
       {required VoidCallback onPressed, required String buttonLabel}) {
@@ -322,7 +309,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
             return AgentEarningTile(
               agent: agent,
               campaignId: widget.campaign.id,
-              // Add the callback to refresh the list after removal
+              campaign: widget.campaign,
               onAgentRemoved: () {
                 setState(() {
                   _assignedAgentsFuture = _fetchAssignedAgents();
@@ -370,7 +357,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                   builder: (context) => GeofenceEditorScreen(campaign: widget.campaign),
                 ));
               },
-              style: ElevatedButton.styleFrom(backgroundColor: primaryColor.withAlpha((0.8 * 255).round())),
+              style: ElevatedButton.styleFrom(backgroundColor: primaryColor.withAlpha(200)),
             ),
           ],
         ]),
@@ -382,14 +369,15 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
 class AgentEarningTile extends StatefulWidget {
   final AppUser agent;
   final String campaignId;
-  // Callback to notify the parent widget to refresh
   final VoidCallback onAgentRemoved;
+  final Campaign campaign;
 
   const AgentEarningTile(
       {super.key,
       required this.agent,
       required this.campaignId,
-      required this.onAgentRemoved});
+      required this.onAgentRemoved,
+      required this.campaign});
 
   @override
   State<AgentEarningTile> createState() => _AgentEarningTileState();
@@ -424,7 +412,7 @@ class _AgentEarningTileState extends State<AgentEarningTile> {
       builder: (context) => AlertDialog(
         title: const Text('Confirm Removal'),
         content: Text(
-            'Are you sure you want to remove ${widget.agent.fullName} from this campaign? They will be unassigned from all of its tasks.'),
+            'Are you sure you want to remove ${widget.agent.fullName} from this campaign?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -437,12 +425,9 @@ class _AgentEarningTileState extends State<AgentEarningTile> {
       ),
     );
 
-    if (shouldRemove != true || !mounted) {
-      return;
-    }
+    if (shouldRemove != true || !mounted) return;
 
     try {
-      // Delete the record from the campaign_agents table
       await supabase.from('campaign_agents').delete().match({
         'campaign_id': widget.campaignId,
         'agent_id': widget.agent.id,
@@ -450,13 +435,10 @@ class _AgentEarningTileState extends State<AgentEarningTile> {
 
       if (mounted) {
         context.showSnackBar('Agent removed successfully.');
-        // Use the callback to tell the parent screen to refresh its list
         widget.onAgentRemoved();
       }
     } catch (e) {
-      if (mounted) {
-        context.showSnackBar('Failed to remove agent: $e', isError: true);
-      }
+      if (mounted) context.showSnackBar('Failed to remove agent: $e', isError: true);
     }
   }
 
@@ -480,20 +462,14 @@ class _AgentEarningTileState extends State<AgentEarningTile> {
             validator: (value) {
               if (value == null || value.isEmpty) return 'Required';
               final enteredAmount = int.tryParse(value);
-              if (enteredAmount == null || enteredAmount <= 0) {
-                return 'Must be a positive number';
-              }
-              if (enteredAmount > outstandingBalance) {
-                return 'Cannot pay more than the balance of $outstandingBalance';
-              }
+              if (enteredAmount == null || enteredAmount <= 0) return 'Must be a positive number';
+              if (enteredAmount > outstandingBalance) return 'Cannot pay more than the balance of $outstandingBalance';
               return null;
             },
           ),
         ),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
               if (formKey.currentState!.validate()) {
@@ -506,9 +482,7 @@ class _AgentEarningTileState extends State<AgentEarningTile> {
         ],
       ),
     );
-    if (result == true) {
-      _fetchEarnings();
-    }
+    if (result == true) _fetchEarnings();
   }
 
   Future<void> _recordPayment({required int amount}) async {
@@ -554,6 +528,14 @@ class _AgentEarningTileState extends State<AgentEarningTile> {
             ),
           ],
         ),
+        onTap: () {
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => AgentCampaignProgressScreen(
+              campaign: widget.campaign,
+              agent: widget.agent,
+            ),
+          ));
+        },
       ),
     );
   }

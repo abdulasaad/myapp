@@ -6,6 +6,7 @@ import 'package:mime/mime.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/task.dart';
 import '../../utils/constants.dart';
+import '../../services/profile_service.dart';
 import '../full_screen_image_viewer.dart';
 
 class Evidence {
@@ -53,23 +54,30 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
 
       _taskAssignmentId = assignment['id'];
       _assignmentStatus = assignment['status'];
-      _evidenceFuture = _fetchEvidence();
     } catch (e) {
       if (mounted) {
         context.showSnackBar('Error loading task assignment: $e', isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
+      _evidenceFuture = _fetchEvidence();
     }
   }
 
   Future<List<Evidence>> _fetchEvidence() async {
-    final response = await supabase
+    final isManager = ProfileService.instance.canManageCampaigns;
+    var query = supabase
         .from('evidence')
-        .select('id, title, file_url')
-        .eq('task_assignment_id', _taskAssignmentId)
-        .order('created_at', ascending: false);
-    return response.map((json) => Evidence.fromJson(json)).toList();
+        .select('id, title, file_url');
+
+    if (!isManager) {
+      query = query.eq('task_assignment_id', _taskAssignmentId);
+    } else {
+      query = query.eq('task_id', widget.task.id);
+    }
+
+    final response = await query.order('created_at', ascending: false);
+    return (response as List<dynamic>).map<Evidence>((json) => Evidence.fromJson(json as Map<String, dynamic>)).toList();
   }
 
   Future<void> _deleteEvidence(Evidence evidence) async {
@@ -168,7 +176,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
         });
       }
     } catch (e) {
-      if (mounted) context.showSnackBar('Failed to update task: $e', isError: true);
+      if (mounted) context.showSnackBar('Upload failed: $e', isError: true);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -318,6 +326,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
                       ),
                     ),
                     const Divider(),
+                    Text('Is Manager: ${ProfileService.instance.canManageCampaigns}'),
                     Expanded(
                       child: evidenceList.isEmpty
                           ? const Center(
