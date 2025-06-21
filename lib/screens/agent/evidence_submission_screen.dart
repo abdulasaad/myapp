@@ -38,7 +38,6 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
   @override
   void initState() {
     super.initState();
-    print('Task title: ${widget.task.title}, Task ID: ${widget.task.id}');
     _loadInitialData();
   }
 

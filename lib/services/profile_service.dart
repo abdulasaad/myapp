@@ -27,6 +27,7 @@ class ProfileService {
   // Getters for easy access
   String? get role => _currentUser?.role;
   String? get status => _currentUser?.status;
+  UserProfile? get currentUser => _currentUser;
 
   bool get canManageCampaigns {
     return _currentUser?.role == 'admin' || _currentUser?.role == 'manager';

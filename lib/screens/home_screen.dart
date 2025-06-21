@@ -94,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen>
   Widget _buildManagerDashboard() {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Main Dashboard'),
+        title: Text('Dashboard - ${ProfileService.instance.currentUser!.fullName}'),
         actions: [
           // ========== THE NEW CALENDAR BUTTON IS ADDED HERE ==========
           IconButton(
@@ -143,7 +143,7 @@ class _HomeScreenState extends State<HomeScreen>
   Widget _buildAgentDashboard() {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Work'),
+        title: Text('My Work - ${ProfileService.instance.currentUser!.fullName}'),
         actions: [
           IconButton(
             icon: const Icon(Icons.satellite_alt_outlined),
@@ -167,10 +167,23 @@ class _HomeScreenState extends State<HomeScreen>
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          const DrawerHeader(
-              decoration: BoxDecoration(color: primaryColor),
-              child: Text('Al-Tijwal App',
-                  style: TextStyle(color: Colors.white, fontSize: 24))),
+          DrawerHeader(
+            decoration: const BoxDecoration(color: primaryColor),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  ProfileService.instance.currentUser!.fullName,
+                  style: const TextStyle(color: Colors.white, fontSize: 20),
+                ),
+                Text(
+                  ProfileService.instance.canManageCampaigns ? 'Manager' : 'Agent',
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                ),
+              ],
+            ),
+          ),
           if (!ProfileService.instance.canManageCampaigns)
             ListTile(
               leading: const Icon(Icons.account_balance_wallet_outlined),

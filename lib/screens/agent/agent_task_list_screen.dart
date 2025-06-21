@@ -57,10 +57,106 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
   }
 
   Future<void> _uploadEvidence(AgentTask task) async {
-    final picker = ImagePicker();
-    final imageFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
-    if (imageFile == null || !mounted) return;
+    final formKey = GlobalKey<FormState>();
+    final titleController = TextEditingController();
+    XFile? selectedFile;
 
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Upload Evidence'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Evidence Name',
+                    hintText: 'Enter evidence name',
+                  ),
+                  validator: (v) => (v == null || v.isEmpty)
+                      ? 'Evidence name is required'
+                      : null,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          final picker = ImagePicker();
+                          final imageFile = await picker.pickImage(
+                            source: ImageSource.gallery,
+                            imageQuality: 70,
+                          );
+                          if (imageFile != null) {
+                            setState(() {
+                              selectedFile = imageFile;
+                            });
+                          }
+                        },
+                        icon: const Icon(Icons.attach_file),
+                        label: Text(selectedFile == null
+                            ? 'Select File'
+                            : 'Change File'),
+                      ),
+                    ),
+                  ],
+                ),
+                if (selectedFile != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.image, size: 16, color: Colors.green),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            selectedFile!.name,
+                            style: const TextStyle(fontSize: 12),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: selectedFile == null
+                  ? null
+                  : () {
+                      if (formKey.currentState!.validate()) {
+                        final title = titleController.text;
+                        Navigator.of(context).pop();
+                        _performUpload(task, title, selectedFile!);
+                      }
+                    },
+              child: const Text('Upload'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _performUpload(AgentTask task, String title, XFile imageFile) async {
     try {
       final fileBytes = await imageFile.readAsBytes();
       final mimeType = lookupMimeType(imageFile.path, headerBytes: fileBytes);
@@ -76,7 +172,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
       await supabase.from('task_assignments').update({'evidence_urls': updatedUrls})
           .match({'task_id': task.taskId, 'agent_id': supabase.auth.currentUser!.id});
       
-      if(mounted) context.showSnackBar('Evidence uploaded successfully!');
+      if(mounted) context.showSnackBar('Evidence "$title" uploaded successfully!');
       _refreshTasks();
     } catch (e) {
       if(mounted) context.showSnackBar('Failed to upload evidence: $e', isError: true);
