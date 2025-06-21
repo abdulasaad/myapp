@@ -306,12 +306,14 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
       final fileUrl =
           supabase.storage.from('task-evidence').getPublicUrl(fileName);
 
-      await supabase.from('evidence').insert({
+      final evidenceData = {
         'task_assignment_id': _taskAssignmentId,
         'uploader_id': supabase.auth.currentUser!.id,
         'title': title,
         'file_url': fileUrl,
-      });
+      };
+      
+      await supabase.from('evidence').insert(evidenceData);
 
       if (mounted) {
         context.showSnackBar('Evidence uploaded successfully.');

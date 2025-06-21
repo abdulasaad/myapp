@@ -19,10 +19,10 @@ class EvidenceFile {
   factory EvidenceFile.fromJson(Map<String, dynamic> json) {
     return EvidenceFile(
       id: json['id'] as String,
-      title: json['title'] as String,
+      title: json['title'] as String? ?? 'Untitled Evidence',
       fileUrl: json['file_url'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
-      taskTitle: json['task_title'] as String,
+      taskTitle: json['task_title'] as String? ?? 'Unknown Task',
     );
   }
 }

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:myapp/services/profile_service.dart';
+import 'package:myapp/services/session_service.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
 import '../utils/constants.dart';
@@ -26,20 +27,30 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     if (session != null) {
-      // Fetch the profile
-      await ProfileService.instance.loadProfile();
+      // Validate both Supabase Auth session AND database session
+      final isValidSession = await SessionService().isSessionValid();
       
-      // ===============================================
-      //  NEW: Set user status to 'active' on login
-      // ===============================================
-      await ProfileService.instance.updateUserStatus('active');
-      
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
+      if (isValidSession) {
+        // Both sessions are valid - proceed to home
+        await ProfileService.instance.loadProfile();
+        await ProfileService.instance.updateUserStatus('active');
+        
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          );
+        }
+      } else {
+        // Database session is invalid - force logout and go to login
+        await SessionService().forceLogout();
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+          );
+        }
       }
     } else {
+      // No Supabase Auth session - go to login
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const LoginScreen()),
       );

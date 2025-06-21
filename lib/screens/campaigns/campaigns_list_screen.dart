@@ -8,6 +8,7 @@ import '../../models/campaign.dart';
 import '../../models/task.dart';
 import '../../services/location_service.dart';
 import '../../services/profile_service.dart';
+import '../../services/session_service.dart';
 import '../../utils/constants.dart';
 import './create_campaign_screen.dart'; // Added for navigation to edit
 import 'campaign_detail_screen.dart';
@@ -41,6 +42,10 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
   @override
   void initState() {
     super.initState();
+    
+    // Validate session immediately when loading campaigns
+    SessionService().validateSessionImmediately();
+    
     // Initialize data fetching based on user role
     if (ProfileService.instance.canManageCampaigns) {
       _managerCampaignsFuture = _fetchManagerCampaigns();

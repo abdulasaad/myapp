@@ -1,8 +1,9 @@
 // lib/screens/agent/agent_campaign_view_screen.dart
 
-import 'dart:io'; // NEW IMPORT for file handling
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart'; // NEW IMPORT for picking images
+import 'package:image_picker/image_picker.dart';
+import 'package:mime/mime.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:myapp/models/campaign.dart';
 import 'package:myapp/models/task_assignment.dart';
 import 'package:myapp/utils/constants.dart';
@@ -61,33 +62,139 @@ class _AgentCampaignViewScreenState extends State<AgentCampaignViewScreen> {
   }
 
   // ===============================================
-  //  NEW METHOD: UPLOAD EVIDENCE
+  //  UPDATED METHOD: UPLOAD EVIDENCE WITH CUSTOM NAME
   // ===============================================
   Future<void> _uploadEvidence(String assignmentId) async {
-    final picker = ImagePicker();
-    final imageFile = await picker.pickImage(
-      source: ImageSource.gallery, // Or use ImageSource.camera
-      maxWidth: 800,
-      imageQuality: 85,
+    // Show dialog to get evidence name and file
+    String? evidenceTitle;
+    XFile? selectedFile;
+    
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        final titleController = TextEditingController();
+        final formKey = GlobalKey<FormState>();
+        
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Upload Evidence'),
+              content: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: titleController,
+                      decoration: const InputDecoration(
+                        labelText: 'Evidence Name',
+                        hintText: 'Enter evidence name',
+                      ),
+                      validator: (v) => (v == null || v.isEmpty)
+                          ? 'Evidence name is required'
+                          : null,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              final picker = ImagePicker();
+                              final imageFile = await picker.pickImage(
+                                source: ImageSource.gallery,
+                                imageQuality: 80,
+                                maxWidth: 1024,
+                              );
+                              if (imageFile != null) {
+                                setState(() {
+                                  selectedFile = imageFile;
+                                });
+                              }
+                            },
+                            icon: const Icon(Icons.attach_file),
+                            label: Text(selectedFile == null
+                                ? 'Select File'
+                                : 'Change File'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (selectedFile != null) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.file_present, color: Colors.grey),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                selectedFile!.name,
+                                style: const TextStyle(color: Colors.black87),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (formKey.currentState!.validate() && selectedFile != null) {
+                      evidenceTitle = titleController.text.trim();
+                      Navigator.of(context).pop(true);
+                    } else if (selectedFile == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please select a file')),
+                      );
+                    }
+                  },
+                  child: const Text('Upload'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
 
-    if (imageFile == null) return; // User cancelled the picker
+    if (result != true || evidenceTitle == null || selectedFile == null) return;
 
     setState(() => _isUploading = true);
 
     try {
-      final file = File(imageFile.path);
-      final fileExt = imageFile.path.split('.').last;
-      final fileName = '${DateTime.now().toIso8601String()}.$fileExt';
-      // The path in the bucket uses the assignmentId as a folder.
-      // This is secure because our RLS policies check this folder name.
-      final filePath = '$assignmentId/$fileName';
+      final fileBytes = await selectedFile!.readAsBytes();
+      final mimeType = lookupMimeType(selectedFile!.path, headerBytes: fileBytes);
+      final fileExt = mimeType?.split('/').last ?? 'jpeg';
+      final fileName = '${supabase.auth.currentUser!.id}/${DateTime.now().millisecondsSinceEpoch}.$fileExt';
 
-      await supabase.storage.from('task-evidence').upload(filePath, file);
+      await supabase.storage.from('task-evidence').uploadBinary(
+        fileName, fileBytes, fileOptions: FileOptions(contentType: mimeType ?? 'image/jpeg'));
 
-      // Get the public URL and update the task_assignments table.
-      final imageUrl = supabase.storage.from('task-evidence').getPublicUrl(filePath);
+      final imageUrl = supabase.storage.from('task-evidence').getPublicUrl(fileName);
 
+      // Store evidence with custom title in evidence table
+      await supabase.from('evidence').insert({
+        'task_assignment_id': assignmentId,
+        'uploader_id': supabase.auth.currentUser!.id,
+        'title': evidenceTitle!,
+        'file_url': imageUrl,
+      });
+
+      // Also update evidence_urls for backward compatibility
       final currentAssignment = await supabase.from('task_assignments').select('evidence_urls').eq('id', assignmentId).single();
       final existingUrls = (currentAssignment['evidence_urls'] as List?)?.cast<String>() ?? [];
       existingUrls.add(imageUrl);
@@ -97,7 +204,7 @@ class _AgentCampaignViewScreenState extends State<AgentCampaignViewScreen> {
           .update({'evidence_urls': existingUrls})
           .eq('id', assignmentId);
       
-      if (mounted) context.showSnackBar('Evidence uploaded successfully!');
+      if (mounted) context.showSnackBar('Evidence "$evidenceTitle" uploaded successfully!');
 
     } catch (e) {
       if (mounted) context.showSnackBar('Error uploading evidence: $e', isError: true);

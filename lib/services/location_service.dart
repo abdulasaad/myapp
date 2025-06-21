@@ -15,8 +15,8 @@ class GeofenceStatus {
 }
 
 class LocationService {
-  // --- FIX: The Timer class is now correctly recognized ---
   Timer? _timer;
+  StreamSubscription<Position>? _positionStreamSubscription;
   final StreamController<Position> _locationDataController = StreamController<Position>.broadcast();
   final StreamController<GeofenceStatus> _geofenceStatusController = StreamController<GeofenceStatus>.broadcast();
 
@@ -34,9 +34,7 @@ class LocationService {
       logger.i("LocationService is no longer tracking for a specific campaign.");
     }
     
-    // TODO: Re-enable when background service is fixed
-    // Update background service as well
-    // BackgroundLocationService.setActiveCampaign(campaignId);
+    // Background service replaced with position streaming
   }
 
   Future<void> start() async {
@@ -45,34 +43,53 @@ class LocationService {
     final hasPermission = await _handlePermission();
     if (!hasPermission) return;
     
-    // Start foreground timer for when app is active
-    _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
-      _fetchAndProcessLocation();
-    });
-    
-    // TODO: Re-enable background service once notification issues are resolved
-    // Start background service for when app is minimized/locked
-    // Future.delayed(const Duration(seconds: 2), () async {
-    //   try {
-    //     await BackgroundLocationService.startLocationTracking();
-    //     logger.i('Background location service started successfully.');
-    //   } catch (e) {
-    //     logger.e('Failed to start background location service: $e');
-    //   }
-    // });
-    
-    logger.i('Foreground location service started.');
+    // Start location stream for continuous tracking (works in background)
+    try {
+      const LocationSettings locationSettings = LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 5, // Update every 5 meters of movement
+        timeLimit: Duration(seconds: 30), // Timeout for each location request
+      );
+      
+      _positionStreamSubscription = Geolocator.getPositionStream(
+        locationSettings: locationSettings,
+      ).listen(
+        (Position position) {
+          logger.i("Stream location: ${position.latitude}, ${position.longitude} (accuracy: ${position.accuracy}m)");
+          _locationDataController.add(position);
+          _sendLocationUpdate(position);
+          
+          // Check geofence if campaign is active
+          if (_activeCampaignId != null) {
+            _checkGeofenceStatus(_activeCampaignId!);
+          }
+        },
+        onError: (e) {
+          logger.e("Location stream error: $e");
+        },
+      );
+      
+      logger.i('Location streaming started (works in background).');
+    } catch (e) {
+      logger.e('Failed to start location stream: $e');
+      
+      // Fallback to timer-based approach
+      _timer = Timer.periodic(const Duration(seconds: 15), (timer) {
+        _fetchAndProcessLocation();
+      });
+      logger.i('Fallback to timer-based location tracking.');
+    }
   }
 
   void stop() {
     _timer?.cancel();
     _timer = null;
     
-    // TODO: Re-enable when background service is fixed
-    // Stop background service as well
-    // BackgroundLocationService.stopLocationTracking();
+    _positionStreamSubscription?.cancel();
+    _positionStreamSubscription = null;
     
     setActiveCampaign(null);
+    logger.i('Location tracking stopped.');
   }
 
   Future<void> _fetchAndProcessLocation() async {

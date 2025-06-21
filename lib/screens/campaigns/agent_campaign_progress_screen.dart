@@ -41,11 +41,55 @@ class _AgentCampaignProgressScreenState
     _detailsFuture = _fetchDetails();
   }
 
-  Future<AgentCampaignDetails> _fetchDetails() {
-    return supabase.rpc('get_agent_campaign_details_fixed', params: {
+  Future<AgentCampaignDetails> _fetchDetails() async {
+    // Fetch basic earnings data using the RPC
+    final rpcData = await supabase.rpc('get_agent_campaign_details_fixed', params: {
       'p_campaign_id': widget.campaign.id,
       'p_agent_id': widget.agent.id,
-    }).then((data) => AgentCampaignDetails.fromJson(data));
+    });
+    
+    // Fetch evidence directly from evidence table with custom titles
+    final evidenceResponse = await supabase
+        .from('evidence')
+        .select('''
+          id,
+          title,
+          file_url,
+          created_at,
+          task_assignments!inner(
+            id,
+            task:tasks!inner(title)
+          )
+        ''')
+        .eq('task_assignments.agent_id', widget.agent.id)
+        .eq('task_assignments.task.campaign_id', widget.campaign.id);
+    
+    // Convert evidence response to EvidenceFile objects
+    final evidenceFiles = evidenceResponse.map((evidence) {
+      final taskTitle = evidence['task_assignments']['task']['title'] as String;
+      return EvidenceFile(
+        id: evidence['id'] as String,
+        title: evidence['title'] as String,
+        fileUrl: evidence['file_url'] as String,
+        createdAt: DateTime.parse(evidence['created_at'] as String),
+        taskTitle: taskTitle,
+      );
+    }).toList();
+    
+    // Create AgentCampaignDetails with real evidence data
+    final earnings = rpcData['earnings'] as Map<String, dynamic>;
+    final total = earnings['total_points'] as int? ?? 0;
+    final paid = earnings['paid_points'] as int? ?? 0;
+    
+    return AgentCampaignDetails(
+      totalPoints: total,
+      pointsPaid: paid,
+      outstandingBalance: total - paid,
+      tasks: (rpcData['tasks'] as List)
+          .map((t) => ProgressTaskItem.fromJson(t as Map<String, dynamic>))
+          .toList(),
+      files: evidenceFiles, // Use real evidence files instead of generated ones
+    );
   }
 
   Future<void> _downloadFile(EvidenceFile file) async {
@@ -219,7 +263,7 @@ class _AgentCampaignProgressScreenState
             leading: Icon(isImage
                 ? Icons.image_outlined
                 : Icons.insert_drive_file_outlined),
-            title: Text(file.title,
+            title: Text(file.title.isNotEmpty ? file.title : 'Untitled Evidence',
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text(
                 'For: ${file.taskTitle}\nOn: ${DateFormat.yMMMd().add_jm().format(file.createdAt)}'),

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../services/location_service.dart';
 import '../services/profile_service.dart';
+import '../services/session_service.dart';
 import './campaigns/campaigns_list_screen.dart';
 import './campaigns/create_campaign_screen.dart';
 import './login_screen.dart';
@@ -40,11 +41,17 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (ProfileService.instance.canManageCampaigns) return;
     if (state == AppLifecycleState.resumed) {
-      ProfileService.instance.updateUserStatus('active');
+      // Immediately validate session when app becomes active
+      SessionService().validateSessionImmediately();
+      
+      if (!ProfileService.instance.canManageCampaigns) {
+        ProfileService.instance.updateUserStatus('active');
+      }
     } else if (state == AppLifecycleState.paused) {
-      ProfileService.instance.updateUserStatus('away');
+      if (!ProfileService.instance.canManageCampaigns) {
+        ProfileService.instance.updateUserStatus('away');
+      }
     }
   }
 
@@ -52,6 +59,19 @@ class _HomeScreenState extends State<HomeScreen>
     if (!ProfileService.instance.canManageCampaigns) {
       _locationService.start();
     }
+    
+    // Set up session invalid callback to navigate to login
+    SessionService().setSessionInvalidCallback(() {
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
+      }
+    });
+    
+    // Start periodic session validation to prevent multiple logins
+    SessionService().startPeriodicValidation();
   }
 
   Future<void> _signOut() async {
@@ -59,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen>
     await ProfileService.instance.updateUserStatus('offline');
     ProfileService.instance.clearProfile();
     try {
-      await supabase.auth.signOut();
+      await SessionService().logout(); // This handles both database session invalidation and Supabase signOut
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -81,6 +101,7 @@ class _HomeScreenState extends State<HomeScreen>
       _tabController.dispose();
     }
     _locationService.stop();
+    SessionService().stopPeriodicValidation();
     super.dispose();
   }
 

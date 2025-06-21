@@ -167,8 +167,28 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
         fileName, fileBytes, fileOptions: FileOptions(contentType: mimeType ?? 'image/jpeg'));
       
       final imageUrl = supabase.storage.from('task-evidence').getPublicUrl(fileName);
+      
+      // Get the task assignment ID for the evidence table
+      final taskAssignmentResponse = await supabase
+          .from('task_assignments')
+          .select('id')
+          .match({'task_id': task.taskId, 'agent_id': supabase.auth.currentUser!.id})
+          .maybeSingle();
+      
+      final taskAssignmentId = taskAssignmentResponse?['id'];
+      
+      if (taskAssignmentId != null) {
+        // Store evidence with custom title in evidence table
+        await supabase.from('evidence').insert({
+          'task_assignment_id': taskAssignmentId,
+          'uploader_id': supabase.auth.currentUser!.id,
+          'title': title,
+          'file_url': imageUrl,
+        });
+      }
+      
+      // Also update the evidence_urls for backward compatibility
       final updatedUrls = List<String>.from(task.evidenceUrls)..add(imageUrl);
-
       await supabase.from('task_assignments').update({'evidence_urls': updatedUrls})
           .match({'task_id': task.taskId, 'agent_id': supabase.auth.currentUser!.id});
       
