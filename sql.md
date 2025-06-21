@@ -1,138 +1,73 @@
-# Geography Error Investigation Commands
+# Profile Status Constraint Investigation
 
-Run these SQL commands in your Supabase SQL editor to investigate the PostGIS geography type error:
+The error occurs when logging out and trying to set status to 'offline'. Let's check what status values are allowed.
 
-## 10. Check if there's actual data in the geofences table
+## Check the status constraint on profiles table
 ```sql
 SELECT 
-    id,
-    campaign_id,
-    name,
-    ST_AsText(area) as area_wkt,
-    ST_GeometryType(area::geometry) as geometry_type
-FROM geofences 
-WHERE campaign_id = '9ef0ab40-b091-48ce-942c-db39ef56b016'::uuid;
+    constraint_name,
+    check_clause
+FROM information_schema.check_constraints 
+WHERE constraint_name = 'status_check';
 ```
 
-## 11. Check if there's location data for the user
+## Check current constraint definition
 ```sql
 SELECT 
-    user_id,
-    ST_AsText(location) as location_wkt,
-    recorded_at
-FROM location_history 
-WHERE user_id = (SELECT auth.uid())
-ORDER BY recorded_at DESC 
-LIMIT 5;
+    conname as constraint_name,
+    pg_get_constraintdef(oid) as constraint_definition
+FROM pg_constraint 
+WHERE conname = 'status_check';
 ```
 
-## 12. Test the geography functions directly
+## Check all constraints on profiles table
 ```sql
--- Test if ST_Intersects works with your geography data
 SELECT 
-    g.name as geofence_name,
-    ST_AsText(g.area) as geofence_wkt,
-    ST_GeometryType(g.area::geometry) as geofence_type,
-    ST_IsValid(g.area::geometry) as is_valid
-FROM geofences g 
-WHERE campaign_id = '9ef0ab40-b091-48ce-942c-db39ef56b016'::uuid;
+    conname as constraint_name,
+    contype as constraint_type,
+    pg_get_constraintdef(oid) as constraint_definition
+FROM pg_constraint 
+WHERE conrelid = 'profiles'::regclass;
 ```
 
-## 13. Check for NULL or invalid geography data
+## Check current status values in profiles table
 ```sql
--- Check for problematic geography data
-SELECT 
-    'geofences' as table_name,
-    id,
-    area IS NULL as is_null,
-    ST_IsValid(area::geometry) as is_valid_geometry
-FROM geofences
-WHERE campaign_id = '9ef0ab40-b091-48ce-942c-db39ef56b016'::uuid
-
-UNION ALL
-
-SELECT 
-    'location_history' as table_name,
-    id::text,
-    location IS NULL as is_null,
-    ST_IsValid(location::geometry) as is_valid_geometry
-FROM location_history
-WHERE user_id = (SELECT auth.uid())
-ORDER BY table_name;
+SELECT DISTINCT status 
+FROM profiles 
+ORDER BY status;
 ```
 
 ---
 
-## Root Cause Found: Missing Data
+## ✅ Solution Found
 
-The issue is NOT with PostGIS geography types - it's missing data:
-- No geofence exists for campaign `9ef0ab40-b091-48ce-942c-db39ef56b016`
-- No location history for the current user
-- The function fails when trying to process NULL geography data
+The constraint only allows: `['active', 'suspended', 'deleted']`
+But the app tries to use: `'offline'`, `'away'`, `'inactive'`
 
-## Fix: Update the Function to Handle Missing Data
-
-Replace the existing `check_agent_in_campaign_geofence` function with this improved version:
-
+### Option 1: Update Database Constraint (Recommended)
 ```sql
-CREATE OR REPLACE FUNCTION check_agent_in_campaign_geofence(
-    p_agent_id uuid,
-    p_campaign_id uuid
-)
-RETURNS boolean
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-DECLARE
-    latest_location GEOGRAPHY(POINT);
-    geofence_area GEOGRAPHY(POLYGON);
-    v_intersects_result BOOLEAN := FALSE;
-BEGIN
-    -- Early return if no data exists to avoid geography type errors
-    IF NOT EXISTS (SELECT 1 FROM location_history WHERE user_id = p_agent_id) THEN
-        RETURN FALSE;
-    END IF;
-    
-    IF NOT EXISTS (SELECT 1 FROM geofences WHERE campaign_id = p_campaign_id) THEN
-        RETURN FALSE;
-    END IF;
+-- Drop the existing constraint
+ALTER TABLE profiles DROP CONSTRAINT status_check;
 
-    -- Get the agent's most recent location
-    SELECT location INTO latest_location
-    FROM location_history
-    WHERE user_id = p_agent_id
-    ORDER BY recorded_at DESC
-    LIMIT 1;
-
-    -- Get the geofence for the campaign
-    SELECT area INTO geofence_area
-    FROM geofences
-    WHERE campaign_id = p_campaign_id
-    LIMIT 1;
-
-    -- Double-check for NULL values
-    IF latest_location IS NULL OR geofence_area IS NULL THEN
-        RETURN FALSE;
-    END IF;
-
-    -- Use ST_DWithin for better geography handling
-    v_intersects_result := ST_DWithin(latest_location, geofence_area, 0);
-
-    RETURN v_intersects_result;
-    
-EXCEPTION WHEN OTHERS THEN
-    -- Log the error and return false instead of failing
-    RAISE LOG 'Error in check_agent_in_campaign_geofence: %', SQLERRM;
-    RETURN FALSE;
-END;
-$$;
+-- Add new constraint with all needed status values
+ALTER TABLE profiles ADD CONSTRAINT status_check 
+CHECK (status IN ('active', 'suspended', 'deleted', 'away', 'offline'));
 ```
 
-## Test the fix
-After running the above function, test it:
-```sql
-SELECT check_agent_in_campaign_geofence(
-    '00000000-0000-0000-0000-000000000000'::uuid,
-    '9ef0ab40-b091-48ce-942c-db39ef56b016'::uuid
-);
+### Option 2: Change App Code to Use Allowed Values
+Update these files to use allowed status values:
+
+**In home_screen.dart:**
+```dart
+// Line 45: Change 'active' to 'active' (already correct)
+ProfileService.instance.updateUserStatus('active');
+
+// Line 47: Change 'away' to 'suspended'
+ProfileService.instance.updateUserStatus('suspended');
+
+// Line 59: Change 'offline' to 'suspended'
+await ProfileService.instance.updateUserStatus('suspended');
 ```
+
+### Recommendation: Use Option 1
+Option 1 is better because it maintains the app's intended behavior and status semantics.

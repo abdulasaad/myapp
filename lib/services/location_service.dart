@@ -1,8 +1,9 @@
 // lib/services/location_service.dart
 
-import 'dart:async'; // <-- FIX: Corrected import from 'dart.async' to 'dart:async'
+import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import 'package:logger/logger.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../utils/constants.dart';
 
 final logger = Logger();
@@ -14,8 +15,8 @@ class GeofenceStatus {
 }
 
 class LocationService {
-  // --- FIX: The Timer class is now correctly recognized ---
   Timer? _timer;
+  StreamSubscription<Position>? _positionStreamSubscription;
   final StreamController<Position> _locationDataController = StreamController<Position>.broadcast();
   final StreamController<GeofenceStatus> _geofenceStatusController = StreamController<GeofenceStatus>.broadcast();
 
@@ -32,6 +33,9 @@ class LocationService {
     } else {
       logger.i("LocationService is no longer tracking for a specific campaign.");
     }
+    
+    // Background service disabled
+    // BackgroundLocationService.setActiveCampaign(campaignId);
   }
 
   Future<void> start() async {
@@ -39,32 +43,87 @@ class LocationService {
     stop();
     final hasPermission = await _handlePermission();
     if (!hasPermission) return;
-    _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
-      _fetchAndProcessLocation();
-    });
-    logger.i('Assertive high-accuracy service started.');
+    
+    // Start location stream for continuous tracking (works in background)
+    try {
+      const LocationSettings locationSettings = LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 10, // Update every 10 meters
+      );
+      
+      _positionStreamSubscription = Geolocator.getPositionStream(
+        locationSettings: locationSettings,
+      ).listen(
+        (Position position) {
+          logger.i("Stream location: ${position.latitude}, ${position.longitude} (accuracy: ${position.accuracy}m)");
+          _locationDataController.add(position);
+          _sendLocationUpdate(position);
+          
+          // Check geofence if campaign is active
+          if (_activeCampaignId != null) {
+            _checkGeofenceStatus(_activeCampaignId!);
+          }
+        },
+        onError: (e) {
+          logger.e("Location stream error: $e");
+        },
+      );
+      
+      logger.i('Location streaming started (works in background).');
+    } catch (e) {
+      logger.e('Failed to start location stream: $e');
+      
+      // Fallback to timer-based approach
+      _timer = Timer.periodic(const Duration(seconds: 15), (timer) {
+        _fetchAndProcessLocation();
+      });
+      logger.i('Fallback to timer-based location tracking.');
+    }
   }
 
   void stop() {
     _timer?.cancel();
     _timer = null;
+    
+    _positionStreamSubscription?.cancel();
+    _positionStreamSubscription = null;
+    
     setActiveCampaign(null);
+    logger.i('Location tracking stopped.');
   }
 
   Future<void> _fetchAndProcessLocation() async {
     try {
+      logger.i("Attempting to get current location...");
       final Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.bestForNavigation,
-        timeLimit: const Duration(seconds: 8),
+        desiredAccuracy: LocationAccuracy.high, // Changed from bestForNavigation for emulator compatibility
+        timeLimit: const Duration(seconds: 10), // Increased timeout for emulator
       );
+      
+      logger.i("Location obtained: ${position.latitude}, ${position.longitude} (accuracy: ${position.accuracy}m)");
       _locationDataController.add(position);
       await _sendLocationUpdate(position);
+      
       // We only have one active campaign at a time, so we check it here.
       if (_activeCampaignId != null) {
         await _checkGeofenceStatus(_activeCampaignId!);
       }
     } catch (e) {
       logger.e("Could not get/process current position: $e");
+      
+      // For debugging: try to get last known position as fallback
+      try {
+        final Position? lastPosition = await Geolocator.getLastKnownPosition();
+        if (lastPosition != null) {
+          logger.i("Using last known position: ${lastPosition.latitude}, ${lastPosition.longitude}");
+          _locationDataController.add(lastPosition);
+          await _sendLocationUpdate(lastPosition);
+        } else {
+          logger.w("No last known position available");
+        }
+      } catch (fallbackError) {
+        logger.e("Failed to get last known position: $fallbackError");
+      }
     }
   }
 
@@ -100,14 +159,70 @@ class LocationService {
   }
 
   Future<bool> _handlePermission() async {
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return false;
-    LocationPermission permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return false;
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      logger.i('Location service enabled: $serviceEnabled');
+      
+      if (!serviceEnabled) {
+        logger.w('Location service is not enabled');
+        return false;
+      }
+      
+      LocationPermission permission = await Geolocator.checkPermission();
+      logger.i('Current location permission: $permission');
+      
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        logger.i('Permission after request: $permission');
+        if (permission == LocationPermission.denied) {
+          logger.w('Location permission denied by user');
+          return false;
+        }
+      }
+      
+      if (permission == LocationPermission.deniedForever) {
+        logger.w('Location permission denied forever');
+        return false;
+      }
+      
+      // Request background location permission for Android
+      try {
+        final backgroundStatus = await Permission.locationAlways.status;
+        logger.i('Background location permission status: $backgroundStatus');
+        
+        if (backgroundStatus.isDenied) {
+          final result = await Permission.locationAlways.request();
+          logger.i('Background permission after request: $result');
+          if (result.isDenied) {
+            logger.w('Background location permission denied - continuing with foreground only');
+          }
+        }
+      } catch (e) {
+        logger.w('Failed to request background permission: $e');
+        // Continue anyway - foreground tracking will still work
+      }
+      
+      // Request notification permission for background service
+      try {
+        final notificationStatus = await Permission.notification.status;
+        logger.i('Notification permission status: $notificationStatus');
+        
+        if (notificationStatus.isDenied) {
+          final result = await Permission.notification.request();
+          logger.i('Notification permission after request: $result');
+          if (result.isDenied) {
+            logger.w('Notification permission denied - background service may not work properly');
+          }
+        }
+      } catch (e) {
+        logger.w('Failed to request notification permission: $e');
+      }
+      
+      logger.i('Location permissions successfully configured');
+      return true;
+    } catch (e) {
+      logger.e('Error handling location permissions: $e');
+      return false;
     }
-    if (permission == LocationPermission.deniedForever) return false;
-    return true;
   }
 }

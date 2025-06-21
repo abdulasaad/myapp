@@ -178,7 +178,7 @@ class _HomeScreenState extends State<HomeScreen>
                   style: const TextStyle(color: Colors.white, fontSize: 20),
                 ),
                 Text(
-                  ProfileService.instance.canManageCampaigns ? 'Manager' : 'Agent',
+                  ProfileService.instance.currentUser!.role,
                   style: const TextStyle(color: Colors.white, fontSize: 14),
                 ),
               ],
