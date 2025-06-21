@@ -7,22 +7,46 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:mime/mime.dart';
 import '../../models/campaign.dart';
 import '../../utils/constants.dart';
+import 'dart:io'; // For XFile if not already imported, though image_picker brings it.
+
+// New class to hold structured evidence details
+class EvidenceDetails {
+  final String title;
+  final String url;
+  // final String? id; // Optional: if you need to reference the evidence record's ID
+
+  EvidenceDetails({required this.title, required this.url});
+
+  factory EvidenceDetails.fromJson(Map<String, dynamic> json) {
+    return EvidenceDetails(
+      title: json['title'] ?? 'Untitled Evidence', // Provide a default if title is missing
+      url: json['file_url'] ?? json['url'] ?? '', // Support 'file_url' or 'url'
+      // id: json['id'],
+    );
+  }
+}
 
 class AgentTask {
   final String taskId;
+  final String? taskAssignmentId; // Important for linking to evidence table directly if needed
   final String title;
   final String? description;
   final int points;
   final String status;
-  final List<String> evidenceUrls;
+  final List<EvidenceDetails> evidenceItems; // Changed from List<String>
 
   AgentTask.fromJson(Map<String, dynamic> json)
       : taskId = json['task_id'],
+        taskAssignmentId = json['task_assignment_id'], // Expecting this from RPC
         title = json['title'],
         description = json['description'],
         points = json['points'] ?? 0,
         status = json['assignment_status'],
-        evidenceUrls = List<String>.from(json['evidence_urls'] ?? []);
+        // Assuming 'evidence_items' is now a list of JSON objects from the RPC
+        evidenceItems = (json['evidence_items'] as List<dynamic>?)
+                ?.map((item) => EvidenceDetails.fromJson(item as Map<String, dynamic>))
+                .toList() ??
+            []; // Default to empty list if null
 }
 
 class AgentTaskListScreen extends StatefulWidget {
@@ -56,28 +80,110 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
     });
   }
 
+  Future<String?> _getTaskAssignmentId(String taskId) async {
+    try {
+      final response = await supabase
+          .from('task_assignments')
+          .select('id')
+          .match({'task_id': taskId, 'agent_id': supabase.auth.currentUser!.id})
+          .single(); // Assuming one assignment per agent per task
+      return response['id'] as String?;
+    } catch (e) {
+      if (mounted) {
+        context.showSnackBar('Error fetching task assignment ID: $e', isError: true);
+      }
+      return null;
+    }
+  }
+
+  Future<String?> _showEvidenceNameDialog(XFile file) async {
+    final formKey = GlobalKey<FormState>();
+    final titleController = TextEditingController();
+    // Use a local variable for context to avoid issues if the widget is disposed during async gaps.
+    final dialogContext = context;
+
+    return await showDialog<String>(
+      context: dialogContext,
+      barrierDismissible: false, // User must explicitly cancel or submit
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Name Your Evidence'),
+          content: Form(
+            key: formKey,
+            child: TextFormField(
+              controller: titleController,
+              decoration: const InputDecoration(labelText: 'Evidence Name/Title'),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter a name for the evidence.';
+                }
+                return null;
+              },
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop(null); // Return null when cancelled
+              },
+            ),
+            ElevatedButton(
+              child: const Text('Confirm & Upload'),
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  Navigator.of(context).pop(titleController.text); // Return the title
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _uploadEvidence(AgentTask task) async {
     final picker = ImagePicker();
     final imageFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
     if (imageFile == null || !mounted) return;
 
+    // Get the name for the evidence
+    final String? evidenceName = await _showEvidenceNameDialog(imageFile);
+    if (evidenceName == null || evidenceName.isEmpty || !mounted) {
+      // User cancelled or dialog returned no name
+      return;
+    }
+
+    // Get task_assignment_id
+    final String? taskAssignmentId = await _getTaskAssignmentId(task.taskId);
+    if (taskAssignmentId == null || !mounted) {
+        context.showSnackBar('Could not find task assignment. Upload failed.', isError: true);
+        return;
+    }
+
     try {
       final fileBytes = await imageFile.readAsBytes();
       final mimeType = lookupMimeType(imageFile.path, headerBytes: fileBytes);
       final fileExt = extensionFromMime(mimeType ?? 'image/jpeg');
-      final fileName = '${supabase.auth.currentUser!.id}/${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+      // Using a more unique filename, though title is stored in DB.
+      final fileName = 'evidence/${taskAssignmentId}/${DateTime.now().millisecondsSinceEpoch}.$fileExt';
 
       await supabase.storage.from('task-evidence').uploadBinary(
         fileName, fileBytes, fileOptions: FileOptions(contentType: mimeType ?? 'image/jpeg'));
       
       final imageUrl = supabase.storage.from('task-evidence').getPublicUrl(fileName);
-      final updatedUrls = List<String>.from(task.evidenceUrls)..add(imageUrl);
 
-      await supabase.from('task_assignments').update({'evidence_urls': updatedUrls})
-          .match({'task_id': task.taskId, 'agent_id': supabase.auth.currentUser!.id});
+      // Insert into evidence table instead of updating task_assignments.evidence_urls
+      await supabase.from('evidence').insert({
+        'task_assignment_id': taskAssignmentId,
+        'uploader_id': supabase.auth.currentUser!.id,
+        'title': evidenceName,
+        'file_url': imageUrl,
+        // 'task_id': task.taskId, // Add if your 'evidence' table schema requires it directly
+      });
       
-      if(mounted) context.showSnackBar('Evidence uploaded successfully!');
-      _refreshTasks();
+      if(mounted) context.showSnackBar('Evidence "$evidenceName" uploaded successfully!');
+      _refreshTasks(); // This will eventually need to re-fetch evidence from the new table structure
     } catch (e) {
       if(mounted) context.showSnackBar('Failed to upload evidence: $e', isError: true);
     }
@@ -176,17 +282,88 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                 const SizedBox(height: 16),
                 Text('Status: ${task.status.toUpperCase()}', style: const TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 16),
-                if (task.evidenceUrls.isNotEmpty) ...[
+                if (task.evidenceItems.isNotEmpty) ...[
                   const Text('Uploaded Evidence:', style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   SizedBox(
-                    height: 80,
+                    height: 120, // Increased height to accommodate title and image
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
-                      itemCount: task.evidenceUrls.length,
-                      itemBuilder: (context, index) => Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: Image.network(task.evidenceUrls[index], width: 80, height: 80, fit: BoxFit.cover),
+                      itemCount: task.evidenceItems.length,
+                      itemBuilder: (context, index) {
+                        final evidence = task.evidenceItems[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 12.0), // Added some spacing
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center, // Center title below image
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  // Optional: Implement full-screen image view if needed
+                                  // Consider using the existing FullScreenImageViewer if available
+                                  // Example: if (FullScreenImageViewer != null) {
+                                  //   Navigator.of(context).push(MaterialPageRoute(builder: (_) => FullScreenImageViewer(imageUrl: evidence.url, heroTag: evidence.url)));
+                                  // }
+                                },
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8.0),
+                                  child: Image.network(
+                                    evidence.url,
+                                    width: 80,
+                                    height: 80,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) =>
+                                      Container(
+                                        width: 80, height: 80,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[200],
+                                          borderRadius: BorderRadius.circular(8.0),
+                                        ),
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(Icons.error_outline, color: Colors.red[300], size: 24),
+                                            const SizedBox(height:4),
+                                            Text("No Preview", textAlign: TextAlign.center, style: TextStyle(fontSize: 10, color: Colors.grey[600])),
+                                          ],
+                                        )
+                                      ),
+                                    loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return Container(
+                                        width: 80, height: 80,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[200],
+                                          borderRadius: BorderRadius.circular(8.0),
+                                        ),
+                                        child: Center(
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.0,
+                                            value: loadingProgress.expectedTotalBytes != null
+                                                ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                                : null,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              SizedBox(
+                                width: 80, // Match image width
+                                child: Text(
+                                  evidence.title,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 2, // Allow title to wrap to two lines
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
                       ),
                     ),
                   ),
