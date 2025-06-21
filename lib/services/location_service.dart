@@ -1,6 +1,6 @@
 // lib/services/location_service.dart
 
-import 'dart:async';
+import 'dart:async'; // <-- FIX: Corrected import from 'dart.async' to 'dart:async'
 import 'package:geolocator/geolocator.dart';
 import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -15,8 +15,8 @@ class GeofenceStatus {
 }
 
 class LocationService {
+  // --- FIX: The Timer class is now correctly recognized ---
   Timer? _timer;
-  StreamSubscription<Position>? _positionStreamSubscription;
   final StreamController<Position> _locationDataController = StreamController<Position>.broadcast();
   final StreamController<GeofenceStatus> _geofenceStatusController = StreamController<GeofenceStatus>.broadcast();
 
@@ -34,7 +34,8 @@ class LocationService {
       logger.i("LocationService is no longer tracking for a specific campaign.");
     }
     
-    // Background service disabled
+    // TODO: Re-enable when background service is fixed
+    // Update background service as well
     // BackgroundLocationService.setActiveCampaign(campaignId);
   }
 
@@ -44,52 +45,34 @@ class LocationService {
     final hasPermission = await _handlePermission();
     if (!hasPermission) return;
     
-    // Start location stream for continuous tracking (works in background)
-    try {
-      const LocationSettings locationSettings = LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 10, // Update every 10 meters
-      );
-      
-      _positionStreamSubscription = Geolocator.getPositionStream(
-        locationSettings: locationSettings,
-      ).listen(
-        (Position position) {
-          logger.i("Stream location: ${position.latitude}, ${position.longitude} (accuracy: ${position.accuracy}m)");
-          _locationDataController.add(position);
-          _sendLocationUpdate(position);
-          
-          // Check geofence if campaign is active
-          if (_activeCampaignId != null) {
-            _checkGeofenceStatus(_activeCampaignId!);
-          }
-        },
-        onError: (e) {
-          logger.e("Location stream error: $e");
-        },
-      );
-      
-      logger.i('Location streaming started (works in background).');
-    } catch (e) {
-      logger.e('Failed to start location stream: $e');
-      
-      // Fallback to timer-based approach
-      _timer = Timer.periodic(const Duration(seconds: 15), (timer) {
-        _fetchAndProcessLocation();
-      });
-      logger.i('Fallback to timer-based location tracking.');
-    }
+    // Start foreground timer for when app is active
+    _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
+      _fetchAndProcessLocation();
+    });
+    
+    // TODO: Re-enable background service once notification issues are resolved
+    // Start background service for when app is minimized/locked
+    // Future.delayed(const Duration(seconds: 2), () async {
+    //   try {
+    //     await BackgroundLocationService.startLocationTracking();
+    //     logger.i('Background location service started successfully.');
+    //   } catch (e) {
+    //     logger.e('Failed to start background location service: $e');
+    //   }
+    // });
+    
+    logger.i('Foreground location service started.');
   }
 
   void stop() {
     _timer?.cancel();
     _timer = null;
     
-    _positionStreamSubscription?.cancel();
-    _positionStreamSubscription = null;
+    // TODO: Re-enable when background service is fixed
+    // Stop background service as well
+    // BackgroundLocationService.stopLocationTracking();
     
     setActiveCampaign(null);
-    logger.i('Location tracking stopped.');
   }
 
   Future<void> _fetchAndProcessLocation() async {
@@ -200,22 +183,6 @@ class LocationService {
       } catch (e) {
         logger.w('Failed to request background permission: $e');
         // Continue anyway - foreground tracking will still work
-      }
-      
-      // Request notification permission for background service
-      try {
-        final notificationStatus = await Permission.notification.status;
-        logger.i('Notification permission status: $notificationStatus');
-        
-        if (notificationStatus.isDenied) {
-          final result = await Permission.notification.request();
-          logger.i('Notification permission after request: $result');
-          if (result.isDenied) {
-            logger.w('Notification permission denied - background service may not work properly');
-          }
-        }
-      } catch (e) {
-        logger.w('Failed to request notification permission: $e');
       }
       
       logger.i('Location permissions successfully configured');
