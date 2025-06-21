@@ -195,15 +195,19 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    TextButton.icon(
-                      icon: const Icon(Icons.cloud_upload_outlined),
-                      label: const Text('Upload Evidence'),
-                      onPressed: isCompleted ? null : () => _uploadEvidence(task),
+                    Expanded(
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.cloud_upload_outlined),
+                        label: const Text('Upload Evidence'),
+                        onPressed: isCompleted ? null : () => _uploadEvidence(task),
+                      ),
                     ),
                     const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: isCompleted ? null : () => _markTaskAsCompleted(task),
-                      child: const Text('Mark Done'),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: isCompleted ? null : () => _markTaskAsCompleted(task),
+                        child: const Text('Mark Done'),
+                      ),
                     ),
                   ],
                 ),

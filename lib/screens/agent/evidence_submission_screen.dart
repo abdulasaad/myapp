@@ -16,8 +16,8 @@ class Evidence {
 
   Evidence({required this.id, required this.title, required this.fileUrl});
 
-  factory Evidence.fromJson(Map<String, dynamic> json) => Evidence(
-      id: json['id'], title: json['title'], fileUrl: json['file_url']);
+  factory Evidence.fromJson(Map<String, dynamic> json) =>
+      Evidence(id: json['id'], title: json['title'], fileUrl: json['file_url']);
 }
 
 class EvidenceSubmissionScreen extends StatefulWidget {
@@ -38,6 +38,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
   @override
   void initState() {
     super.initState();
+    print('Task title: ${widget.task.title}, Task ID: ${widget.task.id}');
     _loadInitialData();
   }
 
@@ -47,16 +48,16 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
           .from('task_assignments')
           .select('id, status')
           .match({
-            'task_id': widget.task.id,
-            'agent_id': supabase.auth.currentUser!.id
-          })
-          .single();
+        'task_id': widget.task.id,
+        'agent_id': supabase.auth.currentUser!.id
+      }).single();
 
       _taskAssignmentId = assignment['id'];
       _assignmentStatus = assignment['status'];
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Error loading task assignment: $e', isError: true);
+        context.showSnackBar('Error loading task assignment: $e',
+            isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -66,9 +67,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
 
   Future<List<Evidence>> _fetchEvidence() async {
     final isManager = ProfileService.instance.canManageCampaigns;
-    var query = supabase
-        .from('evidence')
-        .select('id, title, file_url');
+    var query = supabase.from('evidence').select('id, title, file_url');
 
     if (!isManager) {
       query = query.eq('task_assignment_id', _taskAssignmentId);
@@ -77,7 +76,10 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
     }
 
     final response = await query.order('created_at', ascending: false);
-    return (response as List<dynamic>).map<Evidence>((json) => Evidence.fromJson(json as Map<String, dynamic>)).toList();
+    return (response as List<dynamic>)
+        .map<Evidence>(
+            (json) => Evidence.fromJson(json as Map<String, dynamic>))
+        .toList();
   }
 
   Future<void> _deleteEvidence(Evidence evidence) async {
@@ -105,10 +107,12 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
 
     try {
       final uri = Uri.parse(evidence.fileUrl);
-      final filePath = uri.pathSegments.sublist(uri.pathSegments.indexOf('task-evidence') + 1).join('/');
+      final filePath = uri.pathSegments
+          .sublist(uri.pathSegments.indexOf('task-evidence') + 1)
+          .join('/');
       await supabase.storage.from('task-evidence').remove([filePath]);
       await supabase.from('evidence').delete().eq('id', evidence.id);
-      
+
       if (mounted) {
         context.showSnackBar('Evidence deleted successfully.');
         final remainingEvidence = await _fetchEvidence();
@@ -126,13 +130,15 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
             });
           }
         } else {
-           setState(() {
+          setState(() {
             _evidenceFuture = Future.value(remainingEvidence);
-           });
+          });
         }
       }
     } catch (e) {
-      if (mounted) context.showSnackBar('Failed to delete evidence: $e', isError: true);
+      if (mounted) {
+        context.showSnackBar('Failed to delete evidence: $e', isError: true);
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -182,52 +188,103 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
     }
   }
 
-  Future<void> _pickFileAndShowUploadDialog() async {
-    final picker = ImagePicker();
-    final imageFile = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 80,
-      maxWidth: 1024,
-    );
-
-    if (imageFile == null || !mounted) return;
-    await _showConfirmUploadDialog(imageFile);
-  }
-
-  Future<void> _showConfirmUploadDialog(XFile file) async {
+  Future<void> _showUploadDialog() async {
     final formKey = GlobalKey<FormState>();
     final titleController = TextEditingController();
-    final dialogContext = context;
+    XFile? selectedFile;
 
     await showDialog(
-      context: dialogContext,
+      context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Add Evidence Title'),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: titleController,
-            decoration: const InputDecoration(labelText: 'Evidence Title'),
-            validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Upload Evidence'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Evidence Name',
+                    hintText: 'Enter evidence name',
+                  ),
+                  validator: (v) => (v == null || v.isEmpty)
+                      ? 'Evidence name is required'
+                      : null,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          final picker = ImagePicker();
+                          final imageFile = await picker.pickImage(
+                            source: ImageSource.gallery,
+                            imageQuality: 80,
+                            maxWidth: 1024,
+                          );
+                          if (imageFile != null) {
+                            setState(() {
+                              selectedFile = imageFile;
+                            });
+                          }
+                        },
+                        icon: const Icon(Icons.attach_file),
+                        label: Text(selectedFile == null
+                            ? 'Select File'
+                            : 'Change File'),
+                      ),
+                    ),
+                  ],
+                ),
+                if (selectedFile != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.image, size: 16, color: Colors.green),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            selectedFile!.name,
+                            style: const TextStyle(fontSize: 12),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: selectedFile == null
+                  ? null
+                  : () {
+                      if (formKey.currentState!.validate()) {
+                        final title = titleController.text;
+                        Navigator.of(context).pop();
+                        _uploadEvidence(title, selectedFile!);
+                      }
+                    },
+              child: const Text('Upload'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                final title = titleController.text;
-                Navigator.of(context).pop();
-                _uploadEvidence(title, file);
-              }
-            },
-            child: const Text('Upload'),
-          ),
-        ],
       ),
     );
   }
@@ -238,7 +295,8 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
       final fileBytes = await xFile.readAsBytes();
       final mimeType = lookupMimeType(xFile.name, headerBytes: fileBytes);
       final fileExt = extensionFromMime(mimeType ?? 'image/jpeg');
-      final fileName = '${supabase.auth.currentUser!.id}/${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+      final fileName =
+          '${supabase.auth.currentUser!.id}/${DateTime.now().millisecondsSinceEpoch}.$fileExt';
 
       await supabase.storage.from('task-evidence').uploadBinary(
             fileName,
@@ -289,9 +347,10 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
                 final requiredCount = widget.task.requiredEvidenceCount!;
                 final taskIsCompleted = _assignmentStatus == 'completed';
 
-                final progressValue =
-                    requiredCount > 0 ? evidenceList.length / requiredCount : 1.0;
-                    
+                final progressValue = requiredCount > 0
+                    ? evidenceList.length / requiredCount
+                    : 1.0;
+
                 // ===================================================================
                 // THE FIX: Move the "Mark as Done" button to the bottomNavigationBar
                 // of the Scaffold to prevent it from overlapping with the FAB.
@@ -326,7 +385,8 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
                       ),
                     ),
                     const Divider(),
-                    Text('Is Manager: ${ProfileService.instance.canManageCampaigns}'),
+                    Text(
+                        'Is Manager: ${ProfileService.instance.canManageCampaigns}'),
                     Expanded(
                       child: evidenceList.isEmpty
                           ? const Center(
@@ -378,7 +438,8 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
       bottomNavigationBar: FutureBuilder<List<Evidence>>(
         future: _evidenceFuture,
         builder: (context, snapshot) {
-          if (!snapshot.hasData || snapshot.connectionState == ConnectionState.waiting) {
+          if (!snapshot.hasData ||
+              snapshot.connectionState == ConnectionState.waiting) {
             return const SizedBox.shrink(); // Return nothing while loading
           }
           final evidenceList = snapshot.data!;
@@ -400,13 +461,14 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
               ),
             );
           }
-          return const SizedBox.shrink(); // Return an empty box if conditions aren't met
+          return const SizedBox
+              .shrink(); // Return an empty box if conditions aren't met
         },
       ),
       floatingActionButton: _assignmentStatus == 'completed'
           ? null
           : FloatingActionButton.extended(
-              onPressed: _pickFileAndShowUploadDialog,
+              onPressed: _showUploadDialog,
               label: const Text('Upload Evidence'),
               icon: const Icon(Icons.upload_file),
             ),

@@ -339,27 +339,28 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
 
   /// Builds the list view for standalone tasks.
   Widget _buildTasksList(List<AgentStandaloneTask> tasks) {
-    return RefreshIndicator(
-      onRefresh: () async => refreshAll(),
-      child: ListView.builder(
-        padding: const EdgeInsets.all(12.0),
-        itemCount: tasks.length,
-        itemBuilder: (context, index) {
-          final agentTask = tasks[index];
-          final isCompleted = agentTask.assignmentStatus == 'completed';
-          return TaskCard(
+    return ListView.builder(
+      padding: const EdgeInsets.all(12.0),
+      itemCount: tasks.length,
+      itemBuilder: (context, index) {
+        final agentTask = tasks[index];
+        final isCompleted = agentTask.assignmentStatus == 'completed';
+        return GestureDetector(
+          onTap: () {
+            debugPrint('TaskCard tapped!');
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                  builder: (context) =>
+                      EvidenceSubmissionScreen(task: agentTask.task)),
+            );
+          },
+          child: TaskCard(
             task: agentTask.task,
             isCompleted: isCompleted,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                    builder: (context) =>
-                        EvidenceSubmissionScreen(task: agentTask.task)),
-              );
-            },
-          );
-        },
-      ),
+            onTap: () {}, // Empty onTap to prevent InkWell from interfering
+          ),
+        );
+      },
     );
   }
 }
