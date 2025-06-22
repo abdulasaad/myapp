@@ -1,8 +1,16 @@
 // lib/services/session_service.dart
+//
+// Improved Session Management:
+// - Prevents multiple simultaneous logins per user
+// - Shows user-friendly dialog when login conflict occurs
+// - Reduces aggressive validation to prevent network-related logouts
+// - Validates every 5 minutes instead of 30 seconds
+// - Handles network errors gracefully without forcing logout
 
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:logger/logger.dart';
+import 'package:uuid/uuid.dart';
 import '../utils/constants.dart';
 
 final logger = Logger();
@@ -14,6 +22,7 @@ class SessionService {
 
   static const String _sessionIdKey = 'current_session_id';
   Timer? _validationTimer;
+  Timer? _frequentValidationTimer;
   
   // Callback for when session becomes invalid
   Function()? _onSessionInvalid;
@@ -110,34 +119,97 @@ class SessionService {
     _onSessionInvalid = callback;
   }
 
+  /// Trigger an immediate validation check (useful for testing or manual checks)
+  Future<void> checkSessionNow() async {
+    await validateSessionImmediately();
+  }
+
   /// Validate session immediately and handle invalid session
   Future<void> validateSessionImmediately() async {
-    final isValid = await isSessionValid();
-    if (!isValid) {
-      logger.w('Immediate session validation failed - handling logout');
-      await forceLogout();
-      _onSessionInvalid?.call();
+    try {
+      final isValid = await isSessionValid();
+      if (!isValid) {
+        logger.w('Immediate validation: Session became invalid - logged in from another device');
+        await forceLogout();
+        _onSessionInvalid?.call();
+      } else {
+        logger.d('Immediate validation: Session is still valid');
+      }
+    } catch (e) {
+      // Check if this is a network error vs authentication error
+      final errorString = e.toString().toLowerCase();
+      if (errorString.contains('network') || 
+          errorString.contains('timeout') || 
+          errorString.contains('connection') ||
+          errorString.contains('offline')) {
+        // Network issue - don't logout
+        logger.w('Session validation failed during app resume - network issue: $e');
+      } else {
+        // Possible real auth issue - be more cautious during immediate validation
+        logger.w('Session validation failed during app resume - possible auth issue: $e');
+        // Could add additional checks here if needed
+      }
     }
   }
 
-  /// Start periodic session validation
-  void startPeriodicValidation({Duration interval = const Duration(seconds: 30)}) {
+  /// Start periodic session validation with smart error handling
+  void startPeriodicValidation({Duration interval = const Duration(seconds: 60)}) {
     _validationTimer?.cancel();
+    _frequentValidationTimer?.cancel();
+    
+    // Start frequent validation for first 3 minutes to catch conflicts quickly
+    _frequentValidationTimer = Timer.periodic(const Duration(seconds: 15), (timer) async {
+      await _performValidationCheck();
+    });
+    
+    // Stop frequent validation after 3 minutes and switch to normal interval
+    Timer(const Duration(minutes: 3), () {
+      _frequentValidationTimer?.cancel();
+      _frequentValidationTimer = null;
+      logger.d('Switched from frequent to normal session validation');
+    });
+    
+    // Start normal validation
     _validationTimer = Timer.periodic(interval, (timer) async {
+      await _performValidationCheck();
+    });
+    
+    logger.d('Started session validation: 15s for 3min, then ${interval.inSeconds}s');
+  }
+
+  /// Perform the actual validation check with error handling
+  Future<void> _performValidationCheck() async {
+    try {
       final isValid = await isSessionValid();
       if (!isValid) {
-        logger.w('Periodic session validation failed - handling logout');
+        logger.w('Session became invalid - logged in from another device');
         await forceLogout();
         _onSessionInvalid?.call();
       }
-    });
-    logger.d('Started periodic session validation every ${interval.inSeconds} seconds');
+    } catch (e) {
+      // Check if this is a network error vs authentication error
+      final errorString = e.toString().toLowerCase();
+      if (errorString.contains('network') || 
+          errorString.contains('timeout') || 
+          errorString.contains('connection') ||
+          errorString.contains('offline')) {
+        // Network issue - don't logout, just log
+        logger.w('Session validation failed due to network issue: $e');
+      } else {
+        // Likely a real session/auth issue - logout
+        logger.w('Session validation failed - possible auth issue: $e');
+        await forceLogout();
+        _onSessionInvalid?.call();
+      }
+    }
   }
 
   /// Stop periodic session validation
   void stopPeriodicValidation() {
     _validationTimer?.cancel();
     _validationTimer = null;
+    _frequentValidationTimer?.cancel();
+    _frequentValidationTimer = null;
     logger.d('Stopped periodic session validation');
   }
 
@@ -153,10 +225,66 @@ class SessionService {
     }
   }
 
+  /// Check if user has any active sessions
+  Future<bool> hasActiveSession(String userId) async {
+    try {
+      final response = await supabase
+          .from('sessions')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('is_active', true)
+          .maybeSingle();
+
+      final hasActive = response != null;
+      logger.d('User $userId has active session: $hasActive');
+      return hasActive;
+    } catch (e) {
+      logger.e('Failed to check active sessions: $e');
+      return false;
+    }
+  }
+
+  /// Invalidate all active sessions for a specific user
+  Future<void> invalidateAllUserSessions(String userId) async {
+    try {
+      await supabase
+          .from('sessions')
+          .update({'is_active': false})
+          .eq('user_id', userId)
+          .eq('is_active', true);
+
+      logger.d('Invalidated all sessions for user: $userId');
+    } catch (e) {
+      logger.e('Failed to invalidate user sessions: $e');
+      rethrow;
+    }
+  }
+
+  /// Create a new session for user
+  Future<String> createNewSession(String userId) async {
+    try {
+      final sessionId = const Uuid().v4();
+      await supabase.from('sessions').insert({
+        'id': sessionId,
+        'user_id': userId,
+        'is_active': true,
+      });
+
+      await storeSessionId(sessionId);
+      logger.d('Created new session: $sessionId for user: $userId');
+      return sessionId;
+    } catch (e) {
+      logger.e('Failed to create new session: $e');
+      rethrow;
+    }
+  }
+
   /// Complete logout process (invalidate database session + Supabase auth)
   Future<void> logout() async {
     try {
       stopPeriodicValidation();
+      _frequentValidationTimer?.cancel();
+      _frequentValidationTimer = null;
       await invalidateCurrentSession();
       await supabase.auth.signOut();
       logger.i('Complete logout successful');

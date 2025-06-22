@@ -1,7 +1,9 @@
 // lib/screens/home_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:logger/logger.dart';
 import '../services/location_service.dart';
+import '../services/background_location_service.dart';
 import '../services/profile_service.dart';
 import '../services/session_service.dart';
 import './campaigns/campaigns_list_screen.dart';
@@ -9,10 +11,12 @@ import './campaigns/create_campaign_screen.dart';
 import './login_screen.dart';
 import '../utils/constants.dart';
 import './map/live_map_screen.dart';
-import './agent/calibration_screen.dart';
 import './agent/earnings_screen.dart';
 import './tasks/standalone_tasks_screen.dart';
 import './calendar_screen.dart'; // Import the new calendar screen
+import '../widgets/gps_status_indicator.dart';
+
+final logger = Logger();
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -58,6 +62,7 @@ class _HomeScreenState extends State<HomeScreen>
   Future<void> _initServicesBasedOnRole() async {
     if (!ProfileService.instance.canManageCampaigns) {
       _locationService.start();
+      await BackgroundLocationService.startLocationTracking();
     }
     
     // Set up session invalid callback to navigate to login
@@ -76,6 +81,10 @@ class _HomeScreenState extends State<HomeScreen>
 
   Future<void> _signOut() async {
     _locationService.stop();
+    // Stop background location service for agents
+    if (!ProfileService.instance.canManageCampaigns) {
+      await BackgroundLocationService.stopLocationTracking();
+    }
     await ProfileService.instance.updateUserStatus('offline');
     ProfileService.instance.clearProfile();
     try {
@@ -166,16 +175,7 @@ class _HomeScreenState extends State<HomeScreen>
       appBar: AppBar(
         title: Text('My Work - ${ProfileService.instance.currentUser!.fullName}'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.satellite_alt_outlined),
-            tooltip: 'GPS Calibration',
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) =>
-                    CalibrationScreen(locationService: _locationService),
-              ),
-            ),
-          ),
+          GpsStatusIndicator(locationService: _locationService),
         ],
       ),
       body: CampaignsListScreen(locationService: _locationService),

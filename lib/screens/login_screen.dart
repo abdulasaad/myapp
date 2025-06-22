@@ -2,10 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
 import 'package:logger/logger.dart';
 import '../services/profile_service.dart';
 import '../services/session_service.dart';
+import '../widgets/session_conflict_dialog.dart';
 import '../utils/constants.dart';
 import './home_screen.dart';
 import './signup_screen.dart';
@@ -83,27 +83,27 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
       
-      // --- SESSION MANAGEMENT (Prevent Multiple Logins) ---
-
-      // 1. Invalidate all active sessions for this user first
-      await supabase
-        .from('sessions')
-        .update({'is_active': false})
-        .eq('user_id', user.id)
-        .eq('is_active', true);
-      logger.d('Invalidated all previous sessions for user ${user.id}');
+      // --- SESSION MANAGEMENT (Check for existing sessions) ---
+      
+      // 1. Check if user already has an active session
+      final hasActiveSession = await SessionService().hasActiveSession(user.id);
+      
+      if (hasActiveSession) {
+        // Show dialog asking user what to do
+        if (!mounted) return;
+        final shouldLogoutOther = await SessionConflictDialog.show(context);
+        
+        if (shouldLogoutOther != true) {
+          // User cancelled, stay on login screen
+          return;
+        }
+        
+        // User chose to logout other device
+        await SessionService().invalidateAllUserSessions(user.id);
+      }
 
       // 2. Create a new active session for the current login
-      final sessionId = const Uuid().v4();
-      await supabase.from('sessions').insert({
-        'id': sessionId,
-        'user_id': user.id,
-        'is_active': true,
-      });
-      logger.d('Created new session: $sessionId');
-
-      // 3. Store session ID locally for validation
-      await SessionService().storeSessionId(sessionId);
+      await SessionService().createNewSession(user.id);
 
       // Note: You should store 'sessionId' on the client (e.g., secure storage)
       // to validate it on subsequent requests to protected routes.

@@ -38,24 +38,26 @@ class LocationService {
   }
 
   Future<void> start() async {
-    logger.i("Attempting to start LocationService...");
     stop();
+    
     final hasPermission = await _handlePermission();
-    if (!hasPermission) return;
+    if (!hasPermission) {
+      logger.e("❌ Location permission denied");
+      return;
+    }
     
     // Start location stream for continuous tracking (works in background)
     try {
       const LocationSettings locationSettings = LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 5, // Update every 5 meters of movement
-        timeLimit: Duration(seconds: 30), // Timeout for each location request
+        accuracy: LocationAccuracy.medium,
+        distanceFilter: 10,
+        timeLimit: Duration(minutes: 2),
       );
       
       _positionStreamSubscription = Geolocator.getPositionStream(
         locationSettings: locationSettings,
       ).listen(
         (Position position) {
-          logger.i("Stream location: ${position.latitude}, ${position.longitude} (accuracy: ${position.accuracy}m)");
           _locationDataController.add(position);
           _sendLocationUpdate(position);
           
@@ -65,20 +67,19 @@ class LocationService {
           }
         },
         onError: (e) {
-          logger.e("Location stream error: $e");
+          _startTimerBasedTracking();
         },
       );
-      
-      logger.i('Location streaming started (works in background).');
     } catch (e) {
-      logger.e('Failed to start location stream: $e');
-      
-      // Fallback to timer-based approach
-      _timer = Timer.periodic(const Duration(seconds: 15), (timer) {
-        _fetchAndProcessLocation();
-      });
-      logger.i('Fallback to timer-based location tracking.');
+      _startTimerBasedTracking();
     }
+  }
+
+  void _startTimerBasedTracking() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      _fetchAndProcessLocation();
+    });
   }
 
   void stop() {
@@ -94,44 +95,43 @@ class LocationService {
 
   Future<void> _fetchAndProcessLocation() async {
     try {
-      logger.i("Attempting to get current location...");
       final Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high, // Changed from bestForNavigation for emulator compatibility
-        timeLimit: const Duration(seconds: 10), // Increased timeout for emulator
+        desiredAccuracy: LocationAccuracy.medium,
+        timeLimit: const Duration(seconds: 30),
       );
       
-      logger.i("Location obtained: ${position.latitude}, ${position.longitude} (accuracy: ${position.accuracy}m)");
       _locationDataController.add(position);
       await _sendLocationUpdate(position);
       
-      // We only have one active campaign at a time, so we check it here.
       if (_activeCampaignId != null) {
         await _checkGeofenceStatus(_activeCampaignId!);
       }
     } catch (e) {
-      logger.e("Could not get/process current position: $e");
-      
-      // For debugging: try to get last known position as fallback
+      // Try last known position as fallback
       try {
         final Position? lastPosition = await Geolocator.getLastKnownPosition();
         if (lastPosition != null) {
-          logger.i("Using last known position: ${lastPosition.latitude}, ${lastPosition.longitude}");
           _locationDataController.add(lastPosition);
           await _sendLocationUpdate(lastPosition);
-        } else {
-          logger.w("No last known position available");
+          
+          if (_activeCampaignId != null) {
+            await _checkGeofenceStatus(_activeCampaignId!);
+          }
         }
       } catch (fallbackError) {
-        logger.e("Failed to get last known position: $fallbackError");
+        // Silent fail
       }
     }
   }
 
-  Future<void> _sendLocationUpdate(Position position) async {
+  Future<void> _sendLocationUpdate(Position position) async {    
     if (position.accuracy > 75) return;
+    
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) return;
+    
     final locationString = 'POINT(${position.longitude} ${position.latitude})';
+    
     try {
       await supabase.from('location_history').insert({
         'user_id': userId,
@@ -139,8 +139,10 @@ class LocationService {
         'accuracy': position.accuracy,
         'speed': position.speed,
       });
+      // Only log successful database inserts to verify it's working
+      logger.i("📍 ${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)} → DB ✅");
     } catch (e) {
-      logger.e('Failed to send location update: $e');
+      logger.e('❌ DB error: $e');
     }
   }
 

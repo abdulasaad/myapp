@@ -151,6 +151,11 @@ class _TaskLocationViewerScreenState extends State<TaskLocationViewerScreen> {
                   polygons: _polygons,
                   myLocationButtonEnabled: true,
                   myLocationEnabled: true,
+                  // Add optimizations to reduce buffer usage
+                  compassEnabled: false,
+                  mapToolbarEnabled: false,
+                  rotateGesturesEnabled: false,
+                  tiltGesturesEnabled: false,
                 ),
     );
   }

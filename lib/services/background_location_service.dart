@@ -13,6 +13,7 @@ final logger = Logger();
 @pragma('vm:entry-point')
 class BackgroundLocationService {
   static const String _channelId = 'al_tijwal_location_service';
+  static const String _channelName = 'Al-Tijwal Location Service';
 
   @pragma('vm:entry-point')
   static Future<void> initialize() async {
@@ -24,9 +25,10 @@ class BackgroundLocationService {
         autoStart: false,
         isForegroundMode: true,
         notificationChannelId: _channelId,
-        initialNotificationTitle: 'Al-Tijwal Location Service',
+        initialNotificationTitle: _channelName,
         initialNotificationContent: 'Initializing location tracking...',
         foregroundServiceNotificationId: 888,
+        autoStartOnBoot: false,
       ),
       iosConfiguration: IosConfiguration(
         autoStart: false,
@@ -38,19 +40,31 @@ class BackgroundLocationService {
 
   @pragma('vm:entry-point')
   static Future<void> startLocationTracking() async {
-    final service = FlutterBackgroundService();
-    
-    // Check if service is already running
-    bool isRunning = await service.isRunning();
-    if (!isRunning) {
-      service.startService();
+    try {
+      final service = FlutterBackgroundService();
+      
+      // Check if service is already running
+      bool isRunning = await service.isRunning();
+      if (!isRunning) {
+        logger.i('Starting background location service...');
+        service.startService();
+      } else {
+        logger.i('Background location service already running');
+      }
+    } catch (e) {
+      logger.e('Failed to start background location service: $e');
     }
   }
 
   @pragma('vm:entry-point')
   static Future<void> stopLocationTracking() async {
-    final service = FlutterBackgroundService();
-    service.invoke('stop');
+    try {
+      final service = FlutterBackgroundService();
+      logger.i('Stopping background location service...');
+      service.invoke('stop');
+    } catch (e) {
+      logger.e('Failed to stop background location service: $e');
+    }
   }
 
   @pragma('vm:entry-point')
@@ -72,11 +86,18 @@ class BackgroundLocationService {
         service.setAsBackgroundService();
       });
       
-      // Set as foreground service immediately with notification
-      service.setForegroundNotificationInfo(
-        title: 'Al-Tijwal Location Service',
-        content: 'Tracking location in background',
-      );
+      // Set as foreground service with proper notification after a small delay
+      Future.delayed(const Duration(milliseconds: 500), () {
+        try {
+          service.setForegroundNotificationInfo(
+            title: _channelName,
+            content: 'Initializing location tracking...',
+          );
+          logger.i('Foreground notification set successfully');
+        } catch (e) {
+          logger.e('Failed to set foreground notification: $e');
+        }
+      });
     }
 
     String? activeCampaignId;
@@ -101,31 +122,29 @@ class BackgroundLocationService {
         LocationPermission permission = await Geolocator.checkPermission();
         if (permission == LocationPermission.denied || 
             permission == LocationPermission.deniedForever) {
-          logger.w('Location permission denied in background service');
           return;
         }
 
         // Get current position
         final Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-          timeLimit: const Duration(seconds: 10),
+          desiredAccuracy: LocationAccuracy.medium,
+          timeLimit: const Duration(seconds: 30),
         );
 
         // Only send if accuracy is good enough
         if (position.accuracy > 100) {
-          logger.w('Location accuracy too low: ${position.accuracy}m');
           return;
         }
 
         // Get current user ID from stored session
         final currentUser = supabase.auth.currentUser;
         if (currentUser == null) {
-          logger.w('No authenticated user in background service');
           return;
         }
 
         // Send location to database
         final locationString = 'POINT(${position.longitude} ${position.latitude})';
+        
         await supabase.from('location_history').insert({
           'user_id': currentUser.id,
           'location': locationString,
@@ -133,31 +152,34 @@ class BackgroundLocationService {
           'speed': position.speed,
         });
 
-        logger.i('Background location sent: ${position.latitude}, ${position.longitude} (accuracy: ${position.accuracy}m)');
+        logger.i('📍 BG: ${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)} → DB ✅');
 
         // Check geofence if campaign is active
         if (activeCampaignId != null) {
           try {
-            final bool isInside = await supabase.rpc('check_agent_in_campaign_geofence', params: {
+            await supabase.rpc('check_agent_in_campaign_geofence', params: {
               'p_agent_id': currentUser.id,
               'p_campaign_id': activeCampaignId,
             });
-            logger.i('Geofence check for campaign $activeCampaignId: $isInside');
           } catch (e) {
-            logger.e('Failed to check geofence in background: $e');
+            // Silent fail
           }
         }
 
         // Update notification with latest location info
         if (service is AndroidServiceInstance) {
-          service.setForegroundNotificationInfo(
-            title: 'Al-Tijwal Location Service',
-            content: 'Last update: ${DateTime.now().toString().substring(11, 16)} (${position.accuracy.toStringAsFixed(0)}m accuracy)',
-          );
+          try {
+            service.setForegroundNotificationInfo(
+              title: _channelName,
+              content: 'Last update: ${DateTime.now().toString().substring(11, 16)} (${position.accuracy.toStringAsFixed(0)}m)',
+            );
+          } catch (e) {
+            // Silently ignore notification errors
+          }
         }
 
       } catch (e) {
-        logger.e('Error in background location fetch: $e');
+        // Silent fail for background errors
       }
     }
 
@@ -167,7 +189,6 @@ class BackgroundLocationService {
       locationTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
         fetchAndSendLocation();
       });
-      logger.i('Background location tracking started');
     }
 
     // Listen for service commands

@@ -7,6 +7,7 @@ import 'package:myapp/screens/agent/task_location_viewer_screen.dart';
 import '../../models/campaign.dart';
 import '../../models/task.dart';
 import '../../services/location_service.dart';
+import '../../services/background_location_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/session_service.dart';
 import '../../utils/constants.dart';
@@ -332,6 +333,8 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
             isInsideGeofence: _geofenceStatuses[campaign.id],
             onTap: () {
               widget.locationService.setActiveCampaign(campaign.id);
+              // Also set active campaign in background service
+              BackgroundLocationService.setActiveCampaign(campaign.id);
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) =>
                       AgentTaskListScreen(campaign: campaign)));
