@@ -1,7 +1,10 @@
 // lib/screens/map/live_map_screen.dart
 
 import 'dart:async';
+import 'dart:ui' as ui;
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../utils/constants.dart';
 
@@ -73,6 +76,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
   
   final Map<String, AgentMapInfo> _agents = {};
   String? _selectedAgentId;
+  String? _trackedAgentId; // Agent being actively tracked
   bool _isAgentPanelVisible = false;
   Set<String> _visibleAgentIds = {};
   bool _selectAllAgents = true;
@@ -84,10 +88,16 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
 
   final Set<Marker> _markers = {};
   final Set<Polygon> _polygons = {};
+  
+  // Custom marker icons
+  BitmapDescriptor? _agentIconRed;
+  BitmapDescriptor? _agentIconPurple;
+  BitmapDescriptor? _agentIconBlue;
 
   @override
   void initState() {
     super.initState();
+    _initializeCustomMarkers();
     _initializeAndStartTimer();
   }
 
@@ -95,6 +105,64 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
   void dispose() {
     _periodicTimer?.cancel();
     super.dispose();
+  }
+  
+  Future<void> _initializeCustomMarkers() async {
+    try {
+      _agentIconRed = await _createAgentMarker(Colors.red);
+      _agentIconPurple = await _createAgentMarker(Colors.purple);
+      _agentIconBlue = await _createAgentMarker(Colors.blue);
+    } catch (e) {
+      // Fallback to default markers if custom icons fail
+      debugPrint('Failed to create custom markers: $e');
+    }
+  }
+  
+  Future<BitmapDescriptor> _createAgentMarker(Color color) async {
+    final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
+    final Canvas canvas = Canvas(pictureRecorder);
+    const double size = 60.0;
+    
+    // Draw circle background
+    final Paint circlePaint = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(const Offset(size / 2, size / 2), size / 2, circlePaint);
+    
+    // Draw white border
+    final Paint borderPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.0;
+    canvas.drawCircle(const Offset(size / 2, size / 2), size / 2 - 1.5, borderPaint);
+    
+    // Draw agent icon
+    final TextPainter textPainter = TextPainter(
+      text: TextSpan(
+        text: String.fromCharCode(Icons.person.codePoint),
+        style: TextStyle(
+          fontSize: 30,
+          fontFamily: Icons.person.fontFamily,
+          color: Colors.white,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(
+      canvas,
+      Offset(
+        (size - textPainter.width) / 2,
+        (size - textPainter.height) / 2,
+      ),
+    );
+    
+    final ui.Picture picture = pictureRecorder.endRecording();
+    final ui.Image image = await picture.toImage(size.toInt(), size.toInt());
+    final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    final Uint8List pngBytes = byteData!.buffer.asUint8List();
+    
+    return BitmapDescriptor.fromBytes(pngBytes);
   }
 
   Future<void> _initializeAndStartTimer() async {
@@ -144,6 +212,11 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
         
         _updateMarkers();
         _updatePolygons();
+        
+        // Auto-track the tracked agent if one is selected
+        if (_trackedAgentId != null) {
+          _autoTrackAgent();
+        }
       });
 
     } catch (e) {
@@ -157,14 +230,24 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
     _markers.clear();
     for (final agent in _agents.values) {
       if (_visibleAgentIds.contains(agent.id) && agent.lastLocation != null) {
+        BitmapDescriptor markerIcon;
+        if (_trackedAgentId == agent.id) {
+          // Tracked agent gets purple agent icon
+          markerIcon = _agentIconPurple ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet);
+        } else if (_selectedAgentId == agent.id) {
+          // Selected agent gets blue agent icon
+          markerIcon = _agentIconBlue ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
+        } else {
+          // Default red agent icon
+          markerIcon = _agentIconRed ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed);
+        }
+        
         _markers.add(
           Marker(
             markerId: MarkerId(agent.id),
             position: agent.lastLocation!,
             infoWindow: InfoWindow(title: agent.fullName),
-            icon: _selectedAgentId == agent.id
-                ? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure)
-                : BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+            icon: markerIcon,
             onTap: () => _onAgentTapped(agent),
           )
         );
@@ -215,7 +298,35 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
   Future<void> _onAgentTapped(AgentMapInfo agent) async {
     setState(() {
       _selectedAgentId = agent.id;
-      _isAgentPanelVisible = true;
+      // Don't open the agent panel - just show the name
+      _updateMarkers();
+    });
+
+    if (agent.lastLocation != null) {
+      final controller = await _mapController.future;
+      controller.animateCamera(CameraUpdate.newLatLngZoom(agent.lastLocation!, 15.0));
+      // Show agent name in snackbar instead of opening panel
+      if (mounted) {
+        context.showSnackBar(agent.fullName);
+      }
+    } else {
+      if (mounted) {
+        context.showSnackBar('${agent.fullName} has no location on record.', isError: true);
+      }
+    }
+  }
+
+  Future<void> _startTrackingAgent(AgentMapInfo agent) async {
+    setState(() {
+      _trackedAgentId = agent.id;
+      _selectedAgentId = agent.id;
+      
+      // Automatically make the agent visible if not already selected
+      if (!_visibleAgentIds.contains(agent.id)) {
+        _visibleAgentIds.add(agent.id);
+      }
+      
+      _isAgentPanelVisible = false; // Close the panel
       _isGeofencePanelVisible = false;
       _updateMarkers();
     });
@@ -223,8 +334,23 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
     if (agent.lastLocation != null) {
       final controller = await _mapController.future;
       controller.animateCamera(CameraUpdate.newLatLngZoom(agent.lastLocation!, 15.0));
+      if (mounted) {
+        context.showSnackBar('Now tracking ${agent.fullName}');
+      }
     } else {
-      context.showSnackBar('${agent.fullName} has no location on record.', isError: true);
+      if (mounted) {
+        context.showSnackBar('${agent.fullName} has no location on record.', isError: true);
+      }
+    }
+  }
+
+  Future<void> _autoTrackAgent() async {
+    if (_trackedAgentId == null) return;
+    
+    final trackedAgent = _agents[_trackedAgentId];
+    if (trackedAgent?.lastLocation != null) {
+      final controller = await _mapController.future;
+      controller.animateCamera(CameraUpdate.newLatLng(trackedAgent!.lastLocation!));
     }
   }
 
@@ -258,6 +384,15 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
                         _isAgentPanelVisible = false;
                         _isGeofencePanelVisible = false;
                       });
+                    } else if (_trackedAgentId != null) {
+                      // Stop tracking when map is tapped
+                      setState(() {
+                        _trackedAgentId = null;
+                        _updateMarkers();
+                      });
+                      if (mounted) {
+                        context.showSnackBar('Stopped tracking agent');
+                      }
                     }
                   },
                 ),
@@ -313,6 +448,30 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
                       }),
                       tooltip: 'Show Geofences',
                       child: const Icon(Icons.layers_outlined),
+                    ),
+                  ),
+                
+                // Stop Tracking Button
+                if (_trackedAgentId != null && !_isAgentPanelVisible && !_isGeofencePanelVisible)
+                  Positioned(
+                    bottom: 16,
+                    right: 16,
+                    child: FloatingActionButton(
+                      mini: true,
+                      heroTag: 'stop-tracking-fab',
+                      backgroundColor: Colors.purple,
+                      onPressed: () {
+                        final trackedAgentName = _agents[_trackedAgentId]?.fullName ?? 'Agent';
+                        setState(() {
+                          _trackedAgentId = null;
+                          _updateMarkers();
+                        });
+                        if (mounted) {
+                          context.showSnackBar('Stopped tracking $trackedAgentName');
+                        }
+                      },
+                      tooltip: 'Stop Tracking',
+                      child: const Icon(Icons.location_off, color: Colors.white),
                     ),
                   ),
               ],
@@ -376,27 +535,61 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
                               default: statusColor = Colors.grey;
                             }
 
-                            return CheckboxListTile(
-                              secondary: CircleAvatar(backgroundColor: statusColor, radius: 5),
-                              title: Text(agent.fullName, style: const TextStyle(fontSize: 14)),
-                              subtitle: Text(status, style: const TextStyle(fontSize: 12)),
-                              value: _visibleAgentIds.contains(agent.id),
-                              controlAffinity: ListTileControlAffinity.leading,
-                              onChanged: (bool? value) {
-                                setState(() {
-                                  if (value == true) {
-                                    _visibleAgentIds.add(agent.id);
-                                  } else {
-                                    _visibleAgentIds.remove(agent.id);
-                                  }
-                                  if (_visibleAgentIds.length < _agents.length) {
-                                    _selectAllAgents = false;
-                                  } else {
-                                    _selectAllAgents = true;
-                                  }
-                                  _updateMarkers();
-                                });
-                              },
+                            return Container(
+                              decoration: _trackedAgentId == agent.id 
+                                  ? BoxDecoration(
+                                      color: Colors.purple.withAlpha(51), // 0.2 opacity
+                                      borderRadius: BorderRadius.circular(8),
+                                    )
+                                  : null,
+                              child: Row(
+                                children: [
+                                  // Checkbox for selection
+                                  Checkbox(
+                                    value: _visibleAgentIds.contains(agent.id),
+                                    onChanged: (bool? value) {
+                                      setState(() {
+                                        if (value == true) {
+                                          _visibleAgentIds.add(agent.id);
+                                        } else {
+                                          _visibleAgentIds.remove(agent.id);
+                                        }
+                                        if (_visibleAgentIds.length < _agents.length) {
+                                          _selectAllAgents = false;
+                                        } else {
+                                          _selectAllAgents = true;
+                                        }
+                                        _updateMarkers();
+                                      });
+                                    },
+                                  ),
+                                  // Clickable agent info (name tap navigates to agent)
+                                  Expanded(
+                                    child: ListTile(
+                                      dense: true,
+                                      leading: CircleAvatar(backgroundColor: statusColor, radius: 5),
+                                      title: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              agent.fullName, 
+                                              style: const TextStyle(fontSize: 14),
+                                            ),
+                                          ),
+                                          if (_trackedAgentId == agent.id)
+                                            const Icon(
+                                              Icons.my_location,
+                                              color: Colors.purple,
+                                              size: 16,
+                                            ),
+                                        ],
+                                      ),
+                                      subtitle: Text(status, style: const TextStyle(fontSize: 12)),
+                                      onTap: () => _startTrackingAgent(agent),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             );
                           },
                         ),
