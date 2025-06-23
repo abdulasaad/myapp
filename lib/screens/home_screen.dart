@@ -6,6 +6,7 @@ import '../services/location_service.dart';
 import '../services/background_location_service.dart';
 import '../services/profile_service.dart';
 import '../services/session_service.dart';
+import '../services/connectivity_service.dart';
 import './campaigns/campaigns_list_screen.dart';
 import './campaigns/create_campaign_screen.dart';
 import './login_screen.dart';
@@ -15,6 +16,7 @@ import './agent/earnings_screen.dart';
 import './tasks/standalone_tasks_screen.dart';
 import './calendar_screen.dart'; // Import the new calendar screen
 import '../widgets/gps_status_indicator.dart';
+import '../widgets/offline_widget.dart';
 
 final logger = Logger();
 
@@ -29,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen>
   final LocationService _locationService = LocationService();
   late TabController _tabController;
   int _currentTabIndex = 0;
+  bool _isOnline = true;
 
   @override
   void initState() {
@@ -41,6 +44,34 @@ class _HomeScreenState extends State<HomeScreen>
       });
     }
     _initServicesBasedOnRole();
+    _initConnectivityListener();
+  }
+
+  void _initConnectivityListener() {
+    try {
+      // Set initial state
+      _isOnline = ConnectivityService().isOnline;
+      
+      // Listen to connectivity changes
+      ConnectivityService().connectivityStream.listen((isOnline) {
+        if (mounted) {
+          setState(() {
+            _isOnline = isOnline;
+          });
+          
+          // Show snackbars for connectivity changes
+          if (isOnline) {
+            OnlineSnackBar.show(context);
+          } else {
+            OfflineSnackBar.show(context);
+          }
+        }
+      });
+    } catch (e) {
+      logger.w('Failed to initialize connectivity listener: $e');
+      // Default to offline if connectivity service is not available
+      _isOnline = false;
+    }
   }
 
   @override
@@ -125,7 +156,20 @@ class _HomeScreenState extends State<HomeScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text('Dashboard - ${ProfileService.instance.currentUser!.fullName}'),
+        backgroundColor: _isOnline ? null : Colors.orange[700],
         actions: [
+          if (!_isOnline)
+            const Padding(
+              padding: EdgeInsets.only(right: 8.0),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.wifi_off, color: Colors.white, size: 20),
+                  SizedBox(width: 4),
+                  Text('Offline', style: TextStyle(color: Colors.white, fontSize: 12)),
+                ],
+              ),
+            ),
           // ========== THE NEW CALENDAR BUTTON IS ADDED HERE ==========
           IconButton(
             icon: const Icon(Icons.calendar_month_outlined),
@@ -174,7 +218,20 @@ class _HomeScreenState extends State<HomeScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text('My Work - ${ProfileService.instance.currentUser!.fullName}'),
+        backgroundColor: _isOnline ? null : Colors.orange[700],
         actions: [
+          if (!_isOnline)
+            const Padding(
+              padding: EdgeInsets.only(right: 8.0),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.wifi_off, color: Colors.white, size: 20),
+                  SizedBox(width: 4),
+                  Text('Offline', style: TextStyle(color: Colors.white, fontSize: 12)),
+                ],
+              ),
+            ),
           GpsStatusIndicator(locationService: _locationService),
         ],
       ),

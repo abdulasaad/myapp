@@ -62,19 +62,19 @@ class SessionService {
 
   /// Validate if the current session is still active in database
   Future<bool> isSessionValid() async {
+    final sessionId = await getStoredSessionId();
+    if (sessionId == null) {
+      logger.w('No stored session ID found');
+      return false;
+    }
+
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) {
+      logger.w('No authenticated user found');
+      return false;
+    }
+
     try {
-      final sessionId = await getStoredSessionId();
-      if (sessionId == null) {
-        logger.w('No stored session ID found');
-        return false;
-      }
-
-      final userId = supabase.auth.currentUser?.id;
-      if (userId == null) {
-        logger.w('No authenticated user found');
-        return false;
-      }
-
       // Check if session exists and is active in database
       final response = await supabase
           .from('sessions')
@@ -88,8 +88,22 @@ class SessionService {
       logger.d('Session validation result: $isValid for session $sessionId');
       return isValid;
     } catch (e) {
-      logger.e('Session validation failed: $e');
-      return false;
+      // Check if this is a network error - if so, throw the exception so calling methods can handle it
+      if (e.toString().contains('AuthRetryableFetchException') ||
+          e.toString().contains('ClientException') ||
+          e.toString().contains('SocketException') ||
+          e.toString().contains('Failed host lookup') ||
+          e.toString().contains('No address associated with hostname') ||
+          e.toString().contains('Network is unreachable') ||
+          e.toString().contains('Connection refused') ||
+          e.toString().contains('Connection timed out')) {
+        logger.w('Network error during session validation - rethrowing: $e');
+        rethrow; // Let calling methods handle network errors
+      } else {
+        // Non-network error - treat as invalid session
+        logger.e('Session validation failed with non-network error: $e');
+        return false;
+      }
     }
   }
 
@@ -136,17 +150,28 @@ class SessionService {
         logger.d('Immediate validation: Session is still valid');
       }
     } catch (e) {
-      // Check if this is a network error vs authentication error
-      final errorString = e.toString().toLowerCase();
-      if (errorString.contains('network') || 
-          errorString.contains('timeout') || 
-          errorString.contains('connection') ||
-          errorString.contains('offline')) {
+      logger.i('Immediate session validation caught exception: ${e.runtimeType}: $e');
+      
+      // More specific type checking for network errors
+      bool isNetworkError = false;
+      
+      if (e.toString().contains('AuthRetryableFetchException') ||
+          e.toString().contains('ClientException') ||
+          e.toString().contains('SocketException') ||
+          e.toString().contains('Failed host lookup') ||
+          e.toString().contains('No address associated with hostname') ||
+          e.toString().contains('Network is unreachable') ||
+          e.toString().contains('Connection refused') ||
+          e.toString().contains('Connection timed out')) {
+        isNetworkError = true;
+      }
+      
+      if (isNetworkError) {
         // Network issue - don't logout
-        logger.w('Session validation failed during app resume - network issue: $e');
+        logger.w('🌐 Immediate session validation failed due to network issue - keeping session active: $e');
       } else {
         // Possible real auth issue - be more cautious during immediate validation
-        logger.w('Session validation failed during app resume - possible auth issue: $e');
+        logger.w('🔒 Immediate session validation failed - possible auth issue: $e');
         // Could add additional checks here if needed
       }
     }
@@ -187,17 +212,28 @@ class SessionService {
         _onSessionInvalid?.call();
       }
     } catch (e) {
-      // Check if this is a network error vs authentication error
-      final errorString = e.toString().toLowerCase();
-      if (errorString.contains('network') || 
-          errorString.contains('timeout') || 
-          errorString.contains('connection') ||
-          errorString.contains('offline')) {
+      logger.i('Session validation caught exception: ${e.runtimeType}: $e');
+      
+      // More specific type checking for network errors
+      bool isNetworkError = false;
+      
+      if (e.toString().contains('AuthRetryableFetchException') ||
+          e.toString().contains('ClientException') ||
+          e.toString().contains('SocketException') ||
+          e.toString().contains('Failed host lookup') ||
+          e.toString().contains('No address associated with hostname') ||
+          e.toString().contains('Network is unreachable') ||
+          e.toString().contains('Connection refused') ||
+          e.toString().contains('Connection timed out')) {
+        isNetworkError = true;
+      }
+      
+      if (isNetworkError) {
         // Network issue - don't logout, just log
-        logger.w('Session validation failed due to network issue: $e');
+        logger.w('🌐 Session validation failed due to network issue - keeping session active: $e');
       } else {
         // Likely a real session/auth issue - logout
-        logger.w('Session validation failed - possible auth issue: $e');
+        logger.w('🔒 Session validation failed - possible auth issue - logging out: $e');
         await forceLogout();
         _onSessionInvalid?.call();
       }
@@ -221,7 +257,22 @@ class SessionService {
       await supabase.auth.signOut();
       logger.i('Forced logout completed');
     } catch (e) {
-      logger.e('Failed during forced logout: $e');
+      // Check if this is a network error during logout
+      final errorString = e.toString().toLowerCase();
+      if (errorString.contains('network') || 
+          errorString.contains('timeout') || 
+          errorString.contains('connection') ||
+          errorString.contains('offline') ||
+          errorString.contains('failed host lookup') ||
+          errorString.contains('no address associated with hostname') ||
+          errorString.contains('socketexception') ||
+          errorString.contains('clientexception') ||
+          errorString.contains('authretryablefetchexception')) {
+        // Network issue during logout - local cleanup is enough
+        logger.w('Network error during logout - local cleanup completed: $e');
+      } else {
+        logger.e('Failed during forced logout: $e');
+      }
     }
   }
 

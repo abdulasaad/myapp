@@ -10,7 +10,9 @@ import '../../services/location_service.dart';
 import '../../services/background_location_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/session_service.dart';
+import '../../services/connectivity_service.dart';
 import '../../utils/constants.dart';
+import '../../widgets/offline_widget.dart';
 import './create_campaign_screen.dart'; // Added for navigation to edit
 import 'campaign_detail_screen.dart';
 import '../agent/agent_task_list_screen.dart';
@@ -159,6 +161,14 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
           return preloader;
         }
         if (snapshot.hasError) {
+          // Check if this is a network error
+          if (ConnectivityService.isNetworkError(snapshot.error)) {
+            return OfflineWidget(
+              title: 'No Internet Connection',
+              subtitle: 'Unable to load campaigns. Please check your connection and try again.',
+              onRetry: () => refreshAll(),
+            );
+          }
           return Center(child: Text('Error: ${snapshot.error}'));
         }
         final campaigns = snapshot.data ?? [];
@@ -270,6 +280,14 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
           return preloader;
         }
         if (snapshot.hasError) {
+          // Check if this is a network error
+          if (ConnectivityService.isNetworkError(snapshot.error)) {
+            return OfflineWidget(
+              title: 'No Internet Connection',
+              subtitle: 'Unable to load your tasks and campaigns. Please check your connection and try again.',
+              onRetry: () => refreshAll(),
+            );
+          }
           return Center(child: Text('Error fetching data: ${snapshot.error}'));
         }
         
