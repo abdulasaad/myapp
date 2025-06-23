@@ -15,6 +15,7 @@ import './map/live_map_screen.dart';
 import './agent/earnings_screen.dart';
 import './tasks/standalone_tasks_screen.dart';
 import './calendar_screen.dart'; // Import the new calendar screen
+import './reporting/location_history_screen.dart';
 import '../widgets/gps_status_indicator.dart';
 import '../widgets/offline_widget.dart';
 
@@ -181,6 +182,15 @@ class _HomeScreenState extends State<HomeScreen>
             },
           ),
           // ==========================================================
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: 'Location History',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const LocationHistoryScreen()),
+              );
+            },
+          ),
           IconButton(
               icon: const Icon(Icons.map_outlined),
               tooltip: 'Live Map',
