@@ -116,6 +116,46 @@ class BackgroundLocationService {
       supabase = Supabase.instance.client;
     }
 
+    // Helper functions
+    Future<T> getSettingValue<T>(String key, T defaultValue) async {
+      try {
+        final response = await supabase
+            .from('app_settings')
+            .select('setting_value')
+            .eq('setting_key', key)
+            .maybeSingle();
+        
+        if (response != null) {
+          final value = response['setting_value'];
+          if (T == int) {
+            return (int.tryParse(value) ?? defaultValue) as T;
+          } else if (T == double) {
+            return (double.tryParse(value) ?? defaultValue) as T;
+          } else if (T == String) {
+            return value as T;
+          }
+        }
+      } catch (e) {
+        // Silent fail, use default
+      }
+      return defaultValue;
+    }
+
+    LocationAccuracy getLocationAccuracy(String accuracyLevel) {
+      switch (accuracyLevel.toLowerCase()) {
+        case 'low':
+          return LocationAccuracy.low;
+        case 'medium':
+          return LocationAccuracy.medium;
+        case 'high':
+          return LocationAccuracy.high;
+        case 'best':
+          return LocationAccuracy.best;
+        default:
+          return LocationAccuracy.medium;
+      }
+    }
+
     Future<void> fetchAndSendLocation() async {
       try {
         // Check permissions
@@ -125,14 +165,19 @@ class BackgroundLocationService {
           return;
         }
 
+        // Get settings
+        final accuracyLevel = await getSettingValue('gps_accuracy_level', 'medium');
+        final timeout = await getSettingValue('gps_timeout', 30);
+        
         // Get current position
         final Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.medium,
-          timeLimit: const Duration(seconds: 30),
+          desiredAccuracy: getLocationAccuracy(accuracyLevel),
+          timeLimit: Duration(seconds: timeout),
         );
 
-        // Only send if accuracy is good enough
-        if (position.accuracy > 100) {
+        // Get accuracy threshold from settings
+        final accuracyThreshold = await getSettingValue('background_accuracy_threshold', 100);
+        if (position.accuracy > accuracyThreshold) {
           return;
         }
 
@@ -183,10 +228,12 @@ class BackgroundLocationService {
       }
     }
 
+
     // Start location tracking timer
-    void startLocationTracking() {
+    void startLocationTracking() async {
       locationTimer?.cancel();
-      locationTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      final pingInterval = await getSettingValue('gps_ping_interval', 30);
+      locationTimer = Timer.periodic(Duration(seconds: pingInterval), (timer) {
         fetchAndSendLocation();
       });
     }

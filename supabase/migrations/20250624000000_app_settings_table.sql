@@ -1,8 +1,3 @@
-# SQL Migration Commands
-
-## GPS Tracking Settings Table Migration
-
-```sql
 -- Create app_settings table for admin-configurable application settings
 CREATE TABLE public.app_settings (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -76,4 +71,3 @@ INSERT INTO public.app_settings (setting_key, setting_value, setting_type, descr
 -- Create index for faster lookups
 CREATE INDEX idx_app_settings_key ON public.app_settings(setting_key);
 CREATE INDEX idx_app_settings_updated_at ON public.app_settings(updated_at);
-```

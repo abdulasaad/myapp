@@ -16,6 +16,7 @@ import './agent/earnings_screen.dart';
 import './tasks/standalone_tasks_screen.dart';
 import './calendar_screen.dart'; // Import the new calendar screen
 import './reporting/location_history_screen.dart';
+import './admin/settings_screen.dart';
 import '../widgets/gps_status_indicator.dart';
 import '../widgets/offline_widget.dart';
 
@@ -284,6 +285,17 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           // The User/Group Management link that was previously here
           // is assumed to be handled by an admin-only web panel now.
+          if (ProfileService.instance.role == 'admin')
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                );
+              },
+            ),
           ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Logout'),

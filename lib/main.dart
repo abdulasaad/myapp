@@ -3,6 +3,7 @@ import 'package:logger/logger.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import './screens/splash_screen.dart';
 import './services/connectivity_service.dart';
+import './services/settings_service.dart';
 import './utils/constants.dart';
 
 final logger = Logger();
@@ -24,6 +25,14 @@ Future<void> main() async {
   } catch (e) {
     // If connectivity initialization fails, continue anyway
     logger.w('ConnectivityService initialization failed: $e');
+  }
+
+  // Initialize settings service (handle gracefully if fails)
+  try {
+    await SettingsService.instance.initialize();
+  } catch (e) {
+    // If settings initialization fails, continue anyway (defaults will be used)
+    logger.w('SettingsService initialization failed: $e');
   }
 
   runApp(const MyApp());

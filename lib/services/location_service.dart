@@ -1,10 +1,11 @@
 // lib/services/location_service.dart
 
-import 'dart:async'; // <-- FIX: Corrected import from 'dart.async' to 'dart:async'
+import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../utils/constants.dart';
+import 'settings_service.dart';
 
 final logger = Logger();
 
@@ -17,6 +18,7 @@ class GeofenceStatus {
 class LocationService {
   Timer? _timer;
   StreamSubscription<Position>? _positionStreamSubscription;
+  StreamSubscription<Map<String, AppSetting>>? _settingsSubscription;
   final StreamController<Position> _locationDataController = StreamController<Position>.broadcast();
   final StreamController<GeofenceStatus> _geofenceStatusController = StreamController<GeofenceStatus>.broadcast();
 
@@ -46,12 +48,27 @@ class LocationService {
       return;
     }
     
+    // Subscribe to settings changes to restart tracking with new settings
+    _settingsSubscription = SettingsService.instance.settingsStream.listen((settings) {
+      logger.i('Settings changed, restarting location tracking');
+      _restartLocationTracking();
+    });
+    
+    _startLocationTracking();
+  }
+
+  void _startLocationTracking() async {
+    // Get current settings
+    final distanceFilter = SettingsService.instance.gpsDistanceFilter;
+    final timeout = SettingsService.instance.gpsTimeout;
+    final accuracyLevel = _getLocationAccuracy(SettingsService.instance.gpsAccuracyLevel);
+    
     // Start location stream for continuous tracking (works in background)
     try {
-      const LocationSettings locationSettings = LocationSettings(
-        accuracy: LocationAccuracy.medium,
-        distanceFilter: 10,
-        timeLimit: Duration(minutes: 2),
+      final LocationSettings locationSettings = LocationSettings(
+        accuracy: accuracyLevel,
+        distanceFilter: distanceFilter,
+        timeLimit: Duration(seconds: timeout),
       );
       
       _positionStreamSubscription = Geolocator.getPositionStream(
@@ -77,9 +94,16 @@ class LocationService {
 
   void _startTimerBasedTracking() {
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 30), (timer) {
+    final pingInterval = SettingsService.instance.gpsPingInterval;
+    _timer = Timer.periodic(Duration(seconds: pingInterval), (timer) {
       _fetchAndProcessLocation();
     });
+  }
+
+  void _restartLocationTracking() {
+    _positionStreamSubscription?.cancel();
+    _timer?.cancel();
+    _startLocationTracking();
   }
 
   void stop() {
@@ -89,15 +113,21 @@ class LocationService {
     _positionStreamSubscription?.cancel();
     _positionStreamSubscription = null;
     
+    _settingsSubscription?.cancel();
+    _settingsSubscription = null;
+    
     setActiveCampaign(null);
     logger.i('Location tracking stopped.');
   }
 
   Future<void> _fetchAndProcessLocation() async {
     try {
+      final accuracyLevel = _getLocationAccuracy(SettingsService.instance.gpsAccuracyLevel);
+      final timeout = SettingsService.instance.gpsTimeout;
+      
       final Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.medium,
-        timeLimit: const Duration(seconds: 30),
+        desiredAccuracy: accuracyLevel,
+        timeLimit: Duration(seconds: timeout),
       );
       
       _locationDataController.add(position);
@@ -124,8 +154,9 @@ class LocationService {
     }
   }
 
-  Future<void> _sendLocationUpdate(Position position) async {    
-    if (position.accuracy > 75) return;
+  Future<void> _sendLocationUpdate(Position position) async {
+    final accuracyThreshold = SettingsService.instance.gpsAccuracyThreshold;
+    if (position.accuracy > accuracyThreshold) return;
     
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) return;
@@ -209,6 +240,21 @@ class LocationService {
     } catch (e) {
       logger.e('Error handling location permissions: $e');
       return false;
+    }
+  }
+
+  LocationAccuracy _getLocationAccuracy(String accuracyLevel) {
+    switch (accuracyLevel.toLowerCase()) {
+      case 'low':
+        return LocationAccuracy.low;
+      case 'medium':
+        return LocationAccuracy.medium;
+      case 'high':
+        return LocationAccuracy.high;
+      case 'best':
+        return LocationAccuracy.best;
+      default:
+        return LocationAccuracy.medium;
     }
   }
 }
