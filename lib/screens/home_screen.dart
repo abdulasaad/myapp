@@ -13,6 +13,7 @@ import './login_screen.dart';
 import '../utils/constants.dart';
 import './map/live_map_screen.dart';
 import './agent/earnings_screen.dart';
+import './agent/agent_standalone_tasks_screen.dart';
 import './tasks/standalone_tasks_screen.dart';
 import './calendar_screen.dart'; // Import the new calendar screen
 import './reporting/location_history_screen.dart';
@@ -273,7 +274,17 @@ class _HomeScreenState extends State<HomeScreen>
               ],
             ),
           ),
-          if (!ProfileService.instance.canManageCampaigns)
+          if (!ProfileService.instance.canManageCampaigns) ...[
+            ListTile(
+              leading: const Icon(Icons.assignment_outlined),
+              title: const Text('Available Tasks'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const AgentStandaloneTasksScreen()),
+                );
+              },
+            ),
             ListTile(
               leading: const Icon(Icons.account_balance_wallet_outlined),
               title: const Text('My Earnings'),
@@ -283,6 +294,7 @@ class _HomeScreenState extends State<HomeScreen>
                     MaterialPageRoute(builder: (context) => const EarningsScreen()));
               },
             ),
+          ],
           // The User/Group Management link that was previously here
           // is assumed to be handled by an admin-only web panel now.
           if (ProfileService.instance.role == 'admin')

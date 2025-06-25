@@ -191,6 +191,47 @@ class LocationService {
     }
   }
 
+  /// Check if agent is within task geofence for evidence upload validation
+  Future<bool> isAgentInTaskGeofence(String taskId) async {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) return false;
+    
+    try {
+      // Get current location
+      final Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10),
+      );
+      
+      // Check if task has geofence and if agent is inside
+      final result = await supabase.rpc('check_agent_in_task_geofence', params: {
+        'p_agent_id': userId,
+        'p_task_id': taskId,
+        'p_agent_lat': position.latitude,
+        'p_agent_lng': position.longitude,
+      });
+      
+      return result as bool;
+    } catch (e) {
+      logger.e('Failed to check task geofence for $taskId: $e');
+      return false;
+    }
+  }
+
+  /// Get current location for geofence validation
+  Future<Position?> getCurrentLocation() async {
+    try {
+      final Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10),
+      );
+      return position;
+    } catch (e) {
+      logger.e('Failed to get current location: $e');
+      return null;
+    }
+  }
+
   Future<bool> _handlePermission() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();

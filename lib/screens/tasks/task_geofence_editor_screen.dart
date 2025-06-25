@@ -32,24 +32,43 @@ class _TaskGeofenceEditorScreenState extends State<TaskGeofenceEditorScreen> {
   Future<void> _loadExistingGeofence() async {
     try {
       debugPrint("[GeofenceLoad] Loading geofence for task_id: ${widget.task.id}");
-      // Request the area column as WKT using the computed column get_area_wkt
-      final response = await supabase.from('geofences').select('*, area:get_area_wkt').eq('task_id', widget.task.id).maybeSingle();
-      debugPrint("[GeofenceLoad] Supabase response: $response");
-      final wktString = response?['area'];
-      debugPrint("[GeofenceLoad] WKT String from DB: $wktString");
       
-      if (mounted && wktString != null) {
-        final parsedPoints = _parseWktPolygon(wktString);
-        debugPrint("[GeofenceLoad] Parsed points: $parsedPoints");
-        setState(() {
-          _points.addAll(parsedPoints);
-          _updatePolygon();
-        });
+      // Simple approach: just get the row without PostGIS functions
+      final response = await supabase.from('geofences').select('*').eq('task_id', widget.task.id).maybeSingle();
+      debugPrint("[GeofenceLoad] Supabase response: $response");
+      
+      if (response != null) {
+        final wktString = response['area_text'] as String? ?? response['area'] as String?;
+        debugPrint("[GeofenceLoad] WKT String from DB: $wktString");
+        
+        if (mounted && wktString != null && wktString.isNotEmpty) {
+          try {
+            final parsedPoints = _parseWktPolygon(wktString);
+            debugPrint("[GeofenceLoad] Parsed points: $parsedPoints");
+            
+            if (parsedPoints.isNotEmpty) {
+              setState(() {
+                _points.clear(); // Clear existing points
+                _points.addAll(parsedPoints); // Add parsed points
+                _updatePolygon();
+              });
+              debugPrint("[GeofenceLoad] Successfully loaded ${parsedPoints.length} points");
+            }
+          } catch (parseError) {
+            debugPrint("[GeofenceLoad] Error parsing WKT: $parseError");
+            if (mounted) context.showSnackBar('Could not parse existing geofence data', isError: true);
+          }
+        } else {
+          debugPrint("[GeofenceLoad] No area data found");
+        }
+      } else {
+        debugPrint("[GeofenceLoad] No geofence found for this task");
       }
     } catch (e) {
-      if(mounted) context.showSnackBar('Could not load existing geofence: $e', isError: true);
+      debugPrint("[GeofenceLoad] Error loading geofence: $e");
+      if (mounted) context.showSnackBar('Could not load existing geofence: $e', isError: true);
     } finally {
-      if(mounted) setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -66,15 +85,32 @@ class _TaskGeofenceEditorScreenState extends State<TaskGeofenceEditorScreen> {
       wktPoints.add('${_points.first.longitude} ${_points.first.latitude}');
       final wktString = 'POLYGON((${wktPoints.join(', ')}))';
 
-      // Use upsert to either create a new geofence or update the existing one for this task.
       debugPrint("[GeofenceSave] Saving geofence for task_id: ${widget.task.id}");
       debugPrint("[GeofenceSave] WKT String to save: $wktString");
-      final upsertResponse = await supabase.from('geofences').upsert({
-        'task_id': widget.task.id,
-        'name': '${widget.task.title} Geofence',
-        'area': wktString,
-      }, onConflict: 'task_id');
-      debugPrint("[GeofenceSave] Supabase upsert response: $upsertResponse");
+      
+      // Check if geofence already exists
+      final existing = await supabase
+          .from('geofences')
+          .select('id')
+          .eq('task_id', widget.task.id)
+          .maybeSingle();
+      
+      if (existing != null) {
+        // Update existing geofence - store as text in a text column
+        await supabase.from('geofences').update({
+          'name': '${widget.task.title} Geofence',
+          'area_text': wktString, // Use a text column instead of geometry column
+        }).eq('task_id', widget.task.id);
+        debugPrint("[GeofenceSave] Updated existing geofence");
+      } else {
+        // Insert new geofence - store as text in a text column
+        await supabase.from('geofences').insert({
+          'task_id': widget.task.id,
+          'name': '${widget.task.title} Geofence',
+          'area_text': wktString, // Use a text column instead of geometry column
+        });
+        debugPrint("[GeofenceSave] Inserted new geofence");
+      }
 
       if (mounted) {
         context.showSnackBar('Geofence saved successfully!');
@@ -82,6 +118,7 @@ class _TaskGeofenceEditorScreenState extends State<TaskGeofenceEditorScreen> {
       }
 
     } catch (e) {
+      debugPrint("[GeofenceSave] Error: $e");
       if (mounted) context.showSnackBar('Failed to save geofence: $e', isError: true);
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -121,17 +158,43 @@ class _TaskGeofenceEditorScreenState extends State<TaskGeofenceEditorScreen> {
   }
 
   List<LatLng> _parseWktPolygon(String wkt) {
+    debugPrint("[WKT Parser] Input WKT: '$wkt'");
+    
+    if (!wkt.contains('POLYGON')) {
+      debugPrint("[WKT Parser] Not a valid POLYGON WKT");
+      return [];
+    }
+    
     try {
       final pointsList = <LatLng>[];
       final content = wkt.substring(wkt.indexOf('((') + 2, wkt.lastIndexOf('))'));
+      debugPrint("[WKT Parser] Extracted content: '$content'");
+      
       final pairs = content.split(',');
+      debugPrint("[WKT Parser] Coordinate pairs: ${pairs.length}");
+      
       for (var i = 0; i < pairs.length; i++) {
         final coords = pairs[i].trim().split(' ');
-        pointsList.add(LatLng(double.parse(coords[1]), double.parse(coords[0])));
+        debugPrint("[WKT Parser] Pair $i: '${pairs[i].trim()}' -> coords: $coords");
+        
+        if (coords.length >= 2) {
+          try {
+            final lng = double.parse(coords[0]);
+            final lat = double.parse(coords[1]);
+            pointsList.add(LatLng(lat, lng));
+            debugPrint("[WKT Parser] Added point: ($lat, $lng)");
+          } catch (e) {
+            debugPrint("[WKT Parser] Failed to parse coordinates: $e");
+          }
+        } else {
+          debugPrint("[WKT Parser] Invalid coordinate pair: ${coords.length} elements");
+        }
       }
+      
+      debugPrint("[WKT Parser] Final points count: ${pointsList.length}");
       return pointsList;
     } catch (e) {
-      debugPrint("Failed to parse WKT Polygon: $e");
+      debugPrint("[WKT Parser] Failed to parse WKT Polygon: $e");
       return [];
     }
   }
@@ -153,7 +216,11 @@ class _TaskGeofenceEditorScreenState extends State<TaskGeofenceEditorScreen> {
               children: [
                 GoogleMap(
                   initialCameraPosition: const CameraPosition(target: LatLng(33.3152, 44.3661), zoom: 12),
-                  onMapCreated: (controller) => _mapController.complete(controller),
+                  onMapCreated: (controller) {
+                    if (!_mapController.isCompleted) {
+                      _mapController.complete(controller);
+                    }
+                  },
                   onTap: _onMapTapped,
                   polygons: _polygons,
                   markers: _points.map((point) => Marker(
@@ -161,6 +228,20 @@ class _TaskGeofenceEditorScreenState extends State<TaskGeofenceEditorScreen> {
                     position: point,
                     icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
                   )).toSet(),
+                  // Performance optimizations for mobile devices
+                  compassEnabled: false,
+                  mapToolbarEnabled: false,
+                  rotateGesturesEnabled: true, // Keep enabled for editing
+                  tiltGesturesEnabled: false,
+                  zoomControlsEnabled: false,
+                  indoorViewEnabled: false,
+                  trafficEnabled: false,
+                  buildingsEnabled: false,
+                  myLocationButtonEnabled: true,
+                  myLocationEnabled: true,
+                  // Reduce memory usage for non-essential features
+                  polylines: const <Polyline>{},
+                  circles: const <Circle>{},
                 ),
                 Positioned(
                   top: 10, left: 10, right: 10,

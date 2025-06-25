@@ -151,11 +151,21 @@ class _TaskLocationViewerScreenState extends State<TaskLocationViewerScreen> {
                   polygons: _polygons,
                   myLocationButtonEnabled: true,
                   myLocationEnabled: true,
-                  // Add optimizations to reduce buffer usage
+                  // Performance optimizations for mobile devices
                   compassEnabled: false,
                   mapToolbarEnabled: false,
                   rotateGesturesEnabled: false,
                   tiltGesturesEnabled: false,
+                  zoomControlsEnabled: false,
+                  indoorViewEnabled: false,
+                  trafficEnabled: false,
+                  buildingsEnabled: false,
+                  // Lite mode for older devices (if available)
+                  liteModeEnabled: true,
+                  // Reduce memory usage
+                  polylines: const <Polyline>{},
+                  circles: const <Circle>{},
+                  markers: const <Marker>{},
                 ),
     );
   }

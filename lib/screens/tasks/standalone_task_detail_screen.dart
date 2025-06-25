@@ -33,6 +33,30 @@ class _StandaloneTaskDetailScreenState
   }
 
   Future<List<AgentTaskProgress>> _fetchAgentProgress() async {
+    try {
+      // Use a single RPC call to get all agent progress for this task
+      final response = await supabase.rpc('get_task_agent_progress_batch', params: {
+        'p_task_id': widget.task.id,
+      });
+
+      final List<AgentTaskProgress> progressList = [];
+      for (final item in response as List) {
+        try {
+          progressList.add(AgentTaskProgress.fromJson(item, item['agent_id']));
+        } catch (e) {
+          debugPrint('Error parsing agent progress: $e');
+        }
+      }
+      
+      return progressList;
+    } catch (e) {
+      // Fallback to the old method if new RPC doesn't exist
+      debugPrint('Batch RPC not available, falling back to individual calls: $e');
+      return _fetchAgentProgressFallback();
+    }
+  }
+
+  Future<List<AgentTaskProgress>> _fetchAgentProgressFallback() async {
     // 1. Fetch agent_ids assigned to the task
     final assignmentsResponse = await supabase
         .from('task_assignments')
@@ -52,17 +76,11 @@ class _StandaloneTaskDetailScreenState
           params: {'p_task_id': widget.task.id, 'p_agent_id': agentId},
         ).single(); // Expecting a single record per agent
 
-        // The RPC returns a list with one item, or an empty list if no record found.
-        // We are calling .single() which should give us the map directly or throw.
-        // If the RPC could return an empty list for a valid agent_id (e.g., if agent has no profile),
-        // we might need to handle that more gracefully. Assuming RPC always returns data or throws.
         progressList.add(AgentTaskProgress.fromJson(rpcResponse, agentId));
       } catch (e) {
         // Log error or handle missing agent progress data
-        // For now, we'll skip agents for whom the RPC fails
         if (mounted) {
           debugPrint('Error fetching progress for agent $agentId: $e');
-          // Optionally, show a snackbar or add a placeholder error object
         }
       }
     }

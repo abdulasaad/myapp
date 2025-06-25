@@ -6,7 +6,9 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:mime/mime.dart';
 import '../../models/campaign.dart';
+import '../../models/task.dart';
 import '../../utils/constants.dart';
+import '../../services/location_service.dart';
 
 class AgentTask {
   final String taskId;
@@ -15,6 +17,7 @@ class AgentTask {
   final int points;
   final String status;
   final List<String> evidenceUrls;
+  final bool? enforceGeofence;
 
   AgentTask.fromJson(Map<String, dynamic> json)
       : taskId = json['task_id'],
@@ -22,7 +25,8 @@ class AgentTask {
         description = json['description'],
         points = json['points'] ?? 0,
         status = json['assignment_status'],
-        evidenceUrls = List<String>.from(json['evidence_urls'] ?? []);
+        evidenceUrls = List<String>.from(json['evidence_urls'] ?? []),
+        enforceGeofence = json['enforce_geofence'];
 }
 
 class AgentTaskListScreen extends StatefulWidget {
@@ -158,6 +162,30 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
 
   Future<void> _performUpload(AgentTask task, String title, XFile imageFile) async {
     try {
+      // Check geofence validation if enforcement is enabled
+      if (task.enforceGeofence == true) {
+        if (mounted) {
+          context.showSnackBar('Checking location for geofence validation...', isError: false);
+        }
+        
+        final locationService = LocationService();
+        final isInGeofence = await locationService.isAgentInTaskGeofence(task.taskId);
+        
+        if (!isInGeofence) {
+          if (mounted) {
+            context.showSnackBar(
+              'You must be within the task location area to upload evidence. Please move to the designated location and try again.',
+              isError: true
+            );
+          }
+          return;
+        }
+        
+        if (mounted) {
+          context.showSnackBar('Location verified! Uploading evidence...', isError: false);
+        }
+      }
+
       final fileBytes = await imageFile.readAsBytes();
       final mimeType = lookupMimeType(imageFile.path, headerBytes: fileBytes);
       final fileExt = extensionFromMime(mimeType ?? 'image/jpeg');

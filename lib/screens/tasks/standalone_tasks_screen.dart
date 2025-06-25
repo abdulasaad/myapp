@@ -156,9 +156,26 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
 
   Future<void> _deleteTask(Task task) async {
     try {
+      // First get all task assignment IDs for this task
+      final assignmentIds = await supabase
+          .from('task_assignments')
+          .select('id')
+          .eq('task_id', task.id);
+      
+      // Delete evidence for each assignment
+      for (final assignment in assignmentIds) {
+        await supabase.from('evidence').delete().eq('task_assignment_id', assignment['id']);
+      }
+      
+      // Delete task assignments
       await supabase.from('task_assignments').delete().eq('task_id', task.id);
-      await supabase.from('evidence').delete().eq('task_assignment_id', task.id);
+      
+      // Delete geofences associated with this task
+      await supabase.from('geofences').delete().eq('task_id', task.id);
+      
+      // Delete the task itself
       await supabase.from('tasks').delete().eq('id', task.id);
+      
       if (mounted) context.showSnackBar('Task deleted successfully.');
     } catch (e) {
       if (mounted) context.showSnackBar('Failed to delete task: $e', isError: true);

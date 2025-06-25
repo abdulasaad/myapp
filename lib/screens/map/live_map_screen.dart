@@ -395,6 +395,20 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
                       }
                     }
                   },
+                  // Performance optimizations for mobile devices
+                  compassEnabled: false,
+                  mapToolbarEnabled: false,
+                  rotateGesturesEnabled: false,
+                  tiltGesturesEnabled: false,
+                  zoomControlsEnabled: false,
+                  indoorViewEnabled: false,
+                  trafficEnabled: false,
+                  buildingsEnabled: false,
+                  myLocationButtonEnabled: false, // We have custom controls
+                  myLocationEnabled: false, // Focus on agent tracking
+                  // Reduce memory usage for non-essential features
+                  polylines: const <Polyline>{},
+                  circles: const <Circle>{},
                 ),
                 // Left Panel (Agents)
                 AnimatedPositioned(
