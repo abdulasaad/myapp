@@ -63,9 +63,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 16),
           
           _buildSettingsCategory(
-            'Template Setup',
-            'Setup enhanced task templates with rich features',
-            Icons.rocket_launch,
+            'Manager Template Access',
+            'Assign task templates to managers',
+            Icons.assignment_ind,
             () => Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => const TemplateSetupScreen()),
             ),
