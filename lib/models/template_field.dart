@@ -15,6 +15,37 @@ enum TemplateFieldType {
   phone,
 }
 
+extension TemplateFieldTypeExtension on TemplateFieldType {
+  String get displayName {
+    switch (this) {
+      case TemplateFieldType.text:
+        return 'Text';
+      case TemplateFieldType.number:
+        return 'Number';
+      case TemplateFieldType.date:
+        return 'Date';
+      case TemplateFieldType.time:
+        return 'Time';
+      case TemplateFieldType.boolean:
+        return 'Yes/No';
+      case TemplateFieldType.checkbox:
+        return 'Checkbox';
+      case TemplateFieldType.radio:
+        return 'Radio Button';
+      case TemplateFieldType.select:
+        return 'Single Choice';
+      case TemplateFieldType.multiselect:
+        return 'Multiple Choice';
+      case TemplateFieldType.textarea:
+        return 'Long Text';
+      case TemplateFieldType.email:
+        return 'Email';
+      case TemplateFieldType.phone:
+        return 'Phone';
+    }
+  }
+}
+
 class TemplateField {
   final String id;
   final String templateId;

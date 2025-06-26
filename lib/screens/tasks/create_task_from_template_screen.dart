@@ -42,6 +42,10 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
   // Custom fields values
   final Map<String, dynamic> _customFieldValues = {};
   final Map<String, TextEditingController> _customFieldControllers = {};
+  
+  // Dynamic field builder for managers
+  final List<TemplateField> _dynamicFields = [];
+  bool _showFieldBuilder = false;
 
   @override
   void initState() {
@@ -87,21 +91,410 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
     }
   }
 
+  bool _isDataCollectionTemplate(TaskTemplate template) {
+    return template.taskType == TaskType.dataCollection || 
+           template.taskType == TaskType.survey ||
+           template.taskType == TaskType.inspection;
+  }
+
+  Widget _buildDynamicFieldsCard() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Custom Form Fields',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: _addDynamicField,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add Field'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Create custom fields that agents will fill out when completing this task',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (_dynamicFields.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(Icons.text_fields, size: 48, color: Colors.grey[400]),
+                      const SizedBox(height: 8),
+                      Text(
+                        'No custom fields yet',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Click "Add Field" to create form fields',
+                        style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              ..._dynamicFields.asMap().entries.map((entry) => 
+                _buildDynamicFieldItem(entry.key, entry.value)
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDynamicFieldItem(int index, TemplateField field) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey[50],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                _getFieldTypeIcon(field.fieldType),
+                size: 20,
+                color: Theme.of(context).primaryColor,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  field.fieldLabel,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () => _editDynamicField(index),
+                icon: const Icon(Icons.edit, size: 20),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: () => _removeDynamicField(index),
+                icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  field.fieldType.displayName,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Theme.of(context).primaryColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (field.isRequired)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Text(
+                    'Required',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.red,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          if (field.placeholderText != null && field.placeholderText!.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Placeholder: ${field.placeholderText}',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+          if (field.fieldOptions != null && field.fieldOptions!.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Options: ${field.fieldOptions!.join(', ')}',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  IconData _getFieldTypeIcon(TemplateFieldType type) {
+    switch (type) {
+      case TemplateFieldType.text:
+        return Icons.text_fields;
+      case TemplateFieldType.number:
+        return Icons.numbers;
+      case TemplateFieldType.date:
+        return Icons.calendar_today;
+      case TemplateFieldType.time:
+        return Icons.access_time;
+      case TemplateFieldType.boolean:
+      case TemplateFieldType.checkbox:
+        return Icons.check_box;
+      case TemplateFieldType.radio:
+        return Icons.radio_button_checked;
+      case TemplateFieldType.select:
+        return Icons.arrow_drop_down_circle;
+      case TemplateFieldType.multiselect:
+        return Icons.checklist;
+      case TemplateFieldType.textarea:
+        return Icons.notes;
+      case TemplateFieldType.email:
+        return Icons.email;
+      case TemplateFieldType.phone:
+        return Icons.phone;
+    }
+  }
+
+  void _addDynamicField() {
+    _showFieldEditorDialog();
+  }
+
+  void _editDynamicField(int index) {
+    _showFieldEditorDialog(field: _dynamicFields[index], index: index);
+  }
+
+  void _removeDynamicField(int index) {
+    setState(() {
+      _dynamicFields.removeAt(index);
+    });
+  }
+
+  void _showFieldEditorDialog({TemplateField? field, int? index}) {
+    final isEditing = field != null;
+    final labelController = TextEditingController(text: field?.fieldLabel ?? '');
+    final placeholderController = TextEditingController(text: field?.placeholderText ?? '');
+    final optionsController = TextEditingController(
+      text: field?.fieldOptions?.join(', ') ?? ''
+    );
+    
+    TemplateFieldType selectedType = field?.fieldType ?? TemplateFieldType.text;
+    bool isRequired = field?.isRequired ?? false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(isEditing ? 'Edit Field' : 'Add Custom Field'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: labelController,
+                  decoration: const InputDecoration(
+                    labelText: 'Field Label*',
+                    hintText: 'e.g., Customer Name, Satisfaction Level',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<TemplateFieldType>(
+                  value: selectedType,
+                  decoration: const InputDecoration(
+                    labelText: 'Field Type',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: TemplateFieldType.values.map((type) => DropdownMenuItem(
+                    value: type,
+                    child: Text(type.displayName),
+                  )).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => selectedType = value);
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: placeholderController,
+                  decoration: const InputDecoration(
+                    labelText: 'Placeholder Text (Optional)',
+                    hintText: 'Hint text shown in the field',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                if (selectedType == TemplateFieldType.select || 
+                    selectedType == TemplateFieldType.multiselect ||
+                    selectedType == TemplateFieldType.radio) ...[
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: optionsController,
+                    decoration: const InputDecoration(
+                      labelText: 'Options (comma separated)*',
+                      hintText: 'Option 1, Option 2, Option 3',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                  ),
+                ],
+                const SizedBox(height: 16),
+                CheckboxListTile(
+                  title: const Text('Required Field'),
+                  subtitle: const Text('Agent must fill this field'),
+                  value: isRequired,
+                  onChanged: (value) => setState(() => isRequired = value ?? false),
+                  controlAffinity: ListTileControlAffinity.leading,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (labelController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Field label is required')),
+                  );
+                  return;
+                }
+
+                List<String>? options;
+                if (selectedType == TemplateFieldType.select || 
+                    selectedType == TemplateFieldType.multiselect ||
+                    selectedType == TemplateFieldType.radio) {
+                  options = optionsController.text
+                      .split(',')
+                      .map((e) => e.trim())
+                      .where((e) => e.isNotEmpty)
+                      .toList();
+                  
+                  if (options.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Options are required for this field type')),
+                    );
+                    return;
+                  }
+                }
+
+                final newField = TemplateField(
+                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                  templateId: widget.template.id,
+                  fieldName: labelController.text.toLowerCase().replaceAll(' ', '_'),
+                  fieldType: selectedType,
+                  fieldLabel: labelController.text.trim(),
+                  placeholderText: placeholderController.text.trim().isEmpty ? null : placeholderController.text.trim(),
+                  isRequired: isRequired,
+                  fieldOptions: options,
+                  validationRules: {},
+                  sortOrder: index ?? _dynamicFields.length,
+                  createdAt: DateTime.now(),
+                );
+
+                Navigator.of(context).pop();
+                
+                this.setState(() {
+                  if (isEditing && index != null) {
+                    _dynamicFields[index] = newField;
+                  } else {
+                    _dynamicFields.add(newField);
+                  }
+                });
+              },
+              child: Text(isEditing ? 'Update' : 'Add'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _createTask(TaskTemplate template) async {
-    if (!_formKey.currentState!.validate()) return;
+    debugPrint('[TaskCreation] Starting task creation...');
+    debugPrint('[TaskCreation] Form validation...');
+    if (!_formKey.currentState!.validate()) {
+      debugPrint('[TaskCreation] Form validation failed');
+      return;
+    }
+
+    debugPrint('[TaskCreation] Dynamic fields count: ${_dynamicFields.length}');
+    
+    // Check for required title
+    if (_titleController.text.trim().isEmpty) {
+      debugPrint('[TaskCreation] Title is empty');
+      context.showSnackBar('Task title is required', isError: true);
+      return;
+    }
 
     // Validate custom fields
     final fields = template.fields ?? [];
     final validationErrors = _templateService.validateCustomFields(fields, _customFieldValues);
     
     if (validationErrors.isNotEmpty) {
+      debugPrint('[TaskCreation] Validation errors: $validationErrors');
       _showValidationErrors(validationErrors);
       return;
     }
 
+    debugPrint('[TaskCreation] Setting loading state...');
     setState(() => _isLoading = true);
 
     try {
+      debugPrint('[TaskCreation] Calling template service...');
       final task = await _templateService.createTaskFromTemplate(
         templateId: template.id,
         title: _titleController.text.trim(),
@@ -127,6 +520,12 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
         debugPrint('[TaskCreation] Task created successfully with ID: ${task.id}');
         debugPrint('[TaskCreation] Geofence enabled: $_enableGeofence');
         debugPrint('[TaskCreation] Geofence points count: ${_geofencePoints?.length ?? 0}');
+        
+        // Save dynamic fields if any were created
+        if (_dynamicFields.isNotEmpty) {
+          debugPrint('[TaskCreation] Saving ${_dynamicFields.length} dynamic fields...');
+          await _saveDynamicFields(task.id);
+        }
         
         context.showSnackBar('Task created successfully!');
         
@@ -194,6 +593,42 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
       setState(() {
         _geofencePoints = result;
       });
+    }
+  }
+
+  Future<void> _saveDynamicFields(String taskId) async {
+    debugPrint('[TaskCreation] _saveDynamicFields called with taskId: $taskId');
+    debugPrint('[TaskCreation] Dynamic fields to save: ${_dynamicFields.length}');
+    
+    try {
+      // Save each dynamic field to the database
+      for (int i = 0; i < _dynamicFields.length; i++) {
+        final field = _dynamicFields[i];
+        debugPrint('[TaskCreation] Saving field $i: ${field.fieldLabel} (${field.fieldType.name})');
+        
+        final fieldData = {
+          'task_id': taskId,
+          'field_name': field.fieldName,
+          'field_type': field.fieldType.name,
+          'field_label': field.fieldLabel,
+          'placeholder_text': field.placeholderText,
+          'is_required': field.isRequired,
+          'field_options': field.fieldOptions,
+          'sort_order': i,
+          'created_at': DateTime.now().toIso8601String(),
+          'created_by': supabase.auth.currentUser?.id,
+        };
+        
+        debugPrint('[TaskCreation] Field data: $fieldData');
+        
+        final result = await supabase.from('task_dynamic_fields').insert(fieldData);
+        debugPrint('[TaskCreation] Insert result for field $i: $result');
+      }
+      debugPrint('[TaskCreation] All ${_dynamicFields.length} dynamic fields saved successfully');
+    } catch (e) {
+      debugPrint('[TaskCreation] Failed to save dynamic fields: $e');
+      debugPrint('[TaskCreation] Error type: ${e.runtimeType}');
+      // Don't throw - let the task creation succeed even if fields fail
     }
   }
 
@@ -335,6 +770,11 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
                         if (fields.isNotEmpty) ...[
                           const SizedBox(height: 16),
                           _buildCustomFieldsCard(fields),
+                        ],
+                        // Add dynamic field builder for data collection/survey tasks
+                        if (_isDataCollectionTemplate(template)) ...[
+                          const SizedBox(height: 16),
+                          _buildDynamicFieldsCard(),
                         ],
                         const SizedBox(height: 24),
                         _buildCreateButton(template),

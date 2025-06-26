@@ -5,6 +5,7 @@ import '../../models/app_user.dart'; // Will keep for _showAssignAgentDialog for
 import '../../models/task.dart';
 import '../../models/agent_task_progress.dart'; // New model
 import '../../utils/constants.dart';
+import '../admin/form_responses_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; // For Supabase.instance.client
 
 class StandaloneTaskDetailScreen extends StatefulWidget {
@@ -293,10 +294,49 @@ class _StandaloneTaskDetailScreenState
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: _buildActionButtons(),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    final hasTemplate = widget.task.templateId != null;
+    
+    if (hasTemplate) {
+      // Show both buttons for tasks with templates
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton.extended(
+            onPressed: _showFormResponses,
+            label: const Text('Form Responses'),
+            icon: const Icon(Icons.poll),
+            heroTag: "form_responses",
+            backgroundColor: Colors.green,
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton.extended(
+            onPressed: _showAssignAgentDialog,
+            label: const Text('Assign Agent'),
+            icon: const Icon(Icons.person_add),
+            heroTag: "assign_agent",
+          ),
+        ],
+      );
+    } else {
+      // Show only assign agent button for tasks without templates
+      return FloatingActionButton.extended(
         onPressed: _showAssignAgentDialog,
         label: const Text('Assign Agent'),
         icon: const Icon(Icons.person_add),
+      );
+    }
+  }
+
+  void _showFormResponses() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => FormResponsesScreen(task: widget.task),
       ),
     );
   }

@@ -35,7 +35,8 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
   @override
   void initState() {
     super.initState();
-    _fieldsFuture = TemplateService().getTemplateFields(widget.template.id);
+    // First check for task-specific dynamic fields, then fall back to template fields
+    _fieldsFuture = _loadTaskFields();
     
     if (widget.template.requiresSignature) {
       _signatureController = SignatureController(
@@ -44,6 +45,60 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
         exportBackgroundColor: Colors.white,
       );
     }
+  }
+  
+  Future<List<TemplateField>> _loadTaskFields() async {
+    debugPrint('[DataCollection] Loading fields for task ID: ${widget.task.id}');
+    debugPrint('[DataCollection] Template ID: ${widget.template.id}');
+    
+    try {
+      // Check if this task has dynamic fields created by the manager
+      debugPrint('[DataCollection] Querying task_dynamic_fields table...');
+      final dynamicFieldsResponse = await supabase
+          .from('task_dynamic_fields')
+          .select('*')
+          .eq('task_id', widget.task.id)
+          .order('sort_order');
+      
+      debugPrint('[DataCollection] Dynamic fields response: $dynamicFieldsResponse');
+      debugPrint('[DataCollection] Dynamic fields count: ${dynamicFieldsResponse.length}');
+      
+      if (dynamicFieldsResponse.isNotEmpty) {
+        debugPrint('[DataCollection] Converting ${dynamicFieldsResponse.length} dynamic fields to TemplateField format');
+        // Convert dynamic fields to TemplateField format
+        return dynamicFieldsResponse.map<TemplateField>((field) => TemplateField(
+          id: field['id'],
+          templateId: widget.template.id,
+          fieldName: field['field_name'],
+          fieldType: TemplateFieldType.values.firstWhere(
+            (e) => e.name == field['field_type'],
+            orElse: () => TemplateFieldType.text,
+          ),
+          fieldLabel: field['field_label'],
+          placeholderText: field['placeholder_text'],
+          isRequired: field['is_required'] ?? false,
+          fieldOptions: field['field_options'] != null 
+              ? List<String>.from(field['field_options'])
+              : null,
+          validationRules: field['validation_rules'] != null 
+              ? Map<String, dynamic>.from(field['validation_rules'])
+              : {},
+          sortOrder: field['sort_order'] ?? 0,
+          helpText: field['help_text'],
+          createdAt: DateTime.parse(field['created_at']),
+        )).toList();
+      } else {
+        debugPrint('[DataCollection] No dynamic fields found, checking template fields...');
+      }
+    } catch (e) {
+      debugPrint('[DataCollection] Failed to load dynamic fields: $e');
+    }
+    
+    // Fall back to template fields if no dynamic fields found
+    debugPrint('[DataCollection] Falling back to template fields...');
+    final templateFields = await TemplateService().getTemplateFields(widget.template.id);
+    debugPrint('[DataCollection] Template fields count: ${templateFields.length}');
+    return templateFields;
   }
 
   @override

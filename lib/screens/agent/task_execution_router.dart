@@ -71,27 +71,37 @@ class TaskExecutionRouter extends StatelessWidget {
 
         final template = snapshot.data!;
 
+        debugPrint('[TaskRouter] Task ID: ${task.id}');
+        debugPrint('[TaskRouter] Template: ${template.name}');
+        debugPrint('[TaskRouter] Template taskType: ${template.taskType}');
+        debugPrint('[TaskRouter] Routing to screen...');
+
         // Route to appropriate screen based on task type
         switch (template.taskType) {
           case TaskType.geofenceStay:
+            debugPrint('[TaskRouter] → GeofenceStayTaskScreen');
             return GeofenceStayTaskScreen(task: task, template: template);
           
           case TaskType.dataCollection:
           case TaskType.inspection:
           case TaskType.survey:
           case TaskType.maintenance:
+            debugPrint('[TaskRouter] → DataCollectionTaskScreen (survey/data collection)');
             return DataCollectionTaskScreen(task: task, template: template);
           
           case TaskType.delivery:
+            debugPrint('[TaskRouter] → DataCollectionTaskScreen (delivery)');
             // For delivery tasks, use data collection with signature requirement
             return DataCollectionTaskScreen(task: task, template: template);
           
           case TaskType.monitoring:
+            debugPrint('[TaskRouter] → EnhancedEvidenceSubmissionScreen');
             // For monitoring tasks, use enhanced evidence submission
             return EnhancedEvidenceSubmissionScreen(task: task, template: template);
           
           case TaskType.simpleEvidence:
           default:
+            debugPrint('[TaskRouter] → EvidenceSubmissionScreen (default/simpleEvidence)');
             // Default to evidence submission screen
             return EvidenceSubmissionScreen(task: task);
         }
