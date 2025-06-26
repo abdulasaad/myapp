@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:geolocator/geolocator.dart';
 import '../utils/constants.dart';
 import '../models/app_user.dart';
 import '../services/location_service.dart';
@@ -615,6 +616,8 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> {
                   ],
                 ),
               ),
+              // GPS Signal Indicator
+              _buildGPSIndicator(),
             ],
           ),
           const SizedBox(height: 16),
@@ -682,6 +685,152 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> {
         ],
       ),
     );
+  }
+
+  Widget _buildGPSIndicator() {
+    return FutureBuilder<bool>(
+      future: _checkGPSStatus(),
+      builder: (context, snapshot) {
+        Color indicatorColor;
+        IconData indicatorIcon;
+        String tooltip;
+        
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          indicatorColor = Colors.grey;
+          indicatorIcon = Icons.gps_not_fixed;
+          tooltip = 'Checking GPS...';
+        } else if (snapshot.hasData && snapshot.data == true) {
+          indicatorColor = Colors.green;
+          indicatorIcon = Icons.gps_fixed;
+          tooltip = 'GPS Active';
+        } else {
+          indicatorColor = Colors.red;
+          indicatorIcon = Icons.gps_off;
+          tooltip = 'GPS Unavailable';
+        }
+        
+        return GestureDetector(
+          onTap: () {
+            // Show GPS status dialog
+            _showGPSStatusDialog();
+          },
+          child: Tooltip(
+            message: tooltip,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                indicatorIcon,
+                color: indicatorColor,
+                size: 20,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<bool> _checkGPSStatus() async {
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      final permission = await Geolocator.checkPermission();
+      return serviceEnabled && (permission == LocationPermission.always || permission == LocationPermission.whileInUse);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  void _showGPSStatusDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.location_on, color: primaryColor),
+            SizedBox(width: 8),
+            Text('GPS Status'),
+          ],
+        ),
+        content: FutureBuilder<Map<String, dynamic>>(
+          future: _getDetailedGPSStatus(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CircularProgressIndicator();
+            }
+            
+            final status = snapshot.data ?? {};
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildStatusRow('Location Service', status['serviceEnabled'] ?? false),
+                _buildStatusRow('App Permission', status['hasPermission'] ?? false),
+                if (status['accuracy'] != null)
+                  Text('Last Known Accuracy: ${status['accuracy'].toStringAsFixed(1)}m'),
+              ],
+            );
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusRow(String label, bool isEnabled) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(
+            isEnabled ? Icons.check_circle : Icons.cancel,
+            color: isEnabled ? Colors.green : Colors.red,
+            size: 16,
+          ),
+          const SizedBox(width: 8),
+          Text(label),
+        ],
+      ),
+    );
+  }
+
+  Future<Map<String, dynamic>> _getDetailedGPSStatus() async {
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      final permission = await Geolocator.checkPermission();
+      final hasPermission = permission == LocationPermission.always || permission == LocationPermission.whileInUse;
+      
+      double? accuracy;
+      if (serviceEnabled && hasPermission) {
+        try {
+          final position = await Geolocator.getLastKnownPosition();
+          accuracy = position?.accuracy;
+        } catch (e) {
+          // Ignore errors getting last position
+        }
+      }
+      
+      return {
+        'serviceEnabled': serviceEnabled,
+        'hasPermission': hasPermission,
+        'accuracy': accuracy,
+      };
+    } catch (e) {
+      return {
+        'serviceEnabled': false,
+        'hasPermission': false,
+        'accuracy': null,
+      };
+    }
   }
 
   Widget _buildPerformanceStats(AgentTaskStats taskStats, AgentEarningsStats earningsStats) {
@@ -828,6 +977,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> {
           ),
         ),
         const SizedBox(height: 12),
+        // First row with 2 items for better spacing
         Row(
           children: [
             Expanded(
@@ -861,7 +1011,12 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> {
                 },
               ),
             ),
-            const SizedBox(width: 12),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // Second row with 2 items
+        Row(
+          children: [
             Expanded(
               child: _buildActionCard(
                 icon: Icons.campaign,
@@ -869,10 +1024,26 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> {
                 subtitle: 'Active campaigns',
                 color: secondaryColor,
                 onTap: () {
-                  // Navigate to campaigns screen directly since we can't easily access parent state
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => CampaignsListScreen(locationService: LocationService()),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildActionCard(
+                icon: Icons.location_on,
+                title: 'My Location',
+                subtitle: 'View location',
+                color: warningColor,
+                onTap: () {
+                  // Navigate to task location viewer or show current location
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const LiveMapScreen(),
                     ),
                   );
                 },
@@ -894,6 +1065,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        height: 100, // Fixed height for consistent layout
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: surfaceColor,
@@ -908,26 +1080,30 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> {
           ],
         ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(icon, color: color, size: 20),
+              child: Icon(icon, color: color, size: 18),
             ),
             const SizedBox(height: 8),
             Text(
               title,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: FontWeight.bold,
                 color: textPrimaryColor,
               ),
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
+            const SizedBox(height: 2),
             Text(
               subtitle,
               style: const TextStyle(
@@ -935,6 +1111,8 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> {
                 color: textSecondaryColor,
               ),
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
