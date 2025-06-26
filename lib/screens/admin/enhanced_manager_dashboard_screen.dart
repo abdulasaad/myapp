@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../utils/constants.dart';
-import '../tasks/template_categories_screen.dart';
 import 'evidence_list_screen.dart';
 import '../tasks/standalone_tasks_screen.dart';
 import '../calendar_screen.dart';
@@ -354,20 +353,6 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const TemplateCategoriesScreen(),
-            ),
-          );
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Create Task'),
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 4,
-      ),
     );
   }
 
@@ -592,22 +577,6 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(
-              child: _buildActionCard(
-                title: 'Create Task',
-                subtitle: 'From templates',
-                icon: Icons.add_task,
-                color: primaryColor,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const TemplateCategoriesScreen(),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(width: 12),
             Expanded(
               child: _buildActionCard(
                 title: 'Review Evidence',
