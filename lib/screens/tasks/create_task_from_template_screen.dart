@@ -665,8 +665,12 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
         return _buildNumberFieldWidget(field);
       case TemplateFieldType.date:
         return _buildDateFieldWidget(field);
+      case TemplateFieldType.time:
+        return _buildTimeFieldWidget(field);
       case TemplateFieldType.boolean:
+      case TemplateFieldType.checkbox:
         return _buildBooleanFieldWidget(field);
+      case TemplateFieldType.radio:
       case TemplateFieldType.select:
         return _buildSelectFieldWidget(field);
       case TemplateFieldType.multiselect:
@@ -770,6 +774,42 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
             hintText: field.placeholderText ?? 'Tap to select date',
             border: const OutlineInputBorder(),
             suffixIcon: const Icon(Icons.calendar_today),
+          ),
+          validator: field.isRequired
+              ? (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return '${field.fieldLabel} is required';
+                  }
+                  return null;
+                }
+              : null,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeFieldWidget(TemplateField field) {
+    return InkWell(
+      onTap: () async {
+        final time = await showTimePicker(
+          context: context,
+          initialTime: TimeOfDay.now(),
+        );
+        if (time != null) {
+          setState(() {
+            _customFieldValues[field.fieldName] = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+            _customFieldControllers[field.fieldName]!.text = time.format(context);
+          });
+        }
+      },
+      child: IgnorePointer(
+        child: TextFormField(
+          controller: _customFieldControllers[field.fieldName],
+          decoration: InputDecoration(
+            labelText: field.fieldLabel + (field.isRequired ? ' *' : ''),
+            hintText: field.placeholderText ?? 'Tap to select time',
+            border: const OutlineInputBorder(),
+            suffixIcon: const Icon(Icons.access_time),
           ),
           validator: field.isRequired
               ? (value) {

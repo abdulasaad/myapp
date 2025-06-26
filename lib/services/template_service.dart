@@ -28,6 +28,59 @@ class TemplateService {
     return response.map((json) => TemplateCategory.fromJson(json)).toList();
   }
 
+  /// Get template categories accessible to current manager
+  Future<List<TemplateCategory>> getCategoriesForManager() async {
+    final currentUserId = supabase.auth.currentUser?.id;
+    if (currentUserId == null) return [];
+
+    // Check if user is manager
+    final userResponse = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', currentUserId)
+        .single();
+    
+    final userRole = userResponse['role'] as String?;
+    
+    // Admins see all categories
+    if (userRole == 'admin') {
+      return getCategories();
+    }
+    
+    // For managers, check their template access
+    if (userRole == 'manager') {
+      try {
+        final accessResponse = await supabase
+            .from('manager_template_access')
+            .select('template_categories')
+            .eq('manager_id', currentUserId)
+            .single();
+        
+        final allowedCategories = (accessResponse['template_categories'] as List<dynamic>?)?.cast<String>() ?? [];
+        
+        if (allowedCategories.isEmpty) {
+          return [];
+        }
+        
+        final response = await supabase
+            .from('template_categories')
+            .select()
+            .inFilter('name', allowedCategories)
+            .eq('is_active', true)
+            .order('sort_order');
+        
+        return response.map((json) => TemplateCategory.fromJson(json)).toList();
+      } catch (e) {
+        // If no access record found, return empty list
+        debugPrint('No template access found for manager: $e');
+        return [];
+      }
+    }
+    
+    // Agents and other roles see no categories (they don't create tasks)
+    return [];
+  }
+
   /// Get a specific category by ID
   Future<TemplateCategory?> getCategoryById(String categoryId) async {
     final response = await supabase
@@ -96,6 +149,63 @@ class TemplateService {
       'created_at': DateTime.now().toIso8601String(),
       'updated_at': DateTime.now().toIso8601String(),
     })).toList();
+  }
+
+  /// Get templates accessible to current manager (filtered by their category access)
+  Future<List<TaskTemplate>> getTemplatesForManager() async {
+    final currentUserId = supabase.auth.currentUser?.id;
+    if (currentUserId == null) return [];
+
+    // Check if user is manager
+    final userResponse = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', currentUserId)
+        .single();
+    
+    final userRole = userResponse['role'] as String?;
+    
+    // Admins see all templates
+    if (userRole == 'admin') {
+      return getTemplates();
+    }
+    
+    // For managers, filter by their accessible categories
+    if (userRole == 'manager') {
+      try {
+        final accessResponse = await supabase
+            .from('manager_template_access')
+            .select('template_categories')
+            .eq('manager_id', currentUserId)
+            .single();
+        
+        final allowedCategories = (accessResponse['template_categories'] as List<dynamic>?)?.cast<String>() ?? [];
+        
+        if (allowedCategories.isEmpty) {
+          return [];
+        }
+        
+        final response = await supabase
+            .from('task_templates')
+            .select('''
+              *,
+              template_categories!inner(*)
+            ''')
+            .inFilter('template_categories.name', allowedCategories)
+            .eq('is_active', true)
+            .eq('template_categories.is_active', true)
+            .order('name');
+        
+        return response.map((json) => TaskTemplate.fromJson(json)).toList();
+      } catch (e) {
+        // If no access record found, return empty list
+        debugPrint('No template access found for manager: $e');
+        return [];
+      }
+    }
+    
+    // Agents and other roles see no templates for creation
+    return [];
   }
 
   /// Get a specific template with its fields

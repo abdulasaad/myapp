@@ -6,7 +6,7 @@ import '../../utils/constants.dart';
 import 'evidence_list_screen.dart';
 import '../tasks/standalone_tasks_screen.dart';
 import '../calendar_screen.dart';
-import 'group_management_screen.dart';
+import 'pending_assignments_screen.dart';
 import '../../services/group_service.dart';
 
 class EnhancedManagerDashboardScreen extends StatefulWidget {
@@ -608,6 +608,22 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
           children: [
             Expanded(
               child: _buildActionCard(
+                title: 'Pending Assignments',
+                subtitle: 'Approval needed',
+                icon: Icons.assignment_late,
+                color: Colors.orange,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const PendingAssignmentsScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildActionCard(
                 title: 'Review Evidence',
                 subtitle: 'Pending items',
                 icon: Icons.rate_review,
@@ -637,7 +653,11 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
                 },
               ),
             ),
-            const SizedBox(width: 12),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
             Expanded(
               child: _buildActionCard(
                 title: 'Calendar',
@@ -653,6 +673,10 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
                 },
               ),
             ),
+            const SizedBox(width: 12),
+            Expanded(child: Container()), // Empty space
+            const SizedBox(width: 12),
+            Expanded(child: Container()), // Empty space
           ],
         ),
       ],

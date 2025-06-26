@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../services/profile_service.dart';
 import '../../utils/constants.dart';
 import 'gps_settings_screen.dart';
+import 'template_setup_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -57,6 +58,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Icons.gps_fixed,
             () => Navigator.of(context).push(
               MaterialPageRoute(builder: (context) => const GpsSettingsScreen()),
+            ),
+          ),
+          const SizedBox(height: 16),
+          
+          _buildSettingsCategory(
+            'Template Setup',
+            'Setup enhanced task templates with rich features',
+            Icons.rocket_launch,
+            () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const TemplateSetupScreen()),
             ),
           ),
           const SizedBox(height: 16),

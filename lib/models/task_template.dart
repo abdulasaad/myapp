@@ -17,6 +17,17 @@ enum EvidenceType {
   audio,
 }
 
+enum TaskType {
+  simpleEvidence,    // Basic evidence upload
+  geofenceStay,      // Stay in area for duration
+  dataCollection,    // Form-based data collection
+  inspection,        // Detailed checklist inspection
+  survey,            // Survey with multiple questions
+  monitoring,        // Continuous monitoring task
+  delivery,          // Delivery confirmation
+  maintenance,       // Maintenance report
+}
+
 class TaskTemplate {
   final String id;
   final String name;
@@ -30,6 +41,7 @@ class TaskTemplate {
   final String? customInstructions;
   final int? estimatedDuration; // in minutes
   final DifficultyLevel difficultyLevel;
+  final TaskType taskType;
   final bool isActive;
   final String? createdBy;
   final DateTime createdAt;
@@ -52,6 +64,7 @@ class TaskTemplate {
     this.customInstructions,
     this.estimatedDuration,
     required this.difficultyLevel,
+    required this.taskType,
     required this.isActive,
     this.createdBy,
     required this.createdAt,
@@ -80,6 +93,7 @@ class TaskTemplate {
       customInstructions: json['custom_instructions'],
       estimatedDuration: json['estimated_duration'],
       difficultyLevel: _parseDifficultyLevel(json['difficulty_level']),
+      taskType: _parseTaskType(json['task_type']),
       isActive: json['is_active'] ?? true,
       createdBy: json['created_by'],
       createdAt: DateTime.parse(json['created_at']),
@@ -109,6 +123,7 @@ class TaskTemplate {
       'custom_instructions': customInstructions,
       'estimated_duration': estimatedDuration,
       'difficulty_level': difficultyLevel.name,
+      'task_type': taskType.name,
       'is_active': isActive,
       'created_by': createdBy,
       'created_at': createdAt.toIso8601String(),
@@ -142,6 +157,29 @@ class TaskTemplate {
         return EvidenceType.audio;
       default:
         return EvidenceType.image;
+    }
+  }
+
+  static TaskType _parseTaskType(String? type) {
+    switch (type?.toLowerCase()) {
+      case 'simpleevidence':
+        return TaskType.simpleEvidence;
+      case 'geofencestay':
+        return TaskType.geofenceStay;
+      case 'datacollection':
+        return TaskType.dataCollection;
+      case 'inspection':
+        return TaskType.inspection;
+      case 'survey':
+        return TaskType.survey;
+      case 'monitoring':
+        return TaskType.monitoring;
+      case 'delivery':
+        return TaskType.delivery;
+      case 'maintenance':
+        return TaskType.maintenance;
+      default:
+        return TaskType.simpleEvidence;
     }
   }
 
@@ -182,7 +220,69 @@ class TaskTemplate {
     }).toList();
   }
 
+  String get taskTypeDisplayName {
+    switch (taskType) {
+      case TaskType.simpleEvidence:
+        return 'Evidence Upload';
+      case TaskType.geofenceStay:
+        return 'Location Stay';
+      case TaskType.dataCollection:
+        return 'Data Collection';
+      case TaskType.inspection:
+        return 'Inspection';
+      case TaskType.survey:
+        return 'Survey';
+      case TaskType.monitoring:
+        return 'Monitoring';
+      case TaskType.delivery:
+        return 'Delivery';
+      case TaskType.maintenance:
+        return 'Maintenance';
+    }
+  }
+
+  String get taskTypeDescription {
+    switch (taskType) {
+      case TaskType.simpleEvidence:
+        return 'Upload photos or documents as evidence';
+      case TaskType.geofenceStay:
+        return 'Stay in designated area for required duration';
+      case TaskType.dataCollection:
+        return 'Fill out forms and collect specific data';
+      case TaskType.inspection:
+        return 'Complete detailed inspection checklist';
+      case TaskType.survey:
+        return 'Answer survey questions and submit responses';
+      case TaskType.monitoring:
+        return 'Monitor and report on ongoing conditions';
+      case TaskType.delivery:
+        return 'Confirm delivery and obtain signatures';
+      case TaskType.maintenance:
+        return 'Perform maintenance and report status';
+    }
+  }
+
   bool get hasCustomFields => fields != null && fields!.isNotEmpty;
+  
+  bool get requiresGeofenceStay => taskType == TaskType.geofenceStay;
+  
+  bool get requiresFormData => [
+    TaskType.dataCollection,
+    TaskType.inspection,
+    TaskType.survey,
+    TaskType.maintenance
+  ].contains(taskType);
+  
+  bool get requiresSignature => taskType == TaskType.delivery;
+  
+  int? get requiredStayDuration {
+    if (taskType != TaskType.geofenceStay) return null;
+    return templateConfig['required_stay_minutes'] as int?;
+  }
+  
+  bool get allowsEarlyCompletion {
+    return templateConfig['allow_early_completion'] == true;
+  }
 
   TaskTemplate copyWith({
     String? id,
@@ -197,6 +297,7 @@ class TaskTemplate {
     String? customInstructions,
     int? estimatedDuration,
     DifficultyLevel? difficultyLevel,
+    TaskType? taskType,
     bool? isActive,
     String? createdBy,
     DateTime? createdAt,
@@ -217,6 +318,7 @@ class TaskTemplate {
       customInstructions: customInstructions ?? this.customInstructions,
       estimatedDuration: estimatedDuration ?? this.estimatedDuration,
       difficultyLevel: difficultyLevel ?? this.difficultyLevel,
+      taskType: taskType ?? this.taskType,
       isActive: isActive ?? this.isActive,
       createdBy: createdBy ?? this.createdBy,
       createdAt: createdAt ?? this.createdAt,

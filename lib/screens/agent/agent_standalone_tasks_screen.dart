@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/task.dart';
 import '../../utils/constants.dart';
-import '../agent/evidence_submission_screen.dart';
+import '../agent/task_execution_router.dart';
 import '../agent/task_location_viewer_screen.dart';
 
 class AgentStandaloneTasksScreen extends StatefulWidget {
@@ -355,7 +355,7 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
-        onTap: taskWithAssignment.isAssigned ? () => _openTaskDetail(task) : null,
+        onTap: () => _openTaskDetail(task), // Allow access to all tasks
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -497,21 +497,40 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
     }
 
     if (taskWithAssignment.assignmentStatus == 'pending') {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.orange.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          'Assignment request pending approval',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.orange[700],
-            fontWeight: FontWeight.w500,
+      return Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'Assignment request pending approval',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.orange[700],
+                  fontWeight: FontWeight.w500,
+                  fontSize: 12,
+                ),
+              ),
+            ),
           ),
-        ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: ElevatedButton(
+              onPressed: () => _openTaskDetail(taskWithAssignment.task),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+              ),
+              child: const Text('View Task', style: TextStyle(fontSize: 12)),
+            ),
+          ),
+        ],
       );
     }
 
@@ -539,7 +558,7 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
   void _openTaskDetail(Task task) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => EvidenceSubmissionScreen(task: task),
+        builder: (context) => TaskExecutionRouter(task: task),
       ),
     );
   }

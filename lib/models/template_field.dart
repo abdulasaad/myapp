@@ -4,7 +4,10 @@ enum TemplateFieldType {
   text,
   number,
   date,
+  time,
   boolean,
+  checkbox,
+  radio,
   select,
   multiselect,
   textarea,
@@ -87,8 +90,14 @@ class TemplateField {
         return TemplateFieldType.number;
       case 'date':
         return TemplateFieldType.date;
+      case 'time':
+        return TemplateFieldType.time;
       case 'boolean':
         return TemplateFieldType.boolean;
+      case 'checkbox':
+        return TemplateFieldType.checkbox;
+      case 'radio':
+        return TemplateFieldType.radio;
       case 'select':
         return TemplateFieldType.select;
       case 'multiselect':
@@ -104,11 +113,12 @@ class TemplateField {
     }
   }
 
-  bool get isSelectType => fieldType == TemplateFieldType.select || fieldType == TemplateFieldType.multiselect;
+  bool get isSelectType => fieldType == TemplateFieldType.select || fieldType == TemplateFieldType.multiselect || fieldType == TemplateFieldType.radio;
   bool get isTextType => fieldType == TemplateFieldType.text || fieldType == TemplateFieldType.textarea;
   bool get isNumericType => fieldType == TemplateFieldType.number;
   bool get isDateType => fieldType == TemplateFieldType.date;
-  bool get isBooleanType => fieldType == TemplateFieldType.boolean;
+  bool get isTimeType => fieldType == TemplateFieldType.time;
+  bool get isBooleanType => fieldType == TemplateFieldType.boolean || fieldType == TemplateFieldType.checkbox;
 
   String get fieldTypeDisplayName {
     switch (fieldType) {
@@ -118,8 +128,14 @@ class TemplateField {
         return 'Number';
       case TemplateFieldType.date:
         return 'Date';
+      case TemplateFieldType.time:
+        return 'Time';
       case TemplateFieldType.boolean:
         return 'Yes/No';
+      case TemplateFieldType.checkbox:
+        return 'Checkbox';
+      case TemplateFieldType.radio:
+        return 'Radio Button';
       case TemplateFieldType.select:
         return 'Single Choice';
       case TemplateFieldType.multiselect:

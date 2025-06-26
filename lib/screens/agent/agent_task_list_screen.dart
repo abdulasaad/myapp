@@ -9,6 +9,7 @@ import '../../models/campaign.dart';
 import '../../models/task.dart';
 import '../../utils/constants.dart';
 import '../../services/location_service.dart';
+import '../../services/task_assignment_service.dart';
 import 'guided_task_screen.dart';
 
 class AgentTask {
@@ -214,6 +215,12 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
           'title': title,
           'file_url': imageUrl,
         });
+
+        // Update assignment status to in_progress if it's currently assigned
+        await TaskAssignmentService().updateAssignmentStatusOnEvidence(taskAssignmentId);
+        
+        // Check if task should be auto-completed
+        await TaskAssignmentService().checkTaskCompletion(taskAssignmentId);
       }
       
       // Also update the evidence_urls for backward compatibility

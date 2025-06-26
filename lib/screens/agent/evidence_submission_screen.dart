@@ -104,6 +104,8 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
   @override
   void initState() {
     super.initState();
+    // Initialize _evidenceFuture immediately to prevent LateInitializationError
+    _evidenceFuture = Future.value([]);
     _loadInitialData();
   }
 
@@ -115,18 +117,24 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
           .match({
         'task_id': widget.task.id,
         'agent_id': supabase.auth.currentUser!.id
-      }).single();
+      }).maybeSingle();
 
-      _taskAssignmentId = assignment['id'];
-      _assignmentStatus = assignment['status'];
+      if (assignment != null) {
+        _taskAssignmentId = assignment['id'];
+        _assignmentStatus = assignment['status'];
+      } else {
+        // No assignment exists, allow viewing but not submitting
+        _assignmentStatus = 'not_assigned';
+      }
     } catch (e) {
       if (mounted) {
         context.showSnackBar('Error loading task assignment: $e',
             isError: true);
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      // Always set _evidenceFuture to prevent LateInitializationError
       _evidenceFuture = _fetchEvidence();
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -135,7 +143,12 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
     var query = supabase.from('evidence').select('id, title, file_url, mime_type, file_size, status, rejection_reason, reviewed_at, captured_at, latitude, longitude, accuracy');
 
     if (!isManager) {
-      query = query.eq('task_assignment_id', _taskAssignmentId);
+      if (_taskAssignmentId.isNotEmpty) {
+        query = query.eq('task_assignment_id', _taskAssignmentId);
+      } else {
+        // Return empty list if no assignment
+        return [];
+      }
     } else {
       query = query.eq('task_id', widget.task.id);
     }

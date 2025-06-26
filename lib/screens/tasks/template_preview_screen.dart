@@ -457,10 +457,16 @@ class _TemplatePreviewScreenState extends State<TemplatePreviewScreen> {
         return Icons.numbers;
       case TemplateFieldType.date:
         return Icons.calendar_today;
+      case TemplateFieldType.time:
+        return Icons.access_time;
       case TemplateFieldType.boolean:
+        return Icons.toggle_on;
+      case TemplateFieldType.checkbox:
         return Icons.check_box;
-      case TemplateFieldType.select:
+      case TemplateFieldType.radio:
         return Icons.radio_button_checked;
+      case TemplateFieldType.select:
+        return Icons.arrow_drop_down_circle;
       case TemplateFieldType.multiselect:
         return Icons.checklist;
       case TemplateFieldType.textarea:
