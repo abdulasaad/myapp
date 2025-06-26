@@ -606,10 +606,6 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
     }
   }
 
-  // Keep the old method for backward compatibility
-  Future<void> _uploadEvidence(String title, XFile xFile) async {
-    return _uploadEvidenceFile(title, xFile);
-  }
 
   void _viewEvidence(Evidence evidence) {
     if (evidence.isImage) {
