@@ -90,11 +90,82 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
   // --- DATA FETCHING METHODS ---
 
   Future<List<Campaign>> _fetchManagerCampaigns() async {
-    final response = await supabase
-        .from('campaigns')
-        .select()
-        .order('created_at', ascending: false);
-    return response.map((json) => Campaign.fromJson(json)).toList();
+    final currentUser = supabase.auth.currentUser;
+    if (currentUser == null) return [];
+
+    try {
+      // Get current user's role
+      final userRoleResponse = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', currentUser.id)
+          .single();
+      
+      final userRole = userRoleResponse['role'] as String;
+
+      if (userRole == 'admin') {
+        // Admins can see all campaigns
+        final response = await supabase
+            .from('campaigns')
+            .select()
+            .order('created_at', ascending: false);
+        return response.map((json) => Campaign.fromJson(json)).toList();
+      } else if (userRole == 'manager') {
+        // Managers can only see campaigns created by users in their shared groups
+        // Get current manager's groups
+        final userGroupsResponse = await supabase
+            .from('user_groups')
+            .select('group_id')
+            .eq('user_id', currentUser.id);
+        
+        final userGroupIds = userGroupsResponse
+            .map((item) => item['group_id'] as String)
+            .toSet();
+        
+        if (userGroupIds.isEmpty) {
+          // Manager not in any groups, can only see campaigns they created
+          final response = await supabase
+              .from('campaigns')
+              .select()
+              .eq('created_by', currentUser.id)
+              .order('created_at', ascending: false);
+          return response.map((json) => Campaign.fromJson(json)).toList();
+        }
+
+        // Get all users in the same groups (including the manager)
+        final usersInGroupsResponse = await supabase
+            .from('user_groups')
+            .select('user_id')
+            .inFilter('group_id', userGroupIds.toList());
+        
+        final allowedUserIds = usersInGroupsResponse
+            .map((item) => item['user_id'] as String)
+            .toSet();
+        
+        // Always include the current manager
+        allowedUserIds.add(currentUser.id);
+
+        if (allowedUserIds.isEmpty) {
+          return [];
+        }
+
+        // Get campaigns created by users in the same groups
+        final response = await supabase
+            .from('campaigns')
+            .select()
+            .inFilter('created_by', allowedUserIds.toList())
+            .order('created_at', ascending: false);
+        
+        return response.map((json) => Campaign.fromJson(json)).toList();
+      } else {
+        // Other roles (agents) typically don't manage campaigns
+        return [];
+      }
+    } catch (e) {
+      debugPrint('Error filtering manager campaigns: $e');
+      // Return empty list on error rather than throwing
+      return [];
+    }
   }
 
   Future<List<Campaign>> _fetchAgentCampaigns() async {

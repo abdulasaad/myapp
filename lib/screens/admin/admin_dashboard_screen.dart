@@ -6,6 +6,7 @@ import '../../utils/constants.dart';
 import '../tasks/template_categories_screen.dart';
 import 'simple_evidence_review_screen.dart';
 import '../tasks/standalone_tasks_screen.dart';
+import 'user_management_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -580,7 +581,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 icon: Icons.manage_accounts,
                 color: primaryColor,
                 onTap: () {
-                  // User management feature - placeholder
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const UserManagementScreen(),
+                    ),
+                  );
                 },
               ),
             ),

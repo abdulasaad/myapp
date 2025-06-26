@@ -9,7 +9,7 @@ interface UserCreationPayload {
   password?: string; 
   userMetadata?: { [key: string]: any };
   fullNameForProfile: string;
-  roleForProfile: 'agent' | 'manager';
+  roleForProfile: 'agent' | 'manager' | 'admin';
   usernameForProfile?: string;
   emailForProfile?: string;
   agentCreationLimit?: number;
@@ -105,8 +105,10 @@ serve(async (req) => {
 
   let authorizedToCreate = false;
   if (callingUserRole === 'admin') {
+    // Admins can create any role
     authorizedToCreate = true;
   } else if (callingUserRole === 'manager' && payload.roleForProfile === 'agent') {
+    // Managers can only create agents
     authorizedToCreate = true;
   }
   console.log(`Authorized to create: ${authorizedToCreate}`);
@@ -132,11 +134,14 @@ serve(async (req) => {
   });
 
   try {
+    // For agents, skip email confirmation. For managers/admins, require email confirmation
+    const skipEmailConfirmation = payload.roleForProfile === 'agent';
+    
     const { data: authUserResponse, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: payload.emailForAuth,
       password: payload.password,
-      // user_metadata: userMetadataForAuth, // Temporarily removed for testing
-      // email_confirm: true, // Temporarily removed, will use project default
+      user_metadata: userMetadataForAuth,
+      email_confirm: skipEmailConfirmation, // Agents get auto-confirmed, others need confirmation
     });
     console.log('supabaseAdmin.auth.admin.createUser call completed (simplified).');
 
@@ -184,6 +189,10 @@ serve(async (req) => {
       if (callingUserRole === 'admin') {
         profileDataToUpdate.created_by = null;
       }
+    } else if (payload.roleForProfile === 'admin') {
+      profileDataToUpdate.email = payload.emailForProfile || payload.emailForAuth;
+      profileDataToUpdate.agent_creation_limit = 0; // Admins don't create agents directly
+      profileDataToUpdate.created_by = null; // Top-level role
     }
     console.log(`Attempting to update profile for user ID ${newUserId} with data:`, JSON.stringify(profileDataToUpdate, null, 2));
     

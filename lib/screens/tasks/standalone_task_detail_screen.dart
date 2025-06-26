@@ -89,12 +89,91 @@ class _StandaloneTaskDetailScreenState
   }
 
   Future<void> _showAssignAgentDialog() async {
-    final allAgentsResponse =
-        await supabase.from('profiles').select('id, full_name').eq('role', 'agent');
-    final allAgents =
-        allAgentsResponse.map((json) => AppUser.fromJson(json)).toList();
+    List<AppUser> allAgents = [];
+    
+    try {
+      // Check current user's role to determine filtering approach
+      final currentUser = supabase.auth.currentUser;
+      if (currentUser == null) {
+        if (mounted) {
+          context.showSnackBar('Please log in to assign agents', isError: true);
+        }
+        return;
+      }
+
+      // Get current user's role
+      final userRoleResponse = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', currentUser.id)
+          .single();
+      
+      final userRole = userRoleResponse['role'] as String;
+
+      if (userRole == 'admin') {
+        // Admins can see all agents
+        final allAgentsResponse = await supabase
+            .from('profiles')
+            .select('id, full_name, username, role, status, agent_creation_limit, email, created_at, updated_at')
+            .eq('role', 'agent')
+            .eq('status', 'active');
+        allAgents = allAgentsResponse.map((json) => AppUser.fromJson(json)).toList();
+      } else if (userRole == 'manager') {
+        // Managers can only see agents in their shared groups
+        // Get current manager's groups
+        final userGroupsResponse = await supabase
+            .from('user_groups')
+            .select('group_id')
+            .eq('user_id', currentUser.id);
+        
+        final userGroupIds = userGroupsResponse
+            .map((item) => item['group_id'] as String)
+            .toSet();
+        
+        if (userGroupIds.isEmpty) {
+          // Manager not in any groups, can't see any agents
+          allAgents = [];
+        } else {
+          // Get all agents in the same groups
+          final agentGroupsResponse = await supabase
+              .from('user_groups')
+              .select('user_id')
+              .inFilter('group_id', userGroupIds.toList());
+          
+          final agentIds = agentGroupsResponse
+              .map((item) => item['user_id'] as String)
+              .toSet();
+          
+          if (agentIds.isNotEmpty) {
+            final agentsResponse = await supabase
+                .from('profiles')
+                .select('id, full_name, username, role, status, agent_creation_limit, email, created_at, updated_at')
+                .eq('role', 'agent')
+                .eq('status', 'active')
+                .inFilter('id', agentIds.toList());
+            allAgents = agentsResponse.map((json) => AppUser.fromJson(json)).toList();
+          }
+        }
+      } else {
+        // Other roles (agents) typically can't assign agents
+        if (mounted) {
+          context.showSnackBar('You do not have permission to assign agents', isError: true);
+        }
+        return;
+      }
+    } catch (e) {
+      if (mounted) {
+        context.showSnackBar('Failed to load agents: $e', isError: true);
+      }
+      return;
+    }
 
     if (!mounted) {
+      return;
+    }
+
+    if (allAgents.isEmpty) {
+      context.showSnackBar('No agents available for assignment', isError: true);
       return;
     }
 

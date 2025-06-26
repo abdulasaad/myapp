@@ -172,11 +172,79 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
     });
   }
 
+  /// Fetch agent locations with group filtering applied for managers
+  Future<List> _fetchFilteredAgentLocations() async {
+    final currentUser = supabase.auth.currentUser;
+    if (currentUser == null) return [];
+
+    try {
+      // Get current user's role
+      final userRoleResponse = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', currentUser.id)
+          .single();
+      
+      final userRole = userRoleResponse['role'] as String;
+
+      if (userRole == 'admin') {
+        // Admins can see all agents
+        return await supabase.rpc('get_agents_with_last_location');
+      } else if (userRole == 'manager') {
+        // Managers can only see agents in their shared groups
+        // Get current manager's groups
+        final userGroupsResponse = await supabase
+            .from('user_groups')
+            .select('group_id')
+            .eq('user_id', currentUser.id);
+        
+        final userGroupIds = userGroupsResponse
+            .map((item) => item['group_id'] as String)
+            .toSet();
+        
+        if (userGroupIds.isEmpty) {
+          // Manager not in any groups, can't see any agents
+          return [];
+        }
+
+        // Get all agents in the same groups
+        final agentGroupsResponse = await supabase
+            .from('user_groups')
+            .select('user_id')
+            .inFilter('group_id', userGroupIds.toList());
+        
+        final agentIds = agentGroupsResponse
+            .map((item) => item['user_id'] as String)
+            .toSet();
+        
+        if (agentIds.isEmpty) {
+          return [];
+        }
+
+        // Get agent location data for filtered agents
+        final agentLocationData = await supabase.rpc('get_agents_with_last_location');
+        
+        // Filter the results to only include agents in the same groups
+        return (agentLocationData as List).where((agentData) {
+          final agentId = agentData['id'] as String?;
+          return agentId != null && agentIds.contains(agentId);
+        }).toList();
+      } else {
+        // Other roles (agents) typically don't access live map
+        return [];
+      }
+    } catch (e) {
+      debugPrint('Error filtering agent locations: $e');
+      // Return empty list on error rather than throwing
+      return [];
+    }
+  }
+
   Future<void> _fetchMapData() async {
     try {
       // Add timeout to prevent hanging
       final responses = await Future.wait([
-        supabase.rpc('get_agents_with_last_location').timeout(
+        _fetchFilteredAgentLocations().timeout(
           const Duration(seconds: 10),
           onTimeout: () => throw TimeoutException('Agent location request timed out', const Duration(seconds: 10)),
         ),

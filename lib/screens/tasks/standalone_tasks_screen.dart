@@ -25,12 +25,85 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
   }
 
   Future<List<Task>> _fetchTasks() async {
-    final response = await supabase
-        .from('tasks')
-        .select()
-        .filter('campaign_id', 'is', null) 
-        .order('created_at', ascending: false);
-    return response.map((json) => Task.fromJson(json)).toList();
+    final currentUser = supabase.auth.currentUser;
+    if (currentUser == null) return [];
+
+    try {
+      // Get current user's role
+      final userRoleResponse = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', currentUser.id)
+          .single();
+      
+      final userRole = userRoleResponse['role'] as String;
+
+      if (userRole == 'admin') {
+        // Admins can see all standalone tasks
+        final response = await supabase
+            .from('tasks')
+            .select()
+            .filter('campaign_id', 'is', null) 
+            .order('created_at', ascending: false);
+        return response.map((json) => Task.fromJson(json)).toList();
+      } else if (userRole == 'manager') {
+        // Managers can only see standalone tasks created by users in their shared groups
+        // Get current manager's groups
+        final userGroupsResponse = await supabase
+            .from('user_groups')
+            .select('group_id')
+            .eq('user_id', currentUser.id);
+        
+        final userGroupIds = userGroupsResponse
+            .map((item) => item['group_id'] as String)
+            .toSet();
+        
+        if (userGroupIds.isEmpty) {
+          // Manager not in any groups, can only see tasks they created
+          final response = await supabase
+              .from('tasks')
+              .select()
+              .filter('campaign_id', 'is', null)
+              .eq('created_by', currentUser.id)
+              .order('created_at', ascending: false);
+          return response.map((json) => Task.fromJson(json)).toList();
+        }
+
+        // Get all users in the same groups (including the manager)
+        final usersInGroupsResponse = await supabase
+            .from('user_groups')
+            .select('user_id')
+            .inFilter('group_id', userGroupIds.toList());
+        
+        final allowedUserIds = usersInGroupsResponse
+            .map((item) => item['user_id'] as String)
+            .toSet();
+        
+        // Always include the current manager
+        allowedUserIds.add(currentUser.id);
+
+        if (allowedUserIds.isEmpty) {
+          return [];
+        }
+
+        // Get standalone tasks created by users in the same groups
+        final response = await supabase
+            .from('tasks')
+            .select()
+            .filter('campaign_id', 'is', null)
+            .inFilter('created_by', allowedUserIds.toList())
+            .order('created_at', ascending: false);
+        
+        return response.map((json) => Task.fromJson(json)).toList();
+      } else {
+        // Other roles (agents) typically don't manage standalone tasks
+        return [];
+      }
+    } catch (e) {
+      debugPrint('Error filtering standalone tasks: $e');
+      // Return empty list on error rather than throwing
+      return [];
+    }
   }
 
   // --- NEW: A menu to choose how to create a task ---

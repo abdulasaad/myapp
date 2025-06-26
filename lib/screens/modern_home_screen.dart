@@ -34,6 +34,33 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> {
   void initState() {
     super.initState();
     _loadUserProfile();
+    _setupSessionManagement();
+  }
+
+  @override
+  void dispose() {
+    SessionService().stopPeriodicValidation();
+    super.dispose();
+  }
+
+  void _setupSessionManagement() {
+    // Set callback for when session becomes invalid
+    SessionService().setSessionInvalidCallback(() {
+      if (mounted) {
+        // Navigate back to login screen
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (route) => false,
+        );
+        context.showSnackBar(
+          'You have been logged out because this account was accessed from another device.',
+          isError: true,
+        );
+      }
+    });
+    
+    // Start periodic session validation
+    SessionService().startPeriodicValidation();
   }
 
   Future<void> _loadUserProfile() async {
@@ -1245,7 +1272,7 @@ class _ProfileTab extends StatelessWidget {
             ),
           ),
           Text(
-            '${user.role.toUpperCase()} • ${user.status.toUpperCase()}',
+            '${user.role.toUpperCase()} • ${(user.status ?? 'unknown').toUpperCase()}',
             style: const TextStyle(
               fontSize: 14,
               color: textSecondaryColor,

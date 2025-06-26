@@ -425,13 +425,13 @@ class _GroupDetailScreenState extends State<GroupDetailScreen> {
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                           decoration: BoxDecoration(
-                                            color: _getStatusColor(member.status).withValues(alpha: 0.1),
+                                            color: _getStatusColor(member.status ?? 'unknown').withValues(alpha: 0.1),
                                             borderRadius: BorderRadius.circular(12),
                                           ),
                                           child: Text(
-                                            member.status.toUpperCase(),
+                                            (member.status ?? 'unknown').toUpperCase(),
                                             style: TextStyle(
-                                              color: _getStatusColor(member.status),
+                                              color: _getStatusColor(member.status ?? 'unknown'),
                                               fontSize: 10,
                                               fontWeight: FontWeight.bold,
                                             ),

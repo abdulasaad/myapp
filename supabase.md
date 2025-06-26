@@ -228,6 +228,67 @@ FOR SELECT USING (
 );
 ```
 
+#### 10. `task_templates` Table
+Task templates for creating standardized tasks.
+
+**Columns:**
+- `id` (UUID, Primary Key)
+- `name` (TEXT)
+- `category_id` (UUID) - References template_categories(id)
+- `description` (TEXT)
+- `default_points` (INTEGER)
+- `requires_geofence` (BOOLEAN)
+- `default_evidence_count` (INTEGER)
+- `template_config` (JSONB)
+- `evidence_types` (JSONB)
+- `custom_instructions` (TEXT)
+- `estimated_duration` (INTEGER)
+- `difficulty_level` (TEXT)
+- `task_type` (TEXT) - **Added: 2025-06-26** - Values: 'simpleEvidence', 'survey', 'dataCollection', 'inspection', 'delivery', 'monitoring', 'maintenance'
+- `is_active` (BOOLEAN)
+- `created_by` (UUID) - References profiles(id)
+- `created_at` (TIMESTAMP WITH TIME ZONE)
+- `updated_at` (TIMESTAMP WITH TIME ZONE)
+
+#### 11. `task_dynamic_fields` Table
+**Added: 2025-06-26** - Dynamic form fields created by managers for specific tasks.
+
+**Columns:**
+- `id` (UUID, Primary Key)
+- `task_id` (UUID) - References tasks(id) ON DELETE CASCADE
+- `field_name` (TEXT, NOT NULL)
+- `field_type` (TEXT, NOT NULL) - Values: 'text', 'number', 'email', 'phone', 'select', 'multiselect', 'textarea', 'date', 'time', 'checkbox', 'radio'
+- `field_label` (TEXT, NOT NULL)
+- `placeholder_text` (TEXT)
+- `is_required` (BOOLEAN, DEFAULT: false)
+- `field_options` (TEXT[]) - For select/multiselect/radio options
+- `validation_rules` (JSONB, DEFAULT: '{}')
+- `help_text` (TEXT)
+- `sort_order` (INTEGER, DEFAULT: 0)
+- `created_at` (TIMESTAMP WITH TIME ZONE, DEFAULT: CURRENT_TIMESTAMP)
+- `created_by` (UUID) - References profiles(id)
+
+**Unique Constraint:** `UNIQUE(task_id, field_name)`
+
+#### 12. `sessions` Table
+**Added: 2025-06-27** - Device session management to prevent multiple simultaneous logins.
+
+**Columns:**
+- `id` (UUID, Primary Key)
+- `user_id` (UUID, NOT NULL) - References auth.users(id) ON DELETE CASCADE
+- `is_active` (BOOLEAN, NOT NULL, DEFAULT: true)
+- `created_at` (TIMESTAMP WITH TIME ZONE, DEFAULT: now())
+- `updated_at` (TIMESTAMP WITH TIME ZONE, DEFAULT: now())
+
+**Indexes:**
+- `idx_sessions_user_id` ON user_id
+- `idx_sessions_active` ON is_active
+- `idx_sessions_user_active` ON (user_id, is_active)
+
+**RLS Policies:**
+- Users can only view/manage their own sessions
+- Automatic cleanup of inactive sessions after 30 days
+
 ## Recent Schema Changes
 
 ### 2025-06-26
@@ -254,6 +315,59 @@ FOR SELECT USING (
    - Added null safety checks for task assignment data
    - Corrected EvidenceListItem constructor parameter order
 
+5. **Added `task_type` column to task_templates table**
+   ```sql
+   ALTER TABLE task_templates ADD COLUMN task_type TEXT DEFAULT 'simpleEvidence';
+   ```
+
+6. **Created `task_dynamic_fields` table for dynamic form fields**
+   ```sql
+   CREATE TABLE task_dynamic_fields (
+       id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+       task_id UUID NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+       field_name TEXT NOT NULL,
+       field_type TEXT NOT NULL,
+       field_label TEXT NOT NULL,
+       placeholder_text TEXT,
+       is_required BOOLEAN DEFAULT false,
+       field_options TEXT[],
+       validation_rules JSONB DEFAULT '{}',
+       help_text TEXT,
+       sort_order INTEGER DEFAULT 0,
+       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+       created_by UUID REFERENCES profiles(id),
+       UNIQUE(task_id, field_name)
+   );
+   ```
+
+7. **Implemented RLS policies for dynamic fields**
+   - Managers can create/manage dynamic fields for their tasks
+   - Agents can read dynamic fields for assigned tasks (including pending status)
+
+8. **Added dynamic form field builder system**
+   - Managers can create custom form fields when creating survey/data collection tasks
+   - Support for 11 field types with validation and options
+   - Form submissions stored in both `custom_fields` (JSON) and `evidence` table (audit trail)
+
+### 2025-06-27
+1. **Implemented comprehensive group isolation system**
+   - Managers can only see campaigns/tasks created by users in their shared groups
+   - Live map filtering: Managers only see agents within their groups
+   - User management: Group-based filtering for agent assignment
+   - Applied to campaigns list, standalone tasks, and agent assignment screens
+
+2. **Enhanced session management for device security**
+   - Added `sessions` table with proper RLS policies and indexing
+   - Implemented periodic session validation (60-second intervals)
+   - Session conflict dialog for multiple device login attempts
+   - Automatic logout when session becomes invalid on another device
+   - Session cleanup function for old inactive sessions
+
+3. **Updated session handling in application**
+   - Added session validation to ModernHomeScreen with automatic logout
+   - Enhanced login screen with session conflict detection
+   - Proper session cleanup on app dispose
+
 ## Key Features
 
 ### 1. Geofencing
@@ -276,6 +390,28 @@ FOR SELECT USING (
 - **Hierarchical structure**: Admin → Manager → Agent
 - **Group-based organization**: Managers oversee specific agent groups
 - **Role-based UI**: Different interfaces per user role
+
+### 5. Dynamic Form Builder (Added: 2025-06-26)
+- **Template System**: 8 task types including survey, data collection, inspection
+- **Custom Field Creation**: Managers can create dynamic form fields for tasks
+- **Field Types**: Support for 11 field types (text, number, email, phone, select, multiselect, textarea, date, time, checkbox, radio)
+- **Validation**: Built-in validation rules and required field enforcement
+- **Form Responses**: Comprehensive form submission management and viewing
+- **Data Export**: Form response viewing with export capabilities (planned)
+
+### 6. Group Isolation System (Added: 2025-06-27)
+- **Manager Segregation**: Managers only see content from users in their shared groups
+- **Campaign Filtering**: Group-based campaign and task visibility
+- **Agent Assignment**: Filtered agent lists based on group membership
+- **Live Map Filtering**: Real-time agent tracking respects group boundaries
+- **User Management**: Group-aware user creation and assignment
+
+### 7. Device Session Management (Added: 2025-06-27)
+- **Single Device Login**: Prevents multiple simultaneous logins per account
+- **Session Validation**: Periodic 60-second session checks
+- **Automatic Logout**: Forced logout when logged in from another device
+- **Conflict Resolution**: User choice dialog for handling multiple login attempts
+- **Session Cleanup**: Automatic removal of old inactive sessions
 
 ## API Integration
 
@@ -345,6 +481,6 @@ SUPABASE_ANON_KEY=your_anon_key
 
 ---
 
-**Last Updated**: 2025-06-26  
+**Last Updated**: 2025-06-27  
 **Maintained By**: Claude Code Assistant  
-**Version**: 1.0
+**Version**: 1.1
