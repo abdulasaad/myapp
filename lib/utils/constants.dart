@@ -6,9 +6,18 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 final supabase = Supabase.instance.client;
 
 // --- COLORS AND THEMES ---
-const primaryColor = Colors.teal;
-const backgroundColor = Color.fromRGBO(24, 24, 32, 1);
-const cardBackgroundColor = Color.fromRGBO(36, 36, 48, 1);
+const primaryColor = Color(0xFF2196F3); // Modern blue
+const secondaryColor = Color(0xFF03DAC6); // Teal accent
+const backgroundColor = Color(0xFFF8F9FA); // Light gray background
+const cardBackgroundColor = Colors.white;
+const surfaceColor = Colors.white;
+
+// Additional modern colors
+const successColor = Color(0xFF4CAF50);
+const warningColor = Color(0xFFFF9800);
+const errorColor = Color(0xFFf44336);
+const textPrimaryColor = Color(0xFF212121);
+const textSecondaryColor = Color(0xFF757575);
 
 // --- UI WIDGETS ---
 const formSpacer = SizedBox(height: 16);

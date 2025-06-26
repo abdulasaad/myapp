@@ -16,7 +16,6 @@ import '../../widgets/offline_widget.dart';
 import './create_campaign_screen.dart'; // Added for navigation to edit
 import 'campaign_detail_screen.dart';
 import '../agent/agent_task_list_screen.dart';
-import '../agent/evidence_submission_screen.dart';
 
 // Helper model for standalone tasks
 class AgentStandaloneTask {
@@ -154,186 +153,324 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
 
   /// Builds the view for a manager (a simple list of campaigns).
   Widget _buildManagerView() {
-    return FutureBuilder<List<Campaign>>(
-      future: _managerCampaignsFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return preloader;
-        }
-        if (snapshot.hasError) {
-          // Check if this is a network error
-          if (ConnectivityService.isNetworkError(snapshot.error)) {
-            return OfflineWidget(
-              title: 'No Internet Connection',
-              subtitle: 'Unable to load campaigns. Please check your connection and try again.',
-              onRetry: () => refreshAll(),
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      appBar: AppBar(
+        title: const Text('Campaigns'),
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+      ),
+      body: FutureBuilder<List<Campaign>>(
+        future: _managerCampaignsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            // Check if this is a network error
+            if (ConnectivityService.isNetworkError(snapshot.error)) {
+              return OfflineWidget(
+                title: 'No Internet Connection',
+                subtitle: 'Unable to load campaigns. Please check your connection and try again.',
+                onRetry: () => refreshAll(),
+              );
+            }
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error, size: 64, color: Colors.red[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error loading campaigns',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: refreshAll,
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
             );
           }
-          return Center(child: Text('Error: ${snapshot.error}'));
-        }
-        final campaigns = snapshot.data ?? [];
-        if (campaigns.isEmpty) {
-          return const Center(child: Text('No campaigns found.'));
-        }
-        return RefreshIndicator(
-          onRefresh: () async => refreshAll(),
-          child: ListView.builder(
-            padding: const EdgeInsets.all(8.0),
-            itemCount: campaigns.length,
-            itemBuilder: (context, index) {
-              final campaign = campaigns[index];
-              return CampaignCard(
-                campaign: campaign,
-                showAdminActions: true,
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) =>
-                        CampaignDetailScreen(campaign: campaign))),
-                onEdit: () async {
-                  // Navigate to CreateCampaignScreen for editing
-                  final result = await Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => CreateCampaignScreen(campaignToEdit: campaign),
-                  ));
-                  if (result == true && mounted) {
-                    refreshAll(); // Refresh list if campaign was saved
-                  }
-                },
-                onDelete: () async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return AlertDialog(
-                        title: const Text('Confirm Delete'),
-                        content: Text('Are you sure you want to delete "${campaign.name}"? This action cannot be undone.'),
-                        actions: <Widget>[
-                          TextButton(
-                            child: const Text('Cancel'),
-                            onPressed: () => Navigator.of(context).pop(false),
-                          ),
-                          TextButton(
-                            style: TextButton.styleFrom(foregroundColor: Colors.red),
-                            child: const Text('Delete'),
-                            onPressed: () => Navigator.of(context).pop(true),
-                          ),
-                        ],
+          final campaigns = snapshot.data ?? [];
+          if (campaigns.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(60),
+                    ),
+                    child: Icon(
+                      Icons.campaign,
+                      size: 60,
+                      color: primaryColor.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'No Campaigns Yet',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: textPrimaryColor,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Create your first campaign to get started with managing tasks and agents',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: textSecondaryColor,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      final result = await Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const CreateCampaignScreen(),
+                        ),
                       );
+                      if (result == true && mounted) {
+                        refreshAll();
+                      }
                     },
-                  );
-
-                  if (confirm == true && mounted) {
-                    try {
-                      // Placeholder for actual delete logic
-                      // await supabase.from('campaigns').delete().match({'id': campaign.id});
-                      // For now, just show a snackbar and refresh
-                      // In a real app, handle related data (tasks, assignments) deletion as well.
-                      // This might involve a Supabase Edge Function for cascading deletes or complex logic.
-                      
-                      // Delete related records in order of dependency
-                      await supabase.from('payments').delete().eq('campaign_id', campaign.id); // Added this line
-                      await supabase.from('tasks').delete().eq('campaign_id', campaign.id);
-                      await supabase.from('campaign_agents').delete().eq('campaign_id', campaign.id);
-                      // Finally, delete the campaign itself
-                      await supabase.from('campaigns').delete().eq('id', campaign.id);
-
-                      // If the CampaignsListScreenState is no longer mounted, we shouldn't proceed.
-                      if (!mounted) return; // 'mounted' refers to CampaignsListScreenState.mounted
-
-                      // If the BuildContext of the CampaignCard is still mounted, show the success SnackBar.
-                      // This 'context.mounted' check is required by the linter for using 'context' after an async gap.
-                      if (context.mounted) { // 'context' is CampaignCard's context
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Campaign "${campaign.name}" deleted successfully.')),
-                        );
+                    icon: const Icon(Icons.add),
+                    label: const Text('Create Campaign'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 2,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+          return RefreshIndicator(
+            onRefresh: () async => refreshAll(),
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: campaigns.length,
+              itemBuilder: (context, index) {
+                final campaign = campaigns[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: CampaignCard(
+                    campaign: campaign,
+                    showAdminActions: true,
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) =>
+                            CampaignDetailScreen(campaign: campaign))),
+                    onEdit: () async {
+                      // Navigate to CreateCampaignScreen for editing
+                      final result = await Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => CreateCampaignScreen(campaignToEdit: campaign),
+                      ));
+                      if (result == true && mounted) {
+                        refreshAll(); // Refresh list if campaign was saved
                       }
-                      // refreshAll is a method of CampaignsListScreenState, guarded by the 'if (!mounted) return;' above.
-                      refreshAll();
-                    } catch (e) {
-                      // If the CampaignsListScreenState is no longer mounted, we shouldn't proceed.
-                      if (!mounted) return;
+                    },
+                    onDelete: () async {
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            title: const Text('Confirm Delete'),
+                            content: Text('Are you sure you want to delete "${campaign.name}"? This action cannot be undone.'),
+                            actions: <Widget>[
+                              TextButton(
+                                child: const Text('Cancel'),
+                                onPressed: () => Navigator.of(context).pop(false),
+                              ),
+                              TextButton(
+                                style: TextButton.styleFrom(foregroundColor: errorColor),
+                                child: const Text('Delete'),
+                                onPressed: () => Navigator.of(context).pop(true),
+                              ),
+                            ],
+                          );
+                        },
+                      );
 
-                      // If the BuildContext of the CampaignCard is still mounted, show the error SnackBar.
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Error deleting campaign: ${e.toString()}')),
-                        );
+                      if (confirm == true && mounted) {
+                        try {
+                          // Delete related records in order of dependency
+                          await supabase.from('payments').delete().eq('campaign_id', campaign.id);
+                          await supabase.from('tasks').delete().eq('campaign_id', campaign.id);
+                          await supabase.from('campaign_agents').delete().eq('campaign_id', campaign.id);
+                          // Finally, delete the campaign itself
+                          await supabase.from('campaigns').delete().eq('id', campaign.id);
+
+                          // If the CampaignsListScreenState is no longer mounted, we shouldn't proceed.
+                          if (!mounted) return;
+
+                          // If the BuildContext of the CampaignCard is still mounted, show the success SnackBar.
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Campaign "${campaign.name}" deleted successfully.'),
+                                backgroundColor: successColor,
+                              ),
+                            );
+                          }
+                          refreshAll();
+                        } catch (e) {
+                          // If the CampaignsListScreenState is no longer mounted, we shouldn't proceed.
+                          if (!mounted) return;
+
+                          // If the BuildContext of the CampaignCard is still mounted, show the error SnackBar.
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error deleting campaign: ${e.toString()}'),
+                                backgroundColor: errorColor,
+                              ),
+                            );
+                          }
+                        }
                       }
-                      // Optionally, log to console if context is not mounted but state is.
-                      // else {
-                      //   print('Error deleting campaign: $e. UI context for SnackBar not available.');
-                      // }
-                    }
-                  }
-                },
-              );
-            },
-          ),
-        );
-      },
+                    },
+                  ),
+                );
+              },
+            ),
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final result = await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const CreateCampaignScreen(),
+            ),
+          );
+          if (result == true && mounted) {
+            refreshAll();
+          }
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('Create Campaign'),
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 4,
+      ),
     );
   }
 
-  /// Builds the conditional tabbed view for an agent.
+  /// Builds the campaigns view for an agent.
   Widget _buildAgentView() {
-    return FutureBuilder<List<dynamic>>(
-      future: _agentDataFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return preloader;
-        }
-        if (snapshot.hasError) {
-          // Check if this is a network error
-          if (ConnectivityService.isNetworkError(snapshot.error)) {
-            return OfflineWidget(
-              title: 'No Internet Connection',
-              subtitle: 'Unable to load your tasks and campaigns. Please check your connection and try again.',
-              onRetry: () => refreshAll(),
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      appBar: AppBar(
+        title: const Text('My Campaigns'),
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+      ),
+      body: FutureBuilder<List<dynamic>>(
+        future: _agentDataFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            // Check if this is a network error
+            if (ConnectivityService.isNetworkError(snapshot.error)) {
+              return OfflineWidget(
+                title: 'No Internet Connection',
+                subtitle: 'Unable to load your campaigns. Please check your connection and try again.',
+                onRetry: () => refreshAll(),
+              );
+            }
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error, size: 64, color: Colors.red[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error loading campaigns',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: refreshAll,
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
             );
           }
-          return Center(child: Text('Error fetching data: ${snapshot.error}'));
-        }
-        
-        final List<Campaign> campaigns = snapshot.data?[0] ?? [];
-        final List<AgentStandaloneTask> tasks = snapshot.data?[1] ?? [];
-        
-        final List<Widget> tabs = [];
-        final List<Widget> tabViews = [];
-
-        // Conditionally add tabs and views
-        if (campaigns.isNotEmpty) {
-          tabs.add(const Tab(text: 'Campaigns'));
-          tabViews.add(_buildCampaignsList(campaigns));
-        }
-        if (tasks.isNotEmpty) {
-          tabs.add(const Tab(text: 'Tasks'));
-          tabViews.add(_buildTasksList(tasks));
-        }
-
-        // Handle the case where there is no work
-        if (tabs.isEmpty) {
-          return const Center(child: Text('No work assigned at the moment.'));
-        }
-        
-        // Build the tabbed UI
-        return DefaultTabController(
-          length: tabs.length,
-          child: Column(
-            children: [
-              Container(
-                decoration: const BoxDecoration(
-                    border: Border(bottom: BorderSide(color: Colors.white24, width: 0.5))),
-                child: TabBar(
-                  tabs: tabs,
-                  indicatorColor: primaryColor,
-                  labelColor: primaryColor,
-                  unselectedLabelColor: Colors.grey[400],
-                ),
+          
+          final List<Campaign> campaigns = snapshot.data?[0] ?? [];
+          
+          // Handle the case where there are no campaigns
+          if (campaigns.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(60),
+                    ),
+                    child: Icon(
+                      Icons.campaign,
+                      size: 60,
+                      color: primaryColor.withValues(alpha: 0.6),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'No Campaigns Assigned',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: textPrimaryColor,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'You will see assigned campaigns here when available',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: textSecondaryColor,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
               ),
-              Expanded(
-                child: TabBarView(children: tabViews),
-              ),
-            ],
-          ),
-        );
-      },
+            );
+          }
+          
+          // Show campaigns directly without tabs
+          return _buildCampaignsList(campaigns);
+        },
+      ),
     );
   }
 
@@ -342,51 +479,27 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
     return RefreshIndicator(
       onRefresh: () async => refreshAll(),
       child: ListView.builder(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(16.0),
         itemCount: campaigns.length,
         itemBuilder: (context, index) {
           final campaign = campaigns[index];
-          return CampaignCard(
-            campaign: campaign,
-            isInsideGeofence: _geofenceStatuses[campaign.id],
-            onTap: () {
-              widget.locationService.setActiveCampaign(campaign.id);
-              // Also set active campaign in background service
-              BackgroundLocationService.setActiveCampaign(campaign.id);
-              Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) =>
-                      AgentTaskListScreen(campaign: campaign)));
-            },
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: CampaignCard(
+              campaign: campaign,
+              isInsideGeofence: _geofenceStatuses[campaign.id],
+              onTap: () {
+                widget.locationService.setActiveCampaign(campaign.id);
+                // Also set active campaign in background service
+                BackgroundLocationService.setActiveCampaign(campaign.id);
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) =>
+                        AgentTaskListScreen(campaign: campaign)));
+              },
+            ),
           );
         },
       ),
-    );
-  }
-
-  /// Builds the list view for standalone tasks.
-  Widget _buildTasksList(List<AgentStandaloneTask> tasks) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(12.0),
-      itemCount: tasks.length,
-      itemBuilder: (context, index) {
-        final agentTask = tasks[index];
-        final isCompleted = agentTask.assignmentStatus == 'completed';
-        return GestureDetector(
-          onTap: () {
-            debugPrint('TaskCard tapped!');
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                  builder: (context) =>
-                      EvidenceSubmissionScreen(task: agentTask.task)),
-            );
-          },
-          child: TaskCard(
-            task: agentTask.task,
-            isCompleted: isCompleted,
-            onTap: () {}, // Empty onTap to prevent InkWell from interfering
-          ),
-        );
-      },
     );
   }
 }
@@ -419,8 +532,8 @@ class CampaignCard extends StatelessWidget {
           isInsideGeofence! ? '✅ Inside Geofence' : '❌ Outside Geofence';
       
       final Color bgColor = isInsideGeofence!
-          ? Colors.green.withAlpha(51)
-          : Colors.red.withAlpha(51);
+          ? successColor.withValues(alpha: 0.1)
+          : errorColor.withValues(alpha: 0.1);
 
       statusWidget = Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -429,62 +542,97 @@ class CampaignCard extends StatelessWidget {
               child: Text(message,
                   style: TextStyle(
                       color: isInsideGeofence!
-                          ? Colors.green[200]
-                          : Colors.red[200],
+                          ? successColor
+                          : errorColor,
                       fontSize: 12,
                       fontWeight: FontWeight.bold))));
     }
 
     return Card(
-      clipBehavior: Clip.antiAlias, // Ensures footer corners are rounded
-      color: cardBackgroundColor,
-      margin: const EdgeInsets.symmetric(vertical: 6),
+      clipBehavior: Clip.antiAlias,
+      color: surfaceColor,
+      margin: EdgeInsets.zero,
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(20.0),
               child: Row(children: [
-                CircleAvatar(
-                    backgroundColor: primaryColor,
-                    child: const Icon(Icons.campaign,
-                        color: Colors.white, size: 20)),
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: primaryColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.campaign,
+                    color: primaryColor,
+                    size: 24,
+                  ),
+                ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(campaign.name,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(
+                        campaign.name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: textPrimaryColor,
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text('Ends: ${DateFormat.yMMMd().format(campaign.endDate)}',
-                          style:
-                              TextStyle(color: Colors.grey[400], fontSize: 12)),
+                      Text(
+                        'Ends: ${DateFormat.yMMMd().format(campaign.endDate)}',
+                        style: const TextStyle(
+                          color: textSecondaryColor,
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 if (showAdminActions) ...[
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined, size: 20),
-                    color: Colors.blue[300],
-                    tooltip: 'Edit Campaign',
-                    onPressed: onEdit,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 18),
+                      color: primaryColor,
+                      tooltip: 'Edit Campaign',
+                      onPressed: onEdit,
+                    ),
                   ),
-                  const SizedBox(width: 8), // Spacing between buttons
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, size: 20),
-                    color: Colors.red[300],
-                    tooltip: 'Delete Campaign',
-                    onPressed: onDelete,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+                  const SizedBox(width: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: errorColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.delete_outline, size: 18),
+                      color: errorColor,
+                      tooltip: 'Delete Campaign',
+                      onPressed: onDelete,
+                    ),
                   ),
                 ] else ...[
-                  const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    color: textSecondaryColor,
+                    size: 16,
+                  ),
                 ]
               ]),
             ),
@@ -510,46 +658,82 @@ class TaskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: cardBackgroundColor,
-      margin: const EdgeInsets.symmetric(vertical: 6),
+      color: surfaceColor,
+      margin: EdgeInsets.zero,
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(20.0),
           child: Row(children: [
-            Icon(isCompleted ? Icons.check_circle : Icons.assignment,
-                color: isCompleted ? Colors.green : Colors.grey[400], size: 30),
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: isCompleted 
+                    ? successColor.withValues(alpha: 0.1)
+                    : warningColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                isCompleted ? Icons.check_circle : Icons.assignment,
+                color: isCompleted ? successColor : warningColor,
+                size: 24,
+              ),
+            ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(task.title,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(
+                    task.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: textPrimaryColor,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text('${task.points} Points',
-                      style: TextStyle(color: Colors.grey[400], fontSize: 12)),
+                  Text(
+                    '${task.points} Points',
+                    style: const TextStyle(
+                      color: textSecondaryColor,
+                      fontSize: 12,
+                    ),
+                  ),
                 ],
               ),
             ),
-            // ================================================================
-            // THE CHANGE IS HERE: Add a conditional location button
-            // ================================================================
             if (task.enforceGeofence == true)
-              IconButton(
-                icon: const Icon(Icons.location_on_outlined),
-                color: Colors.blue[300],
-                tooltip: 'View Task Location',
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => TaskLocationViewerScreen(task: task),
-                    ),
-                  );
-                },
+              Container(
+                decoration: BoxDecoration(
+                  color: primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.location_on_outlined, size: 18),
+                  color: primaryColor,
+                  tooltip: 'View Task Location',
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => TaskLocationViewerScreen(task: task),
+                      ),
+                    );
+                  },
+                ),
               ),
-            const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.arrow_forward_ios,
+              color: textSecondaryColor,
+              size: 16,
+            ),
           ]),
         ),
       ),

@@ -9,6 +9,7 @@ import '../../models/campaign.dart';
 import '../../models/task.dart';
 import '../../utils/constants.dart';
 import '../../services/location_service.dart';
+import 'guided_task_screen.dart';
 
 class AgentTask {
   final String taskId;
@@ -260,33 +261,64 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.campaign.name)),
+      backgroundColor: Colors.grey[50],
+      appBar: AppBar(
+        title: Text(widget.campaign.name),
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
       body: Column(
         children: [
-          _buildInfoCard(),
-          const Divider(),
+          _buildCampaignHeader(),
           Expanded(
             child: FutureBuilder<List<AgentTask>>(
               future: _tasksFuture,
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) return preloader;
-                if (snapshot.hasError) return Center(child: Text('Error: ${snapshot.error}'));
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text('Loading tasks...'),
+                      ],
+                    ),
+                  );
+                }
                 
-                // --- THE FIX: Check for data presence and emptiness BEFORE declaring the variable ---
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                        const SizedBox(height: 16),
+                        Text('Error: ${snapshot.error}'),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: _refreshTasks,
+                          child: const Text('Try Again'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('No tasks found for this campaign.'));
+                  return _buildEmptyState();
                 }
 
-                // Now it's safe to declare and use the 'tasks' variable
                 final tasks = snapshot.data!;
                 return RefreshIndicator(
                   onRefresh: () async => _refreshTasks(),
                   child: ListView.builder(
+                    padding: const EdgeInsets.all(16),
                     itemCount: tasks.length,
                     itemBuilder: (context, index) {
                       final task = tasks[index];
-                      final isCompleted = task.status == 'completed';
-                      return _buildTaskTile(task, isCompleted);
+                      return _buildModernTaskCard(task, index);
                     },
                   ),
                 );
@@ -298,94 +330,478 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
     );
   }
 
-  Widget _buildTaskTile(AgentTask task, bool isCompleted) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: isCompleted ? Colors.green.withAlpha(50) : null,
-      child: ExpansionTile(
-        leading: Icon(
-          isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
-          color: isCompleted ? Colors.green : Colors.grey,
-        ),
-        title: Text(task.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text('${task.points} points'),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
+  Widget _buildModernTaskCard(AgentTask task, int index) {
+    final isCompleted = task.status == 'completed';
+    final progress = _calculateTaskProgress(task);
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: isCompleted 
+                ? LinearGradient(
+                    colors: [Colors.green[50]!, Colors.green[100]!],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (task.description != null && task.description!.isNotEmpty)
-                  Text(task.description!),
-                const SizedBox(height: 16),
-                Text('Status: ${task.status.toUpperCase()}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 16),
-                if (task.evidenceUrls.isNotEmpty) ...[
-                  const Text('Uploaded Evidence:', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 80,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: task.evidenceUrls.length,
-                      itemBuilder: (context, index) => Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: Image.network(task.evidenceUrls[index], width: 80, height: 80, fit: BoxFit.cover),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                // Header with task number and status
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Expanded(
-                      child: TextButton.icon(
-                        icon: const Icon(Icons.cloud_upload_outlined),
-                        label: const Text('Upload Evidence'),
-                        onPressed: isCompleted ? null : () => _uploadEvidence(task),
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: isCompleted ? Colors.green : Theme.of(context).primaryColor,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Center(
+                        child: isCompleted 
+                            ? const Icon(Icons.check, color: Colors.white, size: 18)
+                            : Text(
+                                '${index + 1}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 12),
                     Expanded(
-                      child: ElevatedButton(
-                        onPressed: isCompleted ? null : () => _markTaskAsCompleted(task),
-                        child: const Text('Mark Done'),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            task.title,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: isCompleted ? Colors.green[800] : Colors.black87,
+                              decoration: isCompleted ? TextDecoration.lineThrough : null,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.stars,
+                                size: 16,
+                                color: Colors.orange[600],
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${task.points} points',
+                                style: TextStyle(
+                                  color: Colors.orange[600],
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: _getStatusColor(task.status).withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: _getStatusColor(task.status).withValues(alpha: 0.3),
+                                  ),
+                                ),
+                                child: Text(
+                                  task.status.toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: _getStatusColor(task.status),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
+                
+                // Description
+                if (task.description != null && task.description!.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    task.description!,
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+                
+                // Progress indicator
+                const SizedBox(height: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Progress',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black54,
+                          ),
+                        ),
+                        Text(
+                          '${(progress * 100).toInt()}%',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: progress == 1.0 ? Colors.green : Theme.of(context).primaryColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    LinearProgressIndicator(
+                      value: progress,
+                      backgroundColor: Colors.grey[200],
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        progress == 1.0 ? Colors.green : Theme.of(context).primaryColor,
+                      ),
+                      minHeight: 6,
+                    ),
+                  ],
+                ),
+                
+                // Evidence preview
+                if (task.evidenceUrls.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Icon(Icons.photo_library, size: 16, color: Colors.grey[600]),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${task.evidenceUrls.length} evidence file(s)',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 60,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: task.evidenceUrls.length,
+                      itemBuilder: (context, index) => Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            task.evidenceUrls[index],
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              width: 60,
+                              height: 60,
+                              color: Colors.grey[200],
+                              child: Icon(Icons.image_not_supported, color: Colors.grey[400]),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                
+                // Action buttons
+                const SizedBox(height: 20),
+                if (!isCompleted) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => GuidedTaskScreen(
+                              task: Task(
+                                id: task.taskId,
+                                title: task.title,
+                                description: task.description,
+                                points: task.points,
+                                status: task.status,
+                                campaignId: widget.campaign.id,
+                                enforceGeofence: task.enforceGeofence,
+                              ),
+                            ),
+                          ),
+                        );
+                        if (result == true) {
+                          _refreshTasks();
+                        }
+                      },
+                      icon: const Icon(Icons.play_arrow, size: 20),
+                      label: const Text('Start Guided Task'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 2,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _uploadEvidence(task),
+                          icon: const Icon(Icons.cloud_upload, size: 18),
+                          label: const Text('Quick Upload'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _markTaskAsCompleted(task),
+                          icon: const Icon(Icons.check_circle, size: 18),
+                          label: const Text('Mark Done'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ] else ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.green[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.green[200]!),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.green[600], size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Task Completed',
+                          style: TextStyle(
+                            color: Colors.green[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
+  
+  double _calculateTaskProgress(AgentTask task) {
+    if (task.status == 'completed') return 1.0;
+    if (task.evidenceUrls.isNotEmpty) return 0.7;
+    return 0.1; // Task assigned but no evidence yet
+  }
+  
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return Colors.green;
+      case 'in_progress':
+      case 'started':
+        return Colors.blue;
+      case 'assigned':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
 
-  Widget _buildInfoCard() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Campaign Details', style: Theme.of(context).textTheme.titleLarge),
-                const SizedBox(height: 8),
-                Text(widget.campaign.description ?? 'No description available.'),
-              ],
+  Widget _buildCampaignHeader() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              colors: [Theme.of(context).primaryColor, Theme.of(context).primaryColor.withValues(alpha: 0.8)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
           ),
-          Column(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.calendar_today, size: 16),
-              const SizedBox(height: 4),
-              Text(DateFormat.yMMMd().format(widget.campaign.endDate)),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.campaign,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Current Campaign',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.7),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.campaign.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (widget.campaign.description != null && widget.campaign.description!.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(
+                  widget.campaign.description!,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.calendar_today, color: Colors.white, size: 16),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Ends ${DateFormat.yMMMd().format(widget.campaign.endDate)}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ],
-          )
-        ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(60),
+              ),
+              child: Icon(
+                Icons.assignment,
+                size: 60,
+                color: Colors.grey[400],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'No Tasks Available',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[700],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'There are no tasks assigned to you in this campaign yet. Check back later or contact your manager.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

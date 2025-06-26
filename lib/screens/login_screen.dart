@@ -9,7 +9,7 @@ import '../services/connectivity_service.dart';
 import '../widgets/session_conflict_dialog.dart';
 import '../widgets/offline_widget.dart';
 import '../utils/constants.dart';
-import './home_screen.dart';
+import './modern_home_screen.dart';
 import './signup_screen.dart';
 
 final logger = Logger();
@@ -158,7 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         context.showSnackBar('Login successful!');
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          MaterialPageRoute(builder: (context) => const ModernHomeScreen()),
         );
       }
     } on AuthException catch (e) {

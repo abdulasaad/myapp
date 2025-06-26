@@ -5,7 +5,7 @@ import 'package:logger/logger.dart';
 import 'package:myapp/services/profile_service.dart';
 import 'package:myapp/services/session_service.dart';
 import 'package:myapp/services/connectivity_service.dart';
-import 'home_screen.dart';
+import 'modern_home_screen.dart';
 import 'login_screen.dart';
 import '../utils/constants.dart';
 
@@ -46,7 +46,7 @@ class _SplashScreenState extends State<SplashScreen> {
             
             if (mounted) {
               Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => const HomeScreen()),
+                MaterialPageRoute(builder: (context) => const ModernHomeScreen()),
               );
             }
           } else {
