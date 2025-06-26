@@ -329,6 +329,8 @@ class _TemplateSetupScreenState extends State<TemplateSetupScreen> {
       
       if (mounted) {
         context.showSnackBar('Template assignments saved successfully!');
+        // Collapse the expansion tile after saving
+        setState(() {});
       }
     } catch (e) {
       if (mounted) {

@@ -1,4 +1,4 @@
-# Manager Template Access Control - Database Cleanup & Setup
+# Manager Template Access Control - Database Setup
 
 ## Step 1: Clean up existing conflicting items (run this first)
 
@@ -105,4 +105,4 @@ WHERE tablename = 'manager_template_access';
 2. **Run Step 2** (create fresh table) - this creates everything cleanly
 3. **Run Step 3** (verify) - this confirms everything was created properly
 
-If you still get errors, please share the exact error message so I can help debug further!
+After running these steps, the Manager Template Access screen will work with your existing templates!

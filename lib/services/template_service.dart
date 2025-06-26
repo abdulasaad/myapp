@@ -47,7 +47,7 @@ class TemplateService {
       return getCategories();
     }
     
-    // For managers, check their template access
+    // For managers, check their template access and get categories of allowed templates
     if (userRole == 'manager') {
       try {
         final accessResponse = await supabase
@@ -56,20 +56,39 @@ class TemplateService {
             .eq('manager_id', currentUserId)
             .single();
         
-        final allowedCategories = (accessResponse['template_categories'] as List<dynamic>?)?.cast<String>() ?? [];
+        final allowedTemplateIds = (accessResponse['template_categories'] as List<dynamic>?)?.cast<String>() ?? [];
         
-        if (allowedCategories.isEmpty) {
+        if (allowedTemplateIds.isEmpty) {
           return [];
         }
         
+        // Get categories that contain the allowed templates
         final response = await supabase
             .from('template_categories')
             .select()
-            .inFilter('name', allowedCategories)
             .eq('is_active', true)
             .order('sort_order');
         
-        return response.map((json) => TemplateCategory.fromJson(json)).toList();
+        final allCategories = response.map((json) => TemplateCategory.fromJson(json)).toList();
+        
+        // Filter categories that have at least one allowed template
+        final allowedCategories = <TemplateCategory>[];
+        for (final category in allCategories) {
+          final templatesInCategory = await supabase
+              .from('task_templates')
+              .select('id')
+              .eq('category_id', category.id)
+              .eq('is_active', true);
+          
+          final categoryTemplateIds = templatesInCategory.map((t) => t['id'] as String).toList();
+          final hasAllowedTemplate = categoryTemplateIds.any((id) => allowedTemplateIds.contains(id));
+          
+          if (hasAllowedTemplate) {
+            allowedCategories.add(category);
+          }
+        }
+        
+        return allowedCategories;
       } catch (e) {
         // If no access record found, return empty list
         debugPrint('No template access found for manager: $e');
@@ -112,8 +131,21 @@ class TemplateService {
     return response.map((json) => TaskTemplate.fromJson(json)).toList();
   }
 
-  /// Get templates by category
+  /// Get templates by category (filtered by manager access)
   Future<List<TaskTemplate>> getTemplatesByCategory(String categoryId) async {
+    final currentUserId = supabase.auth.currentUser?.id;
+    if (currentUserId == null) return [];
+
+    // Check if user is manager or admin
+    final userResponse = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', currentUserId)
+        .single();
+    
+    final userRole = userResponse['role'] as String?;
+    
+    // Get all templates in category
     final response = await supabase
         .from('task_templates')
         .select('''
@@ -125,7 +157,34 @@ class TemplateService {
         .eq('template_categories.is_active', true)
         .order('name');
     
-    return response.map((json) => TaskTemplate.fromJson(json)).toList();
+    final allTemplates = response.map((json) => TaskTemplate.fromJson(json)).toList();
+    
+    // Admins see all templates in category
+    if (userRole == 'admin') {
+      return allTemplates;
+    }
+    
+    // For managers, filter by their accessible template IDs
+    if (userRole == 'manager') {
+      try {
+        final accessResponse = await supabase
+            .from('manager_template_access')
+            .select('template_categories')
+            .eq('manager_id', currentUserId)
+            .single();
+        
+        final allowedTemplateIds = (accessResponse['template_categories'] as List<dynamic>?)?.cast<String>() ?? [];
+        
+        return allTemplates.where((template) => allowedTemplateIds.contains(template.id)).toList();
+      } catch (e) {
+        // If no access record found, return empty list
+        debugPrint('No template access found for manager: $e');
+        return [];
+      }
+    }
+    
+    // Other roles see no templates
+    return [];
   }
 
   /// Get templates by category name (using RPC function)
@@ -151,7 +210,7 @@ class TemplateService {
     })).toList();
   }
 
-  /// Get templates accessible to current manager (filtered by their category access)
+  /// Get templates accessible to current manager (filtered by their template access)
   Future<List<TaskTemplate>> getTemplatesForManager() async {
     final currentUserId = supabase.auth.currentUser?.id;
     if (currentUserId == null) return [];
@@ -170,7 +229,7 @@ class TemplateService {
       return getTemplates();
     }
     
-    // For managers, filter by their accessible categories
+    // For managers, filter by their accessible template IDs
     if (userRole == 'manager') {
       try {
         final accessResponse = await supabase
@@ -179,9 +238,9 @@ class TemplateService {
             .eq('manager_id', currentUserId)
             .single();
         
-        final allowedCategories = (accessResponse['template_categories'] as List<dynamic>?)?.cast<String>() ?? [];
+        final allowedTemplateIds = (accessResponse['template_categories'] as List<dynamic>?)?.cast<String>() ?? [];
         
-        if (allowedCategories.isEmpty) {
+        if (allowedTemplateIds.isEmpty) {
           return [];
         }
         
@@ -189,11 +248,10 @@ class TemplateService {
             .from('task_templates')
             .select('''
               *,
-              template_categories!inner(*)
+              template_categories(*)
             ''')
-            .inFilter('template_categories.name', allowedCategories)
+            .inFilter('id', allowedTemplateIds)
             .eq('is_active', true)
-            .eq('template_categories.is_active', true)
             .order('name');
         
         return response.map((json) => TaskTemplate.fromJson(json)).toList();
