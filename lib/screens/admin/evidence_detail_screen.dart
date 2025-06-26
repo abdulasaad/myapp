@@ -560,23 +560,7 @@ class _EvidenceDetailScreenState extends State<EvidenceDetailScreen> {
                       },
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          evidence.fileUrl,
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                          errorBuilder: (context, error, stackTrace) => 
-                              Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.error, size: 48, color: Colors.grey[400]),
-                                    const SizedBox(height: 8),
-                                    const Text('Failed to load image'),
-                                  ],
-                                ),
-                              ),
-                        ),
+                        child: _buildImageWidget(evidence.fileUrl),
                       ),
                     )
                   : Center(
@@ -1058,6 +1042,68 @@ class _EvidenceDetailScreenState extends State<EvidenceDetailScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildImageWidget(String imageUrl) {
+    // Check if it's a local file path or network URL
+    if (imageUrl.startsWith('/') || imageUrl.startsWith('file://')) {
+      // Local file path - use File image
+      try {
+        final file = File(imageUrl.replaceFirst('file://', ''));
+        if (file.existsSync()) {
+          return Image.file(
+            file,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+            errorBuilder: (context, error, stackTrace) => _buildErrorWidget(),
+          );
+        } else {
+          return _buildErrorWidget('Local file not found');
+        }
+      } catch (e) {
+        return _buildErrorWidget('Error loading local file');
+      }
+    } else if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      // Network URL - use Network image
+      return Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (context, error, stackTrace) => _buildErrorWidget('Failed to load image from network'),
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Center(
+            child: CircularProgressIndicator(
+              value: loadingProgress.expectedTotalBytes != null
+                  ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                  : null,
+            ),
+          );
+        },
+      );
+    } else {
+      // Invalid URL format
+      return _buildErrorWidget('Invalid image URL format');
+    }
+  }
+
+  Widget _buildErrorWidget([String? message]) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error, size: 48, color: Colors.grey[400]),
+          const SizedBox(height: 8),
+          Text(
+            message ?? 'Failed to load image',
+            style: TextStyle(color: Colors.grey[600]),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

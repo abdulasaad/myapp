@@ -2,7 +2,6 @@
 
 import 'dart:async';
 import 'dart:ui' as ui;
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -73,6 +72,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
   Timer? _periodicTimer;
 
   bool _isLoading = true;
+  bool _hasConnectivityIssue = false;
   
   final Map<String, AgentMapInfo> _agents = {};
   String? _selectedAgentId;
@@ -174,10 +174,20 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
 
   Future<void> _fetchMapData() async {
     try {
+      // Add timeout to prevent hanging
       final responses = await Future.wait([
-        supabase.rpc('get_agents_with_last_location'),
-        supabase.rpc('get_all_geofences_wkt'),
-      ]);
+        supabase.rpc('get_agents_with_last_location').timeout(
+          const Duration(seconds: 10),
+          onTimeout: () => throw TimeoutException('Agent location request timed out', const Duration(seconds: 10)),
+        ),
+        supabase.rpc('get_all_geofences_wkt').timeout(
+          const Duration(seconds: 10), 
+          onTimeout: () => throw TimeoutException('Geofences request timed out', const Duration(seconds: 10)),
+        ),
+      ]).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () => throw TimeoutException('Map data request timed out', const Duration(seconds: 15)),
+      );
 
       if (!mounted) return;
       
@@ -219,8 +229,18 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
         }
       });
 
+      // Clear connectivity issue flag on successful data fetch
+      if (mounted && _hasConnectivityIssue) {
+        setState(() => _hasConnectivityIssue = false);
+      }
+
     } catch (e) {
-      if (mounted) context.showSnackBar('Could not refresh map data: $e', isError: true);
+      debugPrint('Map data fetch error: $e');
+      // Silently handle network errors - don't show error messages to user
+      // Set connectivity issue flag and app will continue to retry on the next timer cycle
+      if (mounted && !_hasConnectivityIssue) {
+        setState(() => _hasConnectivityIssue = true);
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -365,7 +385,20 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Live Map')),
+      appBar: AppBar(
+        title: const Text('Live Map'),
+        actions: [
+          if (_hasConnectivityIssue)
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Icon(
+                Icons.wifi_off,
+                color: Colors.orange[300],
+                size: 20,
+              ),
+            ),
+        ],
+      ),
       body: _isLoading
           ? preloader
           : Stack(

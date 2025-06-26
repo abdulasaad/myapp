@@ -18,6 +18,7 @@ import './tasks/standalone_tasks_screen.dart';
 import './calendar_screen.dart'; // Import the new calendar screen
 import './reporting/location_history_screen.dart';
 import './admin/settings_screen.dart';
+import './admin/group_management_screen.dart';
 import '../widgets/gps_status_indicator.dart';
 import '../widgets/offline_widget.dart';
 
@@ -295,8 +296,18 @@ class _HomeScreenState extends State<HomeScreen>
               },
             ),
           ],
-          // The User/Group Management link that was previously here
-          // is assumed to be handled by an admin-only web panel now.
+          // Group Management - Admin only (for client separation)
+          if (ProfileService.instance.role == 'admin')
+            ListTile(
+              leading: const Icon(Icons.group),
+              title: const Text('Group Management'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const GroupManagementScreen()),
+                );
+              },
+            ),
           if (ProfileService.instance.role == 'admin')
             ListTile(
               leading: const Icon(Icons.settings),

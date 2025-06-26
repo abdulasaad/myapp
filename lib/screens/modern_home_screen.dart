@@ -16,6 +16,7 @@ import 'agent/agent_standalone_tasks_screen.dart';
 import 'agent/earnings_screen.dart';
 import 'login_screen.dart';
 import 'admin/settings_screen.dart';
+import 'admin/group_management_screen.dart';
 
 class ModernHomeScreen extends StatefulWidget {
   const ModernHomeScreen({super.key});
@@ -1274,7 +1275,22 @@ class _ProfileTab extends StatelessWidget {
   Widget _buildProfileOptions(BuildContext context) {
     return Column(
       children: [
-        // Only show settings for admin/manager users
+        // Group Management - Admin only (for client separation)
+        if (user.role == 'admin')
+          _buildOptionCard(
+            icon: Icons.group,
+            title: 'Group Management',
+            subtitle: 'Manage client groups and team members',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const GroupManagementScreen(),
+                ),
+              );
+            },
+          ),
+        if (user.role == 'admin')
+          const SizedBox(height: 12),
         if (user.role == 'admin' || user.role == 'manager')
           _buildOptionCard(
             icon: Icons.settings,

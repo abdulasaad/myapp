@@ -15,7 +15,7 @@ class AppUser {
     this.username,
     required this.role,
     required this.status,
-    required this.agentCreationLimit,
+    this.agentCreationLimit = 0,
     this.defaultGroupId,
   });
 
@@ -23,11 +23,11 @@ class AppUser {
     return AppUser(
       id: json['id'] as String,
       fullName: json['full_name'] as String? ?? 'No Name',
-      username: json['username'] as String?,
+      username: json['username'] as String?, // May not exist in profiles table
       role: json['role'] as String? ?? 'agent',
       status: json['status'] as String? ?? 'active',
-      agentCreationLimit: json['agent_creation_limit'] as int? ?? 0,
-      defaultGroupId: json['default_group_id'] as String?, // Added this line
+      agentCreationLimit: json['agent_creation_limit'] as int? ?? 0, // May not exist
+      defaultGroupId: json['default_group_id'] as String?, // May not exist
     );
   }
 

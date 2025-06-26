@@ -6,6 +6,8 @@ import '../../utils/constants.dart';
 import 'evidence_list_screen.dart';
 import '../tasks/standalone_tasks_screen.dart';
 import '../calendar_screen.dart';
+import 'group_management_screen.dart';
+import '../../services/group_service.dart';
 
 class EnhancedManagerDashboardScreen extends StatefulWidget {
   const EnhancedManagerDashboardScreen({super.key});
@@ -38,6 +40,7 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
         _getEvidenceReviewQueue(),
         _getRecentManagerActivity(),
         _getUpcomingDeadlines(),
+        _getGroupStats(),
       ]);
 
       return ManagerDashboardData(
@@ -47,6 +50,7 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
         evidenceQueue: results[3] as EvidenceReviewQueue,
         recentActivity: results[4] as List<ManagerActivityItem>,
         upcomingDeadlines: results[5] as List<UpcomingDeadline>,
+        groupStats: results[6] as GroupStats,
       );
     } catch (e) {
       debugPrint('Error loading manager dashboard: $e');
@@ -274,6 +278,31 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
       deadline: DateTime.parse(campaign['end_date']),
       type: 'campaign',
     )).toList();
+  }
+
+  Future<GroupStats> _getGroupStats() async {
+    try {
+      final groupService = GroupService();
+      final statistics = await groupService.getGroupStatistics();
+      
+      // Get groups managed by current user if they're a manager
+      int myGroups = 0;
+      // This would need the current user's ID - for now using 0 as placeholder
+      // TODO: Get actual current user ID and filter groups by manager_id
+      
+      return GroupStats(
+        totalGroups: statistics['totalGroups'] ?? 0,
+        totalMemberships: statistics['totalMemberships'] ?? 0,
+        myGroups: myGroups,
+      );
+    } catch (e) {
+      debugPrint('Error loading group statistics: $e');
+      return GroupStats(
+        totalGroups: 0,
+        totalMemberships: 0,
+        myGroups: 0,
+      );
+    }
   }
 
   @override
@@ -1101,6 +1130,7 @@ class ManagerDashboardData {
   final EvidenceReviewQueue evidenceQueue;
   final List<ManagerActivityItem> recentActivity;
   final List<UpcomingDeadline> upcomingDeadlines;
+  final GroupStats groupStats;
 
   ManagerDashboardData({
     required this.taskStats,
@@ -1109,6 +1139,7 @@ class ManagerDashboardData {
     required this.evidenceQueue,
     required this.recentActivity,
     required this.upcomingDeadlines,
+    required this.groupStats,
   });
 }
 
@@ -1195,5 +1226,17 @@ class UpcomingDeadline {
     required this.title,
     required this.deadline,
     required this.type,
+  });
+}
+
+class GroupStats {
+  final int totalGroups;
+  final int totalMemberships;
+  final int myGroups; // For managers - groups they manage
+
+  GroupStats({
+    required this.totalGroups,
+    required this.totalMemberships,
+    required this.myGroups,
   });
 }
