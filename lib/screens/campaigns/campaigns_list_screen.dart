@@ -631,7 +631,13 @@ class CampaignCard extends StatelessWidget {
 
       statusWidget = Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
-          color: bgColor,
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(16),
+              bottomRight: Radius.circular(16),
+            ),
+          ),
           child: Center(
               child: Text(message,
                   style: TextStyle(
@@ -642,96 +648,125 @@ class CampaignCard extends StatelessWidget {
                       fontWeight: FontWeight.bold))));
     }
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      color: surfaceColor,
-      margin: EdgeInsets.zero,
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+    return Container(
+      constraints: const BoxConstraints(minHeight: 90),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: shadowColor,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: lightShadowColor,
+            blurRadius: 2,
+            offset: const Offset(0, 1),
+          ),
+        ],
+        border: Border.all(
+          color: primaryColor.withValues(alpha: 0.1),
+          width: 1,
+        ),
       ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Row(children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: primaryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.campaign,
-                    color: primaryColor,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        campaign.name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: textPrimaryColor,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Ends: ${DateFormat.yMMMd().format(campaign.endDate)}',
-                        style: const TextStyle(
-                          color: textSecondaryColor,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (showAdminActions) ...[
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Row(children: [
                   Container(
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          primaryColor.withValues(alpha: 0.15),
+                          primaryLightColor.withValues(alpha: 0.1),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: primaryColor.withValues(alpha: 0.2),
+                        width: 1,
+                      ),
                     ),
-                    child: IconButton(
-                      icon: const Icon(Icons.edit_outlined, size: 18),
+                    child: Icon(
+                      Icons.campaign,
                       color: primaryColor,
-                      tooltip: 'Edit Campaign',
-                      onPressed: onEdit,
+                      size: 24,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: errorColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.delete_outline, size: 18),
-                      color: errorColor,
-                      tooltip: 'Delete Campaign',
-                      onPressed: onDelete,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          campaign.name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                            color: textPrimaryColor,
+                            letterSpacing: 0.2,
+                          ),
+                          softWrap: true,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Ends: ${DateFormat.yMMMd().format(campaign.endDate)}',
+                          style: const TextStyle(
+                            color: textSecondaryColor,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ] else ...[
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    color: textSecondaryColor,
-                    size: 16,
-                  ),
-                ]
-              ]),
-            ),
-            if (statusWidget != null) statusWidget,
-          ],
+                  if (showAdminActions) ...[
+                    Container(
+                      decoration: BoxDecoration(
+                        color: primaryColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.edit_outlined, size: 18),
+                        color: primaryColor,
+                        tooltip: 'Edit Campaign',
+                        onPressed: onEdit,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: errorColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.delete_outline, size: 18),
+                        color: errorColor,
+                        tooltip: 'Delete Campaign',
+                        onPressed: onDelete,
+                      ),
+                    ),
+                  ] else ...[
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      color: textSecondaryColor,
+                      size: 16,
+                    ),
+                  ]
+                ]),
+              ),
+              if (statusWidget != null) statusWidget,
+            ],
+          ),
         ),
       ),
     );
@@ -751,84 +786,114 @@ class TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: surfaceColor,
-      margin: EdgeInsets.zero,
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+    final color = isCompleted ? successColor : warningColor;
+    
+    return Container(
+      constraints: const BoxConstraints(minHeight: 90),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: shadowColor,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: lightShadowColor,
+            blurRadius: 2,
+            offset: const Offset(0, 1),
+          ),
+        ],
+        border: Border.all(
+          color: color.withValues(alpha: 0.1),
+          width: 1,
+        ),
       ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Row(children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: isCompleted 
-                    ? successColor.withValues(alpha: 0.1)
-                    : warningColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                isCompleted ? Icons.check_circle : Icons.assignment,
-                color: isCompleted ? successColor : warningColor,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    task.title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: textPrimaryColor,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${task.points} Points',
-                    style: const TextStyle(
-                      color: textSecondaryColor,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (task.enforceGeofence == true)
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Row(children: [
               Container(
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: primaryColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      color.withValues(alpha: 0.15),
+                      color.withValues(alpha: 0.1),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: color.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
                 ),
-                child: IconButton(
-                  icon: const Icon(Icons.location_on_outlined, size: 18),
-                  color: primaryColor,
-                  tooltip: 'View Task Location',
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => TaskLocationViewerScreen(task: task),
-                      ),
-                    );
-                  },
+                child: Icon(
+                  isCompleted ? Icons.check_circle : Icons.assignment,
+                  color: color,
+                  size: 24,
                 ),
               ),
-            const SizedBox(width: 8),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: textSecondaryColor,
-              size: 16,
-            ),
-          ]),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      task.title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                        color: textPrimaryColor,
+                        letterSpacing: 0.2,
+                      ),
+                      softWrap: true,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${task.points} Points',
+                      style: const TextStyle(
+                        color: textSecondaryColor,
+                        fontSize: 13,
+                    ),
+                  ),
+                  ],
+                ),
+              ),
+              if (task.enforceGeofence == true)
+                Container(
+                  decoration: BoxDecoration(
+                    color: primaryColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.location_on_outlined, size: 18),
+                    color: primaryColor,
+                    tooltip: 'View Task Location',
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => TaskLocationViewerScreen(task: task),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.arrow_forward_ios,
+                color: textSecondaryColor,
+                size: 16,
+              ),
+            ]),
+          ),
         ),
       ),
     );
