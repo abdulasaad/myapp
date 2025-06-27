@@ -11,19 +11,88 @@ class LocationHistoryService {
 
   final Logger _logger = Logger();
 
-  /// Fetches all agents that can be tracked by managers/admins
+  /// Fetches agents that can be tracked by the current user (group-filtered for managers)
   Future<List<AgentInfo>> getAllAgents() async {
     try {
-      final response = await supabase
-          .from('profiles')
-          .select('id, full_name, role')
-          .inFilter(
-              'role', ['agent', 'manager']) // Include both agents and managers
-          .order('full_name');
+      final currentUser = supabase.auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('No authenticated user');
+      }
 
-      return response
-          .map<AgentInfo>((json) => AgentInfo.fromJson(json))
-          .toList();
+      // Get current user's role
+      final userRoleResponse = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', currentUser.id)
+          .single();
+      
+      final userRole = userRoleResponse['role'] as String;
+
+      if (userRole == 'admin') {
+        // Admins can see all agents and managers
+        final response = await supabase
+            .from('profiles')
+            .select('id, full_name, role')
+            .inFilter('role', ['agent', 'manager'])
+            .order('full_name');
+
+        return response
+            .map<AgentInfo>((json) => AgentInfo.fromJson(json))
+            .toList();
+      } else if (userRole == 'manager') {
+        // Managers can only see agents in their shared groups
+        
+        // Get current manager's groups
+        final userGroupsResponse = await supabase
+            .from('user_groups')
+            .select('group_id')
+            .eq('user_id', currentUser.id);
+        
+        final userGroupIds = userGroupsResponse
+            .map((item) => item['group_id'] as String)
+            .toList();
+        
+        _logger.i('Manager ${currentUser.id} has access to groups: $userGroupIds');
+        
+        if (userGroupIds.isEmpty) {
+          _logger.w('Manager has no group assignments');
+          return [];
+        }
+
+        // Get all users in the same groups (including other managers)
+        final groupMembersResponse = await supabase
+            .from('user_groups')
+            .select('user_id')
+            .inFilter('group_id', userGroupIds);
+        
+        final memberIds = groupMembersResponse
+            .map((item) => item['user_id'] as String)
+            .toSet()
+            .toList();
+        
+        if (memberIds.isEmpty) {
+          return [];
+        }
+
+        // Get profiles for these group members
+        final response = await supabase
+            .from('profiles')
+            .select('id, full_name, role')
+            .inFilter('id', memberIds)
+            .inFilter('role', ['agent', 'manager'])
+            .order('full_name');
+
+        final result = response
+            .map<AgentInfo>((json) => AgentInfo.fromJson(json))
+            .toList();
+        
+        _logger.i('Manager can view location history for ${result.length} users in their groups');
+        return result;
+      } else {
+        // Regular agents can't access location history of others
+        _logger.w('Agent role attempting to access location history');
+        return [];
+      }
     } catch (e) {
       _logger.e('Failed to fetch agents: $e');
       throw Exception('Failed to load agents: $e');
