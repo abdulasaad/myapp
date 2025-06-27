@@ -121,7 +121,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
   Future<BitmapDescriptor> _createAgentMarker(Color color) async {
     final ui.PictureRecorder pictureRecorder = ui.PictureRecorder();
     final Canvas canvas = Canvas(pictureRecorder);
-    const double size = 60.0;
+    const double size = 40.0;
     
     // Draw circle background
     final Paint circlePaint = Paint()
@@ -133,15 +133,15 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
     final Paint borderPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0;
-    canvas.drawCircle(const Offset(size / 2, size / 2), size / 2 - 1.5, borderPaint);
+      ..strokeWidth = 2.0;
+    canvas.drawCircle(const Offset(size / 2, size / 2), size / 2 - 1.0, borderPaint);
     
     // Draw agent icon
     final TextPainter textPainter = TextPainter(
       text: TextSpan(
         text: String.fromCharCode(Icons.person.codePoint),
         style: TextStyle(
-          fontSize: 30,
+          fontSize: 20,
           fontFamily: Icons.person.fontFamily,
           color: Colors.white,
         ),
