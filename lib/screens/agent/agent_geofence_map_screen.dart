@@ -39,43 +39,98 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
       final userId = supabase.auth.currentUser?.id;
       if (userId == null) return;
 
-      // Get campaigns assigned to this agent
+      final zones = <GeofenceZone>[];
+
+      // Get campaigns assigned to this agent through groups
       final userGroupsResponse = await supabase
           .from('user_groups')
           .select('group_id')
           .eq('user_id', userId);
       
-      if (userGroupsResponse.isEmpty) {
-        setState(() => _isLoading = false);
-        return;
+      if (userGroupsResponse.isNotEmpty) {
+        final groupIds = userGroupsResponse
+            .map((item) => item['group_id'] as String)
+            .toList();
+
+        // Get campaigns for these groups
+        final campaignsResponse = await supabase
+            .from('campaigns')
+            .select('''
+              id, title, description, geofence_area_wkt,
+              campaign_groups!inner(group_id)
+            ''')
+            .inFilter('campaign_groups.group_id', groupIds)
+            .eq('status', 'active');
+
+        // Add campaign zones
+        for (final campaign in campaignsResponse) {
+          final wkt = campaign['geofence_area_wkt'] as String?;
+          if (wkt != null && wkt.isNotEmpty) {
+            final points = _parseWktPolygon(wkt);
+            if (points.isNotEmpty) {
+              zones.add(GeofenceZone(
+                id: 'campaign_${campaign['id']}',
+                title: campaign['title'] ?? 'Unnamed Campaign',
+                description: campaign['description'] ?? '',
+                points: points,
+              ));
+            }
+          }
+        }
       }
 
-      final groupIds = userGroupsResponse
-          .map((item) => item['group_id'] as String)
-          .toList();
-
-      // Get campaigns for these groups
-      final campaignsResponse = await supabase
-          .from('campaigns')
+      // Get standalone tasks assigned to this agent that have geofences
+      final taskAssignmentsResponse = await supabase
+          .from('task_assignments')
           .select('''
-            id, title, description, geofence_area_wkt,
-            campaign_groups!inner(group_id)
+            task_id,
+            tasks!inner(id, title, description)
           ''')
-          .inFilter('campaign_groups.group_id', groupIds)
-          .eq('status', 'active');
+          .eq('agent_id', userId)
+          .inFilter('status', ['assigned', 'in_progress']);
 
-      final zones = <GeofenceZone>[];
-      for (final campaign in campaignsResponse) {
-        final wkt = campaign['geofence_area_wkt'] as String?;
-        if (wkt != null && wkt.isNotEmpty) {
-          final points = _parseWktPolygon(wkt);
-          if (points.isNotEmpty) {
-            zones.add(GeofenceZone(
-              id: campaign['id'],
-              title: campaign['title'] ?? 'Unnamed Campaign',
-              description: campaign['description'] ?? '',
-              points: points,
-            ));
+      if (taskAssignmentsResponse.isNotEmpty) {
+        final taskIds = taskAssignmentsResponse
+            .map((item) => item['task_id'] as String)
+            .toList();
+
+        // Get geofences for these tasks
+        final geofencesResponse = await supabase
+            .from('geofences')
+            .select('id, task_id, name, area_text, area')
+            .inFilter('task_id', taskIds);
+
+        // Group geofences by task
+        final geofencesByTask = <String, List<Map<String, dynamic>>>{};
+        for (final geofence in geofencesResponse) {
+          final taskId = geofence['task_id'] as String;
+          geofencesByTask.putIfAbsent(taskId, () => []).add(geofence);
+        }
+
+        // Add task zones
+        for (final assignment in taskAssignmentsResponse) {
+          final taskId = assignment['task_id'] as String;
+          final taskInfo = assignment['tasks'] as Map<String, dynamic>;
+          final taskGeofences = geofencesByTask[taskId] ?? [];
+          
+          if (taskGeofences.isNotEmpty) {
+            // Create a zone for each geofence in the task
+            for (int i = 0; i < taskGeofences.length; i++) {
+              final geofence = taskGeofences[i];
+              final wkt = geofence['area_text'] as String? ?? geofence['area'] as String?;
+              if (wkt != null && wkt.isNotEmpty) {
+                final points = _parseWktPolygon(wkt);
+                if (points.isNotEmpty) {
+                  final geofenceName = geofence['name'] as String? ?? 'Zone ${i + 1}';
+                  zones.add(GeofenceZone(
+                    id: 'task_${taskId}_$i',
+                    title: 'Task: ${taskInfo['title'] ?? 'Unnamed Task'}',
+                    description: geofenceName + (taskInfo['description'] != null ? '\n${taskInfo['description']}' : ''),
+                    points: points,
+                  ));
+                }
+              }
+            }
           }
         }
       }
@@ -120,15 +175,19 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
     for (int i = 0; i < _geofenceZones.length; i++) {
       final zone = _geofenceZones[i];
       final isSelected = i == _currentZoneIndex;
+      final isTask = zone.id.startsWith('task_');
+      
+      // Use different colors for campaigns vs tasks
+      final baseColor = isTask ? secondaryColor : primaryColor;
       
       _polygons.add(Polygon(
         polygonId: PolygonId(zone.id),
         points: zone.points,
-        strokeColor: isSelected ? primaryColor : primaryColor.withValues(alpha: 0.6),
+        strokeColor: isSelected ? baseColor : baseColor.withValues(alpha: 0.6),
         strokeWidth: isSelected ? 3 : 2,
         fillColor: isSelected 
-            ? primaryColor.withValues(alpha: 0.2)
-            : primaryColor.withValues(alpha: 0.1),
+            ? baseColor.withValues(alpha: 0.2)
+            : baseColor.withValues(alpha: 0.1),
       ));
     }
   }
@@ -255,7 +314,7 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            'No Campaign Zones',
+            'No Zones Available',
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -266,7 +325,7 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Text(
-              'You are not assigned to any campaigns with geofenced zones yet.',
+              'You are not assigned to any campaigns or tasks with geofenced zones.',
               style: TextStyle(
                 fontSize: 16,
                 color: textSecondaryColor,
@@ -322,7 +381,9 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
               boxShadow: [
                 BoxShadow(
                   color: isActive
-                      ? primaryColor.withValues(alpha: 0.3)
+                      ? (zone.id.startsWith('task_') 
+                          ? secondaryColor.withValues(alpha: 0.3) 
+                          : primaryColor.withValues(alpha: 0.3))
                       : Colors.black.withValues(alpha: 0.1),
                   blurRadius: isActive ? 15 : 8,
                   offset: const Offset(0, 4),
@@ -330,7 +391,9 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
               ],
               border: Border.all(
                 color: isActive
-                    ? primaryColor.withValues(alpha: 0.3)
+                    ? (zone.id.startsWith('task_') 
+                        ? secondaryColor.withValues(alpha: 0.3) 
+                        : primaryColor.withValues(alpha: 0.3))
                     : Colors.transparent,
                 width: 2,
               ),
@@ -347,16 +410,21 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
                         height: 40,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [
-                              primaryColor.withValues(alpha: 0.15),
-                              primaryColor.withValues(alpha: 0.1),
-                            ],
+                            colors: zone.id.startsWith('task_')
+                                ? [
+                                    secondaryColor.withValues(alpha: 0.15),
+                                    secondaryColor.withValues(alpha: 0.1),
+                                  ]
+                                : [
+                                    primaryColor.withValues(alpha: 0.15),
+                                    primaryColor.withValues(alpha: 0.1),
+                                  ],
                           ),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(
-                          Icons.location_on,
-                          color: primaryColor,
+                          zone.id.startsWith('task_') ? Icons.assignment : Icons.campaign,
+                          color: zone.id.startsWith('task_') ? secondaryColor : primaryColor,
                           size: 20,
                         ),
                       ),
@@ -401,14 +469,14 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
                       Icon(
                         Icons.layers,
                         size: 16,
-                        color: primaryColor,
+                        color: zone.id.startsWith('task_') ? secondaryColor : primaryColor,
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'Zone Area',
+                        zone.id.startsWith('task_') ? 'Task Zone' : 'Campaign Zone',
                         style: TextStyle(
                           fontSize: 12,
-                          color: primaryColor,
+                          color: zone.id.startsWith('task_') ? secondaryColor : primaryColor,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
