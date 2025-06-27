@@ -39,6 +39,7 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
       final userId = supabase.auth.currentUser?.id;
       if (userId == null) return;
 
+      debugPrint('[AgentGeofenceMap] Loading geofences for user: $userId');
       final zones = <GeofenceZone>[];
 
       // Get campaigns assigned to this agent directly through campaign_agents table
@@ -46,6 +47,8 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
           .from('campaign_agents')
           .select('campaign_id')
           .eq('agent_id', userId);
+      
+      debugPrint('[AgentGeofenceMap] Found ${campaignAgentsResponse.length} campaign assignments');
       
       if (campaignAgentsResponse.isNotEmpty) {
         final campaignIds = campaignAgentsResponse
@@ -85,6 +88,8 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
           ''')
           .eq('agent_id', userId)
           .inFilter('status', ['assigned', 'in_progress']);
+      
+      debugPrint('[AgentGeofenceMap] Found ${taskAssignmentsResponse.length} task assignments');
 
       if (taskAssignmentsResponse.isNotEmpty) {
         final taskIds = taskAssignmentsResponse
@@ -96,6 +101,10 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
             .from('geofences')
             .select('id, task_id, name, area_text, area')
             .inFilter('task_id', taskIds);
+        
+        debugPrint('[AgentGeofenceMap] Found ${geofencesResponse.length} geofences for ${taskIds.length} tasks');
+        debugPrint('[AgentGeofenceMap] Task IDs: $taskIds');
+        debugPrint('[AgentGeofenceMap] Geofences: $geofencesResponse');
 
         // Group geofences by task
         final geofencesByTask = <String, List<Map<String, dynamic>>>{};
@@ -132,6 +141,11 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
         }
       }
 
+      debugPrint('[AgentGeofenceMap] Final zones count: ${zones.length}');
+      for (final zone in zones) {
+        debugPrint('[AgentGeofenceMap] Zone: ${zone.id} - ${zone.title}');
+      }
+      
       setState(() {
         _geofenceZones = zones;
         _isLoading = false;
