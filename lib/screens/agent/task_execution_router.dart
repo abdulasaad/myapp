@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../models/task.dart';
 import '../../models/task_template.dart';
 import '../../services/template_service.dart';
+import '../../services/task_assignment_service.dart';
 import '../../utils/constants.dart';
 import 'evidence_submission_screen.dart';
 import 'geofence_stay_task_screen.dart';
@@ -16,14 +17,64 @@ class TaskExecutionRouter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (task.templateId == null) {
-      // Legacy task without template - use evidence submission screen
-      return EvidenceSubmissionScreen(task: task);
-    }
+    // First check if agent can access this task (not pending)
+    return FutureBuilder<bool>(
+      future: TaskAssignmentService().canAgentAccessTask(task.id, supabase.auth.currentUser!.id),
+      builder: (context, accessSnapshot) {
+        if (accessSnapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(task.title),
+              backgroundColor: Theme.of(context).primaryColor,
+              foregroundColor: Colors.white,
+            ),
+            body: preloader,
+          );
+        }
 
-    return FutureBuilder<TaskTemplate?>(
-      future: TemplateService().getTemplateById(task.templateId!),
-      builder: (context, snapshot) {
+        if (accessSnapshot.hasError || accessSnapshot.data == false) {
+          return Scaffold(
+            appBar: AppBar(
+              title: Text(task.title),
+              backgroundColor: Theme.of(context).primaryColor,
+              foregroundColor: Colors.white,
+            ),
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.hourglass_empty, size: 64, color: Colors.orange[300]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Assignment Pending',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Your assignment to this task is pending approval.\nYou cannot access task details until it is approved.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Go Back'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        // Agent can access the task, proceed with template loading
+        if (task.templateId == null) {
+          // Legacy task without template - use evidence submission screen
+          return EvidenceSubmissionScreen(task: task);
+        }
+
+        return FutureBuilder<TaskTemplate?>(
+          future: TemplateService().getTemplateById(task.templateId!),
+          builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
             appBar: AppBar(
@@ -105,6 +156,8 @@ class TaskExecutionRouter extends StatelessWidget {
             // Default to evidence submission screen
             return EvidenceSubmissionScreen(task: task);
         }
+          },
+        );
       },
     );
   }

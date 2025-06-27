@@ -122,6 +122,16 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
       if (assignment != null) {
         _taskAssignmentId = assignment['id'];
         _assignmentStatus = assignment['status'];
+        
+        // Check if assignment is pending
+        if (_assignmentStatus == 'pending') {
+          if (mounted) {
+            // Show dialog and navigate back
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _showPendingAssignmentDialog();
+            });
+          }
+        }
       } else {
         // No assignment exists, allow viewing but not submitting
         _assignmentStatus = 'not_assigned';
@@ -136,6 +146,34 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
       _evidenceFuture = _fetchEvidence();
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _showPendingAssignmentDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.hourglass_empty, color: Colors.orange[700]),
+            const SizedBox(width: 8),
+            const Text('Assignment Pending'),
+          ],
+        ),
+        content: const Text(
+          'Your assignment to this task is currently pending approval from a manager. You cannot access task details or submit evidence until it is approved.\n\nPlease check back later or contact your manager.',
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close dialog
+              Navigator.of(context).pop(); // Go back to previous screen
+            },
+            child: const Text('Go Back'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<List<Evidence>> _fetchEvidence() async {
@@ -1148,7 +1186,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
               .shrink(); // Return an empty box if conditions aren't met
         },
       ),
-      floatingActionButton: _assignmentStatus == 'completed'
+      floatingActionButton: _assignmentStatus == 'completed' || _assignmentStatus == 'pending' || _assignmentStatus == 'not_assigned'
           ? null
           : FloatingActionButton.extended(
               onPressed: _showUploadDialog,

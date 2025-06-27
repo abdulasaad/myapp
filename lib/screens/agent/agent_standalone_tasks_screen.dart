@@ -37,7 +37,7 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) return [];
 
-    // Get all standalone tasks with assignment info for current agent
+    // Get all standalone tasks with assignment info, geofence data, and creator info for current agent
     final response = await supabase
         .from('tasks')
         .select('''
@@ -46,6 +46,13 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
             id,
             status,
             agent_id
+          ),
+          geofences!left(
+            id
+          ),
+          profiles!inner(
+            id,
+            role
           )
         ''')
         .filter('campaign_id', 'is', null)
@@ -56,6 +63,19 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
     for (final taskData in response) {
       final task = Task.fromJson(taskData);
       
+      // Get creator role
+      final creatorProfile = taskData['profiles'] as Map<String, dynamic>?;
+      final creatorRole = creatorProfile?['role'] as String?;
+      
+      // Filter out admin-created tasks that don't have an assigned manager
+      if (creatorRole == 'admin') {
+        final assignedManagerId = taskData['assigned_manager_id'];
+        if (assignedManagerId == null) {
+          // Skip admin tasks without assigned manager
+          continue;
+        }
+      }
+      
       // Find assignment for current agent
       final assignments = taskData['task_assignments'] as List<dynamic>? ?? [];
       final userAssignment = assignments.firstWhere(
@@ -63,11 +83,16 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
         orElse: () => null,
       );
 
+      // Check if task has geofences
+      final geofences = taskData['geofences'] as List<dynamic>? ?? [];
+      final hasGeofences = geofences.isNotEmpty;
+
       tasks.add(TaskWithAssignment(
         task: task,
         assignmentId: userAssignment?['id'],
         assignmentStatus: userAssignment?['status'],
         isAssigned: userAssignment != null,
+        hasGeofences: hasGeofences,
       ));
     }
 
@@ -105,6 +130,30 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
     }
 
     return filteredTasks;
+  }
+
+  void _showPendingStatusDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.hourglass_empty, color: Colors.orange[700]),
+            const SizedBox(width: 8),
+            const Text('Assignment Pending'),
+          ],
+        ),
+        content: const Text(
+          'Your assignment request for this task is currently pending approval from a manager. You cannot start work until it is approved.\n\nPlease check back later or contact your manager for more information.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _requestTaskAssignment(Task task) async {
@@ -351,11 +400,14 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
   Widget _buildTaskCard(TaskWithAssignment taskWithAssignment) {
     final task = taskWithAssignment.task;
     final isExpired = task.endDate != null && task.endDate!.isBefore(DateTime.now());
+    final isPending = taskWithAssignment.assignmentStatus == 'pending';
     
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: InkWell(
-        onTap: () => _openTaskDetail(task), // Allow access to all tasks
+        onTap: isPending 
+            ? () => _showPendingStatusDialog() 
+            : () => _openTaskDetail(task),
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -497,54 +549,66 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
     }
 
     if (taskWithAssignment.assignmentStatus == 'pending') {
-      return Row(
+      return Column(
         children: [
-          Expanded(
-            flex: 2,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                'Assignment request pending approval',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.orange[700],
-                  fontWeight: FontWeight.w500,
-                  fontSize: 12,
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.orange.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.orange[200]!),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.hourglass_empty, color: Colors.orange[700], size: 16),
+                const SizedBox(width: 8),
+                Text(
+                  'Assignment request pending approval',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.orange[700],
+                    fontWeight: FontWeight.w500,
+                    fontSize: 12,
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: ElevatedButton(
-              onPressed: () => _openTaskDetail(taskWithAssignment.task),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 8),
-              ),
-              child: const Text('View Task', style: TextStyle(fontSize: 12)),
+          const SizedBox(height: 8),
+          Text(
+            'You cannot start work on this task until your assignment request is approved by a manager.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 11,
+              fontStyle: FontStyle.italic,
             ),
           ),
         ],
       );
     }
 
+    // Check if task has location data or geofences
+    final hasLocationName = taskWithAssignment.task.locationName != null && 
+                           taskWithAssignment.task.locationName!.isNotEmpty;
+    final hasLocation = hasLocationName || taskWithAssignment.hasGeofences;
+    
     return Row(
       children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: () => _openLocationViewer(taskWithAssignment.task),
-            icon: const Icon(Icons.location_on),
-            label: const Text('View Location'),
+        if (hasLocation) ...[
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: () => _openLocationViewer(taskWithAssignment.task),
+              icon: const Icon(Icons.location_on),
+              label: const Text('View Location'),
+            ),
           ),
-        ),
-        const SizedBox(width: 8),
+          const SizedBox(width: 8),
+        ],
         Expanded(
+          flex: hasLocation ? 1 : 2,
           child: ElevatedButton.icon(
             onPressed: () => _openTaskDetail(taskWithAssignment.task),
             icon: const Icon(Icons.upload),
@@ -577,11 +641,13 @@ class TaskWithAssignment {
   final String? assignmentId;
   final String? assignmentStatus;
   final bool isAssigned;
+  final bool hasGeofences;
 
   TaskWithAssignment({
     required this.task,
     this.assignmentId,
     this.assignmentStatus,
     required this.isAssigned,
+    required this.hasGeofences,
   });
 }

@@ -12,29 +12,90 @@ class TaskAssignmentService {
     final currentUserId = supabase.auth.currentUser?.id;
     if (currentUserId == null) return [];
 
-    final response = await supabase
-        .from('task_assignments')
-        .select('''
-          id,
-          status,
-          created_at,
-          tasks!inner(
+    // Get current user's role
+    final userProfile = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', currentUserId)
+        .single();
+    
+    final isManager = userProfile['role'] == 'manager';
+    
+    // If manager, filter by group assignments
+    if (isManager) {
+      // Get manager's groups
+      final managerGroups = await supabase
+          .from('user_groups')
+          .select('group_id')
+          .eq('user_id', currentUserId);
+      
+      if (managerGroups.isEmpty) {
+        return [];
+      }
+      
+      final groupIds = managerGroups.map((g) => g['group_id']).toList();
+      
+      // Get agents in manager's groups
+      final groupAgents = await supabase
+          .from('user_groups')
+          .select('user_id')
+          .inFilter('group_id', groupIds);
+      
+      if (groupAgents.isEmpty) {
+        return [];
+      }
+      
+      final agentIds = groupAgents.map((g) => g['user_id']).toList();
+      
+      // Get pending assignments from these agents only
+      final response = await supabase
+          .from('task_assignments')
+          .select('''
             id,
-            title,
-            description,
-            points,
-            location_name,
-            required_evidence_count
-          ),
-          profiles!inner(
-            id,
-            full_name
-          )
-        ''')
-        .eq('status', 'pending')
-        .order('created_at', ascending: false);
+            status,
+            agent_id,
+            tasks!inner(
+              id,
+              title,
+              description,
+              points,
+              location_name,
+              required_evidence_count
+            ),
+            profiles!inner(
+              id,
+              full_name
+            )
+          ''')
+          .eq('status', 'pending')
+          .inFilter('agent_id', agentIds);
 
-    return response.map((json) => PendingTaskAssignment.fromJson(json)).toList();
+      return response.map((json) => PendingTaskAssignment.fromJson(json)).toList();
+    } else {
+      // Admin sees all pending assignments
+      final response = await supabase
+          .from('task_assignments')
+          .select('''
+            id,
+            status,
+            agent_id,
+            tasks!inner(
+              id,
+              title,
+              description,
+              points,
+              location_name,
+              required_evidence_count
+            ),
+            profiles!inner(
+              id,
+              full_name
+            )
+          ''')
+          .eq('status', 'pending');
+
+      return response.map((json) => PendingTaskAssignment.fromJson(json)).toList();
+    }
   }
 
   /// Approve a pending task assignment
@@ -43,24 +104,15 @@ class TaskAssignmentService {
         .from('task_assignments')
         .update({
           'status': 'assigned',
-          'assigned_at': DateTime.now().toIso8601String(),
+          'started_at': DateTime.now().toIso8601String(),
         })
         .eq('id', assignmentId);
   }
 
   /// Reject a pending task assignment
   Future<void> rejectAssignment(String assignmentId, String? reason) async {
+    // Simply delete the assignment - don't try to log to assignment_rejections table
     await supabase.from('task_assignments').delete().eq('id', assignmentId);
-    
-    // Optionally log the rejection reason
-    if (reason != null) {
-      await supabase.from('assignment_rejections').insert({
-        'assignment_id': assignmentId,
-        'reason': reason,
-        'rejected_by': supabase.auth.currentUser?.id,
-        'rejected_at': DateTime.now().toIso8601String(),
-      });
-    }
   }
 
   /// Auto-approve assignments based on criteria
@@ -72,7 +124,7 @@ class TaskAssignmentService {
         .from('task_assignments')
         .update({
           'status': 'assigned',
-          'assigned_at': DateTime.now().toIso8601String(),
+          'started_at': DateTime.now().toIso8601String(),
         })
         .eq('status', 'pending');
 
@@ -98,6 +150,44 @@ class TaskAssignmentService {
           .from('task_assignments')
           .update({'status': 'in_progress'})
           .eq('id', taskAssignmentId);
+    }
+  }
+
+  /// Check if agent can access a task (not pending approval)
+  Future<bool> canAgentAccessTask(String taskId, String agentId) async {
+    try {
+      final assignment = await supabase
+          .from('task_assignments')
+          .select('status')
+          .eq('task_id', taskId)
+          .eq('agent_id', agentId)
+          .maybeSingle();
+      
+      // No assignment means no access
+      if (assignment == null) return false;
+      
+      // Can access if status is anything except 'pending'
+      final status = assignment['status'] as String;
+      return status != 'pending';
+    } catch (e) {
+      // If any error, deny access for safety
+      return false;
+    }
+  }
+
+  /// Get agent's task assignment status
+  Future<String?> getTaskAssignmentStatus(String taskId, String agentId) async {
+    try {
+      final assignment = await supabase
+          .from('task_assignments')
+          .select('status')
+          .eq('task_id', taskId)
+          .eq('agent_id', agentId)
+          .maybeSingle();
+      
+      return assignment?['status'] as String?;
+    } catch (e) {
+      return null;
     }
   }
 
@@ -130,7 +220,6 @@ class TaskAssignmentService {
           .from('task_assignments')
           .update({
             'status': 'completed',
-            'completed_at': DateTime.now().toIso8601String(),
           })
           .eq('id', taskAssignmentId);
     }
@@ -147,7 +236,6 @@ class PendingTaskAssignment {
   final int requiredEvidenceCount;
   final String agentId;
   final String agentName;
-  final DateTime createdAt;
 
   PendingTaskAssignment({
     required this.id,
@@ -159,7 +247,6 @@ class PendingTaskAssignment {
     required this.requiredEvidenceCount,
     required this.agentId,
     required this.agentName,
-    required this.createdAt,
   });
 
   factory PendingTaskAssignment.fromJson(Map<String, dynamic> json) {
@@ -174,9 +261,8 @@ class PendingTaskAssignment {
       points: task['points'] ?? 0,
       locationName: task['location_name'],
       requiredEvidenceCount: task['required_evidence_count'] ?? 1,
-      agentId: profile['id'],
+      agentId: json['agent_id'] ?? profile['id'],
       agentName: profile['full_name'] ?? 'Unknown Agent',
-      createdAt: DateTime.parse(json['created_at']),
     );
   }
 }

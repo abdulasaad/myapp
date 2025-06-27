@@ -164,12 +164,15 @@ class LocationService {
     final locationString = 'POINT(${position.longitude} ${position.latitude})';
     
     try {
+      // Insert into location_history using the correct column name
       await supabase.from('location_history').insert({
         'user_id': userId,
         'location': locationString,
         'accuracy': position.accuracy,
         'speed': position.speed,
+        'recorded_at': DateTime.now().toIso8601String(),
       });
+
       // Only log successful database inserts to verify it's working
       logger.i("📍 ${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)} → DB ✅");
     } catch (e) {

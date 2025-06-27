@@ -107,12 +107,24 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
         // Admins can see all campaigns
         final response = await supabase
             .from('campaigns')
-            .select()
+            .select('*, created_at')
             .order('created_at', ascending: false);
         return response.map((json) => Campaign.fromJson(json)).toList();
       } else if (userRole == 'manager') {
-        // Managers can only see campaigns created by users in their shared groups
-        // Get current manager's groups
+        // Managers can see:
+        // 1. Campaigns assigned to them directly (assigned_manager_id)
+        // 2. Campaigns created by users in their shared groups
+        
+        // First, get campaigns assigned directly to this manager
+        final assignedCampaignsResponse = await supabase
+            .from('campaigns')
+            .select('*, created_at')
+            .eq('assigned_manager_id', currentUser.id)
+            .order('created_at', ascending: false);
+        
+        final assignedCampaigns = assignedCampaignsResponse.map((json) => Campaign.fromJson(json)).toList();
+        
+        // Then get current manager's groups for group-based campaigns
         final userGroupsResponse = await supabase
             .from('user_groups')
             .select('group_id')
@@ -122,41 +134,52 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
             .map((item) => item['group_id'] as String)
             .toSet();
         
-        if (userGroupIds.isEmpty) {
-          // Manager not in any groups, can only see campaigns they created
-          final response = await supabase
-              .from('campaigns')
-              .select()
-              .eq('created_by', currentUser.id)
-              .order('created_at', ascending: false);
-          return response.map((json) => Campaign.fromJson(json)).toList();
+        List<Campaign> groupCampaigns = [];
+        
+        if (userGroupIds.isNotEmpty) {
+          // Get all users in the same groups (including the manager)
+          final usersInGroupsResponse = await supabase
+              .from('user_groups')
+              .select('user_id')
+              .inFilter('group_id', userGroupIds.toList());
+          
+          final allowedUserIds = usersInGroupsResponse
+              .map((item) => item['user_id'] as String)
+              .toSet();
+          
+          // Always include the current manager
+          allowedUserIds.add(currentUser.id);
+
+          if (allowedUserIds.isNotEmpty) {
+            // Get campaigns created by users in the same groups
+            final groupCampaignsResponse = await supabase
+                .from('campaigns')
+                .select('*, created_at')
+                .inFilter('created_by', allowedUserIds.toList())
+                .order('created_at', ascending: false);
+            
+            groupCampaigns = groupCampaignsResponse.map((json) => Campaign.fromJson(json)).toList();
+          }
         }
-
-        // Get all users in the same groups (including the manager)
-        final usersInGroupsResponse = await supabase
-            .from('user_groups')
-            .select('user_id')
-            .inFilter('group_id', userGroupIds.toList());
         
-        final allowedUserIds = usersInGroupsResponse
-            .map((item) => item['user_id'] as String)
-            .toSet();
+        // Combine assigned campaigns and group campaigns, removing duplicates
+        final allCampaigns = <String, Campaign>{};
         
-        // Always include the current manager
-        allowedUserIds.add(currentUser.id);
-
-        if (allowedUserIds.isEmpty) {
-          return [];
+        // Add assigned campaigns first (higher priority)
+        for (final campaign in assignedCampaigns) {
+          allCampaigns[campaign.id] = campaign;
         }
-
-        // Get campaigns created by users in the same groups
-        final response = await supabase
-            .from('campaigns')
-            .select()
-            .inFilter('created_by', allowedUserIds.toList())
-            .order('created_at', ascending: false);
         
-        return response.map((json) => Campaign.fromJson(json)).toList();
+        // Add group campaigns (won't overwrite assigned campaigns due to map)
+        for (final campaign in groupCampaigns) {
+          allCampaigns[campaign.id] = campaign;
+        }
+        
+        // Convert back to list and sort by creation date
+        final resultCampaigns = allCampaigns.values.toList();
+        resultCampaigns.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        
+        return resultCampaigns;
       } else {
         // Other roles (agents) typically don't manage campaigns
         return [];

@@ -1,7 +1,6 @@
 // lib/screens/admin/pending_assignments_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../../services/task_assignment_service.dart';
 import '../../utils/constants.dart';
 
@@ -281,7 +280,7 @@ class _PendingAssignmentsScreenState extends State<PendingAssignmentsScreen> {
                         ),
                       ),
                       Text(
-                        'Requested ${DateFormat.yMMMd().add_jm().format(assignment.createdAt)}',
+                        'Pending Assignment Request',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Colors.grey[600],
                         ),

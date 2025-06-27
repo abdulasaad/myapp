@@ -6,8 +6,13 @@ import 'package:geolocator/geolocator.dart';
 import '../utils/constants.dart';
 import '../models/app_user.dart';
 import '../services/location_service.dart';
+import '../services/background_location_service.dart';
 import '../services/session_service.dart';
 import '../services/profile_service.dart';
+import '../services/connectivity_service.dart';
+import '../widgets/gps_status_indicator.dart';
+import '../widgets/offline_widget.dart';
+import 'package:logger/logger.dart';
 import 'campaigns/campaigns_list_screen.dart';
 import 'tasks/standalone_tasks_screen.dart';
 import 'map/live_map_screen.dart';
@@ -287,11 +292,90 @@ class _AgentDashboardTab extends StatefulWidget {
 
 class _AgentDashboardTabState extends State<_AgentDashboardTab> {
   late Future<AgentDashboardData> _dashboardFuture;
+  final LocationService _locationService = LocationService();
+  final Logger _logger = Logger();
 
   @override
   void initState() {
     super.initState();
     _dashboardFuture = _loadAgentDashboardData();
+    _startLocationTracking();
+    // Initialize connectivity monitoring
+    ConnectivityService().initialize();
+  }
+
+  @override
+  void dispose() {
+    _locationService.stop();
+    BackgroundLocationService.stopLocationTracking();
+    super.dispose();
+  }
+
+  void _startLocationTracking() async {
+    try {
+      // Check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        if (mounted) {
+          context.showSnackBar(
+            'Location services are disabled. Please enable them in device settings.',
+            isError: true,
+          );
+        }
+        return;
+      }
+
+      // Check location permissions
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          if (mounted) {
+            context.showSnackBar(
+              'Location permission denied. Please grant permission to track your location.',
+              isError: true,
+            );
+          }
+          return;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        if (mounted) {
+          context.showSnackBar(
+            'Location permission permanently denied. Please enable it in app settings.',
+            isError: true,
+          );
+        }
+        return;
+      }
+
+      // Initialize background service if not already initialized
+      await BackgroundLocationService.initialize();
+      
+      // Start foreground location tracking
+      await _locationService.start();
+      _logger.i('Foreground location tracking started for agent: ${widget.user.fullName}');
+      
+      // Start background location tracking
+      await BackgroundLocationService.startLocationTracking();
+      _logger.i('Background location tracking started for agent: ${widget.user.fullName}');
+      
+      if (mounted) {
+        context.showSnackBar(
+          'Location tracking started successfully (background tracking enabled)',
+          isError: false,
+        );
+      }
+    } catch (e) {
+      _logger.e('Failed to start location tracking: $e');
+      if (mounted) {
+        context.showSnackBar(
+          'Failed to start location tracking: $e',
+          isError: true,
+        );
+      }
+    }
   }
 
   void _refreshDashboard() {
@@ -485,55 +569,122 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: FutureBuilder<AgentDashboardData>(
-        future: _dashboardFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: StreamBuilder<bool>(
+        stream: ConnectivityService().connectivityStream,
+        initialData: ConnectivityService().isOnline,
+        builder: (context, connectivitySnapshot) {
+          final isOnline = connectivitySnapshot.data ?? true;
           
-          if (snapshot.hasError) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error, size: 64, color: Colors.red[400]),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error loading dashboard',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: _refreshDashboard,
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            );
-          }
+          return Stack(
+            children: [
+              FutureBuilder<AgentDashboardData>(
+                future: _dashboardFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  
+                  if (snapshot.hasError) {
+                    // Check if it's a network error
+                    if (!isOnline || ConnectivityService.isNetworkError(snapshot.error)) {
+                      return OfflineWidget(
+                        title: 'You\'re Offline',
+                        subtitle: 'Please check your internet connection to load the dashboard.',
+                        onRetry: isOnline ? _refreshDashboard : null,
+                      );
+                    }
+                    
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error, size: 64, color: Colors.red[400]),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Error loading dashboard',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 8),
+                          ElevatedButton(
+                            onPressed: _refreshDashboard,
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
 
-          final data = snapshot.data!;
-          
-          return RefreshIndicator(
-            onRefresh: () async => _refreshDashboard(),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildWelcomeCard(data.taskStats),
-                  const SizedBox(height: 20),
-                  _buildPerformanceStats(data.taskStats, data.earningsStats),
-                  const SizedBox(height: 20),
-                  _buildQuickActions(context),
-                  const SizedBox(height: 20),
-                  _buildActiveTasksPreview(data.activeTasks),
-                  const SizedBox(height: 20),
-                  _buildRecentActivity(data.recentActivity),
-                ],
+                  final data = snapshot.data!;
+                  
+                  return RefreshIndicator(
+                    onRefresh: () async => _refreshDashboard(),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Dashboard Title with proper spacing from top
+                          SafeArea(
+                            bottom: false,
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                              child: Text(
+                                'Agent Dashboard',
+                                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: textPrimaryColor,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildWelcomeCard(data.taskStats),
+                                const SizedBox(height: 20),
+                                _buildPerformanceStats(data.taskStats, data.earningsStats),
+                                const SizedBox(height: 20),
+                                _buildQuickActions(context),
+                                const SizedBox(height: 20),
+                                _buildActiveTasksPreview(data.activeTasks),
+                                const SizedBox(height: 20),
+                                _buildRecentActivity(data.recentActivity),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
-            ),
+              // Offline banner at the top
+              if (!isOnline)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: SafeArea(
+                    bottom: false,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                      color: Colors.orange[700],
+                      child: const Row(
+                        children: [
+                          Icon(Icons.wifi_off, color: Colors.white, size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            'You\'re offline - Some features may not be available',
+                            style: TextStyle(color: Colors.white, fontSize: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           );
         },
       ),
@@ -616,8 +767,21 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> {
                   ],
                 ),
               ),
-              // GPS Signal Indicator
-              _buildGPSIndicator(),
+              // GPS Signal Indicator with Label
+              Column(
+                children: [
+                  _buildGPSIndicator(),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'GPS Signal',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -688,149 +852,18 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> {
   }
 
   Widget _buildGPSIndicator() {
-    return FutureBuilder<bool>(
-      future: _checkGPSStatus(),
-      builder: (context, snapshot) {
-        Color indicatorColor;
-        IconData indicatorIcon;
-        String tooltip;
-        
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          indicatorColor = Colors.grey;
-          indicatorIcon = Icons.gps_not_fixed;
-          tooltip = 'Checking GPS...';
-        } else if (snapshot.hasData && snapshot.data == true) {
-          indicatorColor = Colors.green;
-          indicatorIcon = Icons.gps_fixed;
-          tooltip = 'GPS Active';
-        } else {
-          indicatorColor = Colors.red;
-          indicatorIcon = Icons.gps_off;
-          tooltip = 'GPS Unavailable';
-        }
-        
-        return GestureDetector(
-          onTap: () {
-            // Show GPS status dialog
-            _showGPSStatusDialog();
-          },
-          child: Tooltip(
-            message: tooltip,
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                indicatorIcon,
-                color: indicatorColor,
-                size: 20,
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Future<bool> _checkGPSStatus() async {
-    try {
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      final permission = await Geolocator.checkPermission();
-      return serviceEnabled && (permission == LocationPermission.always || permission == LocationPermission.whileInUse);
-    } catch (e) {
-      return false;
-    }
-  }
-
-  void _showGPSStatusDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.location_on, color: primaryColor),
-            SizedBox(width: 8),
-            Text('GPS Status'),
-          ],
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.3),
+          width: 1,
         ),
-        content: FutureBuilder<Map<String, dynamic>>(
-          future: _getDetailedGPSStatus(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const CircularProgressIndicator();
-            }
-            
-            final status = snapshot.data ?? {};
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildStatusRow('Location Service', status['serviceEnabled'] ?? false),
-                _buildStatusRow('App Permission', status['hasPermission'] ?? false),
-                if (status['accuracy'] != null)
-                  Text('Last Known Accuracy: ${status['accuracy'].toStringAsFixed(1)}m'),
-              ],
-            );
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
       ),
+      child: GpsStatusIndicator(locationService: _locationService),
     );
-  }
-
-  Widget _buildStatusRow(String label, bool isEnabled) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Icon(
-            isEnabled ? Icons.check_circle : Icons.cancel,
-            color: isEnabled ? Colors.green : Colors.red,
-            size: 16,
-          ),
-          const SizedBox(width: 8),
-          Text(label),
-        ],
-      ),
-    );
-  }
-
-  Future<Map<String, dynamic>> _getDetailedGPSStatus() async {
-    try {
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      final permission = await Geolocator.checkPermission();
-      final hasPermission = permission == LocationPermission.always || permission == LocationPermission.whileInUse;
-      
-      double? accuracy;
-      if (serviceEnabled && hasPermission) {
-        try {
-          final position = await Geolocator.getLastKnownPosition();
-          accuracy = position?.accuracy;
-        } catch (e) {
-          // Ignore errors getting last position
-        }
-      }
-      
-      return {
-        'serviceEnabled': serviceEnabled,
-        'hasPermission': hasPermission,
-        'accuracy': accuracy,
-      };
-    } catch (e) {
-      return {
-        'serviceEnabled': false,
-        'hasPermission': false,
-        'accuracy': null,
-      };
-    }
   }
 
   Widget _buildPerformanceStats(AgentTaskStats taskStats, AgentEarningsStats earningsStats) {

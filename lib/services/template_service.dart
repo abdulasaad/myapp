@@ -331,6 +331,7 @@ class TemplateService {
     int? overridePoints,
     bool? overrideGeofence,
     int? overrideEvidenceCount,
+    String? assignedManagerId,
   }) async {
     // Get the template
     final template = await getTemplateById(templateId);
@@ -353,7 +354,13 @@ class TemplateService {
       'custom_fields': customFieldValues ?? {},
       'template_version': 1,
       'campaign_id': null, // Standalone task
+      'created_by': supabase.auth.currentUser!.id,
     };
+
+    // Add assigned manager if provided
+    if (assignedManagerId != null) {
+      taskData['assigned_manager_id'] = assignedManagerId;
+    }
 
     // Insert the task
     final response = await supabase

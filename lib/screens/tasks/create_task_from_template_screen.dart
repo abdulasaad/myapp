@@ -1,13 +1,16 @@
 // lib/screens/tasks/create_task_from_template_screen.dart
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../models/task_template.dart';
 import '../../models/template_field.dart';
 import '../../models/task.dart';
+import '../../models/app_user.dart';
 import '../../services/template_service.dart';
 import '../../services/location_service.dart';
+import '../../services/user_management_service.dart';
 import '../../utils/constants.dart';
 import '../tasks/task_geofence_editor_screen.dart';
 
@@ -46,12 +49,21 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
   // Dynamic field builder for managers
   final List<TemplateField> _dynamicFields = [];
   bool _showFieldBuilder = false;
+  
+  // Manager assignment (for admin only)
+  String? _selectedManagerId;
+  List<AppUser> _managers = [];
+  bool _isAdmin = false;
+  bool _managersLoaded = false;
 
   @override
   void initState() {
     super.initState();
     _templateWithFieldsFuture = _templateService.getTemplateWithFields(widget.template.id);
     _initializeFields();
+    
+    // Check if current user is admin and load managers
+    _checkUserRoleAndLoadManagers();
   }
 
   @override
@@ -95,6 +107,55 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
     return template.taskType == TaskType.dataCollection || 
            template.taskType == TaskType.survey ||
            template.taskType == TaskType.inspection;
+  }
+
+  Future<void> _checkUserRoleAndLoadManagers() async {
+    try {
+      final userRole = await UserManagementService().getCurrentUserRole();
+      final isAdmin = userRole == 'admin';
+      
+      debugPrint('[TemplateTaskCreation] User role: $userRole, isAdmin: $isAdmin');
+      
+      setState(() {
+        _isAdmin = isAdmin;
+      });
+      
+      if (isAdmin) {
+        debugPrint('[TemplateTaskCreation] Loading managers for admin user...');
+        await _loadManagers();
+      } else {
+        debugPrint('[TemplateTaskCreation] User is not admin, skipping manager loading');
+        setState(() {
+          _managersLoaded = true;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error checking user role: $e');
+      setState(() {
+        _managersLoaded = true;
+      });
+    }
+  }
+
+  Future<void> _loadManagers() async {
+    try {
+      final managers = await UserManagementService().getUsers(
+        roleFilter: 'manager',
+        statusFilter: 'active',
+      );
+      
+      debugPrint('[TemplateTaskCreation] Loaded ${managers.length} managers: ${managers.map((m) => m.fullName).join(', ')}');
+      
+      setState(() {
+        _managers = managers;
+        _managersLoaded = true;
+      });
+    } catch (e) {
+      debugPrint('Error loading managers: $e');
+      setState(() {
+        _managersLoaded = true;
+      });
+    }
   }
 
   Widget _buildDynamicFieldsCard() {
@@ -510,6 +571,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
         overridePoints: int.tryParse(_pointsController.text),
         overrideGeofence: _enableGeofence,
         overrideEvidenceCount: int.tryParse(_evidenceCountController.text),
+        assignedManagerId: _selectedManagerId,
       );
 
       setState(() {
@@ -767,6 +829,11 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
                         _buildBasicFieldsCard(),
                         const SizedBox(height: 16),
                         _buildConfigurationCard(),
+                        // Manager Assignment Section (Admin only)
+                        if (_isAdmin && _managersLoaded) ...[
+                          const SizedBox(height: 16),
+                          _buildManagerAssignmentCard(),
+                        ],
                         if (fields.isNotEmpty) ...[
                           const SizedBox(height: 16),
                           _buildCustomFieldsCard(fields),
@@ -1387,6 +1454,101 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
         style: ElevatedButton.styleFrom(
           backgroundColor: Theme.of(context).primaryColor,
           foregroundColor: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildManagerAssignmentCard() {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.manage_accounts, color: Colors.green[600]),
+                const SizedBox(width: 8),
+                Text(
+                  'Manager Assignment',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Debug info in development mode
+            if (kDebugMode) ...[
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.yellow[100],
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(color: Colors.yellow[400]!),
+                ),
+                child: Text(
+                  'DEBUG: isAdmin=$_isAdmin, managersLoaded=$_managersLoaded, managers=${_managers.length}',
+                  style: const TextStyle(fontSize: 10),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+            DropdownButtonFormField<String>(
+              value: _selectedManagerId,
+              decoration: const InputDecoration(
+                labelText: 'Assign to Manager',
+                hintText: 'Select a manager to oversee this task',
+                border: OutlineInputBorder(),
+              ),
+              items: [
+                const DropdownMenuItem<String>(
+                  value: null,
+                  child: Text('No specific manager'),
+                ),
+                ..._managers.map((manager) {
+                  return DropdownMenuItem<String>(
+                    value: manager.id,
+                    child: Text(manager.fullName),
+                  );
+                }).toList(),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _selectedManagerId = value;
+                });
+              },
+            ),
+            if (_selectedManagerId != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 16, color: Colors.blue[700]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'This task will be assigned to the selected manager. Only they and their agents will be able to see and work on this task.',
+                        style: TextStyle(
+                          color: Colors.blue[700],
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );

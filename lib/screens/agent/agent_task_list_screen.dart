@@ -339,6 +339,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
 
   Widget _buildModernTaskCard(AgentTask task, int index) {
     final isCompleted = task.status == 'completed';
+    final isPending = task.status == 'pending';
     final progress = _calculateTaskProgress(task);
     
     return Container(
@@ -355,7 +356,13 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   )
-                : null,
+                : isPending
+                  ? LinearGradient(
+                      colors: [Colors.orange[50]!, Colors.orange[100]!],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : null,
           ),
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -369,20 +376,26 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: isCompleted ? Colors.green : Theme.of(context).primaryColor,
+                        color: isCompleted 
+                            ? Colors.green 
+                            : isPending 
+                                ? Colors.orange 
+                                : Theme.of(context).primaryColor,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Center(
                         child: isCompleted 
                             ? const Icon(Icons.check, color: Colors.white, size: 18)
-                            : Text(
-                                '${index + 1}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
+                            : isPending
+                                ? const Icon(Icons.hourglass_empty, color: Colors.white, size: 18)
+                                : Text(
+                                    '${index + 1}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -455,46 +468,77 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                   ),
                 ],
                 
-                // Progress indicator
-                const SizedBox(height: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                // Pending status warning
+                if (isPending) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange[200]!),
+                    ),
+                    child: Row(
                       children: [
-                        const Text(
-                          'Progress',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black54,
-                          ),
-                        ),
-                        Text(
-                          '${(progress * 100).toInt()}%',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: progress == 1.0 ? Colors.green : Theme.of(context).primaryColor,
+                        Icon(Icons.info_outline, color: Colors.orange[700], size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'This task assignment is pending approval from your manager. You cannot start work until it is approved.',
+                            style: TextStyle(
+                              color: Colors.orange[700],
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    LinearProgressIndicator(
-                      value: progress,
-                      backgroundColor: Colors.grey[200],
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        progress == 1.0 ? Colors.green : Theme.of(context).primaryColor,
-                      ),
-                      minHeight: 6,
-                    ),
-                  ],
-                ),
+                  ),
+                ],
                 
-                // Evidence preview
-                if (task.evidenceUrls.isNotEmpty) ...[
+                // Progress indicator (only show if not pending)
+                if (!isPending) ...[
+                  const SizedBox(height: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Progress',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          Text(
+                            '${(progress * 100).toInt()}%',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: progress == 1.0 ? Colors.green : Theme.of(context).primaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      LinearProgressIndicator(
+                        value: progress,
+                        backgroundColor: Colors.grey[200],
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          progress == 1.0 ? Colors.green : Theme.of(context).primaryColor,
+                        ),
+                        minHeight: 6,
+                      ),
+                    ],
+                  ),
+                ],
+                
+                // Evidence preview (only show if not pending)
+                if (!isPending && task.evidenceUrls.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   Row(
                     children: [
@@ -540,7 +584,31 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                 
                 // Action buttons
                 const SizedBox(height: 20),
-                if (!isCompleted) ...[
+                if (isPending) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.orange[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.orange[200]!),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.hourglass_empty, color: Colors.orange[600], size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Awaiting Manager Approval',
+                          style: TextStyle(
+                            color: Colors.orange[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ] else if (!isCompleted) ...[
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
@@ -555,6 +623,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                                 description: task.description,
                                 points: task.points,
                                 status: task.status,
+                                createdAt: DateTime.now(), // Use current time as fallback
                                 campaignId: widget.campaign.id,
                                 enforceGeofence: task.enforceGeofence,
                               ),
@@ -657,6 +726,8 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
       case 'started':
         return Colors.blue;
       case 'assigned':
+        return Colors.purple;
+      case 'pending':
         return Colors.orange;
       default:
         return Colors.grey;

@@ -7,6 +7,7 @@ import 'evidence_list_screen.dart';
 import '../tasks/standalone_tasks_screen.dart';
 import '../calendar_screen.dart';
 import 'pending_assignments_screen.dart';
+import '../reporting/location_history_screen.dart';
 import '../../services/group_service.dart';
 
 class EnhancedManagerDashboardScreen extends StatefulWidget {
@@ -59,14 +60,70 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
   }
 
   Future<ManagerTaskStats> _getManagerTaskStats() async {
+    // Get current user's role
+    final currentUser = supabase.auth.currentUser;
+    if (currentUser == null) {
+      return ManagerTaskStats(
+        totalTasks: 0,
+        activeTasks: 0,
+        completedAssignments: 0,
+        pendingAssignments: 0,
+        todayCompleted: 0,
+      );
+    }
+
+    final userProfile = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', currentUser.id)
+        .single();
+    
+    final isManager = userProfile['role'] == 'manager';
+    
     // Get all tasks (both campaign and standalone)
     final tasksResponse = await supabase
         .from('tasks')
         .select('id, status, created_at');
     
-    final assignmentsResponse = await supabase
-        .from('task_assignments')
-        .select('status');
+    // For managers, get assignments only from agents in their groups
+    List<Map<String, dynamic>> assignmentsResponse;
+    
+    if (isManager) {
+      // Get manager's groups
+      final managerGroups = await supabase
+          .from('user_groups')
+          .select('group_id')
+          .eq('user_id', currentUser.id);
+      
+      if (managerGroups.isEmpty) {
+        assignmentsResponse = [];
+      } else {
+        final groupIds = managerGroups.map((g) => g['group_id']).toList();
+        
+        // Get all agents in manager's groups
+        final agentsInGroups = await supabase
+            .from('user_groups')
+            .select('user_id')
+            .inFilter('group_id', groupIds);
+        
+        if (agentsInGroups.isEmpty) {
+          assignmentsResponse = [];
+        } else {
+          final agentIds = agentsInGroups.map((a) => a['user_id'] as String).toList();
+          
+          // Get assignments from these agents only
+          assignmentsResponse = await supabase
+              .from('task_assignments')
+              .select('status, agent_id')
+              .inFilter('agent_id', agentIds);
+        }
+      }
+    } else {
+      // Admin sees all assignments
+      assignmentsResponse = await supabase
+          .from('task_assignments')
+          .select('status');
+    }
     
     int totalTasks = tasksResponse.length;
     int activeTasks = 0, completedAssignments = 0, pendingAssignments = 0;
@@ -357,7 +414,7 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
                   const SizedBox(height: 20),
                   _buildManagementOverview(data),
                   const SizedBox(height: 20),
-                  _buildQuickActionsSection(),
+                  _buildQuickActionsSection(data),
                   const SizedBox(height: 20),
                   _buildAgentManagementSection(data.agentStats),
                   const SizedBox(height: 20),
@@ -591,7 +648,7 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
     );
   }
 
-  Widget _buildQuickActionsSection() {
+  Widget _buildQuickActionsSection(ManagerDashboardData data) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -612,6 +669,7 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
                 subtitle: 'Approval needed',
                 icon: Icons.assignment_late,
                 color: Colors.orange,
+                badgeCount: data.taskStats.pendingAssignments,
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -674,7 +732,21 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
               ),
             ),
             const SizedBox(width: 12),
-            Expanded(child: Container()), // Empty space
+            Expanded(
+              child: _buildActionCard(
+                title: 'Location History',
+                subtitle: 'Track agent locations',
+                icon: Icons.location_history,
+                color: primaryColor,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const LocationHistoryScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
             const SizedBox(width: 12),
             Expanded(child: Container()), // Empty space
           ],
@@ -689,6 +761,7 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
     required IconData icon,
     required Color color,
     required VoidCallback onTap,
+    int? badgeCount,
   }) {
     return InkWell(
       onTap: onTap,
@@ -709,17 +782,48 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
         ),
         child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 20,
-              ),
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: color,
+                    size: 20,
+                  ),
+                ),
+                if (badgeCount != null && badgeCount > 0)
+                  Positioned(
+                    right: -8,
+                    top: -8,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 20,
+                        minHeight: 20,
+                      ),
+                      child: Text(
+                        badgeCount > 99 ? '99+' : badgeCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 8),
             Text(

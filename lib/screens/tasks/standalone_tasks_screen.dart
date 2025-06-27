@@ -42,13 +42,26 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
         // Admins can see all standalone tasks
         final response = await supabase
             .from('tasks')
-            .select()
+            .select('*, created_at')
             .filter('campaign_id', 'is', null) 
             .order('created_at', ascending: false);
         return response.map((json) => Task.fromJson(json)).toList();
       } else if (userRole == 'manager') {
-        // Managers can only see standalone tasks created by users in their shared groups
-        // Get current manager's groups
+        // Managers can see:
+        // 1. Standalone tasks assigned to them directly (assigned_manager_id)
+        // 2. Standalone tasks created by users in their shared groups
+        
+        // First, get tasks assigned directly to this manager
+        final assignedTasksResponse = await supabase
+            .from('tasks')
+            .select('*, created_at')
+            .filter('campaign_id', 'is', null)
+            .eq('assigned_manager_id', currentUser.id)
+            .order('created_at', ascending: false);
+        
+        final assignedTasks = assignedTasksResponse.map((json) => Task.fromJson(json)).toList();
+        
+        // Then get current manager's groups for group-based tasks
         final userGroupsResponse = await supabase
             .from('user_groups')
             .select('group_id')
@@ -58,43 +71,53 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
             .map((item) => item['group_id'] as String)
             .toSet();
         
-        if (userGroupIds.isEmpty) {
-          // Manager not in any groups, can only see tasks they created
-          final response = await supabase
-              .from('tasks')
-              .select()
-              .filter('campaign_id', 'is', null)
-              .eq('created_by', currentUser.id)
-              .order('created_at', ascending: false);
-          return response.map((json) => Task.fromJson(json)).toList();
+        List<Task> groupTasks = [];
+        
+        if (userGroupIds.isNotEmpty) {
+          // Get all users in the same groups (including the manager)
+          final usersInGroupsResponse = await supabase
+              .from('user_groups')
+              .select('user_id')
+              .inFilter('group_id', userGroupIds.toList());
+          
+          final allowedUserIds = usersInGroupsResponse
+              .map((item) => item['user_id'] as String)
+              .toSet();
+          
+          // Always include the current manager
+          allowedUserIds.add(currentUser.id);
+
+          if (allowedUserIds.isNotEmpty) {
+            // Get standalone tasks created by users in the same groups
+            final groupTasksResponse = await supabase
+                .from('tasks')
+                .select('*, created_at')
+                .filter('campaign_id', 'is', null)
+                .inFilter('created_by', allowedUserIds.toList())
+                .order('created_at', ascending: false);
+            
+            groupTasks = groupTasksResponse.map((json) => Task.fromJson(json)).toList();
+          }
         }
-
-        // Get all users in the same groups (including the manager)
-        final usersInGroupsResponse = await supabase
-            .from('user_groups')
-            .select('user_id')
-            .inFilter('group_id', userGroupIds.toList());
         
-        final allowedUserIds = usersInGroupsResponse
-            .map((item) => item['user_id'] as String)
-            .toSet();
+        // Combine assigned tasks and group tasks, removing duplicates
+        final allTasks = <String, Task>{};
         
-        // Always include the current manager
-        allowedUserIds.add(currentUser.id);
-
-        if (allowedUserIds.isEmpty) {
-          return [];
+        // Add assigned tasks first (higher priority)
+        for (final task in assignedTasks) {
+          allTasks[task.id] = task;
         }
-
-        // Get standalone tasks created by users in the same groups
-        final response = await supabase
-            .from('tasks')
-            .select()
-            .filter('campaign_id', 'is', null)
-            .inFilter('created_by', allowedUserIds.toList())
-            .order('created_at', ascending: false);
         
-        return response.map((json) => Task.fromJson(json)).toList();
+        // Add group tasks (won't overwrite assigned tasks due to map)
+        for (final task in groupTasks) {
+          allTasks[task.id] = task;
+        }
+        
+        // Convert back to list and sort by creation date
+        final resultTasks = allTasks.values.toList();
+        resultTasks.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        
+        return resultTasks;
       } else {
         // Other roles (agents) typically don't manage standalone tasks
         return [];

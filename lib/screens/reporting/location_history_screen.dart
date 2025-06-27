@@ -246,6 +246,18 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
         title: const Text('Location History'),
         bottom: TabBar(
           controller: _tabController,
+          indicatorColor: Colors.white,
+          indicatorWeight: 3,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.normal,
+            fontSize: 14,
+          ),
           tabs: const [
             Tab(icon: Icon(Icons.list), text: 'History'),
             Tab(icon: Icon(Icons.map), text: 'Map'),

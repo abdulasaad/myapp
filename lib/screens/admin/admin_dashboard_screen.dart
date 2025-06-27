@@ -7,6 +7,7 @@ import '../tasks/template_categories_screen.dart';
 import 'simple_evidence_review_screen.dart';
 import '../tasks/standalone_tasks_screen.dart';
 import 'user_management_screen.dart';
+import '../reporting/location_history_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -637,6 +638,32 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 },
               ),
             ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildAdminActionCard(
+                title: 'Location History',
+                subtitle: 'Track all agents',
+                icon: Icons.location_history,
+                color: Colors.teal,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const LocationHistoryScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Container()), // Empty space
+            const SizedBox(width: 12),
+            Expanded(child: Container()), // Empty space
+            const SizedBox(width: 12),
+            Expanded(child: Container()), // Empty space
           ],
         ),
       ],

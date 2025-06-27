@@ -75,6 +75,16 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
         final evidenceUrls = List<String>.from(taskData['evidence_urls'] ?? []);
         final status = taskData['assignment_status'] as String;
         
+        // Check if assignment is pending
+        if (status == 'pending') {
+          if (mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _showPendingAssignmentDialog();
+            });
+          }
+          return;
+        }
+        
         setState(() {
           _evidenceUploaded = evidenceUrls.isNotEmpty;
           _taskCompleted = status == 'completed';
@@ -89,6 +99,34 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
     } catch (e) {
       debugPrint('Error checking task status: $e');
     }
+  }
+
+  void _showPendingAssignmentDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.hourglass_empty, color: Colors.orange[700]),
+            const SizedBox(width: 8),
+            const Text('Assignment Pending'),
+          ],
+        ),
+        content: const Text(
+          'Your assignment to this task is currently pending approval from a manager. You cannot start the guided task flow until it is approved.\n\nPlease check back later or contact your manager.',
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close dialog
+              Navigator.of(context).pop(); // Go back to previous screen
+            },
+            child: const Text('Go Back'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _checkLocation() async {

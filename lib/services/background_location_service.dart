@@ -195,6 +195,7 @@ class BackgroundLocationService {
           'location': locationString,
           'accuracy': position.accuracy,
           'speed': position.speed,
+          'recorded_at': DateTime.now().toIso8601String(),
         });
 
         logger.i('📍 BG: ${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)} → DB ✅');

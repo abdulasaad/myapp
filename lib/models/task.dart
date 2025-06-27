@@ -8,6 +8,7 @@ class Task {
   final String? description;
   final int points;
   final String status;
+  final DateTime createdAt;
   
   // --- NEW: Add the new fields from the database ---
   final String? locationName;
@@ -28,6 +29,7 @@ class Task {
     this.description,
     required this.points,
     required this.status,
+    required this.createdAt,
     // Add new fields to the constructor
     this.locationName,
     this.startDate,
@@ -48,6 +50,7 @@ class Task {
       description: json['description'],
       points: json['points'] ?? 0,
       status: json['status'] ?? 'pending',
+      createdAt: DateTime.parse(json['created_at'] ?? DateTime.now().toIso8601String()),
       // --- NEW: Safely parse the new nullable fields ---
       locationName: json['location_name'],
       startDate: json['start_date'] == null ? null : DateTime.parse(json['start_date']),
@@ -71,6 +74,7 @@ class Task {
       'description': description,
       'points': points,
       'status': status,
+      'created_at': createdAt.toIso8601String(),
       'location_name': locationName,
       'start_date': startDate?.toIso8601String(),
       'end_date': endDate?.toIso8601String(),
@@ -92,6 +96,7 @@ class Task {
     String? description,
     int? points,
     String? status,
+    DateTime? createdAt,
     String? locationName,
     DateTime? startDate,
     DateTime? endDate,
@@ -108,6 +113,7 @@ class Task {
       description: description ?? this.description,
       points: points ?? this.points,
       status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
       locationName: locationName ?? this.locationName,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,

@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/campaign.dart'; // Import Campaign model
+import '../../models/app_user.dart';
+import '../../services/user_management_service.dart';
 import '../../utils/constants.dart';
 
 class CreateCampaignScreen extends StatefulWidget {
@@ -22,6 +24,12 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
   final _descriptionController = TextEditingController();
   DateTime? _startDate;
   DateTime? _endDate;
+  
+  // Manager assignment (for admin only)
+  String? _selectedManagerId;
+  List<AppUser> _managers = [];
+  bool _isAdmin = false;
+  bool _managersLoaded = false;
 
   bool get _isEditing => widget.campaignToEdit != null;
 
@@ -34,6 +42,52 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
       _descriptionController.text = campaign.description ?? '';
       _startDate = campaign.startDate;
       _endDate = campaign.endDate;
+    }
+    
+    // Check if current user is admin and load managers
+    _checkUserRoleAndLoadManagers();
+  }
+
+  Future<void> _checkUserRoleAndLoadManagers() async {
+    try {
+      final userRole = await UserManagementService().getCurrentUserRole();
+      final isAdmin = userRole == 'admin';
+      
+      setState(() {
+        _isAdmin = isAdmin;
+      });
+      
+      if (isAdmin) {
+        await _loadManagers();
+      } else {
+        setState(() {
+          _managersLoaded = true;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error checking user role: $e');
+      setState(() {
+        _managersLoaded = true;
+      });
+    }
+  }
+
+  Future<void> _loadManagers() async {
+    try {
+      final managers = await UserManagementService().getUsers(
+        roleFilter: 'manager',
+        statusFilter: 'active',
+      );
+      
+      setState(() {
+        _managers = managers;
+        _managersLoaded = true;
+      });
+    } catch (e) {
+      debugPrint('Error loading managers: $e');
+      setState(() {
+        _managersLoaded = true;
+      });
     }
   }
 
@@ -82,6 +136,11 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
           'start_date': _startDate!.toIso8601String(),
           'end_date': _endDate!.toIso8601String(),
         };
+
+        // Add assigned manager if admin selected one
+        if (_isAdmin && _selectedManagerId != null) {
+          campaignData['assigned_manager_id'] = _selectedManagerId!;
+        }
 
         if (_isEditing) {
           await supabase
@@ -221,6 +280,65 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
                           ),
                           maxLines: 3,
                         ),
+                        // Manager Assignment Section (Admin only)
+                        if (_isAdmin && _managersLoaded) ...[
+                          const SizedBox(height: 16),
+                          DropdownButtonFormField<String>(
+                            value: _selectedManagerId,
+                            decoration: InputDecoration(
+                              labelText: 'Assign to Manager',
+                              hintText: 'Select a manager to oversee this campaign',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              filled: true,
+                              fillColor: backgroundColor,
+                            ),
+                            items: [
+                              const DropdownMenuItem<String>(
+                                value: null,
+                                child: Text('No specific manager'),
+                              ),
+                              ..._managers.map((manager) {
+                                return DropdownMenuItem<String>(
+                                  value: manager.id,
+                                  child: Text(manager.fullName),
+                                );
+                              }).toList(),
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedManagerId = value;
+                              });
+                            },
+                          ),
+                          if (_selectedManagerId != null) ...[
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.blue[50],
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: Colors.blue[200]!),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.info_outline, size: 16, color: Colors.blue[700]),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'This campaign will be assigned to the selected manager. Only they and their agents will be able to see and work on this campaign.',
+                                      style: TextStyle(
+                                        color: Colors.blue[700],
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
                         const SizedBox(height: 16),
                         Row(
                           children: [

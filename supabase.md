@@ -54,6 +54,7 @@ Location-based work campaigns.
 - `status` (TEXT)
 - `package_type` (TEXT)
 - `reset_status_daily` (BOOLEAN)
+- `assigned_manager_id` (UUID) - References profiles(id) ON DELETE SET NULL **Added: 2025-06-27**
 
 #### 5. `tasks` Table
 Individual work items with evidence requirements.
@@ -75,6 +76,7 @@ Individual work items with evidence requirements.
 - `template_id` (UUID)
 - `custom_fields` (JSONB)
 - `template_version` (INTEGER)
+- `assigned_manager_id` (UUID) - References profiles(id) ON DELETE SET NULL **Added: 2025-06-27**
 - `created_at` (TIMESTAMP WITH TIME ZONE)
 
 **Note**: Geofence data is stored at the campaign level, not task level.
@@ -367,6 +369,25 @@ Task templates for creating standardized tasks.
    - Added session validation to ModernHomeScreen with automatic logout
    - Enhanced login screen with session conflict detection
    - Proper session cleanup on app dispose
+
+4. **Added manager assignment functionality**
+   ```sql
+   ALTER TABLE tasks 
+   ADD COLUMN assigned_manager_id UUID REFERENCES profiles(id) ON DELETE SET NULL;
+   
+   ALTER TABLE campaigns
+   ADD COLUMN assigned_manager_id UUID REFERENCES profiles(id) ON DELETE SET NULL;
+   
+   CREATE INDEX idx_tasks_assigned_manager ON tasks(assigned_manager_id);
+   CREATE INDEX idx_campaigns_assigned_manager ON campaigns(assigned_manager_id);
+   ```
+   - Admin users can now assign specific managers to tasks and campaigns
+   - Admin-created tasks without assigned managers are not visible to agents
+   - Manager assignment dropdown added to task and campaign creation screens
+   - Database columns and indexes added for performance
+   - Updated Task model to include `createdAt` property for proper sorting
+   - Enhanced manager task/campaign fetching logic to include assigned items
+   - Fixed all database queries to select `created_at` field
 
 ## Key Features
 

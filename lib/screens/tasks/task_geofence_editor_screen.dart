@@ -116,27 +116,37 @@ class _TaskGeofenceEditorScreenState extends State<TaskGeofenceEditorScreen> {
       
       debugPrint("[GeofenceLoad] Found ${response.length} geofences");
 
-      for (final data in response) {
-        final wktString = data['area_text'] as String? ?? data['area'] as String?;
-        if (wktString != null && wktString.isNotEmpty) {
+      if (response.isNotEmpty) {
+        for (int i = 0; i < response.length; i++) {
           try {
-            final points = _parseWktPolygon(wktString);
-            if (points.isNotEmpty) {
-              final zone = GeofenceZone(
-                id: data['id'],
-                name: data['name'] ?? 'Geofence ${_zones.length + 1}',
-                points: points,
-                color: _colorFromHex(data['color'] as String?) ?? _availableColors[_zones.length % _availableColors.length],
-              );
-              _zones.add(zone);
-              
-              // Select the first zone by default
-              if (_selectedZoneId == null) {
-                _selectedZoneId = zone.id;
+            final data = response[i];
+            if (data.isEmpty) continue;
+            
+            final wktString = data['area_text'] as String? ?? data['area'] as String?;
+            if (wktString != null && wktString.isNotEmpty) {
+              final points = _parseWktPolygon(wktString);
+              if (points.isNotEmpty) {
+                final colorIndex = _zones.length % _availableColors.length;
+                final fallbackColor = _availableColors[colorIndex];
+                
+                final zone = GeofenceZone(
+                  id: data['id']?.toString() ?? 'zone_$i',
+                  name: data['name']?.toString() ?? 'Geofence ${_zones.length + 1}',
+                  points: points,
+                  color: _colorFromHex(data['color']?.toString()) ?? fallbackColor,
+                );
+                _zones.add(zone);
+                
+                // Select the first zone by default
+                _selectedZoneId ??= zone.id;
+                
+                debugPrint("[GeofenceLoad] Successfully loaded zone: ${zone.name}");
               }
             }
           } catch (parseError) {
-            debugPrint("[GeofenceLoad] Error parsing geofence: $parseError");
+            debugPrint("[GeofenceLoad] Error parsing geofence at index $i: $parseError");
+            // Continue with other geofences
+            continue;
           }
         }
       }
@@ -144,11 +154,13 @@ class _TaskGeofenceEditorScreenState extends State<TaskGeofenceEditorScreen> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+      
+      debugPrint("[GeofenceLoad] Finished loading. Total zones: ${_zones.length}");
     } catch (e) {
-      debugPrint("[GeofenceLoad] Error loading geofences: $e");
+      debugPrint("[GeofenceLoad] Critical error loading geofences: $e");
       if (mounted) {
         setState(() => _isLoading = false);
-        context.showSnackBar('Error loading geofences: $e', isError: true);
+        // Don't show error to user, just log it
       }
     }
   }
@@ -352,33 +364,56 @@ class _TaskGeofenceEditorScreenState extends State<TaskGeofenceEditorScreen> {
 
   List<LatLng> _parseWktPolygon(String wkt) {
     try {
+      if (wkt.isEmpty || wkt.length > 10000) {
+        debugPrint("WKT string is empty or too large: ${wkt.length} chars");
+        return [];
+      }
+      
       // Parse POLYGON((lng lat, lng lat, ...))
       final coordsMatch = RegExp(r'POLYGON\s*\(\s*\(([^)]+)\)\s*\)').firstMatch(wkt);
-      if (coordsMatch == null) return [];
+      if (coordsMatch == null) {
+        debugPrint("No valid POLYGON format found in: ${wkt.substring(0, wkt.length > 100 ? 100 : wkt.length)}...");
+        return [];
+      }
       
       final coordsString = coordsMatch.group(1)!;
       final coordPairs = coordsString.split(',');
       
+      // Limit number of points to prevent memory issues
+      if (coordPairs.length > 1000) {
+        debugPrint("Too many coordinate pairs: ${coordPairs.length}, limiting to 1000");
+        coordPairs.removeRange(1000, coordPairs.length);
+      }
+      
       final points = <LatLng>[];
-      for (final pair in coordPairs) {
-        final coords = pair.trim().split(RegExp(r'\s+'));
-        if (coords.length >= 2) {
-          final lng = double.tryParse(coords[0]);
-          final lat = double.tryParse(coords[1]);
-          if (lng != null && lat != null) {
-            points.add(LatLng(lat, lng));
+      for (int i = 0; i < coordPairs.length; i++) {
+        try {
+          final coords = coordPairs[i].trim().split(RegExp(r'\s+'));
+          if (coords.length >= 2) {
+            final lng = double.tryParse(coords[0]);
+            final lat = double.tryParse(coords[1]);
+            if (lng != null && lat != null && 
+                lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+              points.add(LatLng(lat, lng));
+            }
           }
+        } catch (coordError) {
+          debugPrint("Error parsing coordinate pair $i: $coordError");
+          continue;
         }
       }
       
       // Remove the last point if it's the same as the first (closing polygon)
-      if (points.length > 3 && points.first.latitude == points.last.latitude && points.first.longitude == points.last.longitude) {
+      if (points.length > 3 && 
+          (points.first.latitude - points.last.latitude).abs() < 0.000001 && 
+          (points.first.longitude - points.last.longitude).abs() < 0.000001) {
         points.removeLast();
       }
       
+      debugPrint("Successfully parsed ${points.length} points from WKT");
       return points;
     } catch (e) {
-      debugPrint("Error parsing WKT: $e");
+      debugPrint("Critical error parsing WKT: $e");
       return [];
     }
   }
@@ -389,16 +424,24 @@ class _TaskGeofenceEditorScreenState extends State<TaskGeofenceEditorScreen> {
     try {
       final hexString = hex.replaceAll('#', '');
       if (hexString.length == 6) {
-        return Color(int.parse('FF$hexString', radix: 16));
+        final colorValue = int.parse('FF$hexString', radix: 16);
+        return Color(colorValue);
+      } else if (hexString.length == 8) {
+        final colorValue = int.parse(hexString, radix: 16);
+        return Color(colorValue);
       }
       return null;
     } catch (e) {
+      debugPrint("[ColorParse] Error parsing color '$hex': $e");
       return null;
     }
   }
 
   String _colorToHex(Color color) {
-    return '#${color.value.toRadixString(16).substring(2).toUpperCase()}';
+    final red = color.r.round().toRadixString(16).padLeft(2, '0');
+    final green = color.g.round().toRadixString(16).padLeft(2, '0');
+    final blue = color.b.round().toRadixString(16).padLeft(2, '0');
+    return '#$red$green$blue'.toUpperCase();
   }
 
   @override
