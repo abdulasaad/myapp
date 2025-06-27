@@ -132,7 +132,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       
       topManagers.add(ManagerPerformance(
         name: name,
-        campaignsManaged: campaignsCount ~/ (managersResponse.length > 0 ? managersResponse.length : 1), // Simplified distribution
+        campaignsManaged: campaignsCount ~/ (managersResponse.isNotEmpty ? managersResponse.length : 1), // Simplified distribution
         isOnline: status == 'active',
       ));
     }
@@ -214,7 +214,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       final role = user['role'] as String;
       activities.add(AdminActivityItem(
         type: 'user_registered',
-        title: 'New ${role}: ${user['full_name']}',
+        title: 'New $role: ${user['full_name']}',
         timestamp: DateTime.parse(user['created_at']),
         icon: role == 'manager' ? Icons.admin_panel_settings : Icons.person_add,
         color: role == 'manager' ? primaryColor : successColor,

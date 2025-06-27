@@ -262,7 +262,7 @@ class _TemplatePreviewScreenState extends State<TemplatePreviewScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            ...fields.map((field) => _buildFieldPreview(field)).toList(),
+            ...fields.map((field) => _buildFieldPreview(field)),
           ],
         ),
       ),

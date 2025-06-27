@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../utils/constants.dart';
 import '../models/app_user.dart';
 import '../services/location_service.dart';
@@ -23,6 +24,7 @@ import 'agent/earnings_screen.dart';
 import 'login_screen.dart';
 import 'admin/settings_screen.dart';
 import 'admin/group_management_screen.dart';
+import 'agent/agent_geofence_map_screen.dart';
 
 class ModernHomeScreen extends StatefulWidget {
   const ModernHomeScreen({super.key});
@@ -361,12 +363,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> {
       await BackgroundLocationService.startLocationTracking();
       _logger.i('Background location tracking started for agent: ${widget.user.fullName}');
       
-      if (mounted) {
-        context.showSnackBar(
-          'Location tracking started successfully (background tracking enabled)',
-          isError: false,
-        );
-      }
+      // Location tracking started successfully - no notification needed
     } catch (e) {
       _logger.e('Failed to start location tracking: $e');
       if (mounted) {
@@ -622,17 +619,50 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Dashboard Title with proper spacing from top
+                          // Dashboard Title with background label
                           SafeArea(
                             bottom: false,
                             child: Container(
                               width: double.infinity,
-                              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                              child: Text(
-                                'Agent Dashboard',
-                                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: textPrimaryColor,
+                              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      primaryColor.withValues(alpha: 0.15),
+                                      primaryColor.withValues(alpha: 0.08),
+                                      primaryColor.withValues(alpha: 0.12),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: primaryColor.withValues(alpha: 0.25),
+                                    width: 1.5,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: primaryColor.withValues(alpha: 0.1),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                                  child: Center(
+                                    child: Text(
+                                      'Agent Dashboard',
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        color: textPrimaryColor,
+                                        letterSpacing: 0.5,
+                                        fontSize: 26,
+                                        height: 1.2,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -1092,15 +1122,15 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> {
               const SizedBox(width: 12),
               Expanded(
                 child: _buildActionCard(
-                  icon: Icons.location_on,
-                  title: 'My Location',
-                  subtitle: 'View location',
+                  icon: Icons.map,
+                  title: 'MAP',
+                  subtitle: 'Campaign zones',
                   color: warningColor,
                   onTap: () {
-                    // Navigate to task location viewer or show current location
+                    // Navigate to agent geofence map
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => const LiveMapScreen(),
+                        builder: (context) => const AgentGeofenceMapScreen(),
                       ),
                     );
                   },

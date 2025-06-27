@@ -103,7 +103,9 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
 
   @override
   void dispose() {
-    _controllers.values.forEach((controller) => controller.dispose());
+    for (final controller in _controllers.values) {
+      controller.dispose();
+    }
     _signatureController?.dispose();
     super.dispose();
   }
@@ -682,7 +684,7 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
       _formKey.currentState!.save();
 
       // Add signature if present
-      if (widget.template.requiresSignature && !_signatureController!.isEmpty) {
+      if (widget.template.requiresSignature && _signatureController!.isNotEmpty) {
         final signatureBytes = await _signatureController!.toPngBytes();
         _formData['signature'] = base64Encode(signatureBytes!);
       }

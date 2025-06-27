@@ -48,7 +48,6 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
   
   // Dynamic field builder for managers
   final List<TemplateField> _dynamicFields = [];
-  bool _showFieldBuilder = false;
   
   // Manager assignment (for admin only)
   String? _selectedManagerId;
@@ -589,7 +588,9 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
           await _saveDynamicFields(task.id);
         }
         
-        context.showSnackBar('Task created successfully!');
+        if (mounted) {
+          context.showSnackBar('Task created successfully!');
+        }
         
         // If geofence is enabled and points were set, save them automatically
         if (_enableGeofence && _geofencePoints != null && _geofencePoints!.isNotEmpty) {
@@ -601,10 +602,14 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
         } else if (_enableGeofence) {
           // If geofence is enabled but no points set, ask if they want to set it up
           debugPrint('[TaskCreation] Geofence enabled but no points set, showing dialog');
-          _showGeofenceSetupDialog(task);
+          if (mounted) {
+            _showGeofenceSetupDialog(task);
+          }
         } else {
           debugPrint('[TaskCreation] No geofence needed, returning');
-          Navigator.of(context).pop(task);
+          if (mounted) {
+            Navigator.of(context).pop(task);
+          }
         }
       }
     } catch (e) {
@@ -1130,7 +1135,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
               style: TextStyle(color: Colors.grey[600]),
             ),
             const SizedBox(height: 16),
-            ...fields.map((field) => _buildCustomFieldWidget(field)).toList(),
+            ...fields.map((field) => _buildCustomFieldWidget(field)),
           ],
         ),
       ),
@@ -1514,7 +1519,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
                     value: manager.id,
                     child: Text(manager.fullName),
                   );
-                }).toList(),
+                }),
               ],
               onChanged: (value) {
                 setState(() {

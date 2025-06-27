@@ -154,17 +154,19 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
       // Save custom fields after task is saved
       await _saveCustomFields();
 
-      if (isNewTask) {
-        // For a new task
-        context.showSnackBar('Task created successfully.');
-        // Navigate to the tasks screen, replacing the current screen
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const StandaloneTasksScreen()),
-        );
-      } else {
-        // For an existing task (editing)
-        context.showSnackBar('Task details saved.');
-        Navigator.of(context).pop(); // Pop back as before
+      if (mounted) {
+        if (isNewTask) {
+          // For a new task
+          context.showSnackBar('Task created successfully.');
+          // Navigate to the tasks screen, replacing the current screen
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const StandaloneTasksScreen()),
+          );
+        } else {
+          // For an existing task (editing)
+          context.showSnackBar('Task details saved.');
+          Navigator.of(context).pop(); // Pop back as before
+        }
       }
     } catch (e) {
       if (mounted) context.showSnackBar('Failed to save task: $e', isError: true); // Generic error message
@@ -413,7 +415,7 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
                         value: manager.id,
                         child: Text(manager.fullName),
                       );
-                    }).toList(),
+                    }),
                   ],
                   onChanged: (value) {
                     setState(() {

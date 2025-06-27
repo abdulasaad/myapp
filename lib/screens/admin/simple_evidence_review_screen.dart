@@ -113,7 +113,9 @@ class _SimpleEvidenceReviewScreenState extends State<SimpleEvidenceReviewScreen>
         
         if (filteredList.isEmpty) {
           // No more evidence, go back
-          Navigator.of(context).pop();
+          if (mounted) {
+            Navigator.of(context).pop();
+          }
         } else {
           // Update the future with filtered list
           setState(() {

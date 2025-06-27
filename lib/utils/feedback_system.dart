@@ -328,7 +328,7 @@ class ConnectionIndicator extends StatefulWidget {
 }
 
 class _ConnectionIndicatorState extends State<ConnectionIndicator> {
-  bool _isOnline = true;
+  final bool _isOnline = true;
 
   @override
   Widget build(BuildContext context) {

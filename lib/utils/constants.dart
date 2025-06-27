@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../widgets/advanced_notification.dart';
 
 // --- SUPABASE CLIENT ---
 // Global access to the Supabase client
@@ -44,12 +45,63 @@ const preloader = Center(child: CircularProgressIndicator(color: primaryColor));
 // --- HELPERS ---
 extension ScaffoldMessengerHelper on BuildContext {
   void showSnackBar(String message, {bool isError = false}) {
-    ScaffoldMessenger.of(this).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor:
-            isError ? Theme.of(this).colorScheme.error : Colors.green[400],
-      ),
+    // Use advanced notification system
+    if (isError) {
+      showErrorNotification(message);
+    } else {
+      showSuccessNotification(message);
+    }
+  }
+}
+
+// Advanced notification helper extension
+extension AdvancedNotificationHelper on BuildContext {
+  void showAdvancedNotification(
+    String message, {
+    String? title,
+    bool isError = false,
+    bool isWarning = false,
+    bool isInfo = false,
+    Duration? duration,
+    VoidCallback? onTap,
+    IconData? customIcon,
+  }) {
+    // Determine notification type
+    late NotificationType type;
+    if (isError) {
+      type = NotificationType.error;
+    } else if (isWarning) {
+      type = NotificationType.warning;
+    } else if (isInfo) {
+      type = NotificationType.info;
+    } else {
+      type = NotificationType.success;
+    }
+
+    AdvancedNotification.show(
+      this,
+      message: message,
+      type: type,
+      title: title,
+      duration: duration ?? const Duration(seconds: 4),
+      onTap: onTap,
+      customIcon: customIcon,
     );
+  }
+
+  void showSuccessNotification(String message, {String? title, Duration? duration}) {
+    showAdvancedNotification(message, title: title, duration: duration);
+  }
+
+  void showErrorNotification(String message, {String? title, Duration? duration}) {
+    showAdvancedNotification(message, title: title, isError: true, duration: duration);
+  }
+
+  void showWarningNotification(String message, {String? title, Duration? duration}) {
+    showAdvancedNotification(message, title: title, isWarning: true, duration: duration);
+  }
+
+  void showInfoNotification(String message, {String? title, Duration? duration}) {
+    showAdvancedNotification(message, title: title, isInfo: true, duration: duration);
   }
 }

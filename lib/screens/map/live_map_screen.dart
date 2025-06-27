@@ -162,7 +162,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
     final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     final Uint8List pngBytes = byteData!.buffer.asUint8List();
     
-    return BitmapDescriptor.fromBytes(pngBytes);
+    return BitmapDescriptor.bytes(pngBytes);
   }
 
   Future<void> _initializeAndStartTimer() async {
@@ -386,21 +386,12 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
   Future<void> _onAgentTapped(AgentMapInfo agent) async {
     setState(() {
       _selectedAgentId = agent.id;
-      // Don't open the agent panel - just show the name
       _updateMarkers();
     });
 
     if (agent.lastLocation != null) {
       final controller = await _mapController.future;
       controller.animateCamera(CameraUpdate.newLatLngZoom(agent.lastLocation!, 15.0));
-      // Show agent name in snackbar instead of opening panel
-      if (mounted) {
-        context.showSnackBar(agent.fullName);
-      }
-    } else {
-      if (mounted) {
-        context.showSnackBar('${agent.fullName} has no location on record.', isError: true);
-      }
     }
   }
 

@@ -96,7 +96,7 @@ class _GeofenceStayTaskScreenState extends State<GeofenceStayTaskScreen> {
       _checkLocationDuringTask();
     });
 
-    context.showSnackBar('Task started! Stay in the area for ${requiredMinutes} minutes.');
+    context.showSnackBar('Task started! Stay in the area for $requiredMinutes minutes.');
   }
 
   Future<void> _checkLocationDuringTask() async {
@@ -374,7 +374,7 @@ class _GeofenceStayTaskScreenState extends State<GeofenceStayTaskScreen> {
               ),
             ),
             Text(
-              'of ${requiredMinutes}:00 required',
+              'of $requiredMinutes:00 required',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Colors.grey[600],
               ),

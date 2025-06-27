@@ -304,7 +304,7 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
                                   value: manager.id,
                                   child: Text(manager.fullName),
                                 );
-                              }).toList(),
+                              }),
                             ],
                             onChanged: (value) {
                               setState(() {

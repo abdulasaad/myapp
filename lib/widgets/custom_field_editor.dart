@@ -22,7 +22,6 @@ class CustomFieldEditor extends StatefulWidget {
 
 class _CustomFieldEditorState extends State<CustomFieldEditor> {
   late List<TemplateField> _fields;
-  bool _isLoading = false;
 
   @override
   void initState() {

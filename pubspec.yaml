@@ -37,6 +37,7 @@ dependencies:
   http: ^1.1.0
   signature: ^5.5.0
   share_plus: ^10.1.2
+  google_fonts: ^6.1.0
   # ----------------------------------
 
 dev_dependencies:
@@ -52,6 +53,7 @@ flutter:
     - icons/logo1.png
     - icons/logo2.png
     - icons/logo2_padded.png
+  
 
 # Flutter Launcher Icons Configuration
 flutter_launcher_icons:

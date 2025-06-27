@@ -209,7 +209,12 @@ class _StandaloneTaskDetailScreenState
     try {
       await supabase
           .from('task_assignments')
-          .insert({'task_id': widget.task.id, 'agent_id': selectedAgent.id});
+          .insert({
+            'task_id': widget.task.id, 
+            'agent_id': selectedAgent.id,
+            'status': 'assigned',
+            'started_at': DateTime.now().toIso8601String(),
+          });
       if (mounted) {
         context.showSnackBar('Agent assigned successfully.');
       }

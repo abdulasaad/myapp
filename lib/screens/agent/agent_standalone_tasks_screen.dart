@@ -250,6 +250,75 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
               const PopupMenuItem(value: 'completed', child: Text('Completed')),
             ],
           ),
+          // Demo button for new notifications (temporary for testing)
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.notifications_outlined),
+            tooltip: 'Test Advanced Notifications',
+            onSelected: (value) {
+              switch (value) {
+                case 'demo':
+                  // Show sequence of different notification types
+                  context.showSuccessNotification(
+                    'Task completed successfully! This notification slides in from the top.',
+                    title: 'Success',
+                    duration: const Duration(seconds: 2),
+                  );
+                  
+                  Future.delayed(const Duration(seconds: 3), () {
+                    if (mounted) {
+                      context.showErrorNotification(
+                        'Network error occurred. Watch how it smoothly replaces the previous one.',
+                        title: 'Error',
+                        duration: const Duration(seconds: 2),
+                      );
+                    }
+                  });
+                  
+                  Future.delayed(const Duration(seconds: 6), () {
+                    if (mounted) {
+                      context.showWarningNotification(
+                        'Location permission required. Swipe up or tap X to dismiss.',
+                        title: 'Permission Required',
+                        duration: const Duration(seconds: 3),
+                      );
+                    }
+                  });
+                  break;
+                case 'success':
+                  context.showSuccessNotification(
+                    'Task assigned successfully!',
+                    title: 'Success',
+                  );
+                  break;
+                case 'error':
+                  context.showErrorNotification(
+                    'Failed to sync data. Please check connection.',
+                    title: 'Sync Error',
+                  );
+                  break;
+                case 'warning':
+                  context.showWarningNotification(
+                    'Location permission required for this feature.',
+                    title: 'Permission Required',
+                  );
+                  break;
+                case 'info':
+                  context.showInfoNotification(
+                    'New tasks are available in your area.',
+                    title: 'Information',
+                  );
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'demo', child: Row(children: [Icon(Icons.play_arrow, color: Colors.purple), SizedBox(width: 8), Text('Demo Sequence')])),
+              const PopupMenuItem(value: '', child: Divider()),
+              const PopupMenuItem(value: 'success', child: Row(children: [Icon(Icons.check_circle, color: Colors.green), SizedBox(width: 8), Text('Success')])),
+              const PopupMenuItem(value: 'error', child: Row(children: [Icon(Icons.error, color: Colors.red), SizedBox(width: 8), Text('Error')])),
+              const PopupMenuItem(value: 'warning', child: Row(children: [Icon(Icons.warning, color: Colors.orange), SizedBox(width: 8), Text('Warning')])),
+              const PopupMenuItem(value: 'info', child: Row(children: [Icon(Icons.info, color: Colors.blue), SizedBox(width: 8), Text('Info')])),
+            ],
+          ),
         ],
       ),
       body: Column(
