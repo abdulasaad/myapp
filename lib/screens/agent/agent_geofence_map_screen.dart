@@ -84,10 +84,11 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
           .from('task_assignments')
           .select('''
             task_id,
+            status,
             tasks!inner(id, title, description)
           ''')
           .eq('agent_id', userId)
-          .inFilter('status', ['assigned', 'in_progress']);
+          .inFilter('status', ['assigned', 'in_progress', 'completed']);
       
       debugPrint('[AgentGeofenceMap] Found ${taskAssignmentsResponse.length} task assignments');
 
@@ -117,6 +118,7 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
         for (final assignment in taskAssignmentsResponse) {
           final taskId = assignment['task_id'] as String;
           final taskInfo = assignment['tasks'] as Map<String, dynamic>;
+          final assignmentStatus = assignment['status'] as String;
           final taskGeofences = geofencesByTask[taskId] ?? [];
           
           if (taskGeofences.isNotEmpty) {
@@ -128,10 +130,11 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
                 final points = _parseWktPolygon(wkt);
                 if (points.isNotEmpty) {
                   final geofenceName = geofence['name'] as String? ?? 'Zone ${i + 1}';
+                  final statusIndicator = assignmentStatus == 'completed' ? ' ✓' : '';
                   zones.add(GeofenceZone(
                     id: 'task_${taskId}_$i',
-                    title: 'Task: ${taskInfo['title'] ?? 'Unnamed Task'}',
-                    description: geofenceName + (taskInfo['description'] != null ? '\n${taskInfo['description']}' : ''),
+                    title: 'Task: ${taskInfo['title'] ?? 'Unnamed Task'}$statusIndicator',
+                    description: geofenceName + (taskInfo['description'] != null ? '\n${taskInfo['description']}' : '') + '\nStatus: ${assignmentStatus.toUpperCase()}',
                     points: points,
                   ));
                 }
@@ -187,9 +190,17 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
       final zone = _geofenceZones[i];
       final isSelected = i == _currentZoneIndex;
       final isTask = zone.id.startsWith('task_');
+      final isCompleted = zone.title.contains('✓'); // Check for checkmark
       
-      // Use different colors for campaigns vs tasks
-      final baseColor = isTask ? secondaryColor : primaryColor;
+      // Use different colors for campaigns vs tasks vs completed tasks
+      Color baseColor;
+      if (isCompleted) {
+        baseColor = Colors.grey; // Completed tasks in grey
+      } else if (isTask) {
+        baseColor = secondaryColor; // Active tasks in secondary color
+      } else {
+        baseColor = primaryColor; // Campaigns in primary color
+      }
       
       _polygons.add(Polygon(
         polygonId: PolygonId(zone.id),
