@@ -1,19 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- AL-Tijwal Agent Launch Screen -->
+<!-- AL-Tijwal Agent Launch Screen - No Logo Version -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Background gradient matching splash screen -->
+    <!-- Background gradient exactly matching Flutter splash screen -->
     <item>
         <shape android:shape="rectangle">
             <gradient
                 android:startColor="#1E3A8A"
                 android:centerColor="#2563EB"
-                android:endColor="#3B82F6"
+                android:endColor="#60A5FA"
                 android:angle="135" />
         </shape>
-    </item>
-
-    <!-- Logo centered -->
-    <item android:gravity="center">
-        <bitmap android:src="@mipmap/ic_launcher" />
     </item>
 </layer-list>
