@@ -255,11 +255,16 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: textPrimaryColor),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: Text(
-          'Campaign Zones',
+          'Work Areas',
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.w600,
             fontSize: 20,
+            color: textPrimaryColor,
           ),
         ),
         elevation: 0,
