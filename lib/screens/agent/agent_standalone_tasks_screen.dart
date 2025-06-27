@@ -16,6 +16,7 @@ class AgentStandaloneTasksScreen extends StatefulWidget {
 
 class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen> {
   late Future<List<TaskWithAssignment>> _tasksFuture;
+  late Future<bool> _hasGroupMembershipFuture;
   String _filterStatus = 'all'; // all, available, assigned, completed
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -25,6 +26,7 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
   void initState() {
     super.initState();
     _tasksFuture = _fetchTasks();
+    _hasGroupMembershipFuture = _checkGroupMembership();
   }
 
   @override
@@ -33,11 +35,29 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
     super.dispose();
   }
 
+  Future<bool> _checkGroupMembership() async {
+    final userId = supabase.auth.currentUser?.id;
+    if (userId == null) return false;
+
+    try {
+      final response = await supabase
+          .from('user_groups')
+          .select('id')
+          .eq('user_id', userId)
+          .limit(1);
+
+      return response.isNotEmpty;
+    } catch (e) {
+      debugPrint('Error checking group membership: $e');
+      return false;
+    }
+  }
+
   Future<List<TaskWithAssignment>> _fetchTasks() async {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) return [];
 
-    // Get all standalone tasks with assignment info, geofence data, and creator info for current agent
+    // Get all standalone tasks with assignment info and geofence data for current agent
     final response = await supabase
         .from('tasks')
         .select('''
@@ -49,10 +69,6 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
           ),
           geofences!left(
             id
-          ),
-          profiles!inner(
-            id,
-            role
           )
         ''')
         .filter('campaign_id', 'is', null)
@@ -63,18 +79,8 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
     for (final taskData in response) {
       final task = Task.fromJson(taskData);
       
-      // Get creator role
-      final creatorProfile = taskData['profiles'] as Map<String, dynamic>?;
-      final creatorRole = creatorProfile?['role'] as String?;
-      
-      // Filter out admin-created tasks that don't have an assigned manager
-      if (creatorRole == 'admin') {
-        final assignedManagerId = taskData['assigned_manager_id'];
-        if (assignedManagerId == null) {
-          // Skip admin tasks without assigned manager
-          continue;
-        }
-      }
+      // For agents, we'll show all active standalone tasks
+      // The admin/manager filtering can be handled at the UI level if needed
       
       // Find assignment for current agent
       final assignments = taskData['task_assignments'] as List<dynamic>? ?? [];
@@ -251,8 +257,8 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
           if (_filterStatus != 'all' || _searchQuery.isNotEmpty)
             _buildFilterIndicator(),
           Expanded(
-            child: FutureBuilder<List<TaskWithAssignment>>(
-              future: _tasksFuture,
+            child: FutureBuilder<List<dynamic>>(
+              future: Future.wait([_tasksFuture, _hasGroupMembershipFuture]),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return preloader;
@@ -261,7 +267,81 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
                   return Center(child: Text('Error: ${snapshot.error}'));
                 }
 
-                final allTasks = snapshot.data ?? [];
+                final results = snapshot.data ?? [];
+                final allTasks = results[0] as List<TaskWithAssignment>;
+                final hasGroupMembership = results[1] as bool;
+
+                // Show group membership message if user is not in any group
+                if (!hasGroupMembership) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(60),
+                          ),
+                          child: Icon(
+                            Icons.group_off,
+                            size: 60,
+                            color: Colors.orange[700],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Account Not Assigned to Group',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange[800],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 32),
+                          child: Text(
+                            'This account has not been set to a group. Contact the system administrator.',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[600],
+                              height: 1.5,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.orange[300]!),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.info_outline, color: Colors.orange[700], size: 20),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Tasks will appear once you are assigned to a group',
+                                style: TextStyle(
+                                  color: Colors.orange[700],
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
                 final filteredTasks = _filterTasks(allTasks);
 
                 if (filteredTasks.isEmpty) {
@@ -285,6 +365,7 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
                   onRefresh: () async {
                     setState(() {
                       _tasksFuture = _fetchTasks();
+                      _hasGroupMembershipFuture = _checkGroupMembership();
                     });
                   },
                   child: ListView.builder(

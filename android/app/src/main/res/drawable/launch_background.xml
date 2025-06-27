@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Modify this file to customize your launch splash screen -->
+<!-- AL-Tijwal Agent Launch Screen -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@android:color/white" />
+    <!-- Background gradient matching splash screen -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:startColor="#1E3A8A"
+                android:centerColor="#2563EB"
+                android:endColor="#3B82F6"
+                android:angle="135" />
+        </shape>
+    </item>
 
-    <!-- You can insert your own image assets here -->
-    <!-- <item>
-        <bitmap
-            android:gravity="center"
-            android:src="@mipmap/launch_image" />
-    </item> -->
+    <!-- Logo centered -->
+    <item android:gravity="center">
+        <bitmap android:src="@mipmap/ic_launcher" />
+    </item>
 </layer-list>

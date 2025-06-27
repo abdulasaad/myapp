@@ -75,17 +75,28 @@ class GroupService {
           .eq('id', groupId)
           .single();
 
+      debugPrint('Group response: $groupResponse');
+
+      if (groupResponse.isEmpty || groupResponse['id'] == null) {
+        throw Exception('Group not found or access denied');
+      }
+
       final group = Group.fromJson(groupResponse);
       
       // Get manager info if manager_id exists
       AppUser? manager;
       if (groupResponse['manager_id'] != null) {
-        final managerResponse = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', groupResponse['manager_id'])
-            .single();
-        manager = AppUser.fromJson(managerResponse);
+        try {
+          final managerResponse = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', groupResponse['manager_id'])
+              .single();
+          manager = AppUser.fromJson(managerResponse);
+        } catch (e) {
+          debugPrint('Warning: Could not fetch manager details: $e');
+          // Continue without manager info
+        }
       }
 
       // Get group members
@@ -98,13 +109,26 @@ class GroupService {
               username,
               role,
               status,
-              agent_creation_limit
+              agent_creation_limit,
+              created_at
             )
           ''')
           .eq('group_id', groupId);
 
+      debugPrint('Members response: $membersResponse');
+
       final members = membersResponse
-          .map((item) => AppUser.fromJson(item['profiles']))
+          .where((item) => item['profiles'] != null && item['profiles']['id'] != null)
+          .map((item) {
+            try {
+              return AppUser.fromJson(item['profiles']);
+            } catch (e) {
+              debugPrint('Error parsing member: ${item['profiles']}, error: $e');
+              return null;
+            }
+          })
+          .where((member) => member != null)
+          .cast<AppUser>()
           .toList();
 
       return GroupWithMembers(
@@ -276,6 +300,7 @@ class GroupService {
           .eq('user_id', userId);
 
       return response
+          .where((item) => item['groups'] != null)
           .map((item) => Group.fromJson(item['groups']))
           .toList();
     } catch (e) {

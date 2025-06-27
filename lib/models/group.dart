@@ -20,15 +20,27 @@ class Group {
   });
 
   factory Group.fromJson(Map<String, dynamic> json) {
+    // Handle null values that might occur due to RLS policies
+    final id = json['id'] as String?;
+    final createdAtStr = json['created_at'] as String?;
+    
+    if (id == null) {
+      throw Exception('Group ID cannot be null');
+    }
+    
     return Group(
-      id: json['id'] as String,
+      id: id,
       name: json['name'] as String? ?? 'Unnamed Group',
       description: json['description'] as String?,
       createdBy: json['created_by'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: createdAtStr != null 
+          ? DateTime.parse(createdAtStr)
+          : DateTime.now(),
       updatedAt: json['updated_at'] != null 
           ? DateTime.parse(json['updated_at'] as String)
-          : DateTime.parse(json['created_at'] as String),
+          : (createdAtStr != null 
+              ? DateTime.parse(createdAtStr)
+              : DateTime.now()),
     );
   }
 

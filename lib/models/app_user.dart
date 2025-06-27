@@ -28,8 +28,16 @@ class AppUser {
   });
 
   factory AppUser.fromJson(Map<String, dynamic> json) {
+    // Handle null values that might occur due to RLS policies
+    final id = json['id'] as String?;
+    final createdAtStr = json['created_at'] as String?;
+    
+    if (id == null) {
+      throw Exception('User ID cannot be null');
+    }
+    
     return AppUser(
-      id: json['id'] as String,
+      id: id,
       fullName: json['full_name'] as String? ?? 'No Name',
       username: json['username'] as String?,
       email: json['email'] as String?,
@@ -38,7 +46,9 @@ class AppUser {
       agentCreationLimit: json['agent_creation_limit'] as int?,
       defaultGroupId: json['default_group_id'] as String?,
       createdBy: json['created_by'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: createdAtStr != null 
+          ? DateTime.parse(createdAtStr)
+          : DateTime.now(),
       updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : null,
     );
   }
@@ -58,4 +68,13 @@ class AppUser {
       'updated_at': updatedAt?.toIso8601String(),
     };
   }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is AppUser && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }

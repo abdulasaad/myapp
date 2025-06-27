@@ -73,15 +73,24 @@ class _CreateEditGroupScreenState extends State<CreateEditGroupScreen> {
         setState(() {
           // Find the manager in the available managers list by ID
           if (groupWithMembers.manager != null) {
+            final managerId = groupWithMembers.manager!.id;
             _selectedManager = _availableManagers.firstWhere(
-              (m) => m.id == groupWithMembers.manager!.id,
-              orElse: () => groupWithMembers.manager!,
+              (m) => m.id == managerId,
+              orElse: () {
+                // If manager is not in available list, add them to avoid dropdown error
+                _availableManagers.add(groupWithMembers.manager!);
+                return groupWithMembers.manager!;
+              },
             );
           }
           _selectedMembers = List.from(groupWithMembers.members);
           
-          // For editing, we need to add back the agents that are already in this group
-          // They should already be in _availableAgents from getAvailableAgentsForGroup
+          // Ensure all current members are in the available agents list to avoid selection issues
+          for (final member in groupWithMembers.members) {
+            if (!_availableAgents.any((agent) => agent.id == member.id)) {
+              _availableAgents.add(member);
+            }
+          }
         });
       }
     } catch (e) {
