@@ -1124,7 +1124,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> {
                 child: _buildActionCard(
                   icon: Icons.map,
                   title: 'MAP',
-                  subtitle: 'Campaign zones',
+                  subtitle: 'Work areas',
                   color: warningColor,
                   onTap: () {
                     // Navigate to agent geofence map
