@@ -879,52 +879,56 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> {
           ),
         ),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                icon: Icons.check_circle,
-                title: 'Completed',
-                value: taskStats.completedTasks.toString(),
-                color: successColor,
-                subtitle: 'Total tasks',
+        IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.check_circle,
+                  title: 'Completed',
+                  value: taskStats.completedTasks.toString(),
+                  color: successColor,
+                  subtitle: 'Total tasks',
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard(
-                icon: Icons.stars,
-                title: 'Points Earned',
-                value: taskStats.totalPoints.toString(),
-                color: secondaryColor,
-                subtitle: 'Total points',
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.stars,
+                  title: 'Points Earned',
+                  value: taskStats.totalPoints.toString(),
+                  color: secondaryColor,
+                  subtitle: 'Total points',
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                icon: Icons.account_balance_wallet,
-                title: 'Pending',
-                value: earningsStats.pendingPayment.toString(),
-                color: warningColor,
-                subtitle: 'Payment due',
+        IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.account_balance_wallet,
+                  title: 'Pending',
+                  value: earningsStats.pendingPayment.toString(),
+                  color: warningColor,
+                  subtitle: 'Payment due',
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildStatCard(
-                icon: Icons.trending_up,
-                title: 'This Month',
-                value: earningsStats.monthlyEarnings.toString(),
-                color: primaryColor,
-                subtitle: 'Points earned',
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildStatCard(
+                  icon: Icons.trending_up,
+                  title: 'This Month',
+                  value: earningsStats.monthlyEarnings.toString(),
+                  color: primaryColor,
+                  subtitle: 'Points earned',
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
@@ -938,60 +942,77 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> {
     String? subtitle,
   }) {
     return Container(
+      constraints: const BoxConstraints(minHeight: 120),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: surfaceColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: shadowColor,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
+        border: Border.all(
+          color: color.withValues(alpha: 0.1),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: color, size: 16),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  color.withValues(alpha: 0.15),
+                  color.withValues(alpha: 0.1),
+                ],
               ),
-              const Spacer(),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: color.withValues(alpha: 0.2),
+                width: 1,
               ),
-            ],
+            ),
+            child: Icon(icon, color: color, size: 20),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+              color: color,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 6),
           Text(
             title,
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: textPrimaryColor,
+              letterSpacing: 0.1,
             ),
+            softWrap: true,
           ),
-          if (subtitle != null)
+          if (subtitle != null) ...
+            [const SizedBox(height: 4),
             Text(
               subtitle,
               style: const TextStyle(
                 fontSize: 12,
                 color: textSecondaryColor,
               ),
-            ),
+              softWrap: true,
+            )],
         ],
       ),
     );
@@ -1011,78 +1032,82 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> {
         ),
         const SizedBox(height: 12),
         // First row with 2 items for better spacing
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionCard(
-                icon: Icons.assignment,
-                title: 'View Tasks',
-                subtitle: 'See all tasks',
-                color: primaryColor,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const AgentStandaloneTasksScreen(),
-                    ),
-                  );
-                },
+        IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildActionCard(
+                  icon: Icons.assignment,
+                  title: 'View Tasks',
+                  subtitle: 'See all tasks',
+                  color: primaryColor,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const AgentStandaloneTasksScreen(),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionCard(
-                icon: Icons.account_balance_wallet,
-                title: 'Earnings',
-                subtitle: 'Check payments',
-                color: successColor,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const EarningsScreen(),
-                    ),
-                  );
-                },
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionCard(
+                  icon: Icons.account_balance_wallet,
+                  title: 'Earnings',
+                  subtitle: 'Check payments',
+                  color: successColor,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const EarningsScreen(),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 12),
         // Second row with 2 items
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionCard(
-                icon: Icons.campaign,
-                title: 'Campaigns',
-                subtitle: 'Active campaigns',
-                color: secondaryColor,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => CampaignsListScreen(locationService: LocationService()),
-                    ),
-                  );
-                },
+        IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildActionCard(
+                  icon: Icons.campaign,
+                  title: 'Campaigns',
+                  subtitle: 'Active campaigns',
+                  color: secondaryColor,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => CampaignsListScreen(locationService: LocationService()),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionCard(
-                icon: Icons.location_on,
-                title: 'My Location',
-                subtitle: 'View location',
-                color: warningColor,
-                onTap: () {
-                  // Navigate to task location viewer or show current location
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const LiveMapScreen(),
-                    ),
-                  );
-                },
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionCard(
+                  icon: Icons.location_on,
+                  title: 'My Location',
+                  subtitle: 'View location',
+                  color: warningColor,
+                  onTap: () {
+                    // Navigate to task location viewer or show current location
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const LiveMapScreen(),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
@@ -1095,59 +1120,93 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> {
     required Color color,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 100, // Fixed height for consistent layout
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: surfaceColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 120),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: surfaceColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withValues(alpha: 0.15)),
+            boxShadow: [
+              BoxShadow(
+                color: shadowColor,
+                blurRadius: 8,
+                offset: const Offset(0, 3),
               ),
-              child: Icon(icon, color: color, size: 18),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: textPrimaryColor,
+              BoxShadow(
+                color: lightShadowColor,
+                blurRadius: 1,
+                offset: const Offset(0, 1),
               ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            ],
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                surfaceColor,
+                color.withValues(alpha: 0.02),
+              ],
             ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                fontSize: 10,
-                color: textSecondaryColor,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      color.withValues(alpha: 0.15),
+                      color.withValues(alpha: 0.1),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: color.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 22,
+                ),
               ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                    color: textPrimaryColor,
+                    letterSpacing: 0.1,
+                  ),
+                  textAlign: TextAlign.center,
+                  softWrap: true,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: textSecondaryColor,
+                ),
+                textAlign: TextAlign.center,
+                softWrap: true,
+              ),
+            ],
+          ),
         ),
       ),
     );

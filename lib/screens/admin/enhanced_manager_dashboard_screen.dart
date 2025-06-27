@@ -546,38 +546,40 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
           ),
         ),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildOverviewCard(
-                title: 'Team Members',
-                value: data.agentStats.totalAgents.toString(),
-                subtitle: '${data.agentStats.onlineAgents} online',
-                icon: Icons.group,
-                color: primaryColor,
+        IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildOverviewCard(
+                  title: 'Team Members',
+                  value: data.agentStats.totalAgents.toString(),
+                  subtitle: '${data.agentStats.onlineAgents} online',
+                  icon: Icons.group,
+                  color: primaryColor,
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildOverviewCard(
-                title: 'Active Campaigns',
-                value: data.campaignOverview.activeCampaigns.toString(),
-                subtitle: '${data.campaignOverview.upcomingCampaigns} upcoming',
-                icon: Icons.campaign,
-                color: secondaryColor,
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildOverviewCard(
+                  title: 'Active Campaigns',
+                  value: data.campaignOverview.activeCampaigns.toString(),
+                  subtitle: '${data.campaignOverview.upcomingCampaigns} upcoming',
+                  icon: Icons.campaign,
+                  color: secondaryColor,
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildOverviewCard(
-                title: 'Task Progress',
-                value: data.taskStats.activeTasks.toString(),
-                subtitle: '${data.taskStats.todayCompleted} completed today',
-                icon: Icons.assignment,
-                color: successColor,
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildOverviewCard(
+                  title: 'Task Progress',
+                  value: data.taskStats.activeTasks.toString(),
+                  subtitle: '${data.taskStats.todayCompleted} completed today',
+                  icon: Icons.assignment,
+                  color: successColor,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
@@ -591,41 +593,60 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      constraints: const BoxConstraints(minHeight: 150),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: surfaceColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: shadowColor,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: lightShadowColor,
+            blurRadius: 2,
+            offset: const Offset(0, 1),
           ),
         ],
+        border: Border.all(
+          color: color.withValues(alpha: 0.1),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: color, size: 16),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  color.withValues(alpha: 0.15),
+                  color.withValues(alpha: 0.1),
+                ],
               ),
-              const Spacer(),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: color.withValues(alpha: 0.2),
+                width: 1,
               ),
-            ],
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w700,
+              color: color,
+              letterSpacing: 0.5,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -634,14 +655,18 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
               fontSize: 14,
               fontWeight: FontWeight.w600,
               color: textPrimaryColor,
+              letterSpacing: 0.1,
             ),
+            softWrap: true,
           ),
+          const SizedBox(height: 4),
           Text(
             subtitle,
             style: const TextStyle(
               fontSize: 12,
               color: textSecondaryColor,
             ),
+            softWrap: true,
           ),
         ],
       ),
@@ -661,76 +686,79 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
           ),
         ),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionCard(
-                title: 'Pending Assignments',
-                subtitle: 'Approval needed',
-                icon: Icons.assignment_late,
-                color: Colors.orange,
-                badgeCount: data.taskStats.pendingAssignments,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const PendingAssignmentsScreen(),
-                    ),
-                  );
-                },
+        IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildActionCard(
+                  title: 'Pending Assignments',
+                  subtitle: 'Approval needed',
+                  icon: Icons.assignment_late,
+                  color: Colors.orange,
+                  badgeCount: data.taskStats.pendingAssignments,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const PendingAssignmentsScreen(),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionCard(
-                title: 'Review Evidence',
-                subtitle: 'Pending items',
-                icon: Icons.rate_review,
-                color: warningColor,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const EvidenceListScreen(),
-                    ),
-                  );
-                },
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionCard(
+                  title: 'Review Evidence',
+                  subtitle: 'Pending items',
+                  icon: Icons.rate_review,
+                  color: warningColor,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const EvidenceListScreen(),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionCard(
-                title: 'Manage Tasks',
-                subtitle: 'All tasks',
-                icon: Icons.list_alt,
-                color: successColor,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const StandaloneTasksScreen(),
-                    ),
-                  );
-                },
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionCard(
+                  title: 'Manage Tasks',
+                  subtitle: 'All tasks',
+                  icon: Icons.list_alt,
+                  color: successColor,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const StandaloneTasksScreen(),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _buildActionCard(
-                title: 'Calendar',
-                subtitle: 'Schedule & deadlines',
-                icon: Icons.calendar_today,
-                color: secondaryColor,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const CalendarScreen(),
-                    ),
-                  );
-                },
+        IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildActionCard(
+                  title: 'Calendar',
+                  subtitle: 'Schedule & deadlines',
+                  icon: Icons.calendar_today,
+                  color: secondaryColor,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const CalendarScreen(),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
             const SizedBox(width: 12),
             Expanded(
               child: _buildActionCard(
@@ -749,7 +777,8 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
             ),
             const SizedBox(width: 12),
             Expanded(child: Container()), // Empty space
-          ],
+            ],
+          ),
         ),
       ],
     );
@@ -763,87 +792,124 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
     required VoidCallback onTap,
     int? badgeCount,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: surfaceColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: color,
-                    size: 20,
-                  ),
-                ),
-                if (badgeCount != null && badgeCount > 0)
-                  Positioned(
-                    right: -8,
-                    top: -8,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 2),
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 20,
-                        minHeight: 20,
-                      ),
-                      child: Text(
-                        badgeCount > 99 ? '99+' : badgeCount.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 120),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: surfaceColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withValues(alpha: 0.15)),
+            boxShadow: [
+              BoxShadow(
+                color: shadowColor,
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+              BoxShadow(
+                color: lightShadowColor,
+                blurRadius: 1,
+                offset: const Offset(0, 1),
+              ),
+            ],
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                surfaceColor,
+                color.withValues(alpha: 0.02),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          color.withValues(alpha: 0.15),
+                          color.withValues(alpha: 0.1),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: color.withValues(alpha: 0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(
+                      icon,
+                      color: color,
+                      size: 22,
+                    ),
+                  ),
+                  if (badgeCount != null && badgeCount > 0)
+                    Positioned(
+                      right: -8,
+                      top: -8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 20,
+                          minHeight: 20,
+                        ),
+                        child: Text(
+                          badgeCount > 99 ? '99+' : badgeCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 10,
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                    color: textPrimaryColor,
+                    letterSpacing: 0.1,
+                  ),
+                  textAlign: TextAlign.center,
+                  softWrap: true,
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  color: textSecondaryColor,
+                  fontSize: 11,
+                ),
+                textAlign: TextAlign.center,
+                softWrap: true,
+              ),
+            ],
+          ),
         ),
       ),
     );

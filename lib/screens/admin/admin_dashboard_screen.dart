@@ -455,72 +455,76 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ],
         ),
         const SizedBox(height: 20),
-        Row(
-          children: [
-            Expanded(
-              child: _buildSystemCard(
-                title: 'Total Managers',
-                value: overview.totalManagers.toString(),
-                icon: Icons.admin_panel_settings,
-                color: primaryColor,
-                lightColor: primaryLightColor,
+        IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildSystemCard(
+                  title: 'Total Managers',
+                  value: overview.totalManagers.toString(),
+                  icon: Icons.admin_panel_settings,
+                  color: primaryColor,
+                  lightColor: primaryLightColor,
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildSystemCard(
-                title: 'Total Agents',
-                value: overview.totalAgents.toString(),
-                icon: Icons.group,
-                color: purpleAccent,
-                lightColor: purpleLightAccent,
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildSystemCard(
+                  title: 'Total Agents',
+                  value: overview.totalAgents.toString(),
+                  icon: Icons.group,
+                  color: purpleAccent,
+                  lightColor: purpleLightAccent,
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildSystemCard(
-                title: 'Active Users',
-                value: overview.activeUsers.toString(),
-                icon: Icons.wifi,
-                color: successColor,
-                lightColor: successLightColor,
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildSystemCard(
+                  title: 'Active Users',
+                  value: overview.activeUsers.toString(),
+                  icon: Icons.wifi,
+                  color: successColor,
+                  lightColor: successLightColor,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildSystemCard(
-                title: 'Total Campaigns',
-                value: overview.totalCampaigns.toString(),
-                icon: Icons.campaign,
-                color: orangeAccent,
-                lightColor: orangeLightAccent,
+        IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildSystemCard(
+                  title: 'Total Campaigns',
+                  value: overview.totalCampaigns.toString(),
+                  icon: Icons.campaign,
+                  color: orangeAccent,
+                  lightColor: orangeLightAccent,
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildSystemCard(
-                title: 'Total Tasks',
-                value: overview.totalTasks.toString(),
-                icon: Icons.assignment,
-                color: indigoAccent,
-                lightColor: indigoLightAccent,
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildSystemCard(
+                  title: 'Total Tasks',
+                  value: overview.totalTasks.toString(),
+                  icon: Icons.assignment,
+                  color: indigoAccent,
+                  lightColor: indigoLightAccent,
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildSystemCard(
-                title: 'New This Month',
-                value: overview.newUsersThisMonth.toString(),
-                icon: Icons.trending_up,
-                color: secondaryColor,
-                lightColor: Colors.teal.shade300,
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildSystemCard(
+                  title: 'New This Month',
+                  value: overview.newUsersThisMonth.toString(),
+                  icon: Icons.trending_up,
+                  color: secondaryColor,
+                  lightColor: Colors.teal.shade300,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
@@ -534,8 +538,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     required Color lightColor,
   }) {
     return Container(
-      height: 160,
-      padding: const EdgeInsets.all(28),
+      constraints: const BoxConstraints(minHeight: 150),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: surfaceColor,
         borderRadius: BorderRadius.circular(16),
@@ -558,10 +562,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -577,31 +581,30 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 width: 1,
               ),
             ),
-            child: Icon(icon, color: color, size: 22),
+            child: Icon(icon, color: color, size: 20),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.w700,
-                  color: color,
-                  letterSpacing: 0.5,
-                ),
+          const SizedBox(height: 16),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w700,
+              color: color,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Flexible(
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: textPrimaryColor,
+                letterSpacing: 0.1,
               ),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: textPrimaryColor,
-                  letterSpacing: 0.2,
-                ),
-              ),
-            ],
+              softWrap: true,
+            ),
           ),
         ],
       ),
@@ -639,93 +642,97 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ],
         ),
         const SizedBox(height: 20),
-        Row(
-          children: [
-            Expanded(
-              child: _buildAdminActionCard(
-                title: 'User Management',
-                icon: Icons.manage_accounts,
-                color: primaryColor,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const UserManagementScreen(),
-                    ),
-                  );
-                },
+        IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildAdminActionCard(
+                  title: 'User Management',
+                  icon: Icons.manage_accounts,
+                  color: primaryColor,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const UserManagementScreen(),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildAdminActionCard(
-                title: 'System Tasks',
-                icon: Icons.list_alt,
-                color: successColor,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const StandaloneTasksScreen(),
-                    ),
-                  );
-                },
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildAdminActionCard(
+                  title: 'System Tasks',
+                  icon: Icons.list_alt,
+                  color: successColor,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const StandaloneTasksScreen(),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildAdminActionCard(
-                title: 'Evidence Review',
-                icon: Icons.rate_review,
-                color: warningColor,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const SimpleEvidenceReviewScreen(),
-                    ),
-                  );
-                },
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildAdminActionCard(
+                  title: 'Evidence Review',
+                  icon: Icons.rate_review,
+                  color: warningColor,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const SimpleEvidenceReviewScreen(),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: _buildAdminActionCard(
-                title: 'Templates',
-                icon: Icons.category,
-                color: secondaryColor,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const TemplateCategoriesScreen(),
-                    ),
-                  );
-                },
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildAdminActionCard(
+                  title: 'Templates',
+                  icon: Icons.category,
+                  color: secondaryColor,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const TemplateCategoriesScreen(),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _buildAdminActionCard(
-                title: 'Location History',
-                icon: Icons.location_history,
-                color: Colors.teal,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const LocationHistoryScreen(),
-                    ),
-                  );
-                },
+        IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildAdminActionCard(
+                  title: 'Location History',
+                  icon: Icons.location_history,
+                  color: Colors.teal,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const LocationHistoryScreen(),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(child: Container()), // Empty space
-            const SizedBox(width: 16),
-            Expanded(child: Container()), // Empty space
-            const SizedBox(width: 16),
-            Expanded(child: Container()), // Empty space
-          ],
+              const SizedBox(width: 16),
+              Expanded(child: Container()), // Empty space
+              const SizedBox(width: 16),
+              Expanded(child: Container()), // Empty space
+              const SizedBox(width: 16),
+              Expanded(child: Container()), // Empty space
+            ],
+          ),
         ),
       ],
     );
@@ -743,8 +750,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.all(24),
-          height: 140,
+          constraints: const BoxConstraints(minHeight: 120),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: surfaceColor,
             borderRadius: BorderRadius.circular(16),
@@ -772,9 +779,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -793,20 +801,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 child: Icon(
                   icon,
                   color: color,
-                  size: 26,
+                  size: 22,
                 ),
               ),
-              const SizedBox(height: 16),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                  color: textPrimaryColor,
-                  letterSpacing: 0.1,
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                    color: textPrimaryColor,
+                    letterSpacing: 0.1,
+                  ),
+                  textAlign: TextAlign.center,
+                  softWrap: true,
                 ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
               ),
             ],
           ),
