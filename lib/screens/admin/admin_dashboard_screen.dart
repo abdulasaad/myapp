@@ -291,17 +291,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildAdminWelcomeSection(),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   _buildSystemOverview(data.systemOverview),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   _buildAdminQuickActions(),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   _buildManagerManagementSection(data.managerStats),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   _buildSystemPerformanceSection(data.systemPerformance),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
                   _buildRecentActivitySection(data.recentActivity),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
@@ -315,16 +315,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final hour = DateTime.now().hour;
     String greeting;
     IconData greetingIcon;
+    Color greetingColor;
     
     if (hour < 12) {
       greeting = 'Good Morning';
       greetingIcon = Icons.wb_sunny;
+      greetingColor = orangeAccent;
     } else if (hour < 17) {
       greeting = 'Good Afternoon';
       greetingIcon = Icons.wb_sunny_outlined;
+      greetingColor = warningColor;
     } else {
       greeting = 'Good Evening';
       greetingIcon = Icons.nightlight_round;
+      greetingColor = purpleAccent;
     }
 
     return Container(
@@ -335,15 +339,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           end: Alignment.bottomRight,
           colors: [
             primaryColor,
-            primaryColor.withValues(alpha: 0.8),
+            primaryDarkColor,
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
             color: primaryColor.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -352,12 +356,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.2),
+                width: 1,
+              ),
             ),
             child: Icon(
               greetingIcon,
-              color: Colors.white,
+              color: greetingColor,
               size: 28,
             ),
           ),
@@ -370,22 +378,23 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   greeting,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   'System Administrator',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Your platform is running smoothly',
+                  'Monitor and manage your Al-Tijwal platform',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 14,
@@ -397,11 +406,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: Colors.white.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.2),
+                width: 1,
+              ),
             ),
-            child: const Icon(
-              Icons.admin_panel_settings,
+            child: Icon(
+              Icons.dashboard_customize,
               color: Colors.white,
               size: 24,
             ),
@@ -415,78 +428,102 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'System Overview',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: textPrimaryColor,
-          ),
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: primaryColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.dashboard,
+                color: primaryColor,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'System Overview',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: textPrimaryColor,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 20),
         Row(
           children: [
             Expanded(
               child: _buildSystemCard(
                 title: 'Total Managers',
                 value: overview.totalManagers.toString(),
-                subtitle: 'Platform leaders',
+                description: 'Platform leaders who oversee agent groups and manage campaigns. Managers have elevated permissions to create and assign tasks.',
                 icon: Icons.admin_panel_settings,
                 color: primaryColor,
+                lightColor: primaryLightColor,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
               child: _buildSystemCard(
                 title: 'Total Agents',
                 value: overview.totalAgents.toString(),
-                subtitle: 'Field workers',
+                description: 'Field workers who complete location-based tasks and submit evidence. Agents are organized into groups managed by managers.',
                 icon: Icons.group,
-                color: secondaryColor,
+                color: purpleAccent,
+                lightColor: purpleLightAccent,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
               child: _buildSystemCard(
                 title: 'Active Users',
                 value: overview.activeUsers.toString(),
-                subtitle: 'Currently online',
+                description: 'Users currently online and active in the system. This includes managers, agents, and administrators who are logged in.',
                 icon: Icons.wifi,
                 color: successColor,
+                lightColor: successLightColor,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
               child: _buildSystemCard(
                 title: 'Total Campaigns',
                 value: overview.totalCampaigns.toString(),
-                subtitle: 'All campaigns',
+                description: 'All campaigns created in the system. Campaigns contain multiple location-based tasks and define work areas for agents.',
                 icon: Icons.campaign,
-                color: warningColor,
+                color: orangeAccent,
+                lightColor: orangeLightAccent,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
               child: _buildSystemCard(
                 title: 'Total Tasks',
                 value: overview.totalTasks.toString(),
-                subtitle: 'All tasks created',
+                description: 'All tasks created across all campaigns. Tasks are individual work items that agents complete by visiting specific locations.',
                 icon: Icons.assignment,
-                color: errorColor,
+                color: indigoAccent,
+                lightColor: indigoLightAccent,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
               child: _buildSystemCard(
                 title: 'New This Month',
                 value: overview.newUsersThisMonth.toString(),
-                subtitle: 'User growth',
+                description: 'New users who joined the platform this month. This metric helps track user growth and platform adoption.',
                 icon: Icons.trending_up,
-                color: primaryColor,
+                color: secondaryColor,
+                lightColor: Colors.teal.shade300,
               ),
             ),
           ],
@@ -498,65 +535,108 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget _buildSystemCard({
     required String title,
     required String value,
-    required String subtitle,
+    required String description,
     required IconData icon,
     required Color color,
+    required Color lightColor,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+    return Stack(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: surfaceColor,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: shadowColor,
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+              BoxShadow(
+                color: lightShadowColor,
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
+            ],
+            border: Border.all(
+              color: color.withValues(alpha: 0.1),
+              width: 1,
+            ),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      color.withValues(alpha: 0.15),
+                      lightColor.withValues(alpha: 0.1),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: color.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
                 ),
-                child: Icon(icon, color: color, size: 16),
+                child: Icon(icon, color: color, size: 20),
               ),
-              const Spacer(),
+              const SizedBox(height: 16),
               Text(
                 value,
                 style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
                   color: color,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: textPrimaryColor,
+                  letterSpacing: 0.2,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: textPrimaryColor,
+        ),
+        Positioned(
+          top: 8,
+          right: 8,
+          child: InkWell(
+            onTap: () => _showInfoPopup(context, title, description),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.8),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: shadowColor,
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.info_outline,
+                color: textSecondaryColor,
+                size: 12,
+              ),
             ),
           ),
-          Text(
-            subtitle,
-            style: const TextStyle(
-              fontSize: 11,
-              color: textSecondaryColor,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -564,21 +644,39 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Admin Actions',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: textPrimaryColor,
-          ),
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: indigoAccent.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.bolt,
+                color: indigoAccent,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Quick Actions',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: textPrimaryColor,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 20),
         Row(
           children: [
             Expanded(
               child: _buildAdminActionCard(
                 title: 'User Management',
-                subtitle: 'Manage roles & permissions',
+                description: 'Manage user roles, permissions, and group assignments. Create new users, update profiles, and control access levels across the platform.',
                 icon: Icons.manage_accounts,
                 color: primaryColor,
                 onTap: () {
@@ -590,11 +688,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 },
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
               child: _buildAdminActionCard(
                 title: 'System Tasks',
-                subtitle: 'Global task overview',
+                description: 'View and manage all tasks across the platform. Monitor task progress, assignments, and completion rates for the entire system.',
                 icon: Icons.list_alt,
                 color: successColor,
                 onTap: () {
@@ -606,11 +704,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 },
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
               child: _buildAdminActionCard(
                 title: 'Evidence Review',
-                subtitle: 'Monitor quality',
+                description: 'Review and approve evidence submissions from agents. Monitor quality standards and provide feedback on submitted work.',
                 icon: Icons.rate_review,
                 color: warningColor,
                 onTap: () {
@@ -622,11 +720,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 },
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(
               child: _buildAdminActionCard(
                 title: 'Templates',
-                subtitle: 'Global templates',
+                description: 'Manage global task templates and categories. Create reusable templates that managers can use to quickly generate new tasks.',
                 icon: Icons.category,
                 color: secondaryColor,
                 onTap: () {
@@ -640,13 +738,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
               child: _buildAdminActionCard(
                 title: 'Location History',
-                subtitle: 'Track all agents',
+                description: 'Track agent movements and location history. Monitor where agents have been and analyze their work patterns for better task planning.',
                 icon: Icons.location_history,
                 color: Colors.teal,
                 onTap: () {
@@ -658,11 +756,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 },
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(child: Container()), // Empty space
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(child: Container()), // Empty space
-            const SizedBox(width: 12),
+            const SizedBox(width: 16),
             Expanded(child: Container()), // Empty space
           ],
         ),
@@ -672,59 +770,113 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _buildAdminActionCard({
     required String title,
-    required String subtitle,
+    required String description,
     required IconData icon,
     required Color color,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: surfaceColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.2)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
+                color: surfaceColor,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: color.withValues(alpha: 0.15)),
+                boxShadow: [
+                  BoxShadow(
+                    color: shadowColor,
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                  BoxShadow(
+                    color: lightShadowColor,
+                    blurRadius: 1,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    surfaceColor,
+                    color.withValues(alpha: 0.02),
+                  ],
+                ),
               ),
-              child: Icon(
-                icon,
-                color: color,
-                size: 18,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          color.withValues(alpha: 0.15),
+                          color.withValues(alpha: 0.1),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: color.withValues(alpha: 0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(
+                      icon,
+                      color: color,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: textPrimaryColor,
+                      letterSpacing: 0.1,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 11,
+            Positioned(
+              top: 8,
+              right: 8,
+              child: InkWell(
+                onTap: () => _showInfoPopup(context, title, description),
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.8),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: shadowColor,
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.info_outline,
+                    color: textSecondaryColor,
+                    size: 12,
+                  ),
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 9,
-              ),
-              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -1111,6 +1263,96 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     } else {
       return DateFormat.MMMd().format(dateTime);
     }
+  }
+
+  void _showInfoPopup(BuildContext context, String title, String description) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: shadowColor,
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: primaryColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.info_outline,
+                        color: primaryColor,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: textPrimaryColor,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close, color: textSecondaryColor),
+                      iconSize: 20,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  description,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: textSecondaryColor,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: TextButton.styleFrom(
+                      backgroundColor: primaryColor.withValues(alpha: 0.1),
+                      foregroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('Got it'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 
