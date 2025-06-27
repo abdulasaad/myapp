@@ -41,25 +41,22 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
 
       final zones = <GeofenceZone>[];
 
-      // Get campaigns assigned to this agent through groups
-      final userGroupsResponse = await supabase
-          .from('user_groups')
-          .select('group_id')
-          .eq('user_id', userId);
+      // Get campaigns assigned to this agent directly through campaign_agents table
+      final campaignAgentsResponse = await supabase
+          .from('campaign_agents')
+          .select('campaign_id')
+          .eq('agent_id', userId);
       
-      if (userGroupsResponse.isNotEmpty) {
-        final groupIds = userGroupsResponse
-            .map((item) => item['group_id'] as String)
+      if (campaignAgentsResponse.isNotEmpty) {
+        final campaignIds = campaignAgentsResponse
+            .map((item) => item['campaign_id'] as String)
             .toList();
 
-        // Get campaigns for these groups
+        // Get campaigns for this agent
         final campaignsResponse = await supabase
             .from('campaigns')
-            .select('''
-              id, title, description, geofence_area_wkt,
-              campaign_groups!inner(group_id)
-            ''')
-            .inFilter('campaign_groups.group_id', groupIds)
+            .select('id, title, description, geofence_area_wkt')
+            .inFilter('id', campaignIds)
             .eq('status', 'active');
 
         // Add campaign zones
