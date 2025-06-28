@@ -1187,6 +1187,9 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
         return _buildSelectFieldWidget(field);
       case TemplateFieldType.multiselect:
         return _buildMultiSelectFieldWidget(field);
+      default:
+        // Fallback for any unknown field types
+        return _buildTextFieldWidget(field);
     }
   }
 
