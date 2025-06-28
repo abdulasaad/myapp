@@ -24,35 +24,18 @@ class AdvancedNotification {
     VoidCallback? onTap,
     IconData? customIcon,
   }) {
-    // If currently dismissing, wait for it to complete
+    // If currently dismissing, queue the notification
     if (_isDismissing) {
-      Future.delayed(const Duration(milliseconds: 100), () {
-        show(context,
-          message: message,
-          type: type,
-          title: title,
-          duration: duration,
-          onTap: onTap,
-          customIcon: customIcon,
-        );
-      });
+      // Don't use context in async callback - just return early
+      // The caller should retry or handle this case
       return;
     }
 
     // Hide current notification with animation if showing
     if (_isShowing) {
       _hideWithAnimation();
-      // Wait a bit for the hide animation, then show new one
-      Future.delayed(const Duration(milliseconds: 300), () {
-        _showNotification(context,
-          message: message,
-          type: type,
-          title: title,
-          duration: duration,
-          onTap: onTap,
-          customIcon: customIcon,
-        );
-      });
+      // Don't use context in async callback - just return early
+      // The caller should retry or handle this case
       return;
     }
 

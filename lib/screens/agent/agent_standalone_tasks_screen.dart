@@ -162,6 +162,34 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
     );
   }
 
+  Future<void> _showDemoNotificationSequence() async {
+    if (!mounted) return;
+    
+    context.showSuccessNotification(
+      'Task completed successfully! This notification slides in from the top.',
+      title: 'Success',
+      duration: const Duration(seconds: 2),
+    );
+    
+    await Future.delayed(const Duration(seconds: 3));
+    if (!mounted) return;
+    
+    context.showErrorNotification(
+      'Network error occurred. Watch how it smoothly replaces the previous one.',
+      title: 'Error',
+      duration: const Duration(seconds: 2),
+    );
+    
+    await Future.delayed(const Duration(seconds: 3));
+    if (!mounted) return;
+    
+    context.showWarningNotification(
+      'Location permission required. Swipe up or tap X to dismiss.',
+      title: 'Permission Required',
+      duration: const Duration(seconds: 3),
+    );
+  }
+
   Future<void> _requestTaskAssignment(Task task) async {
     final shouldRequest = await showDialog<bool>(
       context: context,
@@ -258,31 +286,7 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
               switch (value) {
                 case 'demo':
                   // Show sequence of different notification types
-                  context.showSuccessNotification(
-                    'Task completed successfully! This notification slides in from the top.',
-                    title: 'Success',
-                    duration: const Duration(seconds: 2),
-                  );
-                  
-                  Future.delayed(const Duration(seconds: 3), () {
-                    if (mounted) {
-                      context.showErrorNotification(
-                        'Network error occurred. Watch how it smoothly replaces the previous one.',
-                        title: 'Error',
-                        duration: const Duration(seconds: 2),
-                      );
-                    }
-                  });
-                  
-                  Future.delayed(const Duration(seconds: 6), () {
-                    if (mounted) {
-                      context.showWarningNotification(
-                        'Location permission required. Swipe up or tap X to dismiss.',
-                        title: 'Permission Required',
-                        duration: const Duration(seconds: 3),
-                      );
-                    }
-                  });
+                  _showDemoNotificationSequence();
                   break;
                 case 'success':
                   context.showSuccessNotification(

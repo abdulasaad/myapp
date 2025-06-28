@@ -79,9 +79,11 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     } else {
       // No Supabase Auth session - go to login
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-      );
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+      }
     }
   }
 

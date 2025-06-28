@@ -174,7 +174,9 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
                     await Navigator.of(context).push(MaterialPageRoute(
                       builder: (context) => const TemplateCategoriesScreen()
                     ));
-                    setState(() { _tasksFuture = _fetchTasks(); });
+                    if (mounted) {
+                      setState(() { _tasksFuture = _fetchTasks(); });
+                    }
                   },
                 ),
                 const SizedBox(height: 12),
@@ -188,7 +190,9 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
                     await Navigator.of(context).push(MaterialPageRoute(
                       builder: (context) => const CreateEvidenceTaskScreen()
                     ));
-                    setState(() { _tasksFuture = _fetchTasks(); });
+                    if (mounted) {
+                      setState(() { _tasksFuture = _fetchTasks(); });
+                    }
                   },
                 ),
                 const SizedBox(height: 20),
@@ -377,7 +381,9 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
                         await Navigator.of(context).push(MaterialPageRoute(
                           builder: (context) => StandaloneTaskDetailScreen(task: task)
                         ));
-                        setState(() { _tasksFuture = _fetchTasks(); });
+                        if (mounted) {
+                          setState(() { _tasksFuture = _fetchTasks(); });
+                        }
                       },
                       borderRadius: BorderRadius.circular(12),
                       child: Padding(
@@ -439,9 +445,11 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
                                       builder: (context) => CreateEvidenceTaskScreen(task: task),
                                     ),
                                   );
-                                  setState(() {
-                                    _tasksFuture = _fetchTasks();
-                                  });
+                                  if (mounted) {
+                                    setState(() {
+                                      _tasksFuture = _fetchTasks();
+                                    });
+                                  }
                                 } else if (value == 'delete') {
                                   final shouldDelete = await showDialog<bool>(
                                     context: context,
@@ -466,9 +474,11 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
                                   );
                                   if (shouldDelete == true) {
                                     await _deleteTask(task);
-                                    setState(() {
-                                      _tasksFuture = _fetchTasks();
-                                    });
+                                    if (mounted) {
+                                      setState(() {
+                                        _tasksFuture = _fetchTasks();
+                                      });
+                                    }
                                   }
                                 }
                               },
