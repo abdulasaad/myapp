@@ -134,7 +134,7 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
                   zones.add(GeofenceZone(
                     id: 'task_${taskId}_$i',
                     title: 'Task: ${taskInfo['title'] ?? 'Unnamed Task'}$statusIndicator',
-                    description: geofenceName + (taskInfo['description'] != null ? '\n${taskInfo['description']}' : '') + '\nStatus: ${assignmentStatus.toUpperCase()}',
+                    description: '$geofenceName${taskInfo['description'] != null ? '\n${taskInfo['description']}' : ''}\nStatus: ${assignmentStatus.toUpperCase()}',
                     points: points,
                   ));
                 }
