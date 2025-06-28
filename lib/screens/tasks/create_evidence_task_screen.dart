@@ -82,6 +82,8 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
   }
 
   Future<void> _selectDateTime(bool isStart) async {
+    if (!mounted) return;
+    
     final initialDate = isStart ? (_startDate ?? DateTime.now()) : (_endDate ?? _startDate ?? DateTime.now());
 
     final newDate = await showDatePicker(context: context, initialDate: initialDate, firstDate: DateTime(2020), lastDate: DateTime(2030));
@@ -110,7 +112,9 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
       return;
     }
     if (_startDate == null || _endDate == null) {
-      context.showSnackBar('Please select both start and end dates.', isError: true);
+      if (mounted) {
+        context.showSnackBar('Please select both start and end dates.', isError: true);
+      }
       return;
     }
 
@@ -310,9 +314,11 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
       return;
     }
 
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => TaskGeofenceEditorScreen(task: _createdTask!)),
-    );
+    if (mounted) {
+      await Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => TaskGeofenceEditorScreen(task: _createdTask!)),
+      );
+    }
   }
 
   @override
