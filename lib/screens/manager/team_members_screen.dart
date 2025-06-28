@@ -513,6 +513,9 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                   case 'details':
                     _showMemberDetails(member);
                     break;
+                  case 'edit_name':
+                    await _showEditNameDialog(member);
+                    break;
                   case 'reset_password':
                     await _showPasswordResetDialog(member);
                     break;
@@ -531,6 +534,16 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                       Icon(Icons.info_outline, size: 18),
                       SizedBox(width: 8),
                       Text('View Details'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'edit_name',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit, size: 18, color: Colors.blue),
+                      SizedBox(width: 8),
+                      Text('Edit Name', style: TextStyle(color: Colors.blue)),
                     ],
                   ),
                 ),
@@ -558,6 +571,164 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
       return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
     }
     return fullName.isNotEmpty ? fullName[0].toUpperCase() : '?';
+  }
+
+  Future<void> _showEditNameDialog(TeamMemberInfo member) async {
+    final TextEditingController nameController = TextEditingController(text: member.user.fullName);
+    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.edit, color: Colors.blue[700]),
+            const SizedBox(width: 8),
+            const Text('Edit Agent Name'),
+          ],
+        ),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Edit name for @${member.user.username ?? 'agent'}',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Name Requirements
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue[200]!),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.blue[700], size: 16),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Name Requirements',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.blue[800],
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ...[ 
+                      'At least 2 characters long',
+                      'Contains at least one letter',
+                      'Only letters, spaces, hyphens, periods, and commas',
+                      'Maximum 100 characters',
+                    ].map((requirement) => Padding(
+                      padding: const EdgeInsets.only(bottom: 2),
+                      child: Row(
+                        children: [
+                          Icon(Icons.check_circle_outline, 
+                            size: 12, color: Colors.blue[600]),
+                          const SizedBox(width: 6),
+                          Text(
+                            requirement,
+                            style: TextStyle(
+                              color: Colors.blue[700],
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Name Input Field
+              TextFormField(
+                controller: nameController,
+                validator: (value) {
+                  return UserManagementService().validateFullName(value ?? '');
+                },
+                decoration: const InputDecoration(
+                  labelText: 'Full Name',
+                  hintText: 'Enter agent full name',
+                  prefixIcon: Icon(Icons.person_outline, size: 20),
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                ),
+                textCapitalization: TextCapitalization.words,
+                autofocus: true,
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Warning
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue[300]!),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_rounded, color: Colors.blue[700], size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'This will update the agent\'s display name throughout the system.',
+                        style: TextStyle(
+                          color: Colors.blue[700],
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(null),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                Navigator.of(context).pop(nameController.text.trim());
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Update Name'),
+          ),
+        ],
+      ),
+    );
+
+    if (newName != null && newName.isNotEmpty && newName != member.user.fullName && mounted) {
+      await _performNameUpdate(member, newName);
+    }
   }
 
   Future<void> _showPasswordResetDialog(TeamMemberInfo member) async {
@@ -969,6 +1140,48 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
           ],
         ),
       );
+    }
+  }
+
+  Future<void> _performNameUpdate(TeamMemberInfo member, String newName) async {
+    // Show loading dialog
+    if (!mounted) return;
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const AlertDialog(
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 16),
+            Text('Updating name...'),
+          ],
+        ),
+      ),
+    );
+
+    try {
+      final success = await UserManagementService().updateAgentName(member.user.id, newName);
+      
+      if (!mounted) return;
+      Navigator.of(context).pop(); // Close loading dialog
+
+      if (success) {
+        // Show success message
+        context.showSnackBar('Agent name updated successfully');
+        
+        // Refresh the team members list to show the updated name
+        setState(() {
+          _teamMembersFuture = _fetchTeamMembers();
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pop(); // Close loading dialog
+      
+      // Show error message
+      context.showSnackBar('Failed to update name: ${e.toString()}', isError: true);
     }
   }
 

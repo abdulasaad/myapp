@@ -471,6 +471,15 @@ Task templates for creating standardized tasks.
    - Comprehensive audit trail for password reset operations
    - Bcrypt password hashing in database function
 
+6. **Agent name editing functionality**
+   - Managers can edit names for agents within their groups
+   - Real-time name validation with character and format requirements
+   - Group-based access control for name editing permissions
+   - Immediate UI refresh to display updated names
+   - Comprehensive error handling with user-friendly messages
+   - Secure database function `update_agent_name_secure()` bypasses RLS conflicts
+   - Professional edit dialog with form validation and loading states
+
 ## Key Features
 
 ### 1. Geofencing
@@ -516,13 +525,16 @@ Task templates for creating standardized tasks.
 - **Conflict Resolution**: User choice dialog for handling multiple login attempts
 - **Session Cleanup**: Automatic removal of old inactive sessions
 
-### 8. Password Reset Management (Added: 2025-06-28)
-- **Manager-Controlled Resets**: Managers can reset passwords for agents in their groups
+### 8. Team Members Management (Added: 2025-06-28)
+- **Manager-Controlled Password Resets**: Managers can reset passwords for agents in their groups
 - **Direct Password Change**: Immediate password updates in Supabase Auth system
 - **Manual Password Entry**: Managers manually enter new passwords with validation
+- **Agent Name Editing**: Managers can update agent display names within their groups
+- **Real-time Validation**: Form validation for passwords and names with clear requirements
 - **Security Validation**: Role-based permissions and group isolation enforcement
 - **Audit Trail**: Complete logging of all password reset operations
-- **Professional UI**: Clean password entry dialog with requirements display
+- **Professional UI**: Clean dialogs with requirements display and loading states
+- **RLS Bypass Functions**: Secure database functions prevent policy recursion conflicts
 
 ## API Integration
 

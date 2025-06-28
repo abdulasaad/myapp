@@ -553,6 +553,67 @@ class UserManagementService {
     }
   }
 
+  /// Update agent name using secure database function (manager can update names for agents in their groups)
+  Future<bool> updateAgentName(String userId, String newFullName) async {
+    try {
+      final currentUser = supabase.auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('Not authenticated');
+      }
+
+      // Validate the new name
+      final nameValidation = validateFullName(newFullName);
+      if (nameValidation != null) {
+        throw Exception('Name validation failed: $nameValidation');
+      }
+
+      // Call the secure database function to update the name
+      final result = await supabase.rpc('update_agent_name_secure', params: {
+        'target_user_id': userId,
+        'new_full_name': newFullName.trim(),
+      });
+
+      if (result == null) {
+        throw Exception('No response from name update function');
+      }
+
+      final response = result as Map<String, dynamic>;
+      
+      if (response['success'] != true) {
+        throw Exception(response['error'] ?? 'Unknown error occurred');
+      }
+
+      debugPrint('Agent name updated successfully for user: $userId');
+      return true;
+    } catch (e) {
+      debugPrint('Error updating agent name: $e');
+      rethrow;
+    }
+  }
+
+  /// Validate full name
+  String? validateFullName(String fullName) {
+    final trimmedName = fullName.trim();
+    if (trimmedName.isEmpty) {
+      return 'Full name is required';
+    }
+    if (trimmedName.length < 2) {
+      return 'Full name must be at least 2 characters long';
+    }
+    if (trimmedName.length > 100) {
+      return 'Full name must be less than 100 characters';
+    }
+    // Check for valid characters (letters, spaces, hyphens, apostrophes)
+    if (!RegExp(r'^[a-zA-Z\s\-\.\,]+$').hasMatch(trimmedName)) {
+      return 'Full name can only contain letters, spaces, hyphens, periods, and commas';
+    }
+    // Check that it contains at least one letter
+    if (!RegExp(r'[a-zA-Z]').hasMatch(trimmedName)) {
+      return 'Full name must contain at least one letter';
+    }
+    return null; // Name is valid
+  }
+
   /// Validate password strength
   String? validatePassword(String password) {
     if (password.isEmpty) {
