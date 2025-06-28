@@ -9,6 +9,7 @@ import '../calendar_screen.dart';
 import 'pending_assignments_screen.dart';
 import '../reporting/location_history_screen.dart';
 import '../../services/group_service.dart';
+import '../manager/team_members_screen.dart';
 
 class EnhancedManagerDashboardScreen extends StatefulWidget {
   const EnhancedManagerDashboardScreen({super.key});
@@ -157,11 +158,64 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
   }
 
   Future<AgentManagementStats> _getAgentManagementStats() async {
-    // Get agent statistics
-    final agentsResponse = await supabase
+    final currentUser = supabase.auth.currentUser;
+    if (currentUser == null) {
+      return AgentManagementStats(
+        totalAgents: 0,
+        activeAgents: 0,
+        onlineAgents: 0,
+        weeklyCompletions: 0,
+      );
+    }
+
+    final userProfile = await supabase
         .from('profiles')
-        .select('status, role')
-        .eq('role', 'agent');
+        .select('role')
+        .eq('id', currentUser.id)
+        .single();
+    
+    final isManager = userProfile['role'] == 'manager';
+    
+    List<Map<String, dynamic>> agentsResponse;
+    
+    if (isManager) {
+      // Get manager's groups
+      final managerGroups = await supabase
+          .from('user_groups')
+          .select('group_id')
+          .eq('user_id', currentUser.id);
+      
+      if (managerGroups.isEmpty) {
+        agentsResponse = [];
+      } else {
+        final groupIds = managerGroups.map((g) => g['group_id']).toList();
+        
+        // Get all agents in manager's groups
+        final agentsInGroups = await supabase
+            .from('user_groups')
+            .select('user_id')
+            .inFilter('group_id', groupIds);
+        
+        if (agentsInGroups.isEmpty) {
+          agentsResponse = [];
+        } else {
+          final agentIds = agentsInGroups.map((a) => a['user_id'] as String).toList();
+          
+          // Get agent profiles from these agents only
+          agentsResponse = await supabase
+              .from('profiles')
+              .select('id, status, role')
+              .eq('role', 'agent')
+              .inFilter('id', agentIds);
+        }
+      }
+    } else {
+      // Admin sees all agents
+      agentsResponse = await supabase
+          .from('profiles')
+          .select('id, status, role')
+          .eq('role', 'agent');
+    }
     
     int totalAgents = agentsResponse.length;
     int activeAgents = 0, onlineAgents = 0;
@@ -175,17 +229,30 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
       }
     }
     
-    // Get agent performance this week - simplified approach
-    final weeklyPerformance = await supabase
-        .from('task_assignments')
-        .select('agent_id')
-        .eq('status', 'completed');
+    // Get agent performance this week - same filtering applies
+    List<Map<String, dynamic>> weeklyPerformanceResponse;
+    
+    if (isManager && agentsResponse.isNotEmpty) {
+      final agentIds = agentsResponse.map((a) => a['id'] as String).toList();
+      weeklyPerformanceResponse = await supabase
+          .from('task_assignments')
+          .select('agent_id')
+          .eq('status', 'completed')
+          .inFilter('agent_id', agentIds);
+    } else if (!isManager) {
+      weeklyPerformanceResponse = await supabase
+          .from('task_assignments')
+          .select('agent_id')
+          .eq('status', 'completed');
+    } else {
+      weeklyPerformanceResponse = [];
+    }
     
     return AgentManagementStats(
       totalAgents: totalAgents,
       activeAgents: activeAgents,
       onlineAgents: onlineAgents,
-      weeklyCompletions: weeklyPerformance.length,
+      weeklyCompletions: weeklyPerformanceResponse.length,
     );
   }
 
@@ -556,6 +623,13 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
                   subtitle: '${data.agentStats.onlineAgents} online',
                   icon: Icons.group,
                   color: primaryColor,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const TeamMembersScreen(),
+                      ),
+                    );
+                  },
                 ),
               ),
               const SizedBox(width: 12),
@@ -591,31 +665,35 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
     required String subtitle,
     required IconData icon,
     required Color color,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      constraints: const BoxConstraints(minHeight: 150),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: shadowColor,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 150),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: surfaceColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: shadowColor,
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+            BoxShadow(
+              color: lightShadowColor,
+              blurRadius: 2,
+              offset: const Offset(0, 1),
+            ),
+          ],
+          border: Border.all(
+            color: color.withValues(alpha: 0.1),
+            width: 1,
           ),
-          BoxShadow(
-            color: lightShadowColor,
-            blurRadius: 2,
-            offset: const Offset(0, 1),
-          ),
-        ],
-        border: Border.all(
-          color: color.withValues(alpha: 0.1),
-          width: 1,
         ),
-      ),
-      child: Column(
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -669,6 +747,7 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
             softWrap: true,
           ),
         ],
+        ),
       ),
     );
   }

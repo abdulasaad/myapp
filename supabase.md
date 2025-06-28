@@ -291,6 +291,20 @@ Task templates for creating standardized tasks.
 - Users can only view/manage their own sessions
 - Automatic cleanup of inactive sessions after 30 days
 
+#### 13. `password_reset_logs` Table
+**Added: 2025-06-28** - Audit log for password reset operations performed by managers.
+
+**Columns:**
+- `id` (UUID, Primary Key, DEFAULT: gen_random_uuid())
+- `user_id` (UUID, NOT NULL) - References auth.users(id) ON DELETE CASCADE
+- `reset_by` (UUID) - References auth.users(id) ON DELETE SET NULL  
+- `reset_at` (TIMESTAMP WITH TIME ZONE, DEFAULT: NOW())
+- `created_at` (TIMESTAMP WITH TIME ZONE, DEFAULT: NOW())
+
+**RLS Policies:**
+- Managers and admins can view password reset logs
+- Insert permissions for password reset function
+
 ## Recent Schema Changes
 
 ### 2025-06-26
@@ -389,6 +403,74 @@ Task templates for creating standardized tasks.
    - Enhanced manager task/campaign fetching logic to include assigned items
    - Fixed all database queries to select `created_at` field
 
+### 2025-06-28
+1. **Implemented direct password reset system for managers**
+   ```sql
+   -- Created password reset logs table
+   CREATE TABLE IF NOT EXISTS password_reset_logs (
+       id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+       user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+       reset_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+       reset_at TIMESTAMPTZ DEFAULT NOW(),
+       created_at TIMESTAMPTZ DEFAULT NOW()
+   );
+
+   -- Added RLS policies for password reset logs
+   CREATE POLICY "Managers and admins can view password reset logs" 
+   ON password_reset_logs FOR SELECT 
+   USING (
+       EXISTS (
+           SELECT 1 FROM profiles 
+           WHERE id = auth.uid() 
+           AND role IN ('manager', 'admin')
+       )
+   );
+
+   CREATE POLICY "Allow password reset logging" 
+   ON password_reset_logs FOR INSERT 
+   WITH CHECK (true);
+
+   -- Created password reset function with group-based permissions
+   CREATE OR REPLACE FUNCTION reset_user_password_direct(
+       target_user_id UUID,
+       new_password TEXT
+   )
+   RETURNS JSON
+   LANGUAGE plpgsql
+   SECURITY DEFINER
+   AS $$
+   -- Function validates manager permissions and resets passwords directly
+   $$;
+   ```
+
+2. **Enhanced Team Members management screen**
+   - Managers can view all agents within their groups with status indicators
+   - Added search and filtering capabilities for team members
+   - Real-time agent status display with active task counts
+   - Group membership visibility for each team member
+
+3. **Direct password reset with manual entry**
+   - Managers can reset passwords for agents in their groups only
+   - Manual password entry with strength validation requirements
+   - Real-time password validation (8+ chars, uppercase, lowercase, numbers)
+   - Password confirmation field with match validation
+   - Immediate password change in Supabase Auth system
+   - Copy-to-clipboard functionality for easy password sharing
+
+4. **UI improvements for password reset dialog**
+   - Fixed keyboard overlap issues with scrollable dialog
+   - Professional password entry interface with show/hide toggles
+   - Clear password requirements display
+   - Success dialog with secure password sharing instructions
+   - Audit logging for all password reset operations
+
+5. **Security enhancements**
+   - Group-based permission validation at database level
+   - Role verification (only managers/admins can reset passwords)
+   - Target user validation (can only reset agent passwords)
+   - Comprehensive audit trail for password reset operations
+   - Bcrypt password hashing in database function
+
 ## Key Features
 
 ### 1. Geofencing
@@ -433,6 +515,14 @@ Task templates for creating standardized tasks.
 - **Automatic Logout**: Forced logout when logged in from another device
 - **Conflict Resolution**: User choice dialog for handling multiple login attempts
 - **Session Cleanup**: Automatic removal of old inactive sessions
+
+### 8. Password Reset Management (Added: 2025-06-28)
+- **Manager-Controlled Resets**: Managers can reset passwords for agents in their groups
+- **Direct Password Change**: Immediate password updates in Supabase Auth system
+- **Manual Password Entry**: Managers manually enter new passwords with validation
+- **Security Validation**: Role-based permissions and group isolation enforcement
+- **Audit Trail**: Complete logging of all password reset operations
+- **Professional UI**: Clean password entry dialog with requirements display
 
 ## API Integration
 
@@ -502,6 +592,6 @@ SUPABASE_ANON_KEY=your_anon_key
 
 ---
 
-**Last Updated**: 2025-06-27  
+**Last Updated**: 2025-06-28  
 **Maintained By**: Claude Code Assistant  
-**Version**: 1.1
+**Version**: 1.2

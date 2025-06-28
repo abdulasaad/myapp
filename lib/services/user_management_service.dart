@@ -515,6 +515,67 @@ class UserManagementService {
     }
   }
 
+  /// Reset password directly for a user (manager can reset passwords for agents in their groups)
+  Future<bool> resetPasswordDirect(String userId, String newPassword) async {
+    try {
+      final currentUser = supabase.auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('Not authenticated');
+      }
+
+      // Validate the new password
+      final passwordValidation = validatePassword(newPassword);
+      if (passwordValidation != null) {
+        throw Exception('Password validation failed: $passwordValidation');
+      }
+
+      // Call the database function to reset the password
+      final result = await supabase.rpc('reset_user_password_direct', params: {
+        'target_user_id': userId,
+        'new_password': newPassword,
+      });
+
+      if (result == null) {
+        throw Exception('No response from password reset function');
+      }
+
+      final response = result as Map<String, dynamic>;
+      
+      if (response['success'] != true) {
+        throw Exception(response['error'] ?? 'Unknown error occurred');
+      }
+
+      debugPrint('Password reset successful for user: $userId');
+      return true;
+    } catch (e) {
+      debugPrint('Error resetting password: $e');
+      rethrow;
+    }
+  }
+
+  /// Validate password strength
+  String? validatePassword(String password) {
+    if (password.isEmpty) {
+      return 'Password is required';
+    }
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters long';
+    }
+    if (!RegExp(r'^(?=.*[a-z])').hasMatch(password)) {
+      return 'Password must contain at least one lowercase letter';
+    }
+    if (!RegExp(r'^(?=.*[A-Z])').hasMatch(password)) {
+      return 'Password must contain at least one uppercase letter';
+    }
+    if (!RegExp(r'^(?=.*\d)').hasMatch(password)) {
+      return 'Password must contain at least one number';
+    }
+    if (password.length > 128) {
+      return 'Password must be less than 128 characters';
+    }
+    return null; // Password is valid
+  }
+
   String _generatePassword() {
     const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#\$%^&*';
     final random = DateTime.now().millisecondsSinceEpoch;

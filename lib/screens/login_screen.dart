@@ -67,6 +67,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+
   Future<void> _signIn() async {
     // Check if user is offline
     if (!_isOnline) {
