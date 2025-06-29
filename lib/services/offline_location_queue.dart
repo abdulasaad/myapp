@@ -30,13 +30,26 @@ class QueuedLocationUpdate {
   });
 
   factory QueuedLocationUpdate.fromPosition(Position position, String userId) {
+    // Ensure recorded timestamp is not in the future
+    final now = DateTime.now();
+    var recordedTime = now;
+    
+    // If position has a timestamp, use it but validate it's not in the future
+    if (position.timestamp.isAfter(now.add(const Duration(minutes: 1)))) {
+      // If timestamp is more than 1 minute in the future, use current time
+      logger.w('⚠️ Position timestamp is in the future, using current time instead');
+      recordedTime = now;
+    } else {
+      recordedTime = position.timestamp;
+    }
+    
     return QueuedLocationUpdate(
       userId: userId,
       latitude: position.latitude,
       longitude: position.longitude,
       accuracy: position.accuracy,
       speed: position.speed,
-      recordedAt: DateTime.now(),
+      recordedAt: recordedTime,
       id: DateTime.now().millisecondsSinceEpoch.toString(),
     );
   }
@@ -257,7 +270,18 @@ class OfflineLocationQueue {
 
   Future<bool> _sendLocationUpdate(QueuedLocationUpdate update) async {
     try {
-      await supabase.from('location_history').insert(update.toJson());
+      // Validate timestamp before sending
+      final now = DateTime.now();
+      final updateData = update.toJson();
+      
+      // If the recorded_at is more than 5 minutes in the future, adjust it
+      final recordedAt = DateTime.parse(updateData['recorded_at']);
+      if (recordedAt.isAfter(now.add(const Duration(minutes: 5)))) {
+        logger.w('⚠️ Adjusting future timestamp from $recordedAt to $now');
+        updateData['recorded_at'] = now.toIso8601String();
+      }
+      
+      await supabase.from('location_history').insert(updateData);
       return true;
     } catch (e) {
       logger.d('❌ Failed to send location update: $e');
