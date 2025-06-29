@@ -54,7 +54,6 @@ flutter:
     - icons/logo2.png
     - icons/logo2_padded.png
     - icons/logo3.png
-    - icons/logo3_padded.png
   
 
 # Flutter Launcher Icons Configuration
@@ -63,10 +62,10 @@ flutter_launcher_icons:
   ios: false
   web:
     generate: true
-    image_path: "icons/logo3_padded.png"
+    image_path: "icons/logo2_padded.png"
     background_color: "#2563EB"
     theme_color: "#2563EB"
-  image_path: "icons/logo3_padded.png"
-  adaptive_icon_foreground: "icons/logo3_padded.png"
-  remove_alpha_ios: true
+  image_path: "icons/logo2_padded.png"
+  adaptive_icon_background: "#2563EB"
+  adaptive_icon_foreground: "icons/logo2_padded.png"
   min_sdk_android: 21
