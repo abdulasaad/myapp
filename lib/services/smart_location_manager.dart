@@ -92,6 +92,11 @@ class SmartLocationManager {
     }
     
     logger.i('🚀 Starting smart location tracking...');
+    
+    // Start background service first to ensure continuity
+    await BackgroundLocationService.startLocationTracking();
+    
+    // Then start foreground mode
     await _switchToForegroundMode();
     
     // Start health monitoring
@@ -148,8 +153,8 @@ class SmartLocationManager {
         
       case AppLifecycleState.paused:
       case AppLifecycleState.hidden:
-        logger.i('📱 App backgrounded - switching to background tracking in 30s');
-        _scheduleMode(LocationTrackingMode.background, const Duration(seconds: 30));
+        logger.i('📱 App backgrounded - switching to background tracking immediately');
+        _scheduleMode(LocationTrackingMode.background, const Duration(seconds: 2));
         break;
         
       case AppLifecycleState.detached:
@@ -195,14 +200,14 @@ class SmartLocationManager {
   /// Switch to foreground-only tracking
   Future<void> _switchToForegroundMode() async {
     try {
-      // Stop background service first
-      await BackgroundLocationService.stopLocationTracking();
+      // Keep background service running but start foreground as primary
+      // This ensures continuity if app is quickly backgrounded again
       
       // Start/restart foreground service
       await _foregroundService.start();
       
       _currentMode = LocationTrackingMode.foreground;
-      logger.i('✅ Switched to FOREGROUND tracking mode');
+      logger.i('✅ Switched to FOREGROUND tracking mode (background still active)');
       
       // Listen to location updates for movement detection
       _foregroundService.locationStream.listen(
@@ -223,11 +228,11 @@ class SmartLocationManager {
   /// Switch to background-only tracking
   Future<void> _switchToBackgroundMode() async {
     try {
-      // Stop foreground service first
-      _foregroundService.stop();
-      
-      // Start background service
+      // Ensure background service is running
       await BackgroundLocationService.startLocationTracking();
+      
+      // Now stop foreground service (background takes over)
+      _foregroundService.stop();
       
       _currentMode = LocationTrackingMode.background;
       logger.i('✅ Switched to BACKGROUND tracking mode');

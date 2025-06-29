@@ -26,9 +26,9 @@ class BackgroundLocationService {
         isForegroundMode: true,
         notificationChannelId: _channelId,
         initialNotificationTitle: _channelName,
-        initialNotificationContent: 'Initializing location tracking...',
+        initialNotificationContent: 'Tracking location in background...',
         foregroundServiceNotificationId: 888,
-        autoStartOnBoot: false,
+        autoStartOnBoot: true,  // Auto-start on device boot
       ),
       iosConfiguration: IosConfiguration(
         autoStart: false,

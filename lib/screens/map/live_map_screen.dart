@@ -288,6 +288,13 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
         if (_selectAllAgents) _visibleAgentIds = _agents.keys.toSet();
         if (_selectAllGeofences) _visibleGeofenceIds = _geofences.map((g) => g.id).toSet();
         
+        // Debug: Log agent data updates
+        for (final agent in _agents.values) {
+          if (agent.lastLocation != null) {
+            debugPrint('📍 Agent ${agent.fullName}: ${agent.lastLocation} at ${agent.lastSeen}');
+          }
+        }
+        
         _updateMarkers();
         _updatePolygons();
         
@@ -322,6 +329,8 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
         if (_trackedAgentId == agent.id) {
           // Tracked agent gets purple agent icon
           markerIcon = _agentIconPurple ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueViolet);
+          // Debug: Log tracked agent position
+          debugPrint('🟣 Tracked agent ${agent.fullName} at ${agent.lastLocation} (${agent.lastSeen})');
         } else if (_selectedAgentId == agent.id) {
           // Selected agent gets blue agent icon
           markerIcon = _agentIconBlue ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
@@ -334,7 +343,10 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
           Marker(
             markerId: MarkerId(agent.id),
             position: agent.lastLocation!,
-            infoWindow: InfoWindow(title: agent.fullName),
+            infoWindow: InfoWindow(
+              title: agent.fullName,
+              snippet: 'Last seen: ${agent.lastSeen?.toString().substring(11, 16) ?? 'Unknown'}',
+            ),
             icon: markerIcon,
             onTap: () => _onAgentTapped(agent),
           )
