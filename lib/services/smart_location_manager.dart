@@ -403,6 +403,12 @@ class SmartLocationManager {
   /// Update background service tracking interval dynamically
   void _updateBackgroundServiceInterval(int intervalSeconds) {
     try {
+      // Only update if interval is reasonable (between 10s and 300s)
+      if (intervalSeconds < 10 || intervalSeconds > 300) {
+        logger.w('⚠️ Skipping invalid interval: ${intervalSeconds}s');
+        return;
+      }
+      
       // Send command to background service to update interval
       final service = FlutterBackgroundService();
       service.invoke('updateInterval', {
@@ -452,8 +458,11 @@ class SmartLocationManager {
       _currentUpdateInterval = newInterval;
       logger.i('⏱️ Adaptive interval updated: ${_currentUpdateInterval}s (${_getIntervalReason()})');
       
-      // Apply new interval to services if needed
-      _applyAdaptiveInterval();
+      // Only apply adaptive intervals if we have location data
+      // Don't interfere with initial location acquisition
+      if (_lastKnownPosition != null) {
+        _applyAdaptiveInterval();
+      }
     }
   }
   
@@ -493,6 +502,11 @@ class SmartLocationManager {
         'Stationary: ${_stationaryDuration}min, '
         'Interval: ${_currentUpdateInterval}s');
     
+    // Temporarily disable dynamic interval updates to ensure stability
+    // TODO: Re-enable after testing basic location tracking
+    logger.d('🔧 Adaptive interval application disabled for stability');
+    
+    /* 
     // Apply adaptive interval to background service
     if (_currentMode == LocationTrackingMode.background) {
       _updateBackgroundServiceInterval(_currentUpdateInterval);
@@ -502,6 +516,7 @@ class SmartLocationManager {
     if (_currentMode == LocationTrackingMode.foreground) {
       _updateForegroundServiceInterval(_currentUpdateInterval);
     }
+    */
   }
   
   /// Get human-readable reason for current interval
