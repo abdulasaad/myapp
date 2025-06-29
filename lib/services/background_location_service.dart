@@ -263,6 +263,18 @@ class BackgroundLocationService {
       activeCampaignId = event?['campaignId'];
       logger.i('Active campaign set to: $activeCampaignId');
     });
+    
+    // Listen for interval updates
+    service.on('updateInterval').listen((event) {
+      final newInterval = event?['interval'] as int?;
+      if (newInterval != null && newInterval > 0) {
+        logger.i('📊 Updating tracking interval to ${newInterval}s');
+        locationTimer?.cancel();
+        locationTimer = Timer.periodic(Duration(seconds: newInterval), (timer) {
+          fetchAndSendLocation();
+        });
+      }
+    });
 
     // Auto-start location tracking
     startLocationTracking();

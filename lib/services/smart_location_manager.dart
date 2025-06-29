@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:logger/logger.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'location_service.dart';
 import 'background_location_service.dart';
 import 'settings_service.dart';
@@ -399,6 +400,31 @@ class SmartLocationManager {
     return await _offlineQueue.syncQueuedUpdates();
   }
   
+  /// Update background service tracking interval dynamically
+  void _updateBackgroundServiceInterval(int intervalSeconds) {
+    try {
+      // Send command to background service to update interval
+      final service = FlutterBackgroundService();
+      service.invoke('updateInterval', {
+        'interval': intervalSeconds,
+      });
+      logger.i('📡 Updated background service interval to ${intervalSeconds}s');
+    } catch (e) {
+      logger.e('❌ Failed to update background interval: $e');
+    }
+  }
+  
+  /// Update foreground service tracking interval
+  void _updateForegroundServiceInterval(int intervalSeconds) {
+    try {
+      // Update the foreground service timer interval
+      _foregroundService.updatePingInterval(intervalSeconds);
+      logger.i('📱 Updated foreground service interval to ${intervalSeconds}s');
+    } catch (e) {
+      logger.e('❌ Failed to update foreground interval: $e');
+    }
+  }
+  
   /// Get offline queue statistics
   Map<String, dynamic> getOfflineQueueStats() {
     return _offlineQueue.getQueueStats();
@@ -412,7 +438,8 @@ class SmartLocationManager {
   /// Start adaptive interval management
   void _startAdaptiveIntervals() {
     _adaptiveTimer?.cancel();
-    _adaptiveTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+    // Check for interval updates every 30 seconds for faster response
+    _adaptiveTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
       _updateAdaptiveInterval();
     });
   }
@@ -461,15 +488,20 @@ class SmartLocationManager {
   
   /// Apply the adaptive interval to location services
   void _applyAdaptiveInterval() {
-    // For now, this affects the health check frequency
-    // In the future, could dynamically update service intervals
-    
-    // Background service intervals are harder to change dynamically,
-    // but we can adjust how we process/filter the updates
     logger.d('📊 Current tracking metrics: '
         'Speed: ${(_currentMovementSpeed * 3.6).toStringAsFixed(1)}km/h, '
         'Stationary: ${_stationaryDuration}min, '
         'Interval: ${_currentUpdateInterval}s');
+    
+    // Apply adaptive interval to background service
+    if (_currentMode == LocationTrackingMode.background) {
+      _updateBackgroundServiceInterval(_currentUpdateInterval);
+    }
+    
+    // Update foreground service interval if needed
+    if (_currentMode == LocationTrackingMode.foreground) {
+      _updateForegroundServiceInterval(_currentUpdateInterval);
+    }
   }
   
   /// Get human-readable reason for current interval

@@ -119,6 +119,17 @@ class LocationService {
     setActiveCampaign(null);
     logger.i('Location tracking stopped.');
   }
+  
+  /// Update the ping interval dynamically for timer-based tracking
+  void updatePingInterval(int intervalSeconds) {
+    if (_timer != null && _timer!.isActive) {
+      _timer?.cancel();
+      _timer = Timer.periodic(Duration(seconds: intervalSeconds), (timer) {
+        _fetchAndProcessLocation();
+      });
+      logger.i('📱 Updated foreground ping interval to ${intervalSeconds}s');
+    }
+  }
 
   Future<void> _fetchAndProcessLocation() async {
     try {
