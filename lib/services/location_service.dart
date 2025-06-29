@@ -165,16 +165,12 @@ class LocationService {
     
     try {
       // Insert into location_history using the correct column name
-      // Validate timestamp to avoid constraint violations
-      final now = DateTime.now();
-      final recordedAt = now.toIso8601String();
-      
-      await supabase.from('location_history').insert({
-        'user_id': userId,
-        'location': locationString,
-        'accuracy': position.accuracy,
-        'speed': position.speed,
-        'recorded_at': recordedAt,
+      // Use server-side timestamp to avoid clock sync issues
+      await supabase.rpc('insert_location_update', params: {
+        'p_user_id': userId,
+        'p_location': locationString,
+        'p_accuracy': position.accuracy,
+        'p_speed': position.speed,
       });
 
       // Only log successful database inserts to verify it's working

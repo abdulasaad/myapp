@@ -270,18 +270,13 @@ class OfflineLocationQueue {
 
   Future<bool> _sendLocationUpdate(QueuedLocationUpdate update) async {
     try {
-      // Validate timestamp before sending
-      final now = DateTime.now();
-      final updateData = update.toJson();
-      
-      // If the recorded_at is more than 5 minutes in the future, adjust it
-      final recordedAt = DateTime.parse(updateData['recorded_at']);
-      if (recordedAt.isAfter(now.add(const Duration(minutes: 5)))) {
-        logger.w('⚠️ Adjusting future timestamp from $recordedAt to $now');
-        updateData['recorded_at'] = now.toIso8601String();
-      }
-      
-      await supabase.from('location_history').insert(updateData);
+      // Use server-side timestamp to avoid clock sync issues
+      await supabase.rpc('insert_location_update', params: {
+        'p_user_id': update.userId,
+        'p_location': 'POINT(${update.longitude} ${update.latitude})',
+        'p_accuracy': update.accuracy,
+        'p_speed': update.speed,
+      });
       return true;
     } catch (e) {
       logger.d('❌ Failed to send location update: $e');
