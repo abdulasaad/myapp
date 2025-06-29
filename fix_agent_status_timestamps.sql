@@ -32,19 +32,22 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Step 2: Add a constraint to prevent future timestamps
+-- Step 2: Fix any existing future timestamps FIRST
+UPDATE location_history
+SET recorded_at = CASE 
+    WHEN created_at IS NOT NULL AND created_at <= NOW() THEN created_at
+    ELSE NOW()
+END
+WHERE recorded_at > NOW() + INTERVAL '5 minutes';
+
+-- Step 3: Now add the constraint to prevent future timestamps
 ALTER TABLE location_history 
 ADD CONSTRAINT check_recorded_at_not_future 
 CHECK (recorded_at <= NOW() + INTERVAL '5 minutes');
 
--- Step 3: Create an index for better performance
+-- Step 4: Create an index for better performance
 CREATE INDEX IF NOT EXISTS idx_location_history_user_recorded 
 ON location_history(user_id, recorded_at DESC);
-
--- Step 4: Fix any existing future timestamps
-UPDATE location_history
-SET recorded_at = created_at
-WHERE recorded_at > NOW() + INTERVAL '5 minutes';
 
 -- Step 5: Grant execute permission
 GRANT EXECUTE ON FUNCTION get_agents_with_last_location() TO authenticated;

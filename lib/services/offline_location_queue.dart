@@ -61,7 +61,7 @@ class QueuedLocationUpdate {
       'accuracy': accuracy,
       'speed': speed,
       'recorded_at': recordedAt.toIso8601String(),
-      'id': id,
+      // Remove 'id' field - let database auto-generate UUID
     };
   }
 
