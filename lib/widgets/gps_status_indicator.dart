@@ -3,12 +3,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import '../services/location_service.dart';
+import '../services/smart_location_manager.dart';
 
 class GpsStatusIndicator extends StatefulWidget {
-  final LocationService locationService;
+  final SmartLocationManager locationManager;
   
-  const GpsStatusIndicator({super.key, required this.locationService});
+  const GpsStatusIndicator({super.key, required this.locationManager});
 
   @override
   State<GpsStatusIndicator> createState() => _GpsStatusIndicatorState();
@@ -22,7 +22,7 @@ class _GpsStatusIndicatorState extends State<GpsStatusIndicator> {
   @override
   void initState() {
     super.initState();
-    _locationSubscription = widget.locationService.locationStream.listen((position) {
+    _locationSubscription = widget.locationManager.locationStream.listen((position) {
       if (mounted) {
         setState(() {
           _currentAccuracy = position.accuracy;

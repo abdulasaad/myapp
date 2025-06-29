@@ -2,12 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../utils/constants.dart';
 import '../models/app_user.dart';
+import '../services/smart_location_manager.dart';
 import '../services/location_service.dart';
-import '../services/background_location_service.dart';
 import '../services/session_service.dart';
 import '../services/profile_service.dart';
 import '../services/connectivity_service.dart';
@@ -292,80 +291,53 @@ class _AgentDashboardTab extends StatefulWidget {
   State<_AgentDashboardTab> createState() => _AgentDashboardTabState();
 }
 
-class _AgentDashboardTabState extends State<_AgentDashboardTab> {
+class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBindingObserver {
   late Future<AgentDashboardData> _dashboardFuture;
-  final LocationService _locationService = LocationService();
+  final SmartLocationManager _locationManager = SmartLocationManager();
   final Logger _logger = Logger();
 
   @override
   void initState() {
     super.initState();
     _dashboardFuture = _loadAgentDashboardData();
-    _startLocationTracking();
+    _startSmartLocationTracking();
     // Initialize connectivity monitoring
     ConnectivityService().initialize();
+    // Add lifecycle observer for app state changes
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
-    _locationService.stop();
-    BackgroundLocationService.stopLocationTracking();
+    _locationManager.stopTracking();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
-  void _startLocationTracking() async {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    _locationManager.onAppLifecycleStateChanged(state);
+  }
+
+  void _startSmartLocationTracking() async {
     try {
-      // Check if location services are enabled
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
+      _logger.i('Starting smart location tracking for agent: ${widget.user.fullName}');
+      
+      final success = await _locationManager.initialize();
+      if (success) {
+        await _locationManager.startTracking();
+        _logger.i('✅ Smart location tracking started successfully');
+      } else {
         if (mounted) {
           context.showSnackBar(
-            'Location services are disabled. Please enable them in device settings.',
+            'Failed to initialize location tracking. Please check permissions.',
             isError: true,
           );
         }
-        return;
       }
-
-      // Check location permissions
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          if (mounted) {
-            context.showSnackBar(
-              'Location permission denied. Please grant permission to track your location.',
-              isError: true,
-            );
-          }
-          return;
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        if (mounted) {
-          context.showSnackBar(
-            'Location permission permanently denied. Please enable it in app settings.',
-            isError: true,
-          );
-        }
-        return;
-      }
-
-      // Initialize background service if not already initialized
-      await BackgroundLocationService.initialize();
-      
-      // Start foreground location tracking
-      await _locationService.start();
-      _logger.i('Foreground location tracking started for agent: ${widget.user.fullName}');
-      
-      // Start background location tracking
-      await BackgroundLocationService.startLocationTracking();
-      _logger.i('Background location tracking started for agent: ${widget.user.fullName}');
-      
-      // Location tracking started successfully - no notification needed
     } catch (e) {
-      _logger.e('Failed to start location tracking: $e');
+      _logger.e('Failed to start smart location tracking: $e');
       if (mounted) {
         context.showSnackBar(
           'Failed to start location tracking: $e',
@@ -892,7 +864,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> {
           width: 1,
         ),
       ),
-      child: GpsStatusIndicator(locationService: _locationService),
+      child: GpsStatusIndicator(locationManager: _locationManager),
     );
   }
 
