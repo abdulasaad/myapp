@@ -46,13 +46,22 @@ class BackgroundLocationService {
       // Check if service is already running
       bool isRunning = await service.isRunning();
       if (!isRunning) {
-        logger.i('Starting background location service...');
-        service.startService();
+        logger.i('🚀 Starting background location service...');
+        bool started = await service.startService();
+        logger.i('📱 Background service start result: $started');
+        
+        // Wait a moment for service to initialize
+        await Future.delayed(const Duration(seconds: 1));
+        
+        // Verify it's running
+        isRunning = await service.isRunning();
+        logger.i('📊 Background service running status: $isRunning');
       } else {
-        logger.i('Background location service already running');
+        logger.i('✅ Background location service already running');
       }
     } catch (e) {
-      logger.e('Failed to start background location service: $e');
+      logger.e('❌ Failed to start background location service: $e');
+      rethrow;
     }
   }
 
@@ -190,12 +199,16 @@ class BackgroundLocationService {
         // Send location to database
         final locationString = 'POINT(${position.longitude} ${position.latitude})';
         
+        // Validate timestamp before sending
+        final now = DateTime.now();
+        final recordedAt = now.toIso8601String();
+        
         await supabase.from('location_history').insert({
           'user_id': currentUser.id,
           'location': locationString,
           'accuracy': position.accuracy,
           'speed': position.speed,
-          'recorded_at': DateTime.now().toIso8601String(),
+          'recorded_at': recordedAt,
         });
 
         logger.i('📍 BG: ${position.latitude.toStringAsFixed(6)}, ${position.longitude.toStringAsFixed(6)} → DB ✅');
