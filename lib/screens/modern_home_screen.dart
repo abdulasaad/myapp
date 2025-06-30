@@ -10,8 +10,10 @@ import '../services/location_service.dart';
 import '../services/session_service.dart';
 import '../services/profile_service.dart';
 import '../services/connectivity_service.dart';
+import '../services/update_service.dart';
 import '../widgets/offline_widget.dart';
 import '../widgets/standalone_upload_dialog.dart';
+import '../widgets/update_dialog.dart';
 import 'package:logger/logger.dart';
 import 'campaigns/campaigns_list_screen.dart';
 import 'tasks/standalone_tasks_screen.dart';
@@ -32,22 +34,52 @@ class ModernHomeScreen extends StatefulWidget {
   State<ModernHomeScreen> createState() => _ModernHomeScreenState();
 }
 
-class _ModernHomeScreenState extends State<ModernHomeScreen> {
+class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBindingObserver {
   int _selectedIndex = 0;
   AppUser? _currentUser;
   bool _isLoading = true;
+  final UpdateService _updateService = UpdateService();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadUserProfile();
     _setupSessionManagement();
+    // Clean up old APKs on app start
+    _updateService.cleanupAllApks();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     SessionService().stopPeriodicValidation();
     super.dispose();
+  }
+  
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Check for updates when app comes back to foreground
+      _checkForUpdate();
+    }
+  }
+  
+  Future<void> _checkForUpdate() async {
+    try {
+      final appVersion = await _updateService.checkForUpdate();
+      
+      if (appVersion != null && mounted) {
+        // Show mandatory update dialog
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => UpdateDialog(appVersion: appVersion),
+        );
+      }
+    } catch (e) {
+      // Silently ignore update check errors when app resumes
+    }
   }
 
   void _setupSessionManagement() {

@@ -10,6 +10,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import androidx.core.content.FileProvider
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -19,6 +20,7 @@ import java.io.FileOutputStream
 class MainActivity : FlutterActivity() {
     private val NOTIFICATION_CHANNEL = "com.example.myapp/notification"
     private val DOWNLOAD_CHANNEL = "com.example.myapp/download"
+    private val INSTALLER_CHANNEL = "com.altijwal.app/installer"
     
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -55,6 +57,48 @@ class MainActivity : FlutterActivity() {
                 result.notImplemented()
             }
         }
+        
+        // Installer channel
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, INSTALLER_CHANNEL).setMethodCallHandler {
+            call, result ->
+            if (call.method == "installApk") {
+                try {
+                    val filePath = call.argument<String>("path")!!
+                    installApk(filePath)
+                    result.success(true)
+                } catch (e: Exception) {
+                    result.error("INSTALL_ERROR", e.message, null)
+                }
+            } else {
+                result.notImplemented()
+            }
+        }
+    }
+    
+    private fun installApk(filePath: String) {
+        val file = File(filePath)
+        if (!file.exists()) {
+            throw Exception("APK file not found: $filePath")
+        }
+        
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            // Android 7.0+ requires FileProvider
+            val uri = FileProvider.getUriForFile(
+                this,
+                "${packageName}.fileprovider",
+                file
+            )
+            intent.setDataAndType(uri, "application/vnd.android.package-archive")
+        } else {
+            // Android 6.0 and below
+            intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive")
+        }
+        
+        startActivity(intent)
     }
     
     private fun saveToDownloads(fileName: String, mimeType: String, data: ByteArray): String {

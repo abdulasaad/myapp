@@ -38,6 +38,8 @@ dependencies:
   signature: ^5.5.0
   share_plus: ^10.1.2
   google_fonts: ^6.1.0
+  package_info_plus: ^8.0.0
+  open_file: ^3.3.2
   # ----------------------------------
 
 dev_dependencies:

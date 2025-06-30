@@ -5,6 +5,8 @@ import 'package:logger/logger.dart';
 import 'package:myapp/services/profile_service.dart';
 import 'package:myapp/services/session_service.dart';
 import 'package:myapp/services/connectivity_service.dart';
+import 'package:myapp/services/update_service.dart';
+import 'package:myapp/widgets/update_dialog.dart';
 import 'modern_home_screen.dart';
 import 'login_screen.dart';
 import '../utils/constants.dart';
@@ -19,15 +21,39 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  final UpdateService _updateService = UpdateService();
+  
   @override
   void initState() {
     super.initState();
     _redirect();
   }
+  
+  Future<void> _checkForUpdate() async {
+    try {
+      final appVersion = await _updateService.checkForUpdate();
+      
+      if (appVersion != null && mounted) {
+        // Show mandatory update dialog
+        await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => UpdateDialog(appVersion: appVersion),
+        );
+      }
+    } catch (e) {
+      logger.e('Error checking for update: $e');
+      // Continue with normal flow if update check fails
+    }
+  }
 
   Future<void> _redirect() async {
     // Small delay to show splash screen briefly before transition
     await Future.delayed(const Duration(milliseconds: 1500));
+    
+    // Check for app updates first
+    await _checkForUpdate();
+    
     final session = supabase.auth.currentSession;
     if (!mounted) return;
 

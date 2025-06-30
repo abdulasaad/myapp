@@ -113,7 +113,7 @@ Evidence submissions with metadata.
 - `rejection_reason` (TEXT)
 - `reviewed_at` (TIMESTAMP WITH TIME ZONE)
 - `reviewed_by` (UUID) - References profiles(id)
-- `task_assignment_id` (UUID, NOT NULL) - References task_assignments(id)
+- `task_assignment_id` (UUID) - References task_assignments(id) - **Changed: 2025-06-30** - Now nullable for standalone evidence
 - `uploader_id` (UUID, NOT NULL) - References profiles(id)
 - `created_at` (TIMESTAMP WITH TIME ZONE, NOT NULL)
 - `updated_at` (TIMESTAMP WITH TIME ZONE)
@@ -480,6 +480,38 @@ Task templates for creating standardized tasks.
    - Secure database function `update_agent_name_secure()` bypasses RLS conflicts
    - Professional edit dialog with form validation and loading states
 
+### 2025-06-30
+1. **Implemented standalone evidence upload feature**
+   ```sql
+   -- Modified evidence table to support standalone uploads
+   ALTER TABLE evidence 
+   ALTER COLUMN task_assignment_id DROP NOT NULL;
+   ```
+
+2. **Added floating action button for agents**
+   - Prominent upload button in agent navigation bar
+   - Modern UI with gradient background and animations
+   - Easy access to standalone evidence upload
+
+3. **Created standalone upload dialog**
+   - Support for photo capture and document upload
+   - Title and description fields for evidence documentation
+   - Automatic location capture with GPS coordinates
+   - Real-time upload progress indicator
+   - Success/error handling with user feedback
+
+4. **Enhanced evidence review screen**
+   - Support for both task-based and standalone evidence
+   - Visual indicators for evidence type (task vs standalone)
+   - Group-based filtering for managers
+   - Improved error handling for image loading
+   - Fallback mechanisms for network issues
+
+5. **Database query optimizations**
+   - LEFT JOIN for evidence queries to include standalone items
+   - Proper handling of nullable task_assignment_id
+   - Group membership filtering for manager access control
+
 ## Key Features
 
 ### 1. Geofencing
@@ -535,6 +567,16 @@ Task templates for creating standardized tasks.
 - **Audit Trail**: Complete logging of all password reset operations
 - **Professional UI**: Clean dialogs with requirements display and loading states
 - **RLS Bypass Functions**: Secure database functions prevent policy recursion conflicts
+
+### 9. Standalone Evidence Upload (Added: 2025-06-30)
+- **Agent-Initiated Evidence**: Agents can upload evidence without task assignment
+- **Floating Action Button**: Prominent upload button in agent navigation
+- **Evidence Categories**: Photo evidence, document submission with descriptions
+- **Location Capture**: Automatic GPS coordinates and accuracy recording
+- **Manager Review**: Standalone evidence appears in manager review queue
+- **Group-Based Access**: Managers only see standalone evidence from their group agents
+- **Evidence Review Screen Updates**: Support for both task-based and standalone evidence
+- **Database Schema**: `task_assignment_id` made nullable in evidence table
 
 ## API Integration
 
@@ -604,6 +646,6 @@ SUPABASE_ANON_KEY=your_anon_key
 
 ---
 
-**Last Updated**: 2025-06-28  
+**Last Updated**: 2025-06-30  
 **Maintained By**: Claude Code Assistant  
-**Version**: 1.2
+**Version**: 1.3
