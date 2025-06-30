@@ -31,54 +31,148 @@ class _SimpleEvidenceReviewScreenState extends State<SimpleEvidenceReviewScreen>
   }
 
   Future<List<EvidenceItem>> _loadPendingEvidence() async {
-    // Get pending evidence with task and agent information
-    final response = await supabase
+    // Get current user to check role and group access
+    final currentUserId = supabase.auth.currentUser?.id;
+    if (currentUserId == null) throw Exception('No authenticated user');
+    
+    // Get current user's profile to check role
+    final userProfile = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', currentUserId)
+        .single();
+    
+    final isAdmin = userProfile['role'] == 'admin';
+    
+    // Get pending evidence with task and agent information (using LEFT JOIN for standalone evidence)
+    var query = supabase
         .from('evidence')
         .select('''
           *,
-          task_assignments!inner(
-            tasks!inner(
+          task_assignments(
+            id,
+            tasks(
               id,
               title,
               template_id,
               task_templates(name)
             ),
-            profiles!inner(
+            profiles(
               id,
-              full_name
+              full_name,
+              user_groups!inner(group_id)
             )
+          ),
+          profiles!evidence_uploader_id_fkey(
+            id,
+            full_name,
+            user_groups!inner(group_id)
           )
         ''')
-        .eq('status', 'pending')
-        .order('created_at', ascending: false);
+        .eq('status', 'pending');
+    
+    // If manager, filter by group membership
+    if (!isAdmin) {
+      // Get manager's groups
+      final managerGroups = await supabase
+          .from('user_groups')
+          .select('group_id')
+          .eq('user_id', currentUserId);
+      
+      final groupIds = managerGroups.map((g) => g['group_id']).toList();
+      
+      if (groupIds.isEmpty) {
+        return []; // Manager has no groups, no evidence to review
+      }
+      
+      // Apply group filter - this is complex because we need to filter on either
+      // task assignment agent's groups OR standalone uploader's groups
+      // We'll handle this in the processing logic below
+    }
+    
+    final response = await query.order('created_at', ascending: false);
 
     final evidenceItems = <EvidenceItem>[];
     
+    // Get manager's group IDs for filtering (if not admin)
+    Set<String>? managerGroupIds;
+    if (!isAdmin) {
+      final managerGroups = await supabase
+          .from('user_groups')
+          .select('group_id')
+          .eq('user_id', currentUserId);
+      managerGroupIds = managerGroups.map<String>((g) => g['group_id'].toString()).toSet();
+    }
+    
     for (final item in response) {
       final taskAssignment = item['task_assignments'];
-      final task = taskAssignment['tasks'];
-      final agent = taskAssignment['profiles'];
-      final template = task['task_templates'];
+      final uploader = item['profiles'];
       
-      evidenceItems.add(EvidenceItem(
-        id: item['id'],
-        title: item['title'],
-        fileUrl: item['file_url'],
-        mimeType: item['mime_type'],
-        fileSize: item['file_size'],
-        capturedAt: item['captured_at'] != null 
-            ? DateTime.parse(item['captured_at']) 
-            : DateTime.parse(item['created_at']),
-        latitude: item['latitude']?.toDouble(),
-        longitude: item['longitude']?.toDouble(),
-        accuracy: item['accuracy']?.toDouble(),
-        taskId: task['id'],
-        taskTitle: task['title'],
-        templateName: template?['name'] ?? 'Custom Task',
-        agentId: agent['id'],
-        agentName: agent['full_name'],
-        taskAssignmentId: taskAssignment['id'],
-      ));
+      String agentId, agentName;
+      String? taskId, taskTitle, templateName, taskAssignmentId;
+      bool shouldInclude = isAdmin; // Admins see all evidence
+      
+      if (taskAssignment != null) {
+        // Task-based evidence
+        final task = taskAssignment['tasks'];
+        final agent = taskAssignment['profiles'];
+        final template = task?['task_templates'];
+        final agentGroups = agent['user_groups'] as List<dynamic>?;
+        
+        agentId = agent['id'];
+        agentName = agent['full_name'];
+        taskId = task?['id'];
+        taskTitle = task?['title'];
+        templateName = template?['name'] ?? 'Custom Task';
+        taskAssignmentId = taskAssignment['id'];
+        
+        // Check if manager has access to this agent
+        if (!isAdmin && managerGroupIds != null && agentGroups != null) {
+          final agentGroupIds = agentGroups.map((g) => g['group_id'].toString()).toSet();
+          shouldInclude = managerGroupIds.intersection(agentGroupIds).isNotEmpty;
+        }
+      } else {
+        // Standalone evidence
+        final uploaderGroups = uploader['user_groups'] as List<dynamic>?;
+        
+        agentId = uploader['id'];
+        agentName = uploader['full_name'];
+        taskId = null;
+        taskTitle = null;
+        templateName = null;
+        taskAssignmentId = null;
+        
+        // Check if manager has access to this uploader
+        if (!isAdmin && managerGroupIds != null && uploaderGroups != null) {
+          final uploaderGroupIds = uploaderGroups.map((g) => g['group_id'].toString()).toSet();
+          shouldInclude = managerGroupIds.intersection(uploaderGroupIds).isNotEmpty;
+        }
+      }
+      
+      // Only include evidence if manager has access or if user is admin
+      if (shouldInclude) {
+        evidenceItems.add(EvidenceItem(
+          id: item['id'],
+          title: item['title'],
+          description: item['description'],
+          fileUrl: item['file_url'],
+          mimeType: item['mime_type'],
+          fileSize: item['file_size'],
+          capturedAt: item['captured_at'] != null 
+              ? DateTime.parse(item['captured_at']) 
+              : DateTime.parse(item['created_at']),
+          latitude: item['latitude']?.toDouble(),
+          longitude: item['longitude']?.toDouble(),
+          accuracy: item['accuracy']?.toDouble(),
+          taskId: taskId,
+          taskTitle: taskTitle,
+          templateName: templateName,
+          agentId: agentId,
+          agentName: agentName,
+          taskAssignmentId: taskAssignmentId,
+          isStandalone: taskAssignmentId == null,
+        ));
+      }
     }
     
     return evidenceItems;
@@ -382,15 +476,45 @@ class _SimpleEvidenceReviewScreenState extends State<SimpleEvidenceReviewScreen>
         ),
         const SizedBox(height: 16),
         
-        // Task info
+        // Evidence title and type
         Text(
-          evidence.taskTitle,
+          evidence.title,
           style: const TextStyle(
             color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
         ),
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: evidence.isStandalone ? Colors.purple[600] : Colors.blue[600],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            evidence.isStandalone 
+                ? '📤 Standalone Evidence' 
+                : '📋 ${evidence.taskTitle ?? 'Task Evidence'}',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        if (evidence.description != null && evidence.description!.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            evidence.description!,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
         const SizedBox(height: 4),
         Row(
           children: [
@@ -455,40 +579,102 @@ class _SimpleEvidenceReviewScreenState extends State<SimpleEvidenceReviewScreen>
           color: Colors.grey[900],
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Image.network(
-          evidence.fileUrl,
-          fit: BoxFit.contain,
-          width: double.infinity,
-          height: double.infinity,
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return Center(
-              child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
-                    : null,
-                color: Colors.white,
-              ),
-            );
+        child: FutureBuilder<Widget>(
+          future: _buildImageWidget(evidence),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              );
+            }
+            return snapshot.data ?? _buildImageError(evidence);
           },
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              color: Colors.grey[800],
-              child: const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error, size: 64, color: Colors.white70),
-                    SizedBox(height: 8),
-                    Text(
-                      'Failed to load image',
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
+        ),
+      ),
+    );
+  }
+
+  Future<Widget> _buildImageWidget(EvidenceItem evidence) async {
+    // Try multiple approaches to load the image
+    
+    // First, try with authentication headers
+    try {
+      return Image.network(
+        evidence.fileUrl,
+        fit: BoxFit.contain,
+        width: double.infinity,
+        height: double.infinity,
+        headers: {
+          'Authorization': 'Bearer ${supabase.auth.currentSession?.accessToken ?? ''}',
+        },
+        errorBuilder: (context, error, stackTrace) {
+          debugPrint('Image load error with auth headers: $error');
+          // If auth headers fail, try without them
+          return Image.network(
+            evidence.fileUrl,
+            fit: BoxFit.contain,
+            width: double.infinity,
+            height: double.infinity,
+            errorBuilder: (context, error2, stackTrace2) {
+              debugPrint('Image load error without auth headers: $error2');
+              return _buildImageError(evidence);
+            },
+          );
+        },
+      );
+    } catch (e) {
+      debugPrint('Error creating image widget: $e');
+      return _buildImageError(evidence);
+    }
+  }
+
+  Widget _buildImageError(EvidenceItem evidence) {
+    return Container(
+      color: Colors.grey[800],
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error, size: 64, color: Colors.white70),
+            const SizedBox(height: 8),
+            const Text(
+              'Failed to load image',
+              style: TextStyle(color: Colors.white70),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'URL: ${evidence.fileUrl}',
+              style: const TextStyle(color: Colors.white54, fontSize: 10),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              onPressed: () async {
+                // Test URL access
+                debugPrint('Testing URL: ${evidence.fileUrl}');
+                // Extract file path from URL
+                final uri = Uri.parse(evidence.fileUrl);
+                final pathSegments = uri.pathSegments;
+                // Find the path after 'task-evidence'
+                final bucketIndex = pathSegments.indexOf('task-evidence');
+                if (bucketIndex >= 0 && bucketIndex < pathSegments.length - 1) {
+                  final filePath = pathSegments.sublist(bucketIndex + 1).join('/');
+                  debugPrint('Extracted file path: $filePath');
+                  try {
+                    final response = await supabase.storage
+                        .from('task-evidence')
+                        .download(filePath);
+                    debugPrint('✅ File download successful: ${response.length} bytes');
+                  } catch (e) {
+                    debugPrint('❌ File download failed: $e');
+                  }
+                } else {
+                  debugPrint('❌ Could not extract file path from URL');
+                }
+              },
+              child: const Text('Test URL'),
+            ),
+          ],
         ),
       ),
     );
@@ -618,6 +804,7 @@ class _SimpleEvidenceReviewScreenState extends State<SimpleEvidenceReviewScreen>
 class EvidenceItem {
   final String id;
   final String title;
+  final String? description;
   final String fileUrl;
   final String? mimeType;
   final int? fileSize;
@@ -625,16 +812,18 @@ class EvidenceItem {
   final double? latitude;
   final double? longitude;
   final double? accuracy;
-  final String taskId;
-  final String taskTitle;
-  final String templateName;
+  final String? taskId;
+  final String? taskTitle;
+  final String? templateName;
   final String agentId;
   final String agentName;
-  final String taskAssignmentId;
+  final String? taskAssignmentId;
+  final bool isStandalone;
 
   EvidenceItem({
     required this.id,
     required this.title,
+    this.description,
     required this.fileUrl,
     this.mimeType,
     this.fileSize,
@@ -642,12 +831,13 @@ class EvidenceItem {
     this.latitude,
     this.longitude,
     this.accuracy,
-    required this.taskId,
-    required this.taskTitle,
-    required this.templateName,
+    this.taskId,
+    this.taskTitle,
+    this.templateName,
     required this.agentId,
     required this.agentName,
-    required this.taskAssignmentId,
+    this.taskAssignmentId,
+    required this.isStandalone,
   });
 
   bool get hasLocationData => latitude != null && longitude != null;

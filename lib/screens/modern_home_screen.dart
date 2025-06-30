@@ -10,8 +10,8 @@ import '../services/location_service.dart';
 import '../services/session_service.dart';
 import '../services/profile_service.dart';
 import '../services/connectivity_service.dart';
-import '../widgets/gps_status_indicator.dart';
 import '../widgets/offline_widget.dart';
+import '../widgets/standalone_upload_dialog.dart';
 import 'package:logger/logger.dart';
 import 'campaigns/campaigns_list_screen.dart';
 import 'tasks/standalone_tasks_screen.dart';
@@ -217,23 +217,187 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> {
     final safeIndex = _selectedIndex.clamp(0, screens.length - 1);
 
     return Scaffold(
-      body: IndexedStack(
-        index: safeIndex,
-        children: screens,
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: safeIndex,
-        onTap: (index) {
-          setState(() => _selectedIndex = index);
-        },
-        selectedItemColor: primaryColor,
-        unselectedItemColor: textSecondaryColor,
-        backgroundColor: surfaceColor,
-        elevation: 8,
-        items: navItems,
+      body: _currentUser!.role == 'admin' || _currentUser!.role == 'manager'
+          ? IndexedStack(
+              index: safeIndex,
+              children: screens,
+            )
+          : Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF6366F1), // Blue at top
+                    Color(0xFFDDD6FE), // Very light purple/lavender
+                    Color(0xFFF8FAFC), // Almost white with slight blue tint
+                    Colors.white,      // Pure white at bottom
+                  ],
+                  stops: [0.0, 0.2, 0.5, 1.0],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+              child: Column(
+                children: [
+                  // Status bar spacer
+                  SizedBox(height: MediaQuery.of(context).padding.top),
+                  Expanded(
+                    child: IndexedStack(
+                      index: safeIndex,
+                      children: screens,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+      bottomNavigationBar: _currentUser!.role == 'admin' || _currentUser!.role == 'manager'
+          ? BottomNavigationBar(
+              type: BottomNavigationBarType.fixed,
+              currentIndex: safeIndex,
+              onTap: (index) {
+                setState(() => _selectedIndex = index);
+              },
+              selectedItemColor: primaryColor,
+              unselectedItemColor: textSecondaryColor,
+              backgroundColor: surfaceColor,
+              elevation: 8,
+              items: navItems,
+            )
+          : _buildAgentBottomNav(),
+    );
+  }
+
+  Widget _buildAgentBottomNav() {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Main navigation bar
+        Container(
+          height: 80,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.95),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(child: _buildEnhancedNavItem(Icons.home_filled, 'Home', 0)),
+              Expanded(child: _buildEnhancedNavItem(Icons.work_outline_rounded, 'Campaigns', 1)),
+              const SizedBox(width: 64), // Space for floating button
+              Expanded(child: _buildEnhancedNavItem(Icons.assignment_outlined, 'Tasks', 2)),
+              Expanded(child: _buildEnhancedNavItem(Icons.person_outline_rounded, 'Profile', 3)),
+            ],
+          ),
+        ),
+        // Floating Action Button positioned above the nav
+        Positioned(
+          top: -28,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: _buildEnhancedUploadButton(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEnhancedNavItem(IconData icon, String label, int index) {
+    final isSelected = _selectedIndex == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() => _selectedIndex = index);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isSelected 
+                  ? const Color(0xFF6366F1).withValues(alpha: 0.1) 
+                  : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                size: 24,
+                color: isSelected ? const Color(0xFF6366F1) : const Color(0xFF9CA3AF),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                color: isSelected ? const Color(0xFF6366F1) : const Color(0xFF9CA3AF),
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  Widget _buildEnhancedUploadButton() {
+    return GestureDetector(
+      onTap: () => _showStandaloneUploadDialog(),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 64,
+        height: 64,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+          ),
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF667EEA).withValues(alpha: 0.4),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+              spreadRadius: -5,
+            ),
+          ],
+        ),
+        child: const Icon(
+          Icons.add_rounded,
+          color: Colors.white,
+          size: 32,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showStandaloneUploadDialog() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const StandaloneUploadDialog(),
+    );
+    
+    if (result == true) {
+      // Refresh the current screen if it's the dashboard
+      if (_selectedIndex == 0) {
+        // Trigger refresh for dashboard
+        setState(() {});
+      }
+    }
   }
 }
 
@@ -537,7 +701,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: Colors.transparent,
       body: StreamBuilder<bool>(
         stream: ConnectivityService().connectivityStream,
         initialData: ConnectivityService().isOnline,
@@ -591,68 +755,76 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Dashboard Title with background label
+                          // Enhanced Dashboard Header with notification
                           SafeArea(
                             bottom: false,
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      primaryColor.withValues(alpha: 0.15),
-                                      primaryColor.withValues(alpha: 0.08),
-                                      primaryColor.withValues(alpha: 0.12),
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Dashboard',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF1F2937),
+                                    ),
+                                  ),
+                                  Stack(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withValues(alpha: 0.8),
+                                          borderRadius: BorderRadius.circular(12),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: 0.1),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2),
+                                            ),
+                                          ],
+                                        ),
+                                        child: const Icon(
+                                          Icons.notifications_outlined,
+                                          color: Color(0xFF6B7280),
+                                          size: 28,
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 6,
+                                        right: 6,
+                                        child: Container(
+                                          width: 8,
+                                          height: 8,
+                                          decoration: const BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle,
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(
-                                    color: primaryColor.withValues(alpha: 0.25),
-                                    width: 1.5,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: primaryColor.withValues(alpha: 0.1),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                                  child: Center(
-                                    child: Text(
-                                      'Agent Dashboard',
-                                      style: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w600,
-                                        color: textPrimaryColor,
-                                        letterSpacing: 0.5,
-                                        fontSize: 26,
-                                        height: 1.2,
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                                ],
                               ),
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(20),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildWelcomeCard(data.taskStats),
-                                const SizedBox(height: 20),
-                                _buildPerformanceStats(data.taskStats, data.earningsStats),
+                                _buildEnhancedWelcomeCard(data.taskStats),
+                                const SizedBox(height: 32),
+                                _buildEnhancedPerformanceStats(data.taskStats, data.earningsStats),
                                 const SizedBox(height: 20),
                                 _buildQuickActions(context),
                                 const SizedBox(height: 20),
                                 _buildActiveTasksPreview(data.activeTasks),
                                 const SizedBox(height: 20),
                                 _buildRecentActivity(data.recentActivity),
+                                const SizedBox(height: 120), // Extra space for floating nav
                               ],
                             ),
                           ),
@@ -693,332 +865,9 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
     );
   }
 
-  Widget _buildWelcomeCard(AgentTaskStats stats) {
-    final hour = DateTime.now().hour;
-    String greeting;
-    IconData greetingIcon;
-    
-    if (hour < 12) {
-      greeting = 'Good Morning';
-      greetingIcon = Icons.wb_sunny;
-    } else if (hour < 17) {
-      greeting = 'Good Afternoon';
-      greetingIcon = Icons.wb_sunny_outlined;
-    } else {
-      greeting = 'Good Evening';
-      greetingIcon = Icons.nightlight_round;
-    }
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [primaryColor, primaryColor.withValues(alpha: 0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: primaryColor.withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  greetingIcon,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      greeting,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      widget.user.fullName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // GPS Signal Indicator with Label
-              Column(
-                children: [
-                  _buildGPSIndicator(),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'GPS Signal',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        stats.todayCompleted.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Text(
-                        'Today\'s Tasks',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        stats.activeTasks.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Text(
-                        'Active Tasks',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildGPSIndicator() {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
-      child: GpsStatusIndicator(locationManager: _locationManager),
-    );
-  }
 
-  Widget _buildPerformanceStats(AgentTaskStats taskStats, AgentEarningsStats earningsStats) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Performance Overview',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: textPrimaryColor,
-          ),
-        ),
-        const SizedBox(height: 12),
-        IntrinsicHeight(
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  icon: Icons.check_circle,
-                  title: 'Completed',
-                  value: taskStats.completedTasks.toString(),
-                  color: successColor,
-                  subtitle: 'Total tasks',
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  icon: Icons.stars,
-                  title: 'Points Earned',
-                  value: taskStats.totalPoints.toString(),
-                  color: secondaryColor,
-                  subtitle: 'Total points',
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        IntrinsicHeight(
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildStatCard(
-                  icon: Icons.account_balance_wallet,
-                  title: 'Pending',
-                  value: earningsStats.pendingPayment.toString(),
-                  color: warningColor,
-                  subtitle: 'Payment due',
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatCard(
-                  icon: Icons.trending_up,
-                  title: 'This Month',
-                  value: earningsStats.monthlyEarnings.toString(),
-                  color: primaryColor,
-                  subtitle: 'Points earned',
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatCard({
-    required IconData icon,
-    required String title,
-    required String value,
-    required Color color,
-    String? subtitle,
-  }) {
-    return Container(
-      constraints: const BoxConstraints(minHeight: 120),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: shadowColor,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(
-          color: color.withValues(alpha: 0.1),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  color.withValues(alpha: 0.15),
-                  color.withValues(alpha: 0.1),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: color.withValues(alpha: 0.2),
-                width: 1,
-              ),
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w700,
-              color: color,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: textPrimaryColor,
-              letterSpacing: 0.1,
-            ),
-            softWrap: true,
-          ),
-          if (subtitle != null) ...
-            [const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                fontSize: 12,
-                color: textSecondaryColor,
-              ),
-              softWrap: true,
-            )],
-        ],
-      ),
-    );
-  }
 
   Widget _buildQuickActions(BuildContext context) {
     return Column(
@@ -1460,6 +1309,242 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
     } else {
       return DateFormat.MMMd().format(dateTime);
     }
+  }
+
+  // Enhanced Welcome Card matching the new design
+  Widget _buildEnhancedWelcomeCard(AgentTaskStats stats) {
+    final hour = DateTime.now().hour;
+    String greeting;
+    
+    if (hour < 12) {
+      greeting = 'Good Morning';
+    } else if (hour < 17) {
+      greeting = 'Good Afternoon';
+    } else {
+      greeting = 'Good Evening';
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF667EEA).withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$greeting, ${widget.user.fullName}',
+            style: GoogleFonts.poppins(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "Here's a summary of your activities.",
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              fontWeight: FontWeight.w300,
+              color: Colors.white.withValues(alpha: 0.9),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(
+                      stats.todayCompleted.toString(),
+                      style: GoogleFonts.poppins(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      "Today's Tasks",
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.8),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(
+                      stats.activeTasks.toString(),
+                      style: GoogleFonts.poppins(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      "Active Tasks",
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.8),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Enhanced Performance Stats with horizontal layout
+  Widget _buildEnhancedPerformanceStats(AgentTaskStats taskStats, AgentEarningsStats earningsStats) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Performance Overview',
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF374151),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _buildEnhancedStatCard(
+                    icon: Icons.check_circle_outline,
+                    iconColor: const Color(0xFF10B981),
+                    iconBgColor: const Color(0xFFDCFCE7),
+                    value: taskStats.completedTasks.toString(),
+                    label: 'Completed',
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildEnhancedStatCard(
+                    icon: Icons.star_outline,
+                    iconColor: const Color(0xFFF59E0B),
+                    iconBgColor: const Color(0xFFFEF3C7),
+                    value: taskStats.totalPoints.toString(),
+                    label: 'Points Earned',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildEnhancedStatCard(
+                    icon: Icons.schedule_outlined,
+                    iconColor: const Color(0xFFF97316),
+                    iconBgColor: const Color(0xFFFFEDD5),
+                    value: earningsStats.pendingPayment.toString(),
+                    label: 'Pending',
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildEnhancedStatCard(
+                    icon: Icons.trending_up_outlined,
+                    iconColor: const Color(0xFF3B82F6),
+                    iconBgColor: const Color(0xFFDBEAFE),
+                    value: earningsStats.monthlyEarnings.toString(),
+                    label: 'This Month',
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEnhancedStatCard({
+    required IconData icon,
+    required Color iconColor,
+    required Color iconBgColor,
+    required String value,
+    required String label,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: iconBgColor,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: iconColor,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: GoogleFonts.poppins(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1F2937),
+                  ),
+                ),
+                Text(
+                  label,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: const Color(0xFF6B7280),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
