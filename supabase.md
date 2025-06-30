@@ -291,6 +291,28 @@ Task templates for creating standardized tasks.
 - Users can only view/manage their own sessions
 - Automatic cleanup of inactive sessions after 30 days
 
+#### 14. `app_versions` Table
+**Added: 2025-06-30** - App version management for mandatory updates.
+
+**Columns:**
+- `id` (UUID, Primary Key, DEFAULT: gen_random_uuid())
+- `version_code` (INTEGER, NOT NULL) - Numeric version for comparison
+- `version_name` (TEXT, NOT NULL) - User-friendly version string
+- `minimum_version_code` (INTEGER, NOT NULL) - Minimum required version
+- `download_url` (TEXT, NOT NULL) - URL to download APK/IPA file
+- `file_size_mb` (FLOAT) - File size in megabytes
+- `release_notes` (TEXT) - What's new in this version
+- `platform` (TEXT, NOT NULL) - 'android' or 'ios'
+- `is_active` (BOOLEAN, DEFAULT: true) - Enable/disable this version
+- `created_at` (TIMESTAMP WITH TIME ZONE, DEFAULT: now())
+
+**Indexes:**
+- `idx_app_versions_platform_active` ON (platform, is_active)
+
+**RLS Policies:**
+- All authenticated users can read app versions
+- Only admins can manage app versions
+
 #### 13. `password_reset_logs` Table
 **Added: 2025-06-28** - Audit log for password reset operations performed by managers.
 
@@ -512,6 +534,36 @@ Task templates for creating standardized tasks.
    - Proper handling of nullable task_assignment_id
    - Group membership filtering for manager access control
 
+6. **Implemented mandatory app update system**
+   ```sql
+   -- Create app_versions table for update management
+   CREATE TABLE app_versions (
+     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+     version_code INTEGER NOT NULL,
+     version_name TEXT NOT NULL,
+     minimum_version_code INTEGER NOT NULL,
+     download_url TEXT NOT NULL,
+     file_size_mb FLOAT,
+     release_notes TEXT,
+     platform TEXT NOT NULL CHECK (platform IN ('android', 'ios')),
+     is_active BOOLEAN DEFAULT true,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+   );
+   ```
+
+7. **Added Android FileProvider configuration**
+   - Secure APK file sharing using FileProvider
+   - External storage paths for update files
+   - Platform channel for native installation
+   - Proper Android permissions for app installation
+
+8. **Enhanced update workflow**
+   - Version checking on app start and resume
+   - Download progress tracking with cancellation support
+   - Multiple installation fallback methods
+   - Automatic cleanup of old APK files
+   - User-friendly error messages and retry mechanisms
+
 ## Key Features
 
 ### 1. Geofencing
@@ -577,6 +629,18 @@ Task templates for creating standardized tasks.
 - **Group-Based Access**: Managers only see standalone evidence from their group agents
 - **Evidence Review Screen Updates**: Support for both task-based and standalone evidence
 - **Database Schema**: `task_assignment_id` made nullable in evidence table
+
+### 10. Mandatory App Update System (Added: 2025-06-30)
+- **Version Management**: Database-driven version control with mandatory updates
+- **Download & Install**: Automatic APK download and installation for Android
+- **Progress Tracking**: Real-time download progress with user feedback
+- **Platform Channel**: Native Android installation using FileProvider
+- **External Storage**: APK files stored in accessible external storage
+- **Update Checks**: Automatic checks on app start and resume from background
+- **Beautiful UI**: Modern update dialog with version info and release notes
+- **Error Handling**: Multiple fallback methods and graceful error recovery
+- **APK Cleanup**: Automatic cleanup of old update files to save storage
+- **iOS Support**: App Store redirection for iOS updates
 
 ## API Integration
 
