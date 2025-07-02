@@ -863,6 +863,16 @@ Task templates for creating standardized tasks.
 - **Status Management**: Complete workflow from route assignment to completion
 - **Auto-checkout**: Automatic checkout when agents leave geofenced areas or receive new assignments
 
+**Recent Improvements (2025-07-02):**
+- Simplified agent UI with clear check-in/out flow (eliminated duplicate buttons)
+- Fixed evidence counting display (removed status filtering)
+- Automatic route completion when all places are visited
+- Manager dashboard fixes: proper place count display and assigned agents list
+- Route editing functionality: add places to existing routes
+- Calendar integration with existing RPC function
+- Bypassed draft status in route creation for immediate activation
+- Enhanced route assignment dialog with "already assigned" visibility
+
 ## API Integration
 
 ### Supabase Client Configuration
