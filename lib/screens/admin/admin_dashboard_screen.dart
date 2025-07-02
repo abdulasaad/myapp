@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../utils/constants.dart';
 import '../tasks/template_categories_screen.dart';
-import 'simple_evidence_review_screen.dart';
+import 'evidence_list_screen.dart';
 import '../tasks/standalone_tasks_screen.dart';
 import 'user_management_screen.dart';
 import '../reporting/location_history_screen.dart';
@@ -683,7 +683,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => const SimpleEvidenceReviewScreen(),
+                        builder: (context) => const EvidenceListScreen(),
                       ),
                     );
                   },

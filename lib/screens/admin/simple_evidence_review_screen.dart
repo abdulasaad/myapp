@@ -16,12 +16,11 @@ class _SimpleEvidenceReviewScreenState extends State<SimpleEvidenceReviewScreen>
   late Future<List<EvidenceItem>> _evidenceFuture;
   final PageController _pageController = PageController();
   int _currentIndex = 0;
-  bool _isProcessing = false;
 
   @override
   void initState() {
     super.initState();
-    _evidenceFuture = _loadPendingEvidence();
+    _evidenceFuture = _loadEvidence();
   }
 
   @override
@@ -30,7 +29,7 @@ class _SimpleEvidenceReviewScreenState extends State<SimpleEvidenceReviewScreen>
     super.dispose();
   }
 
-  Future<List<EvidenceItem>> _loadPendingEvidence() async {
+  Future<List<EvidenceItem>> _loadEvidence() async {
     // Get current user to check role and group access
     final currentUserId = supabase.auth.currentUser?.id;
     if (currentUserId == null) throw Exception('No authenticated user');
@@ -44,7 +43,7 @@ class _SimpleEvidenceReviewScreenState extends State<SimpleEvidenceReviewScreen>
     
     final isAdmin = userProfile['role'] == 'admin';
     
-    // Get pending evidence with task and agent information (using LEFT JOIN for standalone evidence)
+    // Get all evidence with task and agent information (using LEFT JOIN for standalone evidence)
     var query = supabase
         .from('evidence')
         .select('''
@@ -68,8 +67,7 @@ class _SimpleEvidenceReviewScreenState extends State<SimpleEvidenceReviewScreen>
             full_name,
             user_groups!inner(group_id)
           )
-        ''')
-        .eq('status', 'pending');
+        ''');
     
     // If manager, filter by group membership
     if (!isAdmin) {
@@ -178,111 +176,6 @@ class _SimpleEvidenceReviewScreenState extends State<SimpleEvidenceReviewScreen>
     return evidenceItems;
   }
 
-  Future<void> _processEvidence(EvidenceItem evidence, bool approve, {String? rejectionReason}) async {
-    if (_isProcessing) return;
-    
-    setState(() => _isProcessing = true);
-    
-    try {
-      await supabase.from('evidence').update({
-        'status': approve ? 'approved' : 'rejected',
-        'reviewed_at': DateTime.now().toIso8601String(),
-        'reviewed_by': supabase.auth.currentUser?.id,
-        'rejection_reason': rejectionReason,
-      }).eq('id', evidence.id);
-
-      if (mounted) {
-        // Show success feedback
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(approve ? 'Evidence approved!' : 'Evidence rejected'),
-            backgroundColor: approve ? Colors.green : Colors.red,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-
-        // Move to next evidence or close if this was the last
-        final evidenceList = await _evidenceFuture;
-        final filteredList = evidenceList.where((e) => e.id != evidence.id).toList();
-        
-        if (filteredList.isEmpty) {
-          // No more evidence, go back
-          if (mounted) {
-            Navigator.of(context).pop();
-          }
-        } else {
-          // Update the future with filtered list
-          setState(() {
-            _evidenceFuture = Future.value(filteredList);
-            if (_currentIndex >= filteredList.length) {
-              _currentIndex = filteredList.length - 1;
-            }
-          });
-          
-          // Animate to next item or stay if it was the last
-          if (_currentIndex < filteredList.length) {
-            _pageController.animateToPage(
-              _currentIndex,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-            );
-          }
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        context.showSnackBar('Error processing evidence: $e', isError: true);
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-      }
-    }
-  }
-
-  void _showRejectDialog(EvidenceItem evidence) {
-    final reasonController = TextEditingController();
-    
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Reject Evidence'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Why are you rejecting this evidence?'),
-            const SizedBox(height: 12),
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(
-                hintText: 'Enter rejection reason...',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-              autofocus: true,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              if (reasonController.text.trim().isNotEmpty) {
-                _processEvidence(evidence, false, rejectionReason: reasonController.text.trim());
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Reject'),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -291,7 +184,7 @@ class _SimpleEvidenceReviewScreenState extends State<SimpleEvidenceReviewScreen>
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-        title: const Text('Review Evidence'),
+        title: const Text('View Evidence'),
         elevation: 0,
       ),
       body: FutureBuilder<List<EvidenceItem>>(
@@ -318,7 +211,7 @@ class _SimpleEvidenceReviewScreenState extends State<SimpleEvidenceReviewScreen>
                   ElevatedButton(
                     onPressed: () {
                       setState(() {
-                        _evidenceFuture = _loadPendingEvidence();
+                        _evidenceFuture = _loadEvidence();
                       });
                     },
                     child: const Text('Retry'),
@@ -357,7 +250,7 @@ class _SimpleEvidenceReviewScreenState extends State<SimpleEvidenceReviewScreen>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'No pending evidence to review',
+                    'No evidence found',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: Colors.white70,
                     ),
@@ -407,35 +300,7 @@ class _SimpleEvidenceReviewScreenState extends State<SimpleEvidenceReviewScreen>
                 ),
               ),
               
-              // Bottom action buttons
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.bottomCenter,
-                      end: Alignment.topCenter,
-                      colors: [
-                        Colors.black.withValues(alpha: 0.8),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                  child: evidenceList.isNotEmpty ? _buildActionButtons(evidenceList[_currentIndex]) : null,
-                ),
-              ),
               
-              // Processing overlay
-              if (_isProcessing)
-                Container(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  child: const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
-                  ),
-                ),
             ],
           );
         },
@@ -552,7 +417,7 @@ class _SimpleEvidenceReviewScreenState extends State<SimpleEvidenceReviewScreen>
 
   Widget _buildEvidenceCard(EvidenceItem evidence) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 80, 16, 120),
+      margin: const EdgeInsets.fromLTRB(16, 80, 16, 20),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: evidence.isImage 
@@ -749,48 +614,6 @@ class _SimpleEvidenceReviewScreenState extends State<SimpleEvidenceReviewScreen>
     );
   }
 
-  Widget _buildActionButtons(EvidenceItem evidence) {
-    return Row(
-      children: [
-        // Reject button
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: _isProcessing ? null : () => _showRejectDialog(evidence),
-            icon: const Icon(Icons.close),
-            label: const Text('Reject'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ),
-        
-        const SizedBox(width: 16),
-        
-        // Approve button
-        Expanded(
-          flex: 2,
-          child: ElevatedButton.icon(
-            onPressed: _isProcessing ? null : () => _processEvidence(evidence, true),
-            icon: const Icon(Icons.check),
-            label: const Text('Approve'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 
   String _formatFileSize(int bytes) {
     if (bytes < 1024) return '$bytes B';

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../utils/constants.dart';
 import 'evidence_detail_screen.dart';
+import '../../widgets/modern_notification.dart';
 
 class EvidenceListScreen extends StatefulWidget {
   const EvidenceListScreen({super.key});
@@ -14,16 +15,40 @@ class EvidenceListScreen extends StatefulWidget {
 
 class _EvidenceListScreenState extends State<EvidenceListScreen> {
   late Future<List<EvidenceListItem>> _evidenceFuture;
+  String? _userRole;
   
   @override
   void initState() {
     super.initState();
     _evidenceFuture = _loadEvidence();
+    _loadUserRole();
+  }
+
+  Future<void> _loadUserRole() async {
+    final role = await _getUserRole();
+    setState(() {
+      _userRole = role;
+    });
   }
 
   Future<List<EvidenceListItem>> _loadEvidence() async {
     try {
       debugPrint('Loading evidence - including both task and route evidence...');
+      
+      // Get current user's role
+      final currentUserId = supabase.auth.currentUser?.id;
+      if (currentUserId == null) {
+        throw Exception('User not authenticated');
+      }
+      
+      final userResponse = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', currentUserId)
+          .single();
+      
+      final userRole = userResponse['role'] as String;
+      debugPrint('Current user role: $userRole');
       
       // Get all evidence first, then separately fetch related data
       dynamic baseQuery = supabase
@@ -43,7 +68,42 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
             uploader_id
           ''');
 
-      // No filtering - show all evidence, newest first
+      // Apply filtering based on role
+      if (userRole == 'manager') {
+        // Get all groups where current user is a member (not just manager)
+        final userGroupsResponse = await supabase
+            .from('user_groups')
+            .select('group_id')
+            .eq('user_id', currentUserId);
+        
+        final groupIds = (userGroupsResponse as List).map((g) => g['group_id']).toList();
+        debugPrint('Manager is member of groups: $groupIds');
+        
+        if (groupIds.isNotEmpty) {
+          // Get all user IDs from those groups (including agents and other managers)
+          final groupMembersResponse = await supabase
+              .from('user_groups')
+              .select('user_id')
+              .inFilter('group_id', groupIds);
+          
+          final memberIds = (groupMembersResponse as List).map((m) => m['user_id']).toSet().toList();
+          debugPrint('All members in manager groups: $memberIds');
+          
+          if (memberIds.isNotEmpty) {
+            // Filter evidence by uploader_id being any member of the same groups
+            baseQuery = baseQuery.inFilter('uploader_id', memberIds);
+          } else {
+            // No members in groups, return empty list
+            return [];
+          }
+        } else {
+          // Manager is not in any groups, return empty list
+          return [];
+        }
+      }
+      // If user is admin or any other role, show all evidence (no filtering)
+      // If admin, no filtering needed - they see all evidence
+
       baseQuery = baseQuery.order('created_at', ascending: false);
 
       final response = await baseQuery;
@@ -209,6 +269,23 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
     });
   }
 
+  Future<String> _getUserRole() async {
+    final currentUserId = supabase.auth.currentUser?.id;
+    if (currentUserId == null) return 'agent';
+    
+    try {
+      final response = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', currentUserId)
+          .single();
+      
+      return response['role'] as String? ?? 'agent';
+    } catch (e) {
+      return 'agent';
+    }
+  }
+
 
 
   @override
@@ -258,34 +335,81 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
                 final evidenceList = snapshot.data ?? [];
                 
                 if (evidenceList.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.inbox, size: 64, color: Colors.grey[400]),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No evidence found',
-                          style: Theme.of(context).textTheme.titleLarge,
+                  return FutureBuilder<String>(
+                    future: _getUserRole(),
+                    builder: (context, roleSnapshot) {
+                      final role = roleSnapshot.data;
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.inbox, size: 64, color: Colors.grey[400]),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No evidence found',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              role == 'manager' 
+                                  ? 'No evidence from members in your groups'
+                                  : 'No evidence uploaded yet',
+                              style: TextStyle(color: Colors.grey[600]),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'No evidence uploaded yet',
-                          style: TextStyle(color: Colors.grey[600]),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   );
                 }
 
                 return RefreshIndicator(
                   onRefresh: () async => _refreshEvidence(),
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: evidenceList.length,
-                    itemBuilder: (context, index) {
-                      final evidence = evidenceList[index];
-                      return _buildEvidenceCard(evidence);
+                  child: FutureBuilder<String>(
+                    future: _getUserRole(),
+                    builder: (context, roleSnapshot) {
+                      final role = roleSnapshot.data;
+                      return Column(
+                        children: [
+                          if (role == 'manager') ...[
+                            Container(
+                              margin: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.blue[50],
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.blue[200]!),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(Icons.info_outline, color: Colors.blue[700], size: 20),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Showing evidence from all members in your groups',
+                                      style: TextStyle(
+                                        color: Colors.blue[700],
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          Expanded(
+                            child: ListView.builder(
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                              itemCount: evidenceList.length,
+                              itemBuilder: (context, index) {
+                                final evidence = evidenceList[index];
+                                return _buildEvidenceCard(evidence);
+                              },
+                            ),
+                          ),
+                        ],
+                      );
                     },
                   ),
                 );
@@ -295,6 +419,98 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
   }
 
 
+
+  Future<void> _showDeleteConfirmation(EvidenceListItem evidence) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Evidence'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Are you sure you want to delete this evidence?'),
+            const SizedBox(height: 16),
+            Text(
+              'Title: ${evidence.title}',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            Text('Agent: ${evidence.agentName}'),
+            Text('Date: ${DateFormat.yMMMd().format(evidence.createdAt)}'),
+            const SizedBox(height: 16),
+            const Text(
+              'This action cannot be undone.',
+              style: TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await _deleteEvidence(evidence);
+    }
+  }
+
+  Future<void> _deleteEvidence(EvidenceListItem evidence) async {
+    try {
+      // First delete the file from storage if it exists
+      if (evidence.fileUrl.isNotEmpty) {
+        try {
+          // Extract the file path from the URL
+          final uri = Uri.parse(evidence.fileUrl);
+          final pathSegments = uri.pathSegments;
+          final bucketIndex = pathSegments.indexOf('task-evidence');
+          if (bucketIndex != -1 && bucketIndex < pathSegments.length - 1) {
+            final filePath = pathSegments.sublist(bucketIndex + 1).join('/');
+            await supabase.storage.from('task-evidence').remove([filePath]);
+          }
+        } catch (e) {
+          debugPrint('Error deleting file from storage: $e');
+          // Continue with database deletion even if file deletion fails
+        }
+      }
+
+      // Delete the evidence record from database
+      await supabase
+          .from('evidence')
+          .delete()
+          .eq('id', evidence.id);
+
+      if (mounted) {
+        // Show success notification
+        ModernNotification.success(
+          context,
+          message: 'Evidence deleted successfully',
+        );
+        
+        // Refresh the list
+        _refreshEvidence();
+      }
+    } catch (e) {
+      debugPrint('Error deleting evidence: $e');
+      if (mounted) {
+        ModernNotification.error(
+          context,
+          message: 'Failed to delete evidence: ${e.toString()}',
+        );
+      }
+    }
+  }
 
   Widget _buildEvidenceCard(EvidenceListItem evidence) {
     return Card(
@@ -425,11 +641,27 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
                 ),
               ),
               
-              // Arrow indicator
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-                color: Colors.grey[400],
+              // Action buttons
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Delete button for admins
+                  if (_userRole == 'admin')
+                    IconButton(
+                      onPressed: () => _showDeleteConfirmation(evidence),
+                      icon: const Icon(Icons.delete, size: 20),
+                      color: Colors.red[600],
+                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                      padding: const EdgeInsets.all(8),
+                      tooltip: 'Delete evidence',
+                    ),
+                  // Arrow indicator
+                  Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: Colors.grey[400],
+                  ),
+                ],
               ),
             ],
           ),
