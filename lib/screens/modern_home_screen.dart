@@ -13,6 +13,7 @@ import '../services/connectivity_service.dart';
 import '../services/update_service.dart';
 import '../widgets/offline_widget.dart';
 import '../widgets/standalone_upload_dialog.dart';
+import 'agent/agent_route_dashboard_screen.dart';
 import '../widgets/update_dialog.dart';
 import 'package:logger/logger.dart';
 import 'campaigns/campaigns_list_screen.dart';
@@ -386,7 +387,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
 
   Widget _buildEnhancedUploadButton() {
     return GestureDetector(
-      onTap: () => _showStandaloneUploadDialog(),
+      onTap: () => _showRoutesDashboard(),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: 64,
@@ -408,10 +409,18 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
           ],
         ),
         child: const Icon(
-          Icons.add_rounded,
+          Icons.route_rounded,
           color: Colors.white,
-          size: 32,
+          size: 28,
         ),
+      ),
+    );
+  }
+
+  Future<void> _showRoutesDashboard() async {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const AgentRouteDashboardScreen(),
       ),
     );
   }

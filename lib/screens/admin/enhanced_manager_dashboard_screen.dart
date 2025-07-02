@@ -10,6 +10,9 @@ import 'pending_assignments_screen.dart';
 import '../reporting/location_history_screen.dart';
 import '../../services/group_service.dart';
 import '../manager/team_members_screen.dart';
+import '../manager/route_management_screen.dart';
+import '../manager/place_management_screen.dart';
+import '../manager/route_visit_analytics_screen.dart';
 
 class EnhancedManagerDashboardScreen extends StatefulWidget {
   const EnhancedManagerDashboardScreen({super.key});
@@ -655,6 +658,48 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
             ],
           ),
         ),
+        const SizedBox(height: 12),
+        IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildOverviewCard(
+                  title: 'Route Management',
+                  value: '🗺️',
+                  subtitle: 'Create & manage routes',
+                  icon: Icons.route,
+                  color: Colors.purple,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const RouteManagementScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildOverviewCard(
+                  title: 'Place Management',
+                  value: '📍',
+                  subtitle: 'Approve agent suggestions',
+                  icon: Icons.location_on,
+                  color: Colors.green,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const PlaceManagementScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(child: Container()), // Empty space
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -841,6 +886,22 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
             const SizedBox(width: 12),
             Expanded(
               child: _buildActionCard(
+                title: 'Visit Analytics',
+                subtitle: 'Route visit reports',
+                icon: Icons.analytics,
+                color: Colors.teal,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const RouteVisitAnalyticsScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildActionCard(
                 title: 'Location History',
                 subtitle: 'Track agent locations',
                 icon: Icons.location_history,
@@ -855,7 +916,21 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
               ),
             ),
             const SizedBox(width: 12),
-            Expanded(child: Container()), // Empty space
+            Expanded(
+              child: _buildActionCard(
+                title: 'Routes & Places',
+                subtitle: 'Create routes',
+                icon: Icons.route,
+                color: Colors.purple,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const RouteManagementScreen(),
+                    ),
+                  );
+                },
+              ),
+            ),
             ],
           ),
         ),

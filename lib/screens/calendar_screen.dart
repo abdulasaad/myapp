@@ -6,9 +6,11 @@ import 'package:intl/intl.dart';
 import '../models/calendar_event.dart';
 import '../models/campaign.dart';
 import '../models/task.dart';
+import '../models/place_visit.dart';
 import '../utils/constants.dart';
 import './campaigns/campaign_detail_screen.dart';
 import './tasks/standalone_task_detail_screen.dart';
+import './place_visit_detail_screen.dart';
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -95,6 +97,24 @@ class _CalendarScreenState extends State<CalendarScreen> {
         Navigator.of(context).push(MaterialPageRoute(
           builder: (context) => StandaloneTaskDetailScreen(task: task),
         ));
+      } else if (event.type == 'route_visit') {
+        final response = await supabase
+            .from('place_visits')
+            .select('''
+              *,
+              places!place_visits_place_id_fkey(*),
+              route_assignments!place_visits_route_assignment_id_fkey(
+                *,
+                routes!route_assignments_route_id_fkey(*)
+              )
+            ''')
+            .eq('id', event.id)
+            .single();
+        if (!mounted) return;
+        final placeVisit = PlaceVisit.fromJson(response);
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => PlaceVisitDetailScreen(placeVisit: placeVisit),
+        ));
       }
     } catch (e) {
       if (mounted) {
@@ -164,8 +184,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: ListTile(
             leading: Icon(
-              eventType == 'campaign' ? Icons.campaign : Icons.assignment,
-              color: eventType == 'campaign' ? Colors.blueAccent : Colors.orangeAccent,
+              _getEventIcon(eventType),
+              color: _getEventColor(eventType),
             ),
             title: Text(event.title),
             subtitle: Text(
@@ -176,5 +196,31 @@ class _CalendarScreenState extends State<CalendarScreen> {
         );
       },
     );
+  }
+
+  IconData _getEventIcon(String eventType) {
+    switch (eventType) {
+      case 'campaign':
+        return Icons.campaign;
+      case 'task':
+        return Icons.assignment;
+      case 'route_visit':
+        return Icons.location_on;
+      default:
+        return Icons.event;
+    }
+  }
+
+  Color _getEventColor(String eventType) {
+    switch (eventType) {
+      case 'campaign':
+        return Colors.blueAccent;
+      case 'task':
+        return Colors.orangeAccent;
+      case 'route_visit':
+        return Colors.greenAccent;
+      default:
+        return Colors.grey;
+    }
   }
 }

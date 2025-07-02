@@ -63,7 +63,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
         
         if (!installed) {
           setState(() {
-            _statusMessage = 'APK downloaded. Please open your file manager and install the APK from Downloads/updates folder.';
+            _statusMessage = 'Installation started. If you see a security scan dialog, tap "Install without scanning" to proceed quickly.';
             _isDownloading = false;
           });
         }

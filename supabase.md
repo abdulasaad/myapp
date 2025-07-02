@@ -133,17 +133,108 @@ Real-time agent tracking.
 - `updated_at` (TIMESTAMP WITH TIME ZONE, DEFAULT: now())
 
 #### 9. `geofences` Table
-Geofence areas for campaigns and tasks.
+Geofence areas for campaigns, tasks, and places.
 
 **Columns:**
 - `id` (UUID, Primary Key)
 - `campaign_id` (UUID) - References campaigns(id)
 - `task_id` (UUID) - References tasks(id)
+- `place_id` (UUID) - References places(id) - **Added: 2025-06-30**
 - `name` (TEXT)
 - `area` (GEOGRAPHY/GEOMETRY - PostGIS type)
 - `area_text` (TEXT) - Text representation of area
 - `color` (TEXT)
 - `created_at` (TIMESTAMP WITH TIME ZONE)
+
+#### 15. `places` Table
+**Added: 2025-06-30** - Location definitions for route visit system with approval workflow.
+
+**Columns:**
+- `id` (UUID, Primary Key)
+- `name` (TEXT, NOT NULL)
+- `description` (TEXT)
+- `address` (TEXT)
+- `latitude` (DOUBLE PRECISION, NOT NULL)
+- `longitude` (DOUBLE PRECISION, NOT NULL)
+- `created_by` (UUID, NOT NULL) - References profiles(id)
+- `created_at` (TIMESTAMPTZ, DEFAULT: now())
+- `updated_at` (TIMESTAMPTZ, DEFAULT: now())
+- `status` (TEXT, DEFAULT: 'active') - Values: 'active', 'inactive', 'pending_approval'
+- `approval_status` (TEXT, DEFAULT: 'approved') - Values: 'pending', 'approved', 'rejected'
+- `approved_by` (UUID) - References profiles(id)
+- `approved_at` (TIMESTAMPTZ)
+- `rejection_reason` (TEXT)
+- `metadata` (JSONB, DEFAULT: '{}')
+
+#### 16. `routes` Table
+**Added: 2025-06-30** - Route definitions containing multiple places for agent visits.
+
+**Columns:**
+- `id` (UUID, Primary Key)
+- `name` (TEXT, NOT NULL)
+- `description` (TEXT)
+- `created_by` (UUID, NOT NULL) - References profiles(id)
+- `assigned_manager_id` (UUID) - References profiles(id)
+- `created_at` (TIMESTAMPTZ, DEFAULT: now())
+- `updated_at` (TIMESTAMPTZ, DEFAULT: now())
+- `start_date` (DATE)
+- `end_date` (DATE)
+- `status` (TEXT, DEFAULT: 'active') - Values: 'draft', 'active', 'completed', 'archived'
+- `estimated_duration_hours` (INTEGER)
+- `metadata` (JSONB, DEFAULT: '{}')
+
+#### 17. `route_places` Table
+**Added: 2025-06-30** - Junction table linking routes to places with visit order and instructions.
+
+**Columns:**
+- `id` (UUID, Primary Key)
+- `route_id` (UUID, NOT NULL) - References routes(id) ON DELETE CASCADE
+- `place_id` (UUID, NOT NULL) - References places(id) ON DELETE CASCADE
+- `visit_order` (INTEGER, NOT NULL)
+- `estimated_duration_minutes` (INTEGER, DEFAULT: 30)
+- `required_evidence_count` (INTEGER, DEFAULT: 1)
+- `instructions` (TEXT)
+- `created_at` (TIMESTAMPTZ, DEFAULT: now())
+
+**Unique Constraints:**
+- `UNIQUE(route_id, place_id)` - No duplicate places in route
+- `UNIQUE(route_id, visit_order)` - Proper ordering within route
+
+#### 18. `route_assignments` Table
+**Added: 2025-06-30** - Assigns routes to agents with tracking of execution status.
+
+**Columns:**
+- `id` (UUID, Primary Key)
+- `route_id` (UUID, NOT NULL) - References routes(id) ON DELETE CASCADE
+- `agent_id` (UUID, NOT NULL) - References profiles(id) ON DELETE CASCADE
+- `assigned_by` (UUID, NOT NULL) - References profiles(id)
+- `assigned_at` (TIMESTAMPTZ, DEFAULT: now())
+- `status` (TEXT, DEFAULT: 'assigned') - Values: 'assigned', 'in_progress', 'completed', 'cancelled'
+- `started_at` (TIMESTAMPTZ)
+- `completed_at` (TIMESTAMPTZ)
+- `notes` (TEXT)
+
+**Unique Constraint:**
+- `UNIQUE(route_id, agent_id)` - One assignment per agent per route
+
+#### 19. `place_visits` Table
+**Added: 2025-06-30** - Tracks actual agent visits to places with check-in/out times and locations.
+
+**Columns:**
+- `id` (UUID, Primary Key)
+- `route_assignment_id` (UUID, NOT NULL) - References route_assignments(id) ON DELETE CASCADE
+- `place_id` (UUID, NOT NULL) - References places(id)
+- `agent_id` (UUID, NOT NULL) - References profiles(id)
+- `checked_in_at` (TIMESTAMPTZ)
+- `checked_out_at` (TIMESTAMPTZ)
+- `duration_minutes` (INTEGER, GENERATED ALWAYS AS) - Calculated automatically from check-in/out times
+- `check_in_latitude` (DOUBLE PRECISION)
+- `check_in_longitude` (DOUBLE PRECISION)
+- `check_out_latitude` (DOUBLE PRECISION)
+- `check_out_longitude` (DOUBLE PRECISION)
+- `status` (TEXT, DEFAULT: 'pending') - Values: 'pending', 'checked_in', 'completed', 'skipped'
+- `visit_notes` (TEXT)
+- `created_at` (TIMESTAMPTZ, DEFAULT: now())
 
 ## Foreign Key Relationships
 
@@ -564,12 +655,128 @@ Task templates for creating standardized tasks.
    - Automatic cleanup of old APK files
    - User-friendly error messages and retry mechanisms
 
+9. **Implemented comprehensive Route Visit Management System**
+   - Complete route and place management infrastructure
+   - Agent place visit tracking with check-in/check-out
+   - Geofence-enforced visit validation
+   - Manager route creation and assignment workflow
+   - Real-time visit progress monitoring
+
+   **New Tables Created:**
+   ```sql
+   -- Places table for location definitions
+   CREATE TABLE public.places (
+       id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+       name TEXT NOT NULL,
+       description TEXT,
+       address TEXT,
+       latitude DOUBLE PRECISION NOT NULL,
+       longitude DOUBLE PRECISION NOT NULL,
+       created_by UUID REFERENCES public.profiles(id) NOT NULL,
+       created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+       updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+       status TEXT DEFAULT 'active',
+       approval_status TEXT DEFAULT 'approved',
+       approved_by UUID REFERENCES public.profiles(id),
+       approved_at TIMESTAMPTZ,
+       rejection_reason TEXT,
+       metadata JSONB DEFAULT '{}'::jsonb
+   );
+
+   -- Routes table for route definitions
+   CREATE TABLE public.routes (
+       id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+       name TEXT NOT NULL,
+       description TEXT,
+       created_by UUID REFERENCES public.profiles(id) NOT NULL,
+       assigned_manager_id UUID REFERENCES public.profiles(id),
+       created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+       updated_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+       start_date DATE,
+       end_date DATE,
+       status TEXT DEFAULT 'active',
+       estimated_duration_hours INTEGER,
+       metadata JSONB DEFAULT '{}'::jsonb
+   );
+
+   -- Route places junction table
+   CREATE TABLE public.route_places (
+       id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+       route_id UUID REFERENCES public.routes(id) ON DELETE CASCADE NOT NULL,
+       place_id UUID REFERENCES public.places(id) ON DELETE CASCADE NOT NULL,
+       visit_order INTEGER NOT NULL,
+       estimated_duration_minutes INTEGER DEFAULT 30,
+       required_evidence_count INTEGER DEFAULT 1,
+       instructions TEXT,
+       created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+       UNIQUE(route_id, place_id),
+       UNIQUE(route_id, visit_order)
+   );
+
+   -- Route assignments table
+   CREATE TABLE public.route_assignments (
+       id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+       route_id UUID REFERENCES public.routes(id) ON DELETE CASCADE NOT NULL,
+       agent_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+       assigned_by UUID REFERENCES public.profiles(id) NOT NULL,
+       assigned_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+       status TEXT DEFAULT 'assigned',
+       started_at TIMESTAMPTZ,
+       completed_at TIMESTAMPTZ,
+       notes TEXT,
+       UNIQUE(route_id, agent_id)
+   );
+
+   -- Place visits tracking table
+   CREATE TABLE public.place_visits (
+       id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+       route_assignment_id UUID REFERENCES public.route_assignments(id) ON DELETE CASCADE NOT NULL,
+       place_id UUID REFERENCES public.places(id) NOT NULL,
+       agent_id UUID REFERENCES public.profiles(id) NOT NULL,
+       checked_in_at TIMESTAMPTZ,
+       checked_out_at TIMESTAMPTZ,
+       duration_minutes INTEGER GENERATED ALWAYS AS (
+           CASE 
+               WHEN checked_in_at IS NOT NULL AND checked_out_at IS NOT NULL 
+               THEN EXTRACT(EPOCH FROM (checked_out_at - checked_in_at))::INTEGER / 60
+               ELSE NULL 
+           END
+       ) STORED,
+       check_in_latitude DOUBLE PRECISION,
+       check_in_longitude DOUBLE PRECISION,
+       check_out_latitude DOUBLE PRECISION,
+       check_out_longitude DOUBLE PRECISION,
+       status TEXT DEFAULT 'pending',
+       visit_notes TEXT,
+       created_at TIMESTAMPTZ DEFAULT now() NOT NULL
+   );
+
+   -- Extended geofences table for places
+   ALTER TABLE public.geofences 
+   ADD COLUMN place_id UUID REFERENCES public.places(id) ON DELETE CASCADE;
+   ```
+
+   **Spatial Functions Added:**
+   - `check_agent_in_place_geofence()` - Validates agent location within place boundaries
+   - `get_next_place_in_route()` - Returns next unvisited place in route sequence
+   - `get_route_progress()` - Provides route completion statistics
+   - `auto_checkout_on_new_assignment()` - Trigger for automatic checkout management
+
+   **Flutter Models Created:**
+   - `Place` - Location definitions with approval workflow
+   - `Route` - Route container with metadata
+   - `RoutePlace` - Junction model with ordering
+   - `RouteAssignment` - Agent-route assignment tracking
+   - `PlaceVisit` - Visit tracking with check-in/out
+
 ## Key Features
 
 ### 1. Geofencing
 - **Campaign-level**: Location boundaries for entire campaigns
 - **Task-level**: Specific geofence validation for individual tasks
+- **Place-level**: Geofence boundaries for route visit locations **Added: 2025-06-30**
 - **Evidence validation**: Location verification against task geofences
+- **Visit enforcement**: Check-in/check-out only allowed within place geofences **Added: 2025-06-30**
 
 ### 2. Evidence Management
 - **Photo capture** with metadata (location, timestamp)
@@ -642,6 +849,20 @@ Task templates for creating standardized tasks.
 - **APK Cleanup**: Automatic cleanup of old update files to save storage
 - **iOS Support**: App Store redirection for iOS updates
 
+### 11. Route Visit Management System (Added: 2025-06-30)
+- **Route Creation**: Managers can create routes with ordered sequences of places to visit
+- **Place Management**: Location definitions with approval workflow for agent suggestions
+- **Geofence Enforcement**: Check-in/check-out only allowed within place boundaries
+- **Real-time Tracking**: Automatic duration calculation and visit progress monitoring
+- **Agent Workflow**: Sequential place visits with instructions and evidence requirements
+- **Visit History**: Comprehensive tracking of all place visits with timing data
+- **Manager Oversight**: Route assignment, progress monitoring, and visit analytics
+- **Spatial Functions**: Advanced geofencing and route progression logic
+- **Group Integration**: Route assignments respect existing group-based access control
+- **Evidence Collection**: Integration with existing evidence system for place-specific documentation
+- **Status Management**: Complete workflow from route assignment to completion
+- **Auto-checkout**: Automatic checkout when agents leave geofenced areas or receive new assignments
+
 ## API Integration
 
 ### Supabase Client Configuration
@@ -712,4 +933,4 @@ SUPABASE_ANON_KEY=your_anon_key
 
 **Last Updated**: 2025-06-30  
 **Maintained By**: Claude Code Assistant  
-**Version**: 1.3
+**Version**: 1.4 - Route Visit Management System

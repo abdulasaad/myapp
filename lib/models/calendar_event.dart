@@ -5,7 +5,7 @@ class CalendarEvent {
   final String title;
   final DateTime startDate;
   final DateTime endDate;
-  final String type; // 'campaign' or 'task'
+  final String type; // 'campaign', 'task', or 'route_visit'
 
   CalendarEvent({
     required this.id,
@@ -17,11 +17,11 @@ class CalendarEvent {
 
   factory CalendarEvent.fromJson(Map<String, dynamic> json) {
     return CalendarEvent(
-      id: json['event_id'] as String,
-      title: json['event_title'] as String,
-      startDate: DateTime.parse(json['event_start_date'] as String),
-      endDate: DateTime.parse(json['event_end_date'] as String),
-      type: json['event_type'] as String,
+      id: json['id'] as String,
+      title: json['title'] as String,
+      startDate: DateTime.parse(json['start_date'] as String),
+      endDate: DateTime.parse(json['end_date'] as String),
+      type: json['type'] as String,
     );
   }
 
