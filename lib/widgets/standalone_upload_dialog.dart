@@ -9,6 +9,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../utils/constants.dart';
 import '../services/location_service.dart';
+import '../widgets/modern_notification.dart';
 
 class StandaloneUploadDialog extends StatefulWidget {
   const StandaloneUploadDialog({super.key});
@@ -324,7 +325,7 @@ class _StandaloneUploadDialogState extends State<StandaloneUploadDialog> {
         // Check file size (limit to 50MB)
         if (file.size > 50 * 1024 * 1024) {
           if (mounted) {
-            context.showSnackBar('File too large. Maximum size is 50MB.', isError: true);
+            ModernNotification.error(context, message: 'File too large. Maximum size is 50MB.');
           }
           return;
         }
@@ -333,7 +334,7 @@ class _StandaloneUploadDialogState extends State<StandaloneUploadDialog> {
       }
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Error selecting file: $e', isError: true);
+        ModernNotification.error(context, message: 'Error selecting file: $e');
       }
     }
   }
@@ -381,7 +382,7 @@ class _StandaloneUploadDialogState extends State<StandaloneUploadDialog> {
       // Check file size (limit to 50MB)
       if (fileSize > 50 * 1024 * 1024) {
         if (mounted) {
-          context.showSnackBar('File too large. Maximum size is 50MB.', isError: true);
+          ModernNotification.error(context, message: 'File too large. Maximum size is 50MB.');
         }
         return;
       }
@@ -427,7 +428,7 @@ class _StandaloneUploadDialogState extends State<StandaloneUploadDialog> {
         'latitude': currentLocation?.latitude,
         'longitude': currentLocation?.longitude,
         'accuracy': currentLocation?.accuracy,
-        'status': 'pending', // All uploads start as pending for review
+        'status': 'approved', // Evidence is automatically available to managers
       };
 
       await supabase.from('evidence').insert(evidenceData);
@@ -435,12 +436,12 @@ class _StandaloneUploadDialogState extends State<StandaloneUploadDialog> {
       setState(() => _uploadProgress = 1.0);
 
       if (mounted) {
-        context.showSnackBar('Evidence uploaded successfully! Your manager will review it soon.');
+        ModernNotification.success(context, message: 'Evidence uploaded successfully!');
         Navigator.of(context).pop(true); // Return true to indicate successful upload
       }
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Upload failed: $e', isError: true);
+        ModernNotification.error(context, message: 'Upload failed: $e');
       }
     } finally {
       if (mounted) {

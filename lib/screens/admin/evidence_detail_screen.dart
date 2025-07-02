@@ -26,7 +26,6 @@ class EvidenceDetailScreen extends StatefulWidget {
 
 class _EvidenceDetailScreenState extends State<EvidenceDetailScreen> {
   late Future<EvidenceDetail> _evidenceFuture;
-  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -38,128 +37,202 @@ class _EvidenceDetailScreenState extends State<EvidenceDetailScreen> {
     try {
       debugPrint('Loading evidence detail for ID: ${widget.evidenceId}');
       
-      // First, let's try a simpler query to see what we get
-      final simpleTest = await supabase
+      // Get basic evidence data first
+      final evidenceResponse = await supabase
           .from('evidence')
           .select('*')
           .eq('id', widget.evidenceId)
           .single();
       
-      debugPrint('Simple evidence data: $simpleTest');
-      debugPrint('task_assignment_id: ${simpleTest['task_assignment_id']}');
+      debugPrint('Evidence data: $evidenceResponse');
+      debugPrint('task_assignment_id: ${evidenceResponse['task_assignment_id']}');
+      debugPrint('place_visit_id: ${evidenceResponse['place_visit_id']}');
       
-      // Now try the full query with proper syntax
-      final response = await supabase
-          .from('evidence')
-          .select('''
-            *,
-            task_assignments(
-              id,
-              task_id,
-              agent_id,
-              tasks(
-                id,
-                title,
-                description,
-                points,
-                campaign_id,
-                location_name,
-                enforce_geofence,
-                campaigns(name, description)
-              ),
-              profiles:profiles!agent_id(
-                id,
-                full_name,
-                role,
-                status
-              )
-            )
-          ''')
-          .eq('id', widget.evidenceId)
-          .single();
+      // Initialize variables for related data
+      String taskAssignmentId = 'unknown';
+      String taskId = 'unknown';
+      String taskTitle = 'Unknown Task';
+      String? taskDescription;
+      int? taskPoints;
+      String? campaignId;
+      String? campaignName;
+      String? campaignDescription;
+      String agentId = 'unknown';
+      String agentName = 'Unknown Agent';
+      String agentRole = 'agent';
+      String agentStatus = 'active';
       
-      debugPrint('Full evidence response: $response');
-      debugPrint('Task assignments data: ${response['task_assignments']}');
-
-      // Get the related data - handle both array and object responses
-      var taskAssignment = response['task_assignments'];
-      
-      // If task_assignments is an array, get the first element
-      if (taskAssignment is List && taskAssignment.isNotEmpty) {
-        taskAssignment = taskAssignment[0];
-      }
-      
-      if (taskAssignment == null) {
-        debugPrint('WARNING: No task assignment found for evidence ${widget.evidenceId}');
-        // Try to get task assignment separately
+      // Check if this is task-based evidence
+      if (evidenceResponse['task_assignment_id'] != null) {
         try {
-          final taskAssignmentData = await supabase
+          final taskAssignmentResponse = await supabase
               .from('task_assignments')
               .select('''
-                *,
+                id,
+                task_id,
+                agent_id,
                 tasks(
                   id,
                   title,
                   description,
                   points,
                   campaign_id,
+                  location_name,
                   campaigns(name, description)
                 ),
-                profiles:profiles!agent_id(*)
+                profiles:profiles!agent_id(
+                  id,
+                  full_name,
+                  role,
+                  status
+                )
               ''')
-              .eq('id', simpleTest['task_assignment_id'])
+              .eq('id', evidenceResponse['task_assignment_id'])
               .single();
-          taskAssignment = taskAssignmentData;
-          debugPrint('Fetched task assignment separately: $taskAssignment');
+          
+          taskAssignmentId = taskAssignmentResponse['id'];
+          agentId = taskAssignmentResponse['agent_id'];
+          
+          final task = taskAssignmentResponse['tasks'];
+          final agent = taskAssignmentResponse['profiles'];
+          final campaign = task?['campaigns'];
+          
+          if (task != null) {
+            taskId = task['id'];
+            taskTitle = task['title'] ?? 'Unknown Task';
+            taskDescription = task['description'];
+            taskPoints = task['points'];
+            campaignId = task['campaign_id'];
+          }
+          
+          if (campaign != null) {
+            campaignName = campaign['name'];
+            campaignDescription = campaign['description'];
+          }
+          
+          if (agent != null) {
+            agentName = agent['full_name'] ?? 'Unknown Agent';
+            agentRole = agent['role'] ?? 'agent';
+            agentStatus = agent['status'] ?? 'active';
+          }
+          
         } catch (e) {
-          debugPrint('Could not fetch task assignment: $e');
-          throw Exception('No task assignment found for this evidence');
+          debugPrint('Error loading task assignment data: $e');
+        }
+      }
+      // Check if this is route-based evidence
+      else if (evidenceResponse['place_visit_id'] != null) {
+        try {
+          final placeVisitResponse = await supabase
+              .from('place_visits')
+              .select('''
+                id,
+                agent_id,
+                place_id,
+                route_assignment_id,
+                places(name, description),
+                route_assignments(
+                  id,
+                  route_id,
+                  agent_id,
+                  routes(name, description)
+                )
+              ''')
+              .eq('id', evidenceResponse['place_visit_id'])
+              .single();
+          
+          agentId = placeVisitResponse['agent_id'];
+          taskAssignmentId = placeVisitResponse['route_assignment_id'] ?? 'unknown';
+          
+          final place = placeVisitResponse['places'];
+          final routeAssignment = placeVisitResponse['route_assignments'];
+          final route = routeAssignment?['routes'];
+          
+          // Create descriptive task info for route evidence
+          if (place != null) {
+            taskTitle = 'Route Visit: ${place['name']}';
+            taskDescription = place['description'];
+            taskId = placeVisitResponse['place_id'] ?? 'unknown';
+          }
+          
+          if (route != null) {
+            campaignName = 'Route: ${route['name']}';
+            campaignDescription = route['description'];
+            campaignId = routeAssignment?['route_id'];
+          }
+          
+          // Get agent profile
+          final agentResponse = await supabase
+              .from('profiles')
+              .select('id, full_name, role, status')
+              .eq('id', agentId)
+              .maybeSingle();
+          
+          if (agentResponse != null) {
+            agentName = agentResponse['full_name'] ?? 'Unknown Agent';
+            agentRole = agentResponse['role'] ?? 'agent';
+            agentStatus = agentResponse['status'] ?? 'active';
+          }
+          
+        } catch (e) {
+          debugPrint('Error loading place visit data: $e');
+        }
+      }
+      // Handle standalone evidence
+      else {
+        taskTitle = 'Standalone Evidence';
+        campaignName = 'Standalone Upload';
+        
+        // Get uploader info
+        final uploaderResponse = await supabase
+            .from('profiles')
+            .select('id, full_name, role, status')
+            .eq('id', evidenceResponse['uploader_id'])
+            .maybeSingle();
+        
+        if (uploaderResponse != null) {
+          agentId = uploaderResponse['id'];
+          agentName = uploaderResponse['full_name'] ?? 'Unknown Agent';
+          agentRole = uploaderResponse['role'] ?? 'agent';
+          agentStatus = uploaderResponse['status'] ?? 'active';
         }
       }
       
-      final task = taskAssignment['tasks'];
-      final agent = taskAssignment['profiles'];
-      final campaign = task?['campaigns'];
-      
-      debugPrint('Task: $task');
-      debugPrint('Agent: $agent');
-      debugPrint('Campaign: $campaign');
-
       return EvidenceDetail(
-        id: response['id'],
-        title: response['title'] ?? 'Evidence',
-        description: response['description'],
-        fileUrl: response['file_url'],
-        mimeType: response['mime_type'],
-        fileSize: response['file_size'],
-        status: response['status'] ?? 'pending',
-        createdAt: DateTime.parse(response['created_at']),
-        capturedAt: response['captured_at'] != null 
-            ? DateTime.parse(response['captured_at']) 
-            : DateTime.parse(response['created_at']),
-        latitude: response['latitude']?.toDouble(),
-        longitude: response['longitude']?.toDouble(),
-        accuracy: response['accuracy']?.toDouble(),
-        rejectionReason: response['rejection_reason'],
-        reviewedAt: response['reviewed_at'] != null 
-            ? DateTime.parse(response['reviewed_at']) 
+        id: evidenceResponse['id'],
+        title: evidenceResponse['title'] ?? 'Evidence',
+        description: evidenceResponse['description'],
+        fileUrl: evidenceResponse['file_url'],
+        mimeType: evidenceResponse['mime_type'],
+        fileSize: evidenceResponse['file_size'],
+        status: evidenceResponse['status'] ?? 'pending',
+        createdAt: DateTime.parse(evidenceResponse['created_at']),
+        capturedAt: evidenceResponse['captured_at'] != null 
+            ? DateTime.parse(evidenceResponse['captured_at']) 
+            : DateTime.parse(evidenceResponse['created_at']),
+        latitude: evidenceResponse['latitude']?.toDouble(),
+        longitude: evidenceResponse['longitude']?.toDouble(),
+        accuracy: evidenceResponse['accuracy']?.toDouble(),
+        rejectionReason: evidenceResponse['rejection_reason'],
+        reviewedAt: evidenceResponse['reviewed_at'] != null 
+            ? DateTime.parse(evidenceResponse['reviewed_at']) 
             : null,
-        reviewedBy: response['reviewed_by'],
-        taskAssignmentId: taskAssignment['id'],
-        taskId: task?['id'] ?? 'unknown',
-        taskTitle: task?['title'] ?? 'Unknown Task',
-        taskDescription: task?['description'],
-        taskPoints: task?['points'] ?? 0,
-        taskGeofenceCenterLat: null, // task?['geofence_center_lat']?.toDouble(),
-        taskGeofenceCenterLng: null, // task?['geofence_center_lng']?.toDouble(),
-        taskGeofenceRadius: null, // task?['geofence_radius']?.toDouble(),
-        campaignId: task?['campaign_id'],
-        campaignName: campaign?['name'],
-        campaignDescription: campaign?['description'],
-        agentId: agent?['id'] ?? 'unknown',
-        agentName: agent?['full_name'] ?? 'Unknown Agent',
-        agentRole: agent?['role'] ?? 'agent',
-        agentStatus: agent?['status'] ?? 'unknown',
+        reviewedBy: evidenceResponse['reviewed_by'],
+        taskAssignmentId: taskAssignmentId,
+        taskId: taskId,
+        taskTitle: taskTitle,
+        taskDescription: taskDescription,
+        taskPoints: taskPoints ?? 0,
+        taskGeofenceCenterLat: null,
+        taskGeofenceCenterLng: null,
+        taskGeofenceRadius: null,
+        campaignId: campaignId,
+        campaignName: campaignName,
+        campaignDescription: campaignDescription,
+        agentId: agentId,
+        agentName: agentName,
+        agentRole: agentRole,
+        agentStatus: agentStatus,
       );
     } catch (e) {
       debugPrint('Error loading evidence detail: $e');
@@ -167,43 +240,6 @@ class _EvidenceDetailScreenState extends State<EvidenceDetailScreen> {
     }
   }
 
-  Future<void> _processEvidence(bool approve, {String? rejectionReason}) async {
-    if (_isProcessing) return;
-    
-    setState(() => _isProcessing = true);
-    
-    try {
-      await supabase.from('evidence').update({
-        'status': approve ? 'approved' : 'rejected',
-        'reviewed_at': DateTime.now().toIso8601String(),
-        'reviewed_by': supabase.auth.currentUser?.id,
-        'rejection_reason': rejectionReason,
-      }).eq('id', widget.evidenceId);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(approve ? 'Evidence approved!' : 'Evidence rejected'),
-            backgroundColor: approve ? Colors.green : Colors.red,
-            duration: const Duration(seconds: 2),
-          ),
-        );
-        
-        // Refresh the evidence detail
-        setState(() {
-          _evidenceFuture = _loadEvidenceDetail();
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        context.showSnackBar('Error processing evidence: $e', isError: true);
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isProcessing = false);
-      }
-    }
-  }
 
   Future<void> _downloadEvidence(EvidenceDetail evidence) async {
     try {
@@ -353,49 +389,6 @@ class _EvidenceDetailScreenState extends State<EvidenceDetailScreen> {
     }
   }
 
-  void _showRejectDialog(EvidenceDetail evidence) {
-    final reasonController = TextEditingController();
-    
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Reject Evidence'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Why are you rejecting this evidence?'),
-            const SizedBox(height: 12),
-            TextField(
-              controller: reasonController,
-              decoration: const InputDecoration(
-                hintText: 'Enter rejection reason...',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-              autofocus: true,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              if (reasonController.text.trim().isNotEmpty) {
-                _processEvidence(false, rejectionReason: reasonController.text.trim());
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Reject', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -458,25 +451,9 @@ class _EvidenceDetailScreenState extends State<EvidenceDetailScreen> {
                             const SizedBox(height: 24),
                             _buildLocationInfo(evidence),
                           ],
-                          if (evidence.status != 'pending') ...[
-                            const SizedBox(height: 24),
-                            _buildReviewInfo(evidence),
-                          ] else ...[
-                            const SizedBox(height: 24),
-                            _buildPendingActions(evidence),
-                          ],
                         ],
                       ),
                     ),
-                    
-                    // Processing overlay
-                    if (_isProcessing)
-                      Container(
-                        color: Colors.black.withValues(alpha: 0.5),
-                        child: const Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                      ),
                   ],
                 ),
               ),
@@ -986,65 +963,6 @@ class _EvidenceDetailScreenState extends State<EvidenceDetailScreen> {
     );
   }
 
-  Widget _buildPendingActions(EvidenceDetail evidence) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Review Actions',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                // Reject button
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _isProcessing ? null : () => _showRejectDialog(evidence),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text('Reject'),
-                  ),
-                ),
-                
-                const SizedBox(width: 12),
-                
-                // Approve button
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton(
-                    onPressed: _isProcessing ? null : () => _processEvidence(true),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text('Approve'),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   Widget _buildImageWidget(String imageUrl) {
     // Check if it's a local file path or network URL

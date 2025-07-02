@@ -6,6 +6,9 @@ import '../../utils/constants.dart';
 import '../../models/route.dart' as route_model;
 import '../../models/route_place.dart';
 import '../../models/place.dart';
+import '../admin/evidence_detail_screen.dart';
+import '../full_screen_image_viewer.dart';
+import '../../widgets/modern_notification.dart';
 
 class RouteDetailScreen extends StatefulWidget {
   final route_model.Route route;
@@ -46,7 +49,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        context.showSnackBar('Error loading route details: $e', isError: true);
+        ModernNotification.error(context, message: 'Error loading route details', subtitle: e.toString());
       }
     }
   }
@@ -149,7 +152,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
           final evidenceResponse = await supabase
               .from('evidence')
-              .select('id, title, file_url, status, created_at')
+              .select('id, title, file_url, mime_type, status, created_at')
               .eq('place_visit_id', visit['id'])
               .order('created_at', ascending: false);
           
@@ -264,7 +267,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
       if (managerGroups.isEmpty) {
         if (mounted) {
-          context.showSnackBar('No groups found for this manager', isError: true);
+          ModernNotification.error(context, message: 'No groups found for this manager');
         }
         return;
       }
@@ -303,7 +306,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
       if (availablePlaces.isEmpty) {
         if (mounted) {
-          context.showSnackBar('No available places to add to this route', isError: true);
+          ModernNotification.info(context, message: 'No available places to add to this route');
         }
         return;
       }
@@ -315,7 +318,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Error loading available places: $e', isError: true);
+        ModernNotification.error(context, message: 'Error loading available places', subtitle: e.toString());
       }
     }
   }
@@ -369,13 +372,13 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
       });
 
       if (mounted) {
-        context.showSnackBar('Place added to route successfully!');
+        ModernNotification.success(context, message: 'Place added to route successfully!');
         // Reload route details to show the new place
         _loadRouteDetails();
       }
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Error adding place to route: $e', isError: true);
+        ModernNotification.error(context, message: 'Error adding place to route', subtitle: e.toString());
       }
     }
   }
@@ -1012,42 +1015,46 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                 runSpacing: 4,
                 children: (visit['evidence_files'] as List).map<Widget>((evidence) {
                   final fileName = evidence['title'] ?? 'Unknown File';
-                  final fileType = evidence['file_type'] ?? 'unknown';
-                  final status = evidence['status'] ?? 'pending';
+                  final fileType = evidence['file_type'] ?? 'unknown';  
+                  final evidenceId = evidence['id'];
                   
-                  Color statusColor = Colors.grey;
-                  if (status == 'approved') statusColor = Colors.green;
-                  if (status == 'rejected') statusColor = Colors.red;
-                  if (status == 'pending') statusColor = Colors.orange;
-                  
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: statusColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: statusColor.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          fileType.contains('image') ? Icons.image : Icons.file_present,
-                          size: 12,
-                          color: statusColor,
-                        ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            fileName,
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: statusColor,
-                              fontWeight: FontWeight.w500,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                  return GestureDetector(
+                    onTap: () => _viewEvidenceFile(evidence),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: primaryColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: primaryColor.withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            fileType.contains('image') ? Icons.image : Icons.file_present,
+                            size: 12,
+                            color: primaryColor,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              fileName,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: primaryColor,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.open_in_new,
+                            size: 10,
+                            color: primaryColor,
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 }).toList(),
@@ -1332,13 +1339,13 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         });
 
         if (mounted) {
-          context.showSnackBar('Route activated successfully!');
+          ModernNotification.success(context, message: 'Route activated successfully!');
         }
 
       } catch (e) {
         setState(() => _isLoading = false);
         if (mounted) {
-          context.showSnackBar('Error activating route: $e', isError: true);
+          ModernNotification.error(context, message: 'Error activating route', subtitle: e.toString());
         }
       }
     }
@@ -1450,7 +1457,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
       if (managerGroups.isEmpty) {
         if (mounted) {
-          context.showSnackBar('No groups found', isError: true);
+          ModernNotification.error(context, message: 'No groups found');
         }
         return;
       }
@@ -1465,7 +1472,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
       if (agentsInGroups.isEmpty) {
         if (mounted) {
-          context.showSnackBar('No agents found in your groups', isError: true);
+          ModernNotification.info(context, message: 'No agents found in your groups');
         }
         return;
       }
@@ -1481,7 +1488,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
       if (agentsResponse.isEmpty) {
         if (mounted) {
-          context.showSnackBar('No agents available for assignment', isError: true);
+          ModernNotification.info(context, message: 'No agents available for assignment');
         }
         return;
       }
@@ -1498,7 +1505,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Error loading agents: $e', isError: true);
+        ModernNotification.error(context, message: 'Error loading agents', subtitle: e.toString());
       }
     }
   }
@@ -1694,9 +1701,8 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
       if (newAgentIds.isEmpty) {
         if (mounted) {
-          context.showSnackBar(
-            'All selected agents are already assigned to this route',
-            isError: true
+          ModernNotification.warning(context, 
+            message: 'All selected agents are already assigned to this route'
           );
         }
         return;
@@ -1714,12 +1720,13 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
       if (mounted) {
         if (alreadyAssignedIds.isNotEmpty) {
-          context.showSnackBar(
-            'Assigned ${newAgentIds.length} new agents (${alreadyAssignedIds.length} were already assigned)'
+          ModernNotification.success(context, 
+            message: 'Assigned ${newAgentIds.length} new agents', 
+            subtitle: '${alreadyAssignedIds.length} were already assigned'
           );
         } else {
-          context.showSnackBar(
-            'Route assigned to ${newAgentIds.length} agents successfully!'
+          ModernNotification.success(context, 
+            message: 'Route assigned to ${newAgentIds.length} agents successfully!'
           );
         }
         
@@ -1729,7 +1736,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Error assigning route: $e', isError: true);
+        ModernNotification.error(context, message: 'Error assigning route', subtitle: e.toString());
       }
     }
   }
@@ -1826,13 +1833,13 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         await _updateVisitOrders();
 
         if (mounted) {
-          context.showSnackBar('Place removed from route successfully.');
+          ModernNotification.success(context, message: 'Place removed from route successfully.');
           _loadRouteDetails(); // Refresh the route details
         }
 
       } catch (e) {
         if (mounted) {
-          context.showSnackBar('Error removing place from route: $e', isError: true);
+          ModernNotification.error(context, message: 'Error removing place from route', subtitle: e.toString());
         }
       }
     }
@@ -2082,14 +2089,14 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
           .eq('id', _route.id);
 
       if (mounted) {
-        context.showSnackBar('Route deleted successfully.');
+        ModernNotification.success(context, message: 'Route deleted successfully.');
         Navigator.pop(context, true); // Return to previous screen
       }
 
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        context.showSnackBar('Error deleting route: $e', isError: true);
+        ModernNotification.error(context, message: 'Error deleting route', subtitle: e.toString());
       }
     }
   }
@@ -2155,13 +2162,47 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         });
 
         if (mounted) {
-          context.showSnackBar('Route archived successfully.');
+          ModernNotification.success(context, message: 'Route archived successfully.');
         }
       } catch (e) {
         if (mounted) {
-          context.showSnackBar('Error archiving route: $e', isError: true);
+          ModernNotification.error(context, message: 'Error archiving route', subtitle: e.toString());
         }
       }
+    }
+  }
+
+  void _viewEvidenceFile(Map<String, dynamic> evidence) {
+    final fileUrl = evidence['file_url'] as String?;
+    final mimeType = evidence['mime_type'] as String?;
+    final evidenceId = evidence['id'] as String;
+    
+    if (fileUrl == null) {
+      ModernNotification.error(context, message: 'File URL not available');
+      return;
+    }
+
+    // Check if it's an image
+    if (mimeType?.startsWith('image/') == true) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => FullScreenImageViewer(
+            imageUrl: fileUrl,
+            heroTag: 'evidence-$evidenceId',
+          ),
+        ),
+      );
+    } else {
+      // For non-image files, open evidence detail screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => EvidenceDetailScreen(
+            evidenceId: evidenceId,
+          ),
+        ),
+      );
     }
   }
 }

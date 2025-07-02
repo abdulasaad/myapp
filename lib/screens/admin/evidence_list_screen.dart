@@ -14,9 +14,6 @@ class EvidenceListScreen extends StatefulWidget {
 
 class _EvidenceListScreenState extends State<EvidenceListScreen> {
   late Future<List<EvidenceListItem>> _evidenceFuture;
-  String _selectedStatus = 'all';
-  String _searchQuery = '';
-  String _sortBy = 'newest';
   
   @override
   void initState() {
@@ -26,18 +23,10 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
 
   Future<List<EvidenceListItem>> _loadEvidence() async {
     try {
-      debugPrint('Loading evidence with simplified query...');
+      debugPrint('Loading evidence - including both task and route evidence...');
       
-      // First, try a simple query to test basic evidence loading
-      final simpleResponse = await supabase
-          .from('evidence')
-          .select('id, title, status, task_assignment_id')
-          .limit(1);
-      
-      debugPrint('Simple query result: $simpleResponse');
-      
-      // Build base query matching the actual database structure
-      dynamic query = supabase
+      // Get all evidence first, then separately fetch related data
+      dynamic baseQuery = supabase
           .from('evidence')
           .select('''
             id,
@@ -50,84 +39,141 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
             longitude,
             accuracy,
             task_assignment_id,
-            uploader_id,
-            task_assignments!inner(
-              id,
-              agent_id,
-              task_id,
-              tasks!inner(
-                id,
-                title,
-                campaign_id,
-                campaigns(name)
-              ),
-              profiles!agent_id(
-                id,
-                full_name
-              )
-            ),
-            profiles!uploader_id(
-              id,
-              full_name
-            )
+            place_visit_id,
+            uploader_id
           ''');
 
-      // Apply status filter
-      if (_selectedStatus != 'all') {
-        query = query.eq('status', _selectedStatus);
-      }
+      // No filtering - show all evidence, newest first
+      baseQuery = baseQuery.order('created_at', ascending: false);
 
-      // Apply sorting
-      switch (_sortBy) {
-        case 'newest':
-          query = query.order('created_at', ascending: false);
-          break;
-        case 'oldest':
-          query = query.order('created_at', ascending: true);
-          break;
-        case 'agent':
-          // Will sort by agent name in processing
-          query = query.order('created_at', ascending: false);
-          break;
-      }
-
-      final response = await query;
+      final response = await baseQuery;
       final evidenceItems = <EvidenceListItem>[];
       
       for (final item in response) {
         debugPrint('Processing evidence item: ${item['id']}');
-        debugPrint('Task assignment data: ${item['task_assignments']}');
+        debugPrint('Task assignment ID: ${item['task_assignment_id']}');
+        debugPrint('Place visit ID: ${item['place_visit_id']}');
         
-        final taskAssignment = item['task_assignments'];
-        if (taskAssignment == null) {
-          debugPrint('Skipping evidence ${item['id']} - no task assignment found');
-          // Create a minimal evidence item for records without task assignments
-          final evidenceItem = EvidenceListItem(
-            id: item['id'],
-            title: item['title'] ?? 'Evidence',
-            fileUrl: item['file_url'] ?? '',
-            mimeType: item['mime_type'],
-            status: item['status'] ?? 'pending',
-            createdAt: DateTime.parse(item['created_at']),
-            latitude: item['latitude']?.toDouble(),
-            longitude: item['longitude']?.toDouble(),
-            accuracy: item['accuracy']?.toDouble(),
-            agentId: 'unknown',
-            agentName: 'Unknown Agent',
-            taskId: 'unknown',
-            taskTitle: 'Unknown Task',
-            campaignId: null,
-            campaignName: null,
-            taskAssignmentId: item['task_assignment_id'] ?? 'unknown',
-          );
-          evidenceItems.add(evidenceItem);
-          continue;
+        String agentName = 'Unknown Agent';
+        String agentId = 'unknown';
+        String taskTitle = 'Unknown Task';
+        String taskId = 'unknown';
+        String? campaignName;
+        String? campaignId;
+        String taskAssignmentId = 'unknown';
+
+        // Get uploader info
+        final uploaderResponse = await supabase
+            .from('profiles')
+            .select('id, full_name')
+            .eq('id', item['uploader_id'])
+            .maybeSingle();
+        
+        if (uploaderResponse != null) {
+          agentName = uploaderResponse['full_name'] ?? 'Unknown Agent';
+          agentId = uploaderResponse['id'] ?? 'unknown';
         }
-        
-        final task = taskAssignment['tasks'];
-        final agent = taskAssignment['profiles'];
-        final campaign = task?['campaigns'];
-        
+
+        // Check if this is task-based evidence
+        if (item['task_assignment_id'] != null) {
+          try {
+            final taskAssignmentResponse = await supabase
+                .from('task_assignments')
+                .select('''
+                  id,
+                  agent_id,
+                  task_id,
+                  tasks(
+                    id,
+                    title,
+                    campaign_id,
+                    campaigns(name)
+                  )
+                ''')
+                .eq('id', item['task_assignment_id'])
+                .maybeSingle();
+            
+            if (taskAssignmentResponse != null) {
+              taskAssignmentId = taskAssignmentResponse['id'] ?? 'unknown';
+              agentId = taskAssignmentResponse['agent_id'] ?? agentId;
+              taskId = taskAssignmentResponse['task_id'] ?? 'unknown';
+              
+              final task = taskAssignmentResponse['tasks'];
+              if (task != null) {
+                taskTitle = task['title'] ?? 'Unknown Task';
+                campaignId = task['campaign_id'];
+                
+                final campaign = task['campaigns'];
+                if (campaign != null) {
+                  campaignName = campaign['name'];
+                }
+              }
+
+              // Get agent name from assignment
+              final agentResponse = await supabase
+                  .from('profiles')
+                  .select('full_name')
+                  .eq('id', agentId)
+                  .maybeSingle();
+              
+              if (agentResponse != null) {
+                agentName = agentResponse['full_name'] ?? agentName;
+              }
+            }
+          } catch (e) {
+            debugPrint('Error loading task assignment data: $e');
+          }
+        }
+        // Check if this is route-based evidence
+        else if (item['place_visit_id'] != null) {
+          try {
+            final placeVisitResponse = await supabase
+                .from('place_visits')
+                .select('''
+                  id,
+                  agent_id,
+                  place_id,
+                  route_assignment_id,
+                  places(name),
+                  route_assignments(
+                    route_id,
+                    routes(name)
+                  )
+                ''')
+                .eq('id', item['place_visit_id'])
+                .maybeSingle();
+            
+            if (placeVisitResponse != null) {
+              agentId = placeVisitResponse['agent_id'] ?? agentId;
+              
+              final place = placeVisitResponse['places'];
+              final routeAssignment = placeVisitResponse['route_assignments'];
+              final route = routeAssignment?['routes'];
+              
+              // Create descriptive task title for route evidence
+              final placeName = place?['name'] ?? 'Unknown Place';
+              final routeName = route?['name'] ?? 'Unknown Route';
+              taskTitle = 'Route Visit: $placeName';
+              campaignName = 'Route: $routeName';
+              taskId = placeVisitResponse['place_id'] ?? 'unknown';
+              taskAssignmentId = placeVisitResponse['route_assignment_id'] ?? 'unknown';
+
+              // Get agent name
+              final agentResponse = await supabase
+                  .from('profiles')
+                  .select('full_name')
+                  .eq('id', agentId)
+                  .maybeSingle();
+              
+              if (agentResponse != null) {
+                agentName = agentResponse['full_name'] ?? agentName;
+              }
+            }
+          } catch (e) {
+            debugPrint('Error loading place visit data: $e');
+          }
+        }
+
         final evidenceItem = EvidenceListItem(
           id: item['id'],
           title: item['title'] ?? 'Evidence',
@@ -138,28 +184,16 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
           latitude: item['latitude']?.toDouble(),
           longitude: item['longitude']?.toDouble(),
           accuracy: item['accuracy']?.toDouble(),
-          agentId: agent?['id'] ?? 'unknown',
-          agentName: agent?['full_name'] ?? 'Unknown Agent',
-          taskId: task?['id'] ?? 'unknown',
-          taskTitle: task?['title'] ?? 'Unknown Task',
-          campaignId: task?['campaign_id'],
-          campaignName: campaign?['name'],
-          taskAssignmentId: taskAssignment['id'] ?? item['task_assignment_id'],
+          agentId: agentId,
+          agentName: agentName,
+          taskId: taskId,
+          taskTitle: taskTitle,
+          campaignId: campaignId,
+          campaignName: campaignName,
+          taskAssignmentId: taskAssignmentId,
         );
 
-        // Apply search filter
-        if (_searchQuery.isEmpty || 
-            evidenceItem.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            evidenceItem.agentName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            evidenceItem.taskTitle.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            (evidenceItem.campaignName?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false)) {
-          evidenceItems.add(evidenceItem);
-        }
-      }
-      
-      // Apply agent sorting if needed
-      if (_sortBy == 'agent') {
-        evidenceItems.sort((a, b) => a.agentName.compareTo(b.agentName));
+        evidenceItems.add(evidenceItem);
       }
       
       return evidenceItems;
@@ -175,26 +209,7 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
     });
   }
 
-  void _onStatusChanged(String status) {
-    setState(() {
-      _selectedStatus = status;
-      _evidenceFuture = _loadEvidence();
-    });
-  }
 
-  void _onSortChanged(String sortBy) {
-    setState(() {
-      _sortBy = sortBy;
-      _evidenceFuture = _loadEvidence();
-    });
-  }
-
-  void _onSearchChanged(String query) {
-    setState(() {
-      _searchQuery = query;
-      _evidenceFuture = _loadEvidence();
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -212,11 +227,7 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _buildFilterSection(),
-          Expanded(
-            child: FutureBuilder<List<EvidenceListItem>>(
+      body: FutureBuilder<List<EvidenceListItem>>(
               future: _evidenceFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -259,7 +270,7 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Try adjusting your filters',
+                          'No evidence uploaded yet',
                           style: TextStyle(color: Colors.grey[600]),
                         ),
                       ],
@@ -280,93 +291,10 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
                 );
               },
             ),
-          ),
-        ],
-      ),
     );
   }
 
-  Widget _buildFilterSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Search bar
-          TextField(
-            decoration: InputDecoration(
-              hintText: 'Search evidence, agents, tasks...',
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-              filled: true,
-              fillColor: backgroundColor,
-            ),
-            onChanged: _onSearchChanged,
-          ),
-          const SizedBox(height: 12),
-          
-          // Filter chips
-          Row(
-            children: [
-              // Status filter
-              Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _buildFilterChip('All', 'all', _selectedStatus == 'all'),
-                      _buildFilterChip('Pending', 'pending', _selectedStatus == 'pending'),
-                      _buildFilterChip('Approved', 'approved', _selectedStatus == 'approved'),
-                      _buildFilterChip('Rejected', 'rejected', _selectedStatus == 'rejected'),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              
-              // Sort dropdown
-              PopupMenuButton<String>(
-                initialValue: _sortBy,
-                onSelected: _onSortChanged,
-                icon: const Icon(Icons.sort),
-                itemBuilder: (context) => [
-                  const PopupMenuItem(value: 'newest', child: Text('Newest First')),
-                  const PopupMenuItem(value: 'oldest', child: Text('Oldest First')),
-                  const PopupMenuItem(value: 'agent', child: Text('By Agent')),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildFilterChip(String label, String value, bool isSelected) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        label: Text(label),
-        selected: isSelected,
-        onSelected: (selected) => _onStatusChanged(value),
-        backgroundColor: backgroundColor,
-        selectedColor: primaryColor.withValues(alpha: 0.2),
-        checkmarkColor: primaryColor,
-      ),
-    );
-  }
 
   Widget _buildEvidenceCard(EvidenceListItem evidence) {
     return Card(
@@ -416,22 +344,15 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Title and status
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            evidence.title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        _buildStatusBadge(evidence.status),
-                      ],
+                    // Title
+                    Text(
+                      evidence.title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     
@@ -517,49 +438,7 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
     );
   }
 
-  Widget _buildStatusBadge(String status) {
-    Color color;
-    IconData icon;
-    
-    switch (status) {
-      case 'approved':
-        color = Colors.green;
-        icon = Icons.check_circle;
-        break;
-      case 'rejected':
-        color = Colors.red;
-        icon = Icons.cancel;
-        break;
-      case 'pending':
-      default:
-        color = Colors.orange;
-        icon = Icons.schedule;
-        break;
-    }
-    
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: color),
-          const SizedBox(width: 4),
-          Text(
-            status.toUpperCase(),
-            style: TextStyle(
-              color: color,
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 }
 
 // Data model for evidence list items

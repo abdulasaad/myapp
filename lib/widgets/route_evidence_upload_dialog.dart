@@ -11,6 +11,7 @@ import '../utils/constants.dart';
 import '../services/location_service.dart';
 import '../models/place_visit.dart';
 import '../models/route_place.dart';
+import '../widgets/modern_notification.dart';
 
 class RouteEvidenceUploadDialog extends StatefulWidget {
   final PlaceVisit placeVisit;
@@ -478,7 +479,7 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
         // Check file size (limit to 50MB)
         if (file.size > 50 * 1024 * 1024) {
           if (mounted) {
-            context.showSnackBar('File too large. Maximum size is 50MB.', isError: true);
+            ModernNotification.error(context, message: 'File too large. Maximum size is 50MB.');
           }
           return;
         }
@@ -487,7 +488,7 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
       }
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Error selecting file: $e', isError: true);
+        ModernNotification.error(context, message: 'Error selecting file: $e');
       }
     }
   }
@@ -535,7 +536,7 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
       // Check file size (limit to 50MB)
       if (fileSize > 50 * 1024 * 1024) {
         if (mounted) {
-          context.showSnackBar('File too large. Maximum size is 50MB.', isError: true);
+          ModernNotification.error(context, message: 'File too large. Maximum size is 50MB.');
         }
         return;
       }
@@ -582,7 +583,7 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
         'latitude': currentLocation?.latitude,
         'longitude': currentLocation?.longitude,
         'accuracy': currentLocation?.accuracy,
-        'status': 'pending', // All uploads start as pending for review
+        'status': 'approved', // Evidence is automatically available to managers
       };
 
       await supabase.from('evidence').insert(evidenceData);
@@ -590,12 +591,12 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
       setState(() => _uploadProgress = 1.0);
 
       if (mounted) {
-        context.showSnackBar('Evidence uploaded successfully! Your manager will review it.');
+        ModernNotification.success(context, message: 'Evidence uploaded successfully!');
         Navigator.of(context).pop(true); // Return true to indicate successful upload
       }
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Upload failed: $e', isError: true);
+        ModernNotification.error(context, message: 'Upload failed: $e');
       }
     } finally {
       if (mounted) {
