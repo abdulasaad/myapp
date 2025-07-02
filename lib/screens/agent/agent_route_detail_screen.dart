@@ -1,12 +1,14 @@
 // lib/screens/agent/agent_route_detail_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../utils/constants.dart';
 import '../../models/route_assignment.dart';
 import '../../models/place_visit.dart';
 import '../../models/route_place.dart';
 import '../../widgets/route_evidence_upload_dialog.dart';
 import '../../widgets/modern_notification.dart';
+import '../../services/location_service.dart';
 
 class AgentRouteDetailScreen extends StatefulWidget {
   final RouteAssignment routeAssignment;
@@ -67,7 +69,7 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
           final routePlace = RoutePlace.fromJson(json);
           routePlaces.add(routePlace);
         } catch (e) {
-          print('Error parsing route place: $e');
+          debugPrint('Error parsing route place: $e');
         }
       }
 
@@ -103,7 +105,7 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
             currentActiveVisit = visit;
           }
         } catch (e) {
-          print('Error parsing place visit: $e');
+          debugPrint('Error parsing place visit: $e');
         }
       }
 
@@ -150,7 +152,7 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
         _evidenceCounts = evidenceCounts;
       });
     } catch (e) {
-      print('Error loading evidence counts: $e');
+      debugPrint('Error loading evidence counts: $e');
     }
   }
 
@@ -239,7 +241,6 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
     );
     final currentEvidenceCount = _evidenceCounts[visit.id] ?? 0;
     final requiredEvidenceCount = routePlace.requiredEvidenceCount;
-    final hasEnoughEvidence = currentEvidenceCount >= requiredEvidenceCount;
     
     return Container(
       padding: const EdgeInsets.all(20),
@@ -797,23 +798,75 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
 
       // Check if there's already an active visit
       if (_currentActiveVisit != null) {
-        ModernNotification.warning(
-          context,
-          message: 'Already checked in',
-          subtitle: 'Please check out from current place first',
-        );
+        if (mounted) {
+          ModernNotification.warning(
+            context,
+            message: 'Already checked in',
+            subtitle: 'Please check out from current place first',
+          );
+        }
         return;
       }
 
-      // Create a new place visit
+      // Get current location
+      final locationService = LocationService();
+      final currentPosition = await locationService.getCurrentLocation();
+      
+      if (currentPosition == null) {
+        if (mounted) {
+          ModernNotification.error(
+            context,
+            message: 'Location required',
+            subtitle: 'Unable to get your current location. Please enable location services.',
+          );
+        }
+        return;
+      }
+
+      // Get place details to check coordinates
+      final place = routePlace.place;
+      if (place == null) {
+        if (mounted) {
+          ModernNotification.error(
+            context,
+            message: 'Place data unavailable',
+            subtitle: 'Cannot validate location. Please try again.',
+          );
+        }
+        return;
+      }
+
+      // Calculate distance between current location and place location
+      final double distanceInMeters = Geolocator.distanceBetween(
+        currentPosition.latitude,
+        currentPosition.longitude,
+        place.latitude,
+        place.longitude,
+      );
+
+      // Check if agent is within 50 meters of the place (you can adjust this threshold)
+      const double maxDistanceMeters = 50.0;
+      
+      if (distanceInMeters > maxDistanceMeters) {
+        if (mounted) {
+          ModernNotification.warning(
+            context,
+            message: 'Too far from location',
+            subtitle: 'You must be within ${maxDistanceMeters.toInt()}m of ${place.name} to check in. Currently ${distanceInMeters.toInt()}m away.',
+          );
+        }
+        return;
+      }
+
+      // Create a new place visit with actual coordinates
       await supabase.from('place_visits').insert({
         'route_assignment_id': widget.routeAssignment.id,
         'place_id': routePlace.placeId,
         'agent_id': currentUser.id,
         'checked_in_at': DateTime.now().toIso8601String(),
         'status': 'checked_in',
-        'check_in_latitude': 0.0,
-        'check_in_longitude': 0.0,
+        'check_in_latitude': currentPosition.latitude,
+        'check_in_longitude': currentPosition.longitude,
       });
 
       // If this is the first check-in, update route assignment status
@@ -824,49 +877,60 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
         }).eq('id', widget.routeAssignment.id);
       }
 
-      ModernNotification.success(
-        context,
-        message: 'Checked in successfully!',
-        subtitle: 'Visit started',
-      );
-      _loadRouteDetails(); // Refresh data
+      if (mounted) {
+        ModernNotification.success(
+          context,
+          message: 'Checked in successfully!',
+          subtitle: 'Visit started',
+        );
+        _loadRouteDetails(); // Refresh data
+      }
 
     } catch (e) {
-      ModernNotification.error(
-        context,
-        message: 'Error checking in',
-        subtitle: e.toString(),
-      );
+      if (mounted) {
+        ModernNotification.error(
+          context,
+          message: 'Error checking in',
+          subtitle: e.toString(),
+        );
+      }
     }
   }
 
   Future<void> _checkOut(PlaceVisit visit) async {
     try {
+      // Get current location for checkout
+      final locationService = LocationService();
+      final currentPosition = await locationService.getCurrentLocation();
+      
       // Update the place visit to completed
       await supabase.from('place_visits').update({
         'checked_out_at': DateTime.now().toIso8601String(),
         'status': 'completed',
-        'check_out_latitude': 0.0,
-        'check_out_longitude': 0.0,
+        'check_out_latitude': currentPosition?.latitude ?? 0.0,
+        'check_out_longitude': currentPosition?.longitude ?? 0.0,
       }).eq('id', visit.id);
 
       // Check if this was the last place to complete the route
       await _checkAndUpdateRouteCompletion();
 
-      ModernNotification.success(
-        context,
-        message: 'Checked out successfully!',
-        subtitle: 'Place visit completed',
-      );
-      
-      _loadRouteDetails(); // Refresh data
+      if (mounted) {
+        ModernNotification.success(
+          context,
+          message: 'Checked out successfully!',
+          subtitle: 'Place visit completed',
+        );
+        _loadRouteDetails(); // Refresh data
+      }
 
     } catch (e) {
-      ModernNotification.error(
-        context,
-        message: 'Error checking out',
-        subtitle: e.toString(),
-      );
+      if (mounted) {
+        ModernNotification.error(
+          context,
+          message: 'Error checking out',
+          subtitle: e.toString(),
+        );
+      }
     }
   }
 
@@ -886,7 +950,7 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
       final completedVisits = allVisitsResponse.where((v) => v['status'] == 'completed').length;
       final totalPlaces = _routePlaces.length;
 
-      print('Completed visits: $completedVisits, Total places: $totalPlaces');
+      debugPrint('Completed visits: $completedVisits, Total places: $totalPlaces');
 
       // If all places are completed, update route assignment status
       if (completedVisits >= totalPlaces) {
@@ -895,16 +959,18 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
           'completed_at': DateTime.now().toIso8601String(),
         }).eq('id', widget.routeAssignment.id);
 
-        print('Route assignment marked as completed');
+        debugPrint('Route assignment marked as completed');
         
-        ModernNotification.success(
-          context,
-          message: 'Route completed!',
-          subtitle: 'All places visited successfully',
-        );
+        if (mounted) {
+          ModernNotification.success(
+            context,
+            message: 'Route completed!',
+            subtitle: 'All places visited successfully',
+          );
+        }
       }
     } catch (e) {
-      print('Error checking route completion: $e');
+      debugPrint('Error checking route completion: $e');
     }
   }
 
