@@ -156,6 +156,100 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
     }
   }
 
+  Future<Map<String, dynamic>> _checkPlaceAvailability(String placeId) async {
+    try {
+      final currentUser = supabase.auth.currentUser;
+      if (currentUser == null) {
+        return {
+          'can_check_in': false,
+          'reason': 'Not authenticated',
+          'completed_visits': 0,
+          'required_visits': 1,
+        };
+      }
+
+      // Get the route place to find the required frequency
+      final routePlace = _routePlaces.firstWhere((rp) => rp.placeId == placeId);
+      
+      // Count completed visits for this place
+      final completedVisitsResponse = await supabase
+          .from('place_visits')
+          .select('id, checked_out_at')
+          .eq('route_assignment_id', widget.routeAssignment.id)
+          .eq('place_id', placeId)
+          .eq('agent_id', currentUser.id)
+          .eq('status', 'completed')
+          .order('checked_out_at', ascending: false);
+      
+      final completedVisits = completedVisitsResponse.length;
+      
+      // Check if there's an active check-in
+      final activeCheckInResponse = await supabase
+          .from('place_visits')
+          .select('id')
+          .eq('route_assignment_id', widget.routeAssignment.id)
+          .eq('place_id', placeId)
+          .eq('agent_id', currentUser.id)
+          .eq('status', 'checked_in')
+          .maybeSingle();
+      
+      if (activeCheckInResponse != null) {
+        return {
+          'can_check_in': false,
+          'reason': 'Already checked in',
+          'completed_visits': completedVisits,
+          'required_visits': routePlace.visitFrequency,
+        };
+      }
+      
+      // Check if all visits are completed
+      if (completedVisits >= routePlace.visitFrequency) {
+        return {
+          'can_check_in': false,
+          'reason': 'All visits completed',
+          'completed_visits': completedVisits,
+          'required_visits': routePlace.visitFrequency,
+        };
+      }
+      
+      // Check cooldown period if there are completed visits
+      if (completedVisitsResponse.isNotEmpty) {
+        final lastCheckout = DateTime.parse(completedVisitsResponse.first['checked_out_at']);
+        final hoursSinceCheckout = DateTime.now().difference(lastCheckout).inHours;
+        
+        if (hoursSinceCheckout < 12) {
+          final remainingHours = 12 - hoursSinceCheckout;
+          return {
+            'can_check_in': false,
+            'reason': 'Cooldown active',
+            'completed_visits': completedVisits,
+            'required_visits': routePlace.visitFrequency,
+            'cooldown_hours': remainingHours,
+            'last_checkout': lastCheckout.toIso8601String(),
+          };
+        }
+      }
+      
+      // Can check in
+      return {
+        'can_check_in': true,
+        'reason': 'Available',
+        'completed_visits': completedVisits,
+        'required_visits': routePlace.visitFrequency,
+        'next_visit_number': completedVisits + 1,
+      };
+      
+    } catch (e) {
+      debugPrint('Error checking place availability: $e');
+      return {
+        'can_check_in': false,
+        'reason': 'Error checking availability',
+        'completed_visits': 0,
+        'required_visits': 1,
+      };
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -427,11 +521,24 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
   }
 
   Widget _buildRouteProgress() {
-    final completedCount = _placeVisits.values
-        .where((visit) => visit?.status == 'completed')
-        .length;
-    final totalCount = _routePlaces.length;
-    final progress = totalCount > 0 ? completedCount / totalCount : 0.0;
+    // Calculate progress based on total required visits (considering frequency)
+    int totalRequiredVisits = 0;
+    int completedVisits = 0;
+    
+    for (final routePlace in _routePlaces) {
+      totalRequiredVisits += routePlace.visitFrequency;
+      
+      // Count completed visits for this place
+      final placeCompletedVisits = _placeVisits.values
+          .where((visit) => visit != null && 
+                 visit.placeId == routePlace.placeId && 
+                 visit.status == 'completed')
+          .length;
+      
+      completedVisits += placeCompletedVisits.clamp(0, routePlace.visitFrequency);
+    }
+    
+    final progress = totalRequiredVisits > 0 ? completedVisits / totalRequiredVisits : 0.0;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -461,7 +568,7 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
                 ),
               ),
               Text(
-                '$completedCount / $totalCount',
+                '$completedVisits / $totalRequiredVisits',
                 style: TextStyle(
                   fontSize: 14,
                   color: primaryColor,
@@ -491,15 +598,20 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
 
   Widget _buildPlaceCard(RoutePlace routePlace, PlaceVisit? visit, int index, bool isNext) {
     final place = routePlace.place;
-    final isCompleted = visit?.status == 'completed';
     final isCheckedIn = visit?.status == 'checked_in';
-    final canCheckIn = !isCheckedIn && _currentActiveVisit == null && isNext;
+    
+    // Count completed visits for this place
+    final completedVisitsCount = _placeVisits.values
+        .where((v) => v != null && v.placeId == routePlace.placeId && v.status == 'completed')
+        .length;
+    final isAllVisitsCompleted = completedVisitsCount >= routePlace.visitFrequency;
+    final canCheckIn = !isCheckedIn && _currentActiveVisit == null && isNext && !isAllVisitsCompleted;
     
     Color cardColor;
     Color textColor;
     IconData statusIcon;
     
-    if (isCompleted) {
+    if (isAllVisitsCompleted) {
       cardColor = Colors.green[50]!;
       textColor = Colors.green[700]!;
       statusIcon = Icons.check_circle;
@@ -610,6 +722,19 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
                   _buildEvidenceText(routePlace, visit),
                   style: TextStyle(fontSize: 12, color: textColor),
                 ),
+                const SizedBox(width: 16),
+                Icon(Icons.repeat, size: 16, color: textColor),
+                const SizedBox(width: 4),
+                Text(
+                  _buildVisitProgressText(routePlace),
+                  style: TextStyle(
+                    fontSize: 12, 
+                    color: textColor,
+                    fontWeight: completedVisitsCount >= routePlace.visitFrequency 
+                        ? FontWeight.bold 
+                        : FontWeight.normal,
+                  ),
+                ),
               ],
             ),
             
@@ -681,6 +806,44 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
                   label: const Text('Check In'),
                 ),
               )
+            else if (!isAllVisitsCompleted && !isCheckedIn && completedVisitsCount > 0)
+              FutureBuilder<Map<String, dynamic>>(
+                future: _checkPlaceAvailability(routePlace.placeId),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Container();
+                  }
+                  
+                  final availability = snapshot.data!;
+                  if (availability['reason'] == 'Cooldown active') {
+                    final cooldownHours = availability['cooldown_hours'] ?? 0;
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.orange[100],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange[300]!),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.timer, color: Colors.orange[700], size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Next visit available in $cooldownHours hours',
+                            style: TextStyle(
+                              color: Colors.orange[700],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return Container();
+                },
+              )
             else if (isCheckedIn && visit != null)
               Container(
                 width: double.infinity,
@@ -704,7 +867,7 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
                   ],
                 ),
               )
-            else if (isCompleted && visit != null)
+            else if (isAllVisitsCompleted)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
@@ -718,7 +881,7 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
                     Icon(Icons.check_circle, color: Colors.green[700], size: 20),
                     const SizedBox(width: 8),
                     Text(
-                      'Completed${visit.formattedDuration.isNotEmpty ? " (${visit.formattedDuration})" : ""}',
+                      'All ${routePlace.visitFrequency} visits completed',
                       style: TextStyle(
                         color: Colors.green[700],
                         fontWeight: FontWeight.bold,
@@ -776,6 +939,18 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
     }
   }
 
+  String _buildVisitProgressText(RoutePlace routePlace) {
+    final completedVisitsCount = _placeVisits.values
+        .where((v) => v != null && v.placeId == routePlace.placeId && v.status == 'completed')
+        .length;
+    
+    if (routePlace.visitFrequency > 1) {
+      return 'Visit $completedVisitsCount/${routePlace.visitFrequency}';
+    } else {
+      return completedVisitsCount > 0 ? 'Completed' : 'Not visited';
+    }
+  }
+
   String _getVisitDuration(PlaceVisit visit) {
     if (visit.checkedInAt != null) {
       final duration = DateTime.now().difference(visit.checkedInAt!);
@@ -803,6 +978,30 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
             context,
             message: 'Already checked in',
             subtitle: 'Please check out from current place first',
+          );
+        }
+        return;
+      }
+
+      // Check place availability (frequency and cooldown)
+      final availability = await _checkPlaceAvailability(routePlace.placeId);
+      
+      if (!availability['can_check_in']) {
+        if (mounted) {
+          String subtitle = '';
+          if (availability['reason'] == 'Cooldown active') {
+            final hours = availability['cooldown_hours'] ?? 0;
+            subtitle = 'Next visit available in $hours hours';
+          } else if (availability['reason'] == 'All visits completed') {
+            subtitle = 'You have completed all ${availability['required_visits']} required visits';
+          } else {
+            subtitle = availability['reason'];
+          }
+          
+          ModernNotification.warning(
+            context,
+            message: 'Cannot check in',
+            subtitle: subtitle,
           );
         }
         return;
@@ -858,7 +1057,7 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
         return;
       }
 
-      // Create a new place visit with actual coordinates
+      // Create a new place visit with actual coordinates and visit number
       await supabase.from('place_visits').insert({
         'route_assignment_id': widget.routeAssignment.id,
         'place_id': routePlace.placeId,
@@ -867,6 +1066,7 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
         'status': 'checked_in',
         'check_in_latitude': currentPosition.latitude,
         'check_in_longitude': currentPosition.longitude,
+        'visit_number': availability['next_visit_number'] ?? 1,
       });
 
       // If this is the first check-in, update route assignment status
@@ -939,21 +1139,29 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
       final currentUser = supabase.auth.currentUser;
       if (currentUser == null) return;
 
-      // Get all place visits for this route assignment
-      final allVisitsResponse = await supabase
-          .from('place_visits')
-          .select('id, status')
-          .eq('route_assignment_id', widget.routeAssignment.id)
-          .eq('agent_id', currentUser.id);
+      // Calculate if all required visits are completed (considering frequency)
+      int totalRequiredVisits = 0;
+      int completedVisitsCount = 0;
+      
+      for (final routePlace in _routePlaces) {
+        totalRequiredVisits += routePlace.visitFrequency;
+        
+        // Count completed visits for this place
+        final placeCompletedVisits = await supabase
+            .from('place_visits')
+            .select('id')
+            .eq('route_assignment_id', widget.routeAssignment.id)
+            .eq('place_id', routePlace.placeId)
+            .eq('agent_id', currentUser.id)
+            .eq('status', 'completed');
+        
+        completedVisitsCount += placeCompletedVisits.length.clamp(0, routePlace.visitFrequency);
+      }
 
-      // Check if all places have been visited (should match the number of route places)
-      final completedVisits = allVisitsResponse.where((v) => v['status'] == 'completed').length;
-      final totalPlaces = _routePlaces.length;
+      debugPrint('Completed visits: $completedVisitsCount, Total required: $totalRequiredVisits');
 
-      debugPrint('Completed visits: $completedVisits, Total places: $totalPlaces');
-
-      // If all places are completed, update route assignment status
-      if (completedVisits >= totalPlaces) {
+      // If all required visits are completed, update route assignment status
+      if (completedVisitsCount >= totalRequiredVisits) {
         await supabase.from('route_assignments').update({
           'status': 'completed',
           'completed_at': DateTime.now().toIso8601String(),

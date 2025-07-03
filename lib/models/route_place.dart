@@ -9,6 +9,7 @@ class RoutePlace {
   final int visitOrder;
   final int estimatedDurationMinutes;
   final int requiredEvidenceCount;
+  final int visitFrequency; // Number of times to visit this place
   final String? instructions;
   final DateTime createdAt;
   
@@ -22,6 +23,7 @@ class RoutePlace {
     required this.visitOrder,
     required this.estimatedDurationMinutes,
     required this.requiredEvidenceCount,
+    this.visitFrequency = 1,
     this.instructions,
     required this.createdAt,
     this.place,
@@ -39,6 +41,9 @@ class RoutePlace {
             : 30,
         requiredEvidenceCount: json['required_evidence_count'] is int 
             ? json['required_evidence_count'] 
+            : 1,
+        visitFrequency: json['visit_frequency'] is int 
+            ? json['visit_frequency'] 
             : 1,
         instructions: json['instructions']?.toString(),
         createdAt: json['created_at'] != null 
@@ -59,6 +64,7 @@ class RoutePlace {
         visitOrder: 0,
         estimatedDurationMinutes: 30,
         requiredEvidenceCount: 1,
+        visitFrequency: 1,
         createdAt: DateTime.now(),
       );
     }
@@ -72,6 +78,7 @@ class RoutePlace {
       'visit_order': visitOrder,
       'estimated_duration_minutes': estimatedDurationMinutes,
       'required_evidence_count': requiredEvidenceCount,
+      'visit_frequency': visitFrequency,
       'instructions': instructions,
       'created_at': createdAt.toIso8601String(),
     };
@@ -84,6 +91,7 @@ class RoutePlace {
     int? visitOrder,
     int? estimatedDurationMinutes,
     int? requiredEvidenceCount,
+    int? visitFrequency,
     String? instructions,
     DateTime? createdAt,
     Place? place,
@@ -95,6 +103,7 @@ class RoutePlace {
       visitOrder: visitOrder ?? this.visitOrder,
       estimatedDurationMinutes: estimatedDurationMinutes ?? this.estimatedDurationMinutes,
       requiredEvidenceCount: requiredEvidenceCount ?? this.requiredEvidenceCount,
+      visitFrequency: visitFrequency ?? this.visitFrequency,
       instructions: instructions ?? this.instructions,
       createdAt: createdAt ?? this.createdAt,
       place: place ?? this.place,

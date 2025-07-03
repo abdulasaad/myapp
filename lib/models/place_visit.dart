@@ -17,6 +17,7 @@ class PlaceVisit {
   final double? checkOutLongitude;
   final String status; // 'pending', 'checked_in', 'completed', 'skipped'
   final String? visitNotes;
+  final int visitNumber; // Which visit number this is (1st, 2nd, etc.)
   final DateTime createdAt;
   
   // Optional expanded data when joined
@@ -37,6 +38,7 @@ class PlaceVisit {
     this.checkOutLongitude,
     required this.status,
     this.visitNotes,
+    this.visitNumber = 1,
     required this.createdAt,
     this.place,
     this.routeAssignment,
@@ -72,6 +74,9 @@ class PlaceVisit {
             : null,
         status: (json['status'] ?? 'pending').toString(),
         visitNotes: json['visit_notes']?.toString(),
+        visitNumber: json['visit_number'] is int 
+            ? json['visit_number'] 
+            : 1,
         createdAt: json['created_at'] != null 
             ? DateTime.parse(json['created_at'].toString()) 
             : DateTime.now(),
@@ -92,6 +97,7 @@ class PlaceVisit {
         placeId: (json['place_id'] ?? '').toString(),
         agentId: (json['agent_id'] ?? '').toString(),
         status: 'pending',
+        visitNumber: 1,
         createdAt: DateTime.now(),
       );
     }
@@ -111,6 +117,7 @@ class PlaceVisit {
       'check_out_longitude': checkOutLongitude,
       'status': status,
       'visit_notes': visitNotes,
+      'visit_number': visitNumber,
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -154,6 +161,7 @@ class PlaceVisit {
     double? checkOutLongitude,
     String? status,
     String? visitNotes,
+    int? visitNumber,
     DateTime? createdAt,
     Place? place,
     RouteAssignment? routeAssignment,
@@ -172,6 +180,7 @@ class PlaceVisit {
       checkOutLongitude: checkOutLongitude ?? this.checkOutLongitude,
       status: status ?? this.status,
       visitNotes: visitNotes ?? this.visitNotes,
+      visitNumber: visitNumber ?? this.visitNumber,
       createdAt: createdAt ?? this.createdAt,
       place: place ?? this.place,
       routeAssignment: routeAssignment ?? this.routeAssignment,

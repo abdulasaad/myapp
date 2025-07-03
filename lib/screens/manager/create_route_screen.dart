@@ -475,7 +475,7 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
-          'Duration: ${routePlace.estimatedDurationMinutes}min • Evidence: ${routePlace.requiredEvidenceCount}',
+          'Duration: ${routePlace.estimatedDurationMinutes}min • Evidence: ${routePlace.requiredEvidenceCount} • Visits: ${routePlace.visitFrequency}',
           style: const TextStyle(fontSize: 12),
         ),
         trailing: Row(
@@ -588,6 +588,7 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
         visitOrder: _selectedPlaces.length + 1,
         estimatedDurationMinutes: 30, // Default
         requiredEvidenceCount: 1, // Default
+        visitFrequency: 1, // Default
         instructions: null,
         createdAt: DateTime.now(),
         place: place,
@@ -627,6 +628,7 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
     final hoursController = TextEditingController(text: durationHours.toString());
     final minutesController = TextEditingController(text: durationMinutes.toString());
     final evidenceController = TextEditingController(text: routePlace.requiredEvidenceCount.toString());
+    final frequencyController = TextEditingController(text: routePlace.visitFrequency.toString());
     final instructionsController = TextEditingController(text: routePlace.instructions ?? '');
 
     showDialog(
@@ -685,14 +687,54 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            TextField(
-              controller: evidenceController,
-              decoration: const InputDecoration(
-                labelText: 'Required Evidence Count',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: evidenceController,
+                    decoration: const InputDecoration(
+                      labelText: 'Required Evidence',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: TextField(
+                    controller: frequencyController,
+                    decoration: const InputDecoration(
+                      labelText: 'Visit Frequency',
+                      hintText: '1-10',
+                      border: OutlineInputBorder(),
+                      helperText: 'Times to visit',
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+              ],
             ),
+            const SizedBox(height: 8),
+            if (routePlace.visitFrequency > 1)
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 16, color: Colors.blue[700]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Agent must visit ${routePlace.visitFrequency} times with 12-hour cooldown between visits',
+                        style: TextStyle(fontSize: 12, color: Colors.blue[700]),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             const SizedBox(height: 16),
             TextField(
               controller: instructionsController,
@@ -715,11 +757,21 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
               final minutes = int.tryParse(minutesController.text) ?? 0;
               final totalMinutes = (hours * 60) + minutes;
               final evidence = int.tryParse(evidenceController.text) ?? 1;
+              final frequency = int.tryParse(frequencyController.text) ?? 1;
+              
+              // Validate frequency
+              if (frequency < 1 || frequency > 10) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Visit frequency must be between 1 and 10')),
+                );
+                return;
+              }
               
               setState(() {
                 _selectedPlaces[index] = _selectedPlaces[index].copyWith(
                   estimatedDurationMinutes: totalMinutes,
                   requiredEvidenceCount: evidence,
+                  visitFrequency: frequency,
                   instructions: instructionsController.text.trim().isNotEmpty 
                       ? instructionsController.text.trim()
                       : null,
@@ -782,6 +834,7 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
         'visit_order': rp.visitOrder,
         'estimated_duration_minutes': rp.estimatedDurationMinutes,
         'required_evidence_count': rp.requiredEvidenceCount,
+        'visit_frequency': rp.visitFrequency,
         'instructions': rp.instructions,
       }).toList();
 

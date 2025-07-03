@@ -23,11 +23,130 @@ class EnhancedManagerDashboardScreen extends StatefulWidget {
 
 class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboardScreen> {
   late Future<ManagerDashboardData> _dashboardFuture;
+  bool _isEditMode = false;
+  List<ActionCardData> _actionCards = [];
 
   @override
   void initState() {
     super.initState();
     _dashboardFuture = _loadManagerDashboardData();
+    _initializeActionCards();
+  }
+
+  void _initializeActionCards() {
+    _actionCards = [
+      ActionCardData(
+        id: 'pending_assignments',
+        title: 'Pending Assignments',
+        icon: Icons.assignment_late,
+        color: Colors.orange,
+        onTap: () => _navigateToPendingAssignments(),
+      ),
+      ActionCardData(
+        id: 'review_evidence',
+        title: 'Review Evidence',
+        icon: Icons.rate_review,
+        color: warningColor,
+        onTap: () => _navigateToEvidenceList(),
+      ),
+      ActionCardData(
+        id: 'manage_tasks',
+        title: 'Manage Tasks',
+        icon: Icons.list_alt,
+        color: successColor,
+        onTap: () => _navigateToManageTasks(),
+      ),
+      ActionCardData(
+        id: 'calendar',
+        title: 'Calendar',
+        icon: Icons.calendar_today,
+        color: secondaryColor,
+        onTap: () => _navigateToCalendar(),
+      ),
+      ActionCardData(
+        id: 'visit_analytics',
+        title: 'Visit Analytics',
+        icon: Icons.analytics,
+        color: Colors.teal,
+        onTap: () => _navigateToVisitAnalytics(),
+      ),
+      ActionCardData(
+        id: 'location_history',
+        title: 'Location History',
+        icon: Icons.location_history,
+        color: primaryColor,
+        onTap: () => _navigateToLocationHistory(),
+      ),
+      ActionCardData(
+        id: 'routes_places',
+        title: 'Routes & Places',
+        icon: Icons.route,
+        color: Colors.purple,
+        onTap: () => _navigateToRouteManagement(),
+      ),
+    ];
+  }
+
+  void _navigateToPendingAssignments() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const PendingAssignmentsScreen(),
+      ),
+    );
+  }
+
+  void _navigateToEvidenceList() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const EvidenceListScreen(),
+      ),
+    );
+  }
+
+  void _navigateToManageTasks() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const StandaloneTasksScreen(),
+      ),
+    );
+  }
+
+  void _navigateToCalendar() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const CalendarScreen(),
+      ),
+    );
+  }
+
+  void _navigateToVisitAnalytics() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const RouteVisitAnalyticsScreen(),
+      ),
+    );
+  }
+
+  void _navigateToLocationHistory() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const LocationHistoryScreen(),
+      ),
+    );
+  }
+
+  void _navigateToRouteManagement() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const RouteManagementScreen(),
+      ),
+    );
+  }
+
+  void _toggleEditMode() {
+    setState(() {
+      _isEditMode = !_isEditMode;
+    });
   }
 
   void _refreshDashboard() {
@@ -586,16 +705,21 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(
-              Icons.manage_accounts,
-              color: Colors.white,
-              size: 20,
+          InkWell(
+            onTap: _toggleEditMode,
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: _isEditMode ? 0.3 : 0.2),
+                borderRadius: BorderRadius.circular(8),
+                border: _isEditMode ? Border.all(color: Colors.white, width: 1) : null,
+              ),
+              child: Icon(
+                _isEditMode ? Icons.check : Icons.settings,
+                color: Colors.white,
+                size: 20,
+              ),
             ),
           ),
         ],
@@ -801,140 +925,250 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Quick Actions',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: textPrimaryColor,
-          ),
+        Row(
+          children: [
+            const Text(
+              'Quick Actions',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: textPrimaryColor,
+              ),
+            ),
+            if (_isEditMode) ...[
+              const SizedBox(width: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: primaryColor.withValues(alpha: 0.3)),
+                ),
+                child: Text(
+                  'Edit mode active',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: primaryColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
         const SizedBox(height: 12),
+        _buildCardsGrid(data),
+      ],
+    );
+  }
+
+  Widget _buildCardsGrid(ManagerDashboardData data) {
+    return Column(
+      children: [
+        // Row 1: 3 cards
         IntrinsicHeight(
           child: Row(
             children: [
               Expanded(
                 child: _buildActionCard(
                   title: 'Pending Assignments',
-                  subtitle: 'Approval needed',
+                  subtitle: '',
                   icon: Icons.assignment_late,
                   color: Colors.orange,
                   badgeCount: data.taskStats.pendingAssignments,
-                  onTap: () {
+                  onTap: _isEditMode ? null : () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => const PendingAssignmentsScreen(),
                       ),
                     );
                   },
+                  isDraggable: _isEditMode,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _buildActionCard(
                   title: 'Review Evidence',
-                  subtitle: 'Pending items',
+                  subtitle: '',
                   icon: Icons.rate_review,
                   color: warningColor,
-                  onTap: () {
+                  onTap: _isEditMode ? null : () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => const EvidenceListScreen(),
                       ),
                     );
                   },
+                  isDraggable: _isEditMode,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _buildActionCard(
                   title: 'Manage Tasks',
-                  subtitle: 'All tasks',
+                  subtitle: '',
                   icon: Icons.list_alt,
                   color: successColor,
-                  onTap: () {
+                  onTap: _isEditMode ? null : () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => const StandaloneTasksScreen(),
                       ),
                     );
                   },
+                  isDraggable: _isEditMode,
                 ),
               ),
             ],
           ),
         ),
         const SizedBox(height: 12),
+        // Row 2: 3 cards
         IntrinsicHeight(
           child: Row(
             children: [
               Expanded(
                 child: _buildActionCard(
                   title: 'Calendar',
-                  subtitle: 'Schedule & deadlines',
+                  subtitle: '',
                   icon: Icons.calendar_today,
                   color: secondaryColor,
-                  onTap: () {
+                  onTap: _isEditMode ? null : () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => const CalendarScreen(),
                       ),
                     );
                   },
+                  isDraggable: _isEditMode,
                 ),
               ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionCard(
-                title: 'Visit Analytics',
-                subtitle: 'Route visit reports',
-                icon: Icons.analytics,
-                color: Colors.teal,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const RouteVisitAnalyticsScreen(),
-                    ),
-                  );
-                },
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionCard(
+                  title: 'Visit Analytics',
+                  subtitle: '',
+                  icon: Icons.analytics,
+                  color: Colors.teal,
+                  onTap: _isEditMode ? null : () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const RouteVisitAnalyticsScreen(),
+                      ),
+                    );
+                  },
+                  isDraggable: _isEditMode,
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionCard(
-                title: 'Location History',
-                subtitle: 'Track agent locations',
-                icon: Icons.location_history,
-                color: primaryColor,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const LocationHistoryScreen(),
-                    ),
-                  );
-                },
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildActionCard(
+                  title: 'Location History',
+                  subtitle: '',
+                  icon: Icons.location_history,
+                  color: primaryColor,
+                  onTap: _isEditMode ? null : () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const LocationHistoryScreen(),
+                      ),
+                    );
+                  },
+                  isDraggable: _isEditMode,
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildActionCard(
-                title: 'Routes & Places',
-                subtitle: 'Create routes',
-                icon: Icons.route,
-                color: Colors.purple,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const RouteManagementScreen(),
-                    ),
-                  );
-                },
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        // Row 3: 1 card
+        IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildActionCard(
+                  title: 'Routes & Places',
+                  subtitle: '',
+                  icon: Icons.route,
+                  color: Colors.purple,
+                  onTap: _isEditMode ? null : () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const RouteManagementScreen(),
+                      ),
+                    );
+                  },
+                  isDraggable: _isEditMode,
+                ),
               ),
-            ),
+              const SizedBox(width: 12),
+              Expanded(child: Container()), // Empty space
+              const SizedBox(width: 12),
+              Expanded(child: Container()), // Empty space
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildStaticGrid(ManagerDashboardData data) {
+    // Ensure cards are initialized
+    if (_actionCards.isEmpty) {
+      _initializeActionCards();
+    }
+    
+    // Split cards into rows of 3
+    List<Widget> rows = [];
+    for (int i = 0; i < _actionCards.length; i += 3) {
+      List<ActionCardData> rowCards = _actionCards.skip(i).take(3).toList();
+      rows.add(_buildCardRow(rowCards, data));
+      if (i + 3 < _actionCards.length) {
+        rows.add(const SizedBox(height: 12));
+      }
+    }
+    
+    return Column(children: rows);
+  }
+
+  Widget _buildCardRow(List<ActionCardData> cards, ManagerDashboardData data) {
+    return IntrinsicHeight(
+      child: Row(
+        children: [
+          for (int i = 0; i < 3; i++) ...[
+            if (i > 0) const SizedBox(width: 12),
+            Expanded(
+              child: i < cards.length
+                  ? _buildActionCardFromData(cards[i], data)
+                  : Container(), // Empty space
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReorderableGrid(ManagerDashboardData data) {
+    // For now, just show the static grid with edit mode styling
+    // We can implement drag and drop later
+    return _buildStaticGrid(data);
+  }
+
+  Widget _buildActionCardFromData(ActionCardData cardData, ManagerDashboardData data, {bool isDraggable = false}) {
+    int? badgeCount;
+    if (cardData.id == 'pending_assignments') {
+      badgeCount = data.taskStats.pendingAssignments;
+    }
+
+    return _buildActionCard(
+      title: cardData.title,
+      subtitle: '',
+      icon: cardData.icon,
+      color: cardData.color,
+      badgeCount: badgeCount,
+      onTap: _isEditMode ? null : cardData.onTap,
+      isDraggable: isDraggable,
     );
   }
 
@@ -943,8 +1177,9 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
     required String subtitle,
     required IconData icon,
     required Color color,
-    required VoidCallback onTap,
+    VoidCallback? onTap,
     int? badgeCount,
+    bool isDraggable = false,
   }) {
     return Material(
       color: Colors.transparent,
@@ -952,12 +1187,17 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          constraints: const BoxConstraints(minHeight: 120),
+          height: 130,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: surfaceColor,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withValues(alpha: 0.15)),
+            border: Border.all(
+              color: isDraggable && _isEditMode 
+                  ? color.withValues(alpha: 0.4)
+                  : color.withValues(alpha: 0.15),
+              width: isDraggable && _isEditMode ? 2 : 1,
+            ),
             boxShadow: [
               BoxShadow(
                 color: shadowColor,
@@ -975,7 +1215,7 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
               end: Alignment.bottomRight,
               colors: [
                 surfaceColor,
-                color.withValues(alpha: 0.02),
+                color.withValues(alpha: isDraggable && _isEditMode ? 0.05 : 0.02),
               ],
             ),
           ),
@@ -1009,6 +1249,24 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
                       size: 22,
                     ),
                   ),
+                  if (isDraggable && _isEditMode)
+                    Positioned(
+                      top: -4,
+                      right: -4,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 1),
+                        ),
+                        child: const Icon(
+                          Icons.drag_indicator,
+                          color: Colors.white,
+                          size: 12,
+                        ),
+                      ),
+                    ),
                   if (badgeCount != null && badgeCount > 0)
                     Positioned(
                       right: -8,
@@ -1044,24 +1302,32 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
                   title,
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
-                    fontSize: 12,
+                    fontSize: 13,
                     color: textPrimaryColor,
-                    letterSpacing: 0.1,
+                    letterSpacing: 0,
+                    height: 1.2,
                   ),
                   textAlign: TextAlign.center,
                   softWrap: true,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  color: textSecondaryColor,
-                  fontSize: 11,
+              if (subtitle.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    color: textSecondaryColor,
+                    fontSize: 11,
+                    height: 1.2,
+                  ),
+                  textAlign: TextAlign.center,
+                  softWrap: true,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                textAlign: TextAlign.center,
-                softWrap: true,
-              ),
+              ],
             ],
           ),
         ),
@@ -1586,5 +1852,21 @@ class GroupStats {
     required this.totalGroups,
     required this.totalMemberships,
     required this.myGroups,
+  });
+}
+
+class ActionCardData {
+  final String id;
+  final String title;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  ActionCardData({
+    required this.id,
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.onTap,
   });
 }

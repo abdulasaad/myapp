@@ -344,9 +344,38 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
               children: [
                 Icon(Icons.gps_fixed, size: 16, color: Colors.grey[600]),
                 const SizedBox(width: 4),
-                Text(
-                  '${place.latitude.toStringAsFixed(6)}, ${place.longitude.toStringAsFixed(6)}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                Expanded(
+                  child: Text(
+                    '${place.latitude.toStringAsFixed(6)}, ${place.longitude.toStringAsFixed(6)}',
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                InkWell(
+                  onTap: () => _viewPlaceOnMap(place),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: primaryColor.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.map, size: 12, color: primaryColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          'View',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: primaryColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -1298,6 +1327,336 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
       if (mounted) {
         context.showSnackBar('Error reactivating place: $e', isError: true);
       }
+    }
+  }
+
+  void _viewPlaceOnMap(Place place) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PlaceMapViewScreen(place: place),
+      ),
+    );
+  }
+}
+
+class PlaceMapViewScreen extends StatefulWidget {
+  final Place place;
+
+  const PlaceMapViewScreen({super.key, required this.place});
+
+  @override
+  State<PlaceMapViewScreen> createState() => _PlaceMapViewScreenState();
+}
+
+class _PlaceMapViewScreenState extends State<PlaceMapViewScreen> {
+  GoogleMapController? _mapController;
+  bool _isEditing = false;
+  LatLng? _newLocation;
+  bool _isLoading = false;
+  double _geofenceRadius = 50.0;
+  Set<Marker> _markers = {};
+  Set<Circle> _circles = {};
+  late LatLng _currentLocation; // Current location that gets updated on save
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize with place's current location
+    _currentLocation = LatLng(widget.place.latitude, widget.place.longitude);
+    
+    // Get initial geofence radius from place metadata
+    if (widget.place.metadata != null && widget.place.metadata!['geofence_radius'] != null) {
+      _geofenceRadius = (widget.place.metadata!['geofence_radius'] as num).toDouble();
+    }
+    _updateMapElements();
+  }
+
+  void _updateMapElements() {
+    final displayLocation = _newLocation ?? _currentLocation;
+
+    _markers = {
+      Marker(
+        markerId: const MarkerId('place'),
+        position: displayLocation,
+        infoWindow: InfoWindow(
+          title: widget.place.name,
+          snippet: _isEditing ? 'Tap to move location' : widget.place.address,
+        ),
+        draggable: _isEditing,
+        onDragEnd: _isEditing
+            ? (LatLng newPosition) {
+                setState(() {
+                  _newLocation = newPosition;
+                  _updateMapElements();
+                });
+              }
+            : null,
+      ),
+    };
+
+    _circles = {
+      Circle(
+        circleId: const CircleId('geofence'),
+        center: displayLocation,
+        radius: _geofenceRadius,
+        fillColor: primaryColor.withValues(alpha: 0.2),
+        strokeColor: primaryColor,
+        strokeWidth: 2,
+      ),
+    };
+  }
+
+  void _onRadiusChanged(double value) {
+    setState(() {
+      _geofenceRadius = value;
+      _updateMapElements();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final displayLocation = _newLocation ?? _currentLocation;
+
+    return Scaffold(
+      backgroundColor: backgroundColor,
+      appBar: AppBar(
+        title: Text(widget.place.name),
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          if (!_isEditing)
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _isEditing = true;
+                  _newLocation = _currentLocation;
+                  _updateMapElements();
+                });
+              },
+              icon: const Icon(Icons.edit_location),
+              tooltip: 'Edit Location',
+            )
+          else ...[
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _isEditing = false;
+                  _newLocation = null;
+                  _updateMapElements();
+                });
+              },
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+            TextButton(
+              onPressed: _isLoading ? null : _saveLocation,
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text(
+                      'Save',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+            ),
+          ],
+        ],
+      ),
+      body: Stack(
+        children: [
+          GoogleMap(
+            onMapCreated: (GoogleMapController controller) {
+              _mapController = controller;
+            },
+            initialCameraPosition: CameraPosition(
+              target: displayLocation,
+              zoom: 16.0,
+            ),
+            markers: _markers,
+            circles: _circles,
+            onTap: _isEditing
+                ? (LatLng tappedLocation) {
+                    setState(() {
+                      _newLocation = tappedLocation;
+                      _updateMapElements();
+                    });
+                  }
+                : null,
+          ),
+          if (_isEditing)
+            Positioned(
+              bottom: 20,
+              left: 20,
+              right: 20,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.info, color: primaryColor, size: 20),
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Text(
+                            'Edit Mode Active',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Tap on the map or drag the marker to change the location',
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                    if (_newLocation != null) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.gps_fixed, size: 16, color: Colors.grey[600]),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '${_newLocation!.latitude.toStringAsFixed(6)}, ${_newLocation!.longitude.toStringAsFixed(6)}',
+                                style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    
+                    // Geofence radius selector
+                    Row(
+                      children: [
+                        const Text(
+                          'Geofence Radius:',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: primaryColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '${_geofenceRadius.round()}m',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: primaryColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(Icons.radio_button_unchecked, size: 16, color: primaryColor),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Slider(
+                            value: _geofenceRadius,
+                            min: 10.0,
+                            max: 500.0,
+                            divisions: 49,
+                            activeColor: primaryColor,
+                            label: '${_geofenceRadius.round()}m',
+                            onChanged: _onRadiusChanged,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _saveLocation() async {
+    if (_newLocation == null && _geofenceRadius == (widget.place.metadata?['geofence_radius'] ?? 50.0)) {
+      return; // No changes to save
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Prepare the update data
+      Map<String, dynamic> updateData = {};
+      
+      // Update location if it changed
+      if (_newLocation != null) {
+        updateData['latitude'] = _newLocation!.latitude;
+        updateData['longitude'] = _newLocation!.longitude;
+      }
+      
+      // Update metadata with geofence radius
+      Map<String, dynamic> metadata = Map<String, dynamic>.from(widget.place.metadata ?? {});
+      metadata['geofence_radius'] = _geofenceRadius;
+      updateData['metadata'] = metadata;
+      
+      await supabase.from('places').update(updateData).eq('id', widget.place.id);
+
+      if (mounted) {
+        context.showSnackBar('Location and geofence updated successfully!');
+        setState(() {
+          // Update the current location to the new location if it changed
+          if (_newLocation != null) {
+            _currentLocation = _newLocation!;
+          }
+          _isEditing = false;
+          _newLocation = null;
+          _updateMapElements();
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        context.showSnackBar('Error updating location: $e', isError: true);
+      }
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 }
