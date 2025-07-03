@@ -193,6 +193,7 @@ Geofence areas for campaigns, tasks, and places.
 - `visit_order` (INTEGER, NOT NULL)
 - `estimated_duration_minutes` (INTEGER, DEFAULT: 30)
 - `required_evidence_count` (INTEGER, DEFAULT: 1)
+- `visit_frequency` (INTEGER, DEFAULT: 1) - **Added: 2025-07-03** - Number of times place must be visited (1-10)
 - `instructions` (TEXT)
 - `created_at` (TIMESTAMPTZ, DEFAULT: now())
 
@@ -234,6 +235,7 @@ Geofence areas for campaigns, tasks, and places.
 - `check_out_longitude` (DOUBLE PRECISION)
 - `status` (TEXT, DEFAULT: 'pending') - Values: 'pending', 'checked_in', 'completed', 'skipped'
 - `visit_notes` (TEXT)
+- `visit_number` (INTEGER, DEFAULT: 1) - **Added: 2025-07-03** - Which visit this is (1st, 2nd, etc.) for frequency tracking
 - `created_at` (TIMESTAMPTZ, DEFAULT: now())
 
 ## Foreign Key Relationships
@@ -419,6 +421,46 @@ Task templates for creating standardized tasks.
 - Insert permissions for password reset function
 
 ## Recent Schema Changes
+
+### 2025-07-03
+1. **Enhanced Route Visit System with Frequency Support**
+   ```sql
+   -- Add visit frequency to route places
+   ALTER TABLE route_places ADD COLUMN visit_frequency INTEGER DEFAULT 1;
+   
+   -- Add visit number tracking to place visits
+   ALTER TABLE place_visits ADD COLUMN visit_number INTEGER DEFAULT 1;
+   ```
+
+2. **Enhanced Place Management with Location Editing**
+   - Interactive map view for viewing place locations with geofence visualization
+   - Drag-and-drop location editing with real-time coordinate updates
+   - Geofence radius selector (10m-500m) with visual circle feedback
+   - Database updates for both coordinates and geofence radius in place metadata
+
+3. **Calendar Access Control Security Fix**
+   ```sql
+   -- Updated get_calendar_events function to include group-based filtering
+   CREATE OR REPLACE FUNCTION get_calendar_events(month_start TEXT, month_end TEXT)
+   RETURNS TABLE(id UUID, title TEXT, type TEXT, start_date DATE, end_date DATE, description TEXT, status TEXT)
+   AS $$
+   -- Function now respects user groups and role-based access like other management screens
+   -- Admins see all events, managers/agents see only events from their groups
+   $$;
+   ```
+
+4. **Route Visit Frequency Features**
+   - Places can require 1-10 visits with 12-hour cooldown between visits
+   - Visit number tracking for proper sequence and completion validation
+   - Progress calculation considers total required visits across all frequencies
+   - Cooldown enforcement prevents duplicate visits within restricted timeframe
+   - Enhanced UI with frequency selector and validation in route creation
+
+5. **Flutter Model Updates**
+   - Updated RoutePlace model with visitFrequency property and JSON serialization
+   - Updated PlaceVisit model with visitNumber property for frequency tracking
+   - Enhanced copyWith methods and factory constructors for both models
+   - Backward compatibility maintained with existing data
 
 ### 2025-06-26
 1. **Added `description` column to evidence table**
@@ -873,6 +915,14 @@ Task templates for creating standardized tasks.
 - Bypassed draft status in route creation for immediate activation
 - Enhanced route assignment dialog with "already assigned" visibility
 
+**Recent Improvements (2025-07-03):**
+- **Route Visit Frequency System**: Places can now require multiple visits (1-10) with 12-hour cooldown between visits
+- **Enhanced Place Management**: Added interactive map view and editing capabilities with geofence radius control
+- **Calendar Access Control**: Updated get_calendar_events function to respect group-based filtering like other management screens
+- **Location Editing**: Managers can now view and edit place locations with drag-and-drop markers and radius adjustment
+- **Visit Progress Tracking**: Progress calculations now consider multiple required visits per place
+- **Database Schema Extensions**: Added visit_frequency to route_places and visit_number to place_visits tables
+
 ## API Integration
 
 ### Supabase Client Configuration
@@ -941,6 +991,6 @@ SUPABASE_ANON_KEY=your_anon_key
 
 ---
 
-**Last Updated**: 2025-06-30  
+**Last Updated**: 2025-07-03  
 **Maintained By**: Claude Code Assistant  
-**Version**: 1.4 - Route Visit Management System
+**Version**: 1.5 - Route Visit Frequency System & Enhanced Place Management
