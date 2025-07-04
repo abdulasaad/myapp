@@ -596,10 +596,13 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
         'address': placeData['address'],
         'latitude': placeData['latitude'],
         'longitude': placeData['longitude'],
-        'geofence_radius': placeData['geofence_radius'],
         'created_by': currentUser.id,
         'approval_status': 'pending', // Requires manager approval
         'status': 'pending_approval',
+        'metadata': {
+          'created_by_role': 'agent',
+          'geofence_radius': placeData['geofence_radius'],
+        },
       });
 
       if (mounted) {
