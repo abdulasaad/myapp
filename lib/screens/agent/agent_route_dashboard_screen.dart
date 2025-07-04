@@ -2,9 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../utils/constants.dart';
 import '../../models/route_assignment.dart';
 import '../../models/place_visit.dart';
+import '../manager/map_location_picker_screen.dart';
 import 'agent_route_detail_screen.dart';
 
 class AgentRouteDashboardScreen extends StatefulWidget {
@@ -413,174 +415,170 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
     final nameController = TextEditingController();
     final descriptionController = TextEditingController();
     final addressController = TextEditingController();
-    final latitudeController = TextEditingController();
-    final longitudeController = TextEditingController();
+    LatLng? selectedLocation;
+    double selectedRadius = 50.0; // Default radius
     
-    return AlertDialog(
-      title: Row(
-        children: [
-          Icon(Icons.add_location, color: primaryColor),
-          const SizedBox(width: 8),
-          const Text('Suggest New Place'),
-        ],
-      ),
-      content: SingleChildScrollView(
-        child: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+    return StatefulBuilder(
+      builder: (context, setState) {
+        return AlertDialog(
+          title: Row(
             children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Place Name *',
-                  hintText: 'Enter place name',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  hintText: 'Brief description of the place',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: addressController,
-                decoration: const InputDecoration(
-                  labelText: 'Address',
-                  hintText: 'Street address or landmark',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
+              Icon(Icons.add_location, color: primaryColor),
+              const SizedBox(width: 8),
+              const Text('Suggest New Place'),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: SizedBox(
+              width: double.maxFinite,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: latitudeController,
-                      decoration: const InputDecoration(
-                        labelText: 'Latitude *',
-                        hintText: '0.0',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Place Name *',
+                      hintText: 'Enter place name',
+                      border: OutlineInputBorder(),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextField(
-                      controller: longitudeController,
-                      decoration: const InputDecoration(
-                        labelText: 'Longitude *',
-                        hintText: '0.0',
-                        border: OutlineInputBorder(),
-                      ),
-                      keyboardType: TextInputType.number,
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: descriptionController,
+                    decoration: const InputDecoration(
+                      labelText: 'Description',
+                      hintText: 'Brief description of the place',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: addressController,
+                    decoration: const InputDecoration(
+                      labelText: 'Address',
+                      hintText: 'Street address or landmark',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Location Selection Section
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey[300]!),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Location *',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        if (selectedLocation != null) ...[
+                          Text(
+                            'Selected Location:',
+                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          ),
+                          Text(
+                            '${selectedLocation!.latitude.toStringAsFixed(6)}, ${selectedLocation!.longitude.toStringAsFixed(6)}',
+                            style: const TextStyle(
+                              fontFamily: 'monospace',
+                              fontSize: 12,
+                            ),
+                          ),
+                          Text(
+                            'Radius: ${selectedRadius.toInt()}m',
+                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              final result = await Navigator.push<Map<String, dynamic>>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => MapLocationPickerScreen(
+                                    initialLocation: selectedLocation,
+                                    initialRadius: selectedRadius,
+                                  ),
+                                ),
+                              );
+                              
+                              if (result != null) {
+                                setState(() {
+                                  selectedLocation = result['location'] as LatLng;
+                                  selectedRadius = result['radius'] as double;
+                                });
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryColor,
+                              foregroundColor: Colors.white,
+                            ),
+                            icon: const Icon(Icons.map),
+                            label: Text(selectedLocation == null 
+                              ? 'Select Location on Map' 
+                              : 'Change Location'),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue[200]!),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline, color: Colors.blue[700], size: 20),
-                    const SizedBox(width: 8),
-                    const Expanded(
-                      child: Text(
-                        'Tip: Use GPS coordinates from your current location or a maps app',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ),
-                  ],
-                ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: selectedLocation == null ? null : () => _submitPlaceSuggestion(
+                nameController.text,
+                descriptionController.text,
+                addressController.text,
+                selectedLocation!,
+                selectedRadius,
               ),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: () => _getCurrentLocation(latitudeController, longitudeController),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                ),
-                icon: const Icon(Icons.my_location),
-                label: const Text('Use Current Location'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
               ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () => _submitPlaceSuggestion(
-            nameController.text,
-            descriptionController.text,
-            addressController.text,
-            latitudeController.text,
-            longitudeController.text,
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: primaryColor,
-            foregroundColor: Colors.white,
-          ),
-          child: const Text('Submit Suggestion'),
-        ),
-      ],
+              child: const Text('Submit Suggestion'),
+            ),
+          ],
+        );
+      },
     );
   }
 
-  void _getCurrentLocation(TextEditingController latController, TextEditingController lngController) {
-    // TODO: Implement GPS location capture
-    // For now, show placeholder coordinates
-    latController.text = '24.7136';
-    lngController.text = '46.6753';
-    context.showSnackBar('Using current location (demo coordinates)');
-  }
-
-  void _submitPlaceSuggestion(String name, String description, String address, String latitude, String longitude) {
-    if (name.trim().isEmpty || latitude.trim().isEmpty || longitude.trim().isEmpty) {
-      context.showSnackBar('Please fill required fields (Name, Latitude, Longitude)', isError: true);
+  void _submitPlaceSuggestion(String name, String description, String address, LatLng location, double radius) {
+    if (name.trim().isEmpty) {
+      context.showSnackBar('Please fill required fields (Name)', isError: true);
       return;
     }
 
-    try {
-      final lat = double.parse(latitude);
-      final lng = double.parse(longitude);
-      
-      // Validate coordinates
-      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-        context.showSnackBar('Invalid coordinates. Latitude: -90 to 90, Longitude: -180 to 180', isError: true);
-        return;
-      }
-
-      Navigator.pop(context);
-      
-      // TODO: Submit to Supabase with approval_status = 'pending'
-      _savePlaceSuggestion({
-        'name': name.trim(),
-        'description': description.trim(),
-        'address': address.trim(),
-        'latitude': lat,
-        'longitude': lng,
-      });
-      
-    } catch (e) {
-      context.showSnackBar('Invalid coordinate format. Please enter valid numbers.', isError: true);
-    }
+    Navigator.pop(context);
+    
+    // Submit to Supabase with approval_status = 'pending'
+    _savePlaceSuggestion({
+      'name': name.trim(),
+      'description': description.trim(),
+      'address': address.trim(),
+      'latitude': location.latitude,
+      'longitude': location.longitude,
+      'geofence_radius': radius,
+    });
   }
 
   Future<void> _savePlaceSuggestion(Map<String, dynamic> placeData) async {
@@ -598,6 +596,7 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
         'address': placeData['address'],
         'latitude': placeData['latitude'],
         'longitude': placeData['longitude'],
+        'geofence_radius': placeData['geofence_radius'],
         'created_by': currentUser.id,
         'approval_status': 'pending', // Requires manager approval
         'status': 'pending_approval',
