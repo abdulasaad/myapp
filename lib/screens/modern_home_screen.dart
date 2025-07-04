@@ -1871,6 +1871,13 @@ class _ProfileTab extends StatelessWidget {
         );
 
         try {
+          // Stop all location tracking services first
+          try {
+            await SmartLocationManager().stopTracking();
+          } catch (e) {
+            // Continue with logout even if location cleanup fails
+          }
+          
           // Clean up session in database
           await SessionService().forceLogout();
           

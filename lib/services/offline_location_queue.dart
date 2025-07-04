@@ -270,6 +270,13 @@ class OfflineLocationQueue {
 
   Future<bool> _sendLocationUpdate(QueuedLocationUpdate update) async {
     try {
+      // Check if user is still authenticated before sending
+      final currentUser = supabase.auth.currentUser;
+      if (currentUser == null || currentUser.id != update.userId) {
+        logger.d('❌ User not authenticated, skipping location update');
+        return false;
+      }
+      
       // Use server-side timestamp to avoid clock sync issues
       await supabase.rpc('insert_location_update', params: {
         'p_user_id': update.userId,

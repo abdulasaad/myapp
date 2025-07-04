@@ -193,6 +193,9 @@ class BackgroundLocationService {
         // Get current user ID from stored session
         final currentUser = supabase.auth.currentUser;
         if (currentUser == null) {
+          // No authenticated user - stop the service
+          locationTimer?.cancel();
+          service.stopSelf();
           return;
         }
 

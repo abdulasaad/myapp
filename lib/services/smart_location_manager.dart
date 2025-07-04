@@ -313,7 +313,12 @@ class SmartLocationManager {
   Future<void> _sendLocationWithOfflineSupport(Position position) async {
     try {
       final userId = supabase.auth.currentUser?.id;
-      if (userId == null) return;
+      if (userId == null) {
+        // User not authenticated - stop tracking
+        logger.i('🛑 User not authenticated, stopping location tracking');
+        await stopTracking();
+        return;
+      }
       
       // Use offline queue which handles online/offline scenarios automatically
       await _offlineQueue.queueLocationUpdate(position, userId);
