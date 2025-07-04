@@ -426,7 +426,12 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
 
   Future<void> _onAgentTapped(AgentMapInfo agent) async {
     setState(() {
-      _selectedAgentId = agent.id;
+      // Toggle selection: if already selected, deselect it
+      if (_selectedAgentId == agent.id) {
+        _selectedAgentId = null; // Deselect the agent
+      } else {
+        _selectedAgentId = agent.id; // Select the agent
+      }
       _updateMarkers();
     });
 
