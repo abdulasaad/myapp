@@ -13,8 +13,6 @@ import '../services/connectivity_service.dart';
 import '../services/update_service.dart';
 import '../services/timezone_service.dart';
 import '../widgets/offline_widget.dart';
-import '../widgets/standalone_upload_dialog.dart';
-import 'agent/agent_route_dashboard_screen.dart';
 import '../widgets/update_dialog.dart';
 import 'package:logger/logger.dart';
 import 'campaigns/campaigns_list_screen.dart';
@@ -259,16 +257,14 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
     final safeIndex = _selectedIndex.clamp(0, screens.length - 1);
 
     return Scaffold(
+      extendBody: true,
       body: Stack(
         children: [
-          // Main content with bottom padding for floating nav
+          // Main content
           _currentUser!.role == 'admin' || _currentUser!.role == 'manager'
-              ? Padding(
-                  padding: const EdgeInsets.only(bottom: 96), // Space for floating nav
-                  child: IndexedStack(
-                    index: safeIndex,
-                    children: screens,
-                  ),
+              ? IndexedStack(
+                  index: safeIndex,
+                  children: screens,
                 )
               : Container(
                   decoration: const BoxDecoration(
@@ -289,39 +285,33 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
                       // Status bar spacer
                       SizedBox(height: MediaQuery.of(context).padding.top),
                       Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 96), // Space for floating nav
-                          child: IndexedStack(
-                            index: safeIndex,
-                            children: screens,
-                          ),
+                        child: IndexedStack(
+                          index: safeIndex,
+                          children: screens,
                         ),
                       ),
                     ],
                   ),
                 ),
-          // Floating navigation overlay
+          // Floating navigation bar
           Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
+            bottom: 16,
+            left: 16,
+            right: 16,
             child: _currentUser!.role == 'admin' || _currentUser!.role == 'manager'
-                ? _buildFloatingBottomNav(safeIndex, navItems)
+                ? _buildFloatingAdminNav(safeIndex, navItems)
                 : _buildAgentBottomNav(),
           ),
         ],
       ),
-      extendBody: true, // This makes the body extend behind the floating navigation
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
-  Widget _buildFloatingBottomNav(int currentIndex, List<BottomNavigationBarItem> items) {
+  Widget _buildFloatingAdminNav(int currentIndex, List<BottomNavigationBarItem> navItems) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       height: 80,
       decoration: BoxDecoration(
-        color: surfaceColor,
+        color: Colors.white.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -332,8 +322,8 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
         ],
       ),
       child: Row(
-        children: List.generate(items.length, (index) {
-          final item = items[index];
+        children: List.generate(navItems.length, (index) {
+          final item = navItems[index];
           final isSelected = currentIndex == index;
           // Extract IconData from the BottomNavigationBarItem
           IconData iconData = Icons.help; // fallback
@@ -396,44 +386,25 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
 
   Widget _buildAgentBottomNav() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Stack(
-        clipBehavior: Clip.none,
+      height: 80,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
         children: [
-          // Main navigation bar with floating style
-          Container(
-            height: 80,
-            decoration: BoxDecoration(
-              color: surfaceColor,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-          child: Row(
-            children: [
-              Expanded(child: _buildEnhancedNavItem(Icons.home_filled, 'Home', 0)),
-              Expanded(child: _buildEnhancedNavItem(Icons.work_outline_rounded, 'Campaigns', 1)),
-              const SizedBox(width: 64), // Space for floating button
-              Expanded(child: _buildEnhancedNavItem(Icons.assignment_outlined, 'Tasks', 2)),
-              Expanded(child: _buildEnhancedNavItem(Icons.person_outline_rounded, 'Profile', 3)),
-            ],
-          ),
-        ),
-        // Floating Action Button positioned above the nav
-        Positioned(
-          top: -28,
-          left: 0,
-          right: 0,
-          child: Center(
-            child: _buildEnhancedUploadButton(),
-          ),
-        ),
-      ],
+          Expanded(child: _buildEnhancedNavItem(Icons.home_filled, 'Home', 0)),
+          Expanded(child: _buildEnhancedNavItem(Icons.work_outline_rounded, 'Campaigns', 1)),
+          Expanded(child: _buildEnhancedNavItem(Icons.assignment_outlined, 'Tasks', 2)),
+          Expanded(child: _buildEnhancedNavItem(Icons.person_outline_rounded, 'Profile', 3)),
+        ],
       ),
     );
   }
@@ -480,61 +451,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
     );
   }
 
-  Widget _buildEnhancedUploadButton() {
-    return GestureDetector(
-      onTap: () => _showRoutesDashboard(),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: 64,
-        height: 64,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-          ),
-          borderRadius: BorderRadius.circular(32),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF667EEA).withValues(alpha: 0.4),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-              spreadRadius: -5,
-            ),
-          ],
-        ),
-        child: const Icon(
-          Icons.route_rounded,
-          color: Colors.white,
-          size: 28,
-        ),
-      ),
-    );
-  }
 
-  Future<void> _showRoutesDashboard() async {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const AgentRouteDashboardScreen(),
-      ),
-    );
-  }
-
-  Future<void> _showStandaloneUploadDialog() async {
-    final result = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const StandaloneUploadDialog(),
-    );
-    
-    if (result == true) {
-      // Refresh the current screen if it's the dashboard
-      if (_selectedIndex == 0) {
-        // Trigger refresh for dashboard
-        setState(() {});
-      }
-    }
-  }
 }
 
 // Dashboard Tab for Admins/Managers
