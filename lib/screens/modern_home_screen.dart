@@ -259,76 +259,161 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
     final safeIndex = _selectedIndex.clamp(0, screens.length - 1);
 
     return Scaffold(
-      body: _currentUser!.role == 'admin' || _currentUser!.role == 'manager'
-          ? IndexedStack(
-              index: safeIndex,
-              children: screens,
-            )
-          : Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Color(0xFF6366F1), // Blue at top
-                    Color(0xFFDDD6FE), // Very light purple/lavender
-                    Color(0xFFF8FAFC), // Almost white with slight blue tint
-                    Colors.white,      // Pure white at bottom
-                  ],
-                  stops: [0.0, 0.2, 0.5, 1.0],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
-              child: Column(
-                children: [
-                  // Status bar spacer
-                  SizedBox(height: MediaQuery.of(context).padding.top),
-                  Expanded(
-                    child: IndexedStack(
-                      index: safeIndex,
-                      children: screens,
+      body: Stack(
+        children: [
+          // Main content with bottom padding for floating nav
+          _currentUser!.role == 'admin' || _currentUser!.role == 'manager'
+              ? Padding(
+                  padding: const EdgeInsets.only(bottom: 112), // Space for floating nav
+                  child: IndexedStack(
+                    index: safeIndex,
+                    children: screens,
+                  ),
+                )
+              : Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Color(0xFF6366F1), // Blue at top
+                        Color(0xFFDDD6FE), // Very light purple/lavender
+                        Color(0xFFF8FAFC), // Almost white with slight blue tint
+                        Colors.white,      // Pure white at bottom
+                      ],
+                      stops: [0.0, 0.2, 0.5, 1.0],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
                     ),
                   ),
-                ],
+                  child: Column(
+                    children: [
+                      // Status bar spacer
+                      SizedBox(height: MediaQuery.of(context).padding.top),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 112), // Space for floating nav
+                          child: IndexedStack(
+                            index: safeIndex,
+                            children: screens,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+          // Floating navigation overlay
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: _currentUser!.role == 'admin' || _currentUser!.role == 'manager'
+                ? _buildFloatingBottomNav(safeIndex, navItems)
+                : _buildAgentBottomNav(),
+          ),
+        ],
+      ),
+      extendBody: true, // This makes the body extend behind the floating navigation
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+    );
+  }
+
+  Widget _buildFloatingBottomNav(int currentIndex, List<BottomNavigationBarItem> items) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      height: 80,
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: List.generate(items.length, (index) {
+          final item = items[index];
+          final isSelected = currentIndex == index;
+          // Extract IconData from the BottomNavigationBarItem
+          IconData iconData = Icons.help; // fallback
+          if (item.icon is Icon) {
+            iconData = (item.icon as Icon).icon ?? Icons.help;
+          }
+          return Expanded(
+            child: _buildAdminNavItem(
+              iconData,
+              item.label ?? '',
+              index,
+              isSelected,
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildAdminNavItem(IconData icon, String label, int index, bool isSelected) {
+    return GestureDetector(
+      onTap: () {
+        setState(() => _selectedIndex = index);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isSelected 
+                  ? const Color(0xFF6366F1).withValues(alpha: 0.1) 
+                  : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                size: 24,
+                color: isSelected ? const Color(0xFF6366F1) : const Color(0xFF9CA3AF),
               ),
             ),
-      bottomNavigationBar: _currentUser!.role == 'admin' || _currentUser!.role == 'manager'
-          ? BottomNavigationBar(
-              type: BottomNavigationBarType.fixed,
-              currentIndex: safeIndex,
-              onTap: (index) {
-                setState(() => _selectedIndex = index);
-              },
-              selectedItemColor: primaryColor,
-              unselectedItemColor: textSecondaryColor,
-              backgroundColor: surfaceColor,
-              elevation: 8,
-              items: navItems,
-            )
-          : _buildAgentBottomNav(),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                color: isSelected ? const Color(0xFF6366F1) : const Color(0xFF9CA3AF),
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   Widget _buildAgentBottomNav() {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        // Main navigation bar
-        Container(
-          height: 80,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.95),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
+    return Container(
+      margin: const EdgeInsets.all(16),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // Main navigation bar with floating style
+          Container(
+            height: 80,
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 10,
-                offset: const Offset(0, -5),
-              ),
-            ],
-          ),
           child: Row(
             children: [
               Expanded(child: _buildEnhancedNavItem(Icons.home_filled, 'Home', 0)),
@@ -349,6 +434,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
           ),
         ),
       ],
+      ),
     );
   }
 
