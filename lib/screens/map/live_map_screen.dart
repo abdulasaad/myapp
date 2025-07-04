@@ -14,12 +14,14 @@ class AgentMapInfo {
   final String fullName;
   final LatLng? lastLocation;
   final DateTime? lastSeen;
+  final String? status;
 
   AgentMapInfo({
     required this.id,
     required this.fullName,
     this.lastLocation,
     this.lastSeen,
+    this.status,
   });
 
   factory AgentMapInfo.fromJson(Map<String, dynamic> data) {
@@ -47,6 +49,7 @@ class AgentMapInfo {
       fullName: data['full_name'] ?? 'Unknown Agent',
       lastLocation: parsedLocation,
       lastSeen: parsedTime,
+      status: data['status'] as String?,
     );
   }
 }
@@ -93,6 +96,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
   BitmapDescriptor? _agentIconRed;
   BitmapDescriptor? _agentIconPurple;
   BitmapDescriptor? _agentIconBlue;
+  BitmapDescriptor? _agentIconGreen;
 
   @override
   void initState() {
@@ -112,6 +116,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
       _agentIconRed = await _createAgentMarker(Colors.red);
       _agentIconPurple = await _createAgentMarker(Colors.purple);
       _agentIconBlue = await _createAgentMarker(Colors.blue);
+      _agentIconGreen = await _createAgentMarker(Colors.green);
     } catch (e) {
       // Fallback to default markers if custom icons fail
       debugPrint('Failed to create custom markers: $e');
@@ -321,6 +326,22 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
     }
   }
 
+  bool _isAgentOnline(AgentMapInfo agent) {
+    // First check explicit status from database
+    if (agent.status != null) {
+      return agent.status == 'active';
+    }
+    
+    // Fallback to checking last seen timestamp
+    if (agent.lastSeen == null) return false;
+    
+    final now = DateTime.now();
+    final timeSinceLastSeen = now.difference(agent.lastSeen!);
+    
+    // Consider online if seen within last 15 minutes
+    return timeSinceLastSeen.inMinutes < 15;
+  }
+
   void _updateMarkers() {
     _markers.clear();
     for (final agent in _agents.values) {
@@ -335,8 +356,16 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
           // Selected agent gets blue agent icon
           markerIcon = _agentIconBlue ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
         } else {
-          // Default red agent icon
-          markerIcon = _agentIconRed ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed);
+          // Not selected - check online/offline status
+          final isOnline = _isAgentOnline(agent);
+          debugPrint('Agent ${agent.fullName}: status=${agent.status}, lastSeen=${agent.lastSeen}, isOnline=$isOnline');
+          if (isOnline) {
+            // Online agents get green icon
+            markerIcon = _agentIconGreen ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
+          } else {
+            // Offline agents get red icon
+            markerIcon = _agentIconRed ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed);
+          }
         }
         
         _markers.add(

@@ -11,6 +11,7 @@ import '../services/session_service.dart';
 import '../services/profile_service.dart';
 import '../services/connectivity_service.dart';
 import '../services/update_service.dart';
+import '../services/timezone_service.dart';
 import '../widgets/offline_widget.dart';
 import '../widgets/standalone_upload_dialog.dart';
 import 'agent/agent_route_dashboard_screen.dart';
@@ -117,6 +118,14 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
           .single();
       
       final user = AppUser.fromJson(response);
+      
+      // Fetch and set the user's timezone
+      try {
+        await TimezoneService.instance.fetchUserTimezone();
+      } catch (e) {
+        // Continue with default timezone if fetch fails
+      }
+      
       setState(() {
         _currentUser = user;
         _isLoading = false;
