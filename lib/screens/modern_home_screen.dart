@@ -264,7 +264,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
           // Main content with bottom padding for floating nav
           _currentUser!.role == 'admin' || _currentUser!.role == 'manager'
               ? Padding(
-                  padding: const EdgeInsets.only(bottom: 112), // Space for floating nav
+                  padding: const EdgeInsets.only(bottom: 96), // Space for floating nav
                   child: IndexedStack(
                     index: safeIndex,
                     children: screens,
@@ -290,7 +290,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
                       SizedBox(height: MediaQuery.of(context).padding.top),
                       Expanded(
                         child: Padding(
-                          padding: const EdgeInsets.only(bottom: 112), // Space for floating nav
+                          padding: const EdgeInsets.only(bottom: 96), // Space for floating nav
                           child: IndexedStack(
                             index: safeIndex,
                             children: screens,
@@ -318,7 +318,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
 
   Widget _buildFloatingBottomNav(int currentIndex, List<BottomNavigationBarItem> items) {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       height: 80,
       decoration: BoxDecoration(
         color: surfaceColor,
@@ -396,7 +396,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
 
   Widget _buildAgentBottomNav() {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Stack(
         clipBehavior: Clip.none,
         children: [

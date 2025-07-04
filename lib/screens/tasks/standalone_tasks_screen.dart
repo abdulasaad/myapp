@@ -341,21 +341,22 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
                       height: 1.5,
                     ),
                   ),
-                  const SizedBox(height: 32),
-                  ElevatedButton.icon(
-                    onPressed: _showCreateTaskMenu,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Create Task'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 2,
-                    ),
-                  ),
+                  // Removed center creation button - using only FAB for consistency
+                  // const SizedBox(height: 32),
+                  // ElevatedButton.icon(
+                  //   onPressed: _showCreateTaskMenu,
+                  //   icon: const Icon(Icons.add),
+                  //   label: const Text('Create Task'),
+                  //   style: ElevatedButton.styleFrom(
+                  //     backgroundColor: primaryColor,
+                  //     foregroundColor: Colors.white,
+                  //     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                  //     shape: RoundedRectangleBorder(
+                  //       borderRadius: BorderRadius.circular(12),
+                  //     ),
+                  //     elevation: 2,
+                  //   ),
+                  // ),
                 ],
               ),
             );
