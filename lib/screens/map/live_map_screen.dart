@@ -426,12 +426,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
 
   Future<void> _onAgentTapped(AgentMapInfo agent) async {
     setState(() {
-      // Toggle selection: if already selected, deselect it
-      if (_selectedAgentId == agent.id) {
-        _selectedAgentId = null; // Deselect the agent
-      } else {
-        _selectedAgentId = agent.id; // Select the agent
-      }
+      _selectedAgentId = agent.id; // Always select the agent when tapped
       _updateMarkers();
     });
 
@@ -531,6 +526,12 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
                       if (mounted) {
                         context.showSnackBar('Stopped tracking agent');
                       }
+                    } else if (_selectedAgentId != null) {
+                      // Deselect agent when tapping empty area of map
+                      setState(() {
+                        _selectedAgentId = null;
+                        _updateMarkers();
+                      });
                     }
                   },
                   // Performance optimizations for mobile devices
