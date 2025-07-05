@@ -17,10 +17,6 @@ class AgentStandaloneTasksScreen extends StatefulWidget {
 class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen> {
   late Future<List<TaskWithAssignment>> _tasksFuture;
   late Future<bool> _hasGroupMembershipFuture;
-  String _filterStatus = 'all'; // all, available, assigned, completed
-  String _searchQuery = '';
-  final TextEditingController _searchController = TextEditingController();
-  bool _showSearchBar = false;
 
   @override
   void initState() {
@@ -29,11 +25,6 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
     _hasGroupMembershipFuture = _checkGroupMembership();
   }
 
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
 
   Future<bool> _checkGroupMembership() async {
     final userId = supabase.auth.currentUser?.id;
@@ -105,38 +96,6 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
     return tasks;
   }
 
-  List<TaskWithAssignment> _filterTasks(List<TaskWithAssignment> tasks) {
-    var filteredTasks = tasks;
-
-    // Apply status filter
-    switch (_filterStatus) {
-      case 'available':
-        filteredTasks = filteredTasks.where((t) => !t.isAssigned).toList();
-        break;
-      case 'assigned':
-        filteredTasks = filteredTasks.where((t) => t.isAssigned && t.assignmentStatus != 'completed').toList();
-        break;
-      case 'completed':
-        filteredTasks = filteredTasks.where((t) => t.assignmentStatus == 'completed').toList();
-        break;
-    }
-
-    // Apply search filter
-    if (_searchQuery.isNotEmpty) {
-      final query = _searchQuery.toLowerCase();
-      filteredTasks = filteredTasks.where((t) {
-        final title = t.task.title.toLowerCase();
-        final description = (t.task.description ?? '').toLowerCase();
-        final locationName = (t.task.locationName ?? '').toLowerCase();
-        
-        return title.contains(query) || 
-               description.contains(query) || 
-               locationName.contains(query);
-      }).toList();
-    }
-
-    return filteredTasks;
-  }
 
   void _showPendingStatusDialog() {
     showDialog(
@@ -162,33 +121,6 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
     );
   }
 
-  Future<void> _showDemoNotificationSequence() async {
-    if (!mounted) return;
-    
-    context.showSuccessNotification(
-      'Task completed successfully! This notification slides in from the top.',
-      title: 'Success',
-      duration: const Duration(seconds: 2),
-    );
-    
-    await Future.delayed(const Duration(seconds: 3));
-    if (!mounted) return;
-    
-    context.showErrorNotification(
-      'Network error occurred. Watch how it smoothly replaces the previous one.',
-      title: 'Error',
-      duration: const Duration(seconds: 2),
-    );
-    
-    await Future.delayed(const Duration(seconds: 3));
-    if (!mounted) return;
-    
-    context.showWarningNotification(
-      'Location permission required. Swipe up or tap X to dismiss.',
-      title: 'Permission Required',
-      duration: const Duration(seconds: 3),
-    );
-  }
 
   Future<void> _requestTaskAssignment(Task task) async {
     final shouldRequest = await showDialog<bool>(
@@ -234,101 +166,42 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: _showSearchBar 
-            ? TextField(
-                controller: _searchController,
-                decoration: const InputDecoration(
-                  hintText: 'Search tasks...',
-                  border: InputBorder.none,
-                  hintStyle: TextStyle(color: Colors.white70),
-                ),
-                style: const TextStyle(color: Colors.white),
-                onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value;
-                  });
-                },
-              )
-            : const Text('Available Tasks'),
-        actions: [
-          IconButton(
-            icon: Icon(_showSearchBar ? Icons.close : Icons.search),
-            onPressed: () {
-              setState(() {
-                _showSearchBar = !_showSearchBar;
-                if (!_showSearchBar) {
-                  _searchController.clear();
-                  _searchQuery = '';
-                }
-              });
-            },
-          ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.filter_list),
-            onSelected: (value) {
-              setState(() {
-                _filterStatus = value;
-              });
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'all', child: Text('All Tasks')),
-              const PopupMenuItem(value: 'available', child: Text('Available')),
-              const PopupMenuItem(value: 'assigned', child: Text('My Tasks')),
-              const PopupMenuItem(value: 'completed', child: Text('Completed')),
-            ],
-          ),
-          // Demo button for new notifications (temporary for testing)
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.notifications_outlined),
-            tooltip: 'Test Advanced Notifications',
-            onSelected: (value) {
-              switch (value) {
-                case 'demo':
-                  // Show sequence of different notification types
-                  _showDemoNotificationSequence();
-                  break;
-                case 'success':
-                  context.showSuccessNotification(
-                    'Task assigned successfully!',
-                    title: 'Success',
-                  );
-                  break;
-                case 'error':
-                  context.showErrorNotification(
-                    'Failed to sync data. Please check connection.',
-                    title: 'Sync Error',
-                  );
-                  break;
-                case 'warning':
-                  context.showWarningNotification(
-                    'Location permission required for this feature.',
-                    title: 'Permission Required',
-                  );
-                  break;
-                case 'info':
-                  context.showInfoNotification(
-                    'New tasks are available in your area.',
-                    title: 'Information',
-                  );
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'demo', child: Row(children: [Icon(Icons.play_arrow, color: Colors.purple), SizedBox(width: 8), Text('Demo Sequence')])),
-              const PopupMenuItem(value: '', child: Divider()),
-              const PopupMenuItem(value: 'success', child: Row(children: [Icon(Icons.check_circle, color: Colors.green), SizedBox(width: 8), Text('Success')])),
-              const PopupMenuItem(value: 'error', child: Row(children: [Icon(Icons.error, color: Colors.red), SizedBox(width: 8), Text('Error')])),
-              const PopupMenuItem(value: 'warning', child: Row(children: [Icon(Icons.warning, color: Colors.orange), SizedBox(width: 8), Text('Warning')])),
-              const PopupMenuItem(value: 'info', child: Row(children: [Icon(Icons.info, color: Colors.blue), SizedBox(width: 8), Text('Info')])),
-            ],
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          if (_filterStatus != 'all' || _searchQuery.isNotEmpty)
-            _buildFilterIndicator(),
+      backgroundColor: backgroundColor,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Modern Title Header
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.fromLTRB(16, MediaQuery.of(context).padding.top + 16, 16, 0),
+              child: Column(
+                children: [
+                  // Title and Actions Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Title
+                      const Text(
+                        'My Tasks',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+            
+            // Content
+            Expanded(
+              child: Column(
+                children: [
           Expanded(
             child: FutureBuilder<List<dynamic>>(
               future: Future.wait([_tasksFuture, _hasGroupMembershipFuture]),
@@ -453,9 +326,7 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
                   );
                 }
 
-                final filteredTasks = _filterTasks(allTasks);
-
-                if (filteredTasks.isEmpty) {
+                if (allTasks.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -463,7 +334,7 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
                         Icon(Icons.assignment, size: 64, color: Colors.grey[400]),
                         const SizedBox(height: 16),
                         Text(
-                          _getEmptyMessage(),
+                          'No tasks found.\nStandalone tasks will appear here when created.',
                           style: Theme.of(context).textTheme.titleMedium,
                           textAlign: TextAlign.center,
                         ),
@@ -481,9 +352,9 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
                   },
                   child: ListView.builder(
                     padding: const EdgeInsets.all(16),
-                    itemCount: filteredTasks.length,
+                    itemCount: allTasks.length,
                     itemBuilder: (context, index) {
-                      final taskWithAssignment = filteredTasks[index];
+                      final taskWithAssignment = allTasks[index];
                       return _buildTaskCard(taskWithAssignment);
                     },
                   ),
@@ -491,103 +362,15 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
               },
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFilterIndicator() {
-    final chips = <Widget>[];
-    
-    if (_filterStatus != 'all') {
-      String filterText;
-      switch (_filterStatus) {
-        case 'available':
-          filterText = 'Available';
-          break;
-        case 'assigned':
-          filterText = 'My Tasks';
-          break;
-        case 'completed':
-          filterText = 'Completed';
-          break;
-        default:
-          filterText = _filterStatus;
-      }
-      
-      chips.add(
-        Chip(
-          label: Text(filterText),
-          onDeleted: () {
-            setState(() {
-              _filterStatus = 'all';
-            });
-          },
-          deleteIcon: const Icon(Icons.close, size: 18),
-        ),
-      );
-    }
-    
-    if (_searchQuery.isNotEmpty) {
-      chips.add(
-        Chip(
-          label: Text('Search: "$_searchQuery"'),
-          onDeleted: () {
-            setState(() {
-              _searchQuery = '';
-              _searchController.clear();
-            });
-          },
-          deleteIcon: const Icon(Icons.close, size: 18),
-        ),
-      );
-    }
-    
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
-        ),
-      ),
-      child: Wrap(
-        spacing: 8,
-        children: [
-          ...chips,
-          if (chips.length > 1)
-            ActionChip(
-              label: const Text('Clear All'),
-              onPressed: () {
-                setState(() {
-                  _filterStatus = 'all';
-                  _searchQuery = '';
-                  _searchController.clear();
-                });
-              },
+                ],
+              ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  String _getEmptyMessage() {
-    if (_searchQuery.isNotEmpty) {
-      return 'No tasks found matching "$_searchQuery".\nTry adjusting your search terms.';
-    }
-    
-    switch (_filterStatus) {
-      case 'available':
-        return 'No available tasks at the moment.\nCheck back later for new opportunities.';
-      case 'assigned':
-        return 'You have no assigned tasks.\nRequest assignment to available tasks.';
-      case 'completed':
-        return 'You haven\'t completed any tasks yet.\nStart working on your assigned tasks.';
-      default:
-        return 'No tasks found.\nStandalone tasks will appear here when created.';
-    }
-  }
 
   Widget _buildTaskCard(TaskWithAssignment taskWithAssignment) {
     final task = taskWithAssignment.task;
