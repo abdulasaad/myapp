@@ -934,6 +934,8 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
         'uploader_id': supabase.auth.currentUser!.id,
         'title': title,
         'file_url': imageUrl,
+        'mime_type': mimeType,
+        'file_size': fileBytes.length,
       });
       
       if(mounted) {

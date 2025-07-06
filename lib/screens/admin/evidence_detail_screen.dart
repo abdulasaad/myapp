@@ -1,13 +1,11 @@
 // lib/screens/admin/evidence_detail_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'dart:math' as math;
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import '../../utils/constants.dart';
 import '../full_screen_image_viewer.dart';
 import 'evidence_location_viewer.dart';
@@ -198,12 +196,44 @@ class _EvidenceDetailScreenState extends State<EvidenceDetailScreen> {
         }
       }
       
+      // Fallback for missing mime_type by detecting from file URL
+      String? mimeType = evidenceResponse['mime_type'];
+      if (mimeType == null) {
+        final fileUrl = evidenceResponse['file_url'] as String?;
+        if (fileUrl != null) {
+          if (fileUrl.startsWith('data:application/json')) {
+            mimeType = 'application/json';
+          } else {
+            // Try to detect from file extension
+            final uri = Uri.tryParse(fileUrl);
+            if (uri != null) {
+              final path = uri.path.toLowerCase();
+              if (path.contains('.jpg') || path.contains('.jpeg')) {
+                mimeType = 'image/jpeg';
+              } else if (path.contains('.png')) {
+                mimeType = 'image/png';
+              } else if (path.contains('.gif')) {
+                mimeType = 'image/gif';
+              } else if (path.contains('.webp')) {
+                mimeType = 'image/webp';
+              } else if (path.contains('.pdf')) {
+                mimeType = 'application/pdf';
+              } else if (path.contains('.mp4')) {
+                mimeType = 'video/mp4';
+              } else if (path.contains('.mov')) {
+                mimeType = 'video/quicktime';
+              }
+            }
+          }
+        }
+      }
+
       return EvidenceDetail(
         id: evidenceResponse['id'],
         title: evidenceResponse['title'] ?? 'Evidence',
         description: evidenceResponse['description'],
         fileUrl: evidenceResponse['file_url'],
-        mimeType: evidenceResponse['mime_type'],
+        mimeType: mimeType,
         fileSize: evidenceResponse['file_size'],
         status: evidenceResponse['status'] ?? 'pending',
         createdAt: DateTime.parse(evidenceResponse['created_at']),
@@ -269,9 +299,8 @@ class _EvidenceDetailScreenState extends State<EvidenceDetailScreen> {
         throw Exception('Failed to download file: ${response.statusCode}');
       }
 
-      // Get file extension and MIME type
+      // Get file extension
       String extension = '';
-      String mimeType = evidence.mimeType ?? 'application/octet-stream';
       
       if (evidence.fileUrl.contains('.')) {
         extension = evidence.fileUrl.split('.').last.split('?').first.toLowerCase();
@@ -299,48 +328,25 @@ class _EvidenceDetailScreenState extends State<EvidenceDetailScreen> {
       String? filePath;
 
       if (Platform.isAndroid) {
-        // Use MediaStore API for Android to save to public Downloads
-        final deviceInfo = DeviceInfoPlugin();
-        final androidInfo = await deviceInfo.androidInfo;
-        
-        if (androidInfo.version.sdkInt >= 29) {
-          // Android 10+ (API 29+) - Use MediaStore
-          try {
-            const platform = MethodChannel('com.example.myapp/download');
-            filePath = await platform.invokeMethod('saveToDownloads', {
-              'fileName': fileName,
-              'mimeType': mimeType,
-              'data': response.bodyBytes,
-            });
-          } catch (e) {
-            debugPrint('MediaStore method failed: $e');
-            // Fallback to legacy method
-            final directory = await getExternalStorageDirectory();
-            if (directory != null) {
-              final downloadsDir = Directory('${directory.path}/Download');
-              if (!await downloadsDir.exists()) {
-                await downloadsDir.create(recursive: true);
-              }
-              final file = File('${downloadsDir.path}/$fileName');
-              await file.writeAsBytes(response.bodyBytes);
-              filePath = file.path;
+        // Try app's external directory first (most reliable)
+        try {
+          final directory = await getExternalStorageDirectory();
+          if (directory != null) {
+            final downloadsDir = Directory('${directory.path}/Downloads');
+            if (!await downloadsDir.exists()) {
+              await downloadsDir.create(recursive: true);
             }
-          }
-        } else {
-          // Android 9 and below - Use legacy storage
-          final directory = Directory('/storage/emulated/0/Download');
-          if (await directory.exists()) {
-            final file = File('${directory.path}/$fileName');
+            final file = File('${downloadsDir.path}/$fileName');
             await file.writeAsBytes(response.bodyBytes);
             filePath = file.path;
-          } else {
-            final externalDir = await getExternalStorageDirectory();
-            if (externalDir != null) {
-              final file = File('${externalDir.path}/$fileName');
-              await file.writeAsBytes(response.bodyBytes);
-              filePath = file.path;
-            }
           }
+        } catch (e) {
+          debugPrint('External storage failed: $e');
+          // Fallback to app documents
+          final directory = await getApplicationDocumentsDirectory();
+          final file = File('${directory.path}/$fileName');
+          await file.writeAsBytes(response.bodyBytes);
+          filePath = file.path;
         }
       } else if (Platform.isIOS) {
         // iOS - Save to Documents directory
@@ -363,11 +369,10 @@ class _EvidenceDetailScreenState extends State<EvidenceDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Downloaded: $fileName'),
-                if (Platform.isAndroid && filePath.contains('Download'))
-                  const Text(
-                    'Check your Downloads folder',
-                    style: TextStyle(fontSize: 12, color: Colors.white70),
-                  ),
+                Text(
+                  'Saved to: ${filePath.replaceAll(RegExp(r'^.*/'), '')}',
+                  style: const TextStyle(fontSize: 12, color: Colors.white70),
+                ),
               ],
             ),
             backgroundColor: Colors.green,

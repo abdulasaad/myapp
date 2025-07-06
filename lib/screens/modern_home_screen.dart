@@ -1,7 +1,6 @@
 // lib/screens/modern_home_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../utils/constants.dart';
@@ -710,6 +709,23 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
         );
       });
 
+      final visitAnalytics = await _getComprehensiveVisitAnalytics(userId).catchError((e) {
+        debugPrint('Error loading visit analytics: $e');
+        return AgentVisitAnalytics(
+          totalVisitsToday: 0,
+          totalVisitsThisWeek: 0,
+          totalVisitsThisMonth: 0,
+          placeVisitsToday: 0,
+          taskVisitsToday: 0,
+          evidenceSubmissionsToday: 0,
+          averageVisitDuration: 0.0,
+          visitCompletionRate: 0.0,
+          uniqueLocationsVisited: 0,
+          visitsVsYesterday: 0,
+          peakVisitHour: 'N/A',
+        );
+      });
+
       return AgentDashboardData(
         taskStats: taskStats,
         earningsStats: earningsStats,
@@ -717,6 +733,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
         activeTasks: activeTasks,
         routeStats: routeStats,
         campaignStats: campaignStats,
+        visitAnalytics: visitAnalytics,
       );
     } catch (e) {
       debugPrint('Error loading agent dashboard: $e');
@@ -933,18 +950,33 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
   Future<AgentRouteStats> _getAgentRouteStats(String userId) async {
     try {
       // Get active routes assigned to this agent via route_assignments table
-      final routeAssignmentsResponse = await supabase
-          .from('route_assignments')
-          .select('route_id, routes!inner(id, name, status)')
-          .eq('agent_id', userId)
-          .inFilter('status', ['assigned', 'in_progress'])
-          .eq('routes.status', 'active');
+      List<dynamic> routeAssignmentsResponse = [];
+      try {
+        routeAssignmentsResponse = await supabase
+            .from('route_assignments')
+            .select('route_id, routes!inner(id, name, status)')
+            .eq('agent_id', userId)
+            .inFilter('status', ['assigned', 'in_progress'])
+            .eq('routes.status', 'active');
+      } catch (e) {
+        debugPrint('Error loading route assignments: $e');
+        // Continue with empty list
+      }
 
-      final routeNames = routeAssignmentsResponse.map((assignment) {
-        final route = assignment['routes'] as Map<String, dynamic>?;
-        return route?['name'] as String? ?? 'Route ${route?['id'] ?? ''}';
-      }).toList();
-      final activeRoutesCount = routeAssignmentsResponse.length;
+      // Safely extract route names with better error handling
+      final List<String> routeNames = [];
+      for (final assignment in routeAssignmentsResponse) {
+        try {
+          final route = assignment['routes'] as Map<String, dynamic>?;
+          if (route != null) {
+            final name = route['name']?.toString() ?? 'Route ${route['id'] ?? 'Unknown'}';
+            routeNames.add(name);
+          }
+        } catch (e) {
+          debugPrint('Error processing route assignment: $e');
+        }
+      }
+      final activeRoutesCount = routeNames.length;
 
       // Get places to visit today (unvisited places in active routes)
       final today = DateTime.now();
@@ -953,37 +985,52 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
       int todayPlacesCount = 0;
       if (activeRoutesCount > 0) {
         try {
-          // Get route assignment IDs for this agent
-          final routeAssignmentIds = routeAssignmentsResponse.map((assignment) => assignment['route_id'] as String).toList();
-          
-          // Get all route places in assigned routes
-          final allRoutePlaces = await supabase
-              .from('route_places')
-              .select('id, place_id, visit_frequency')
-              .filter('route_id', 'in', '(${routeAssignmentIds.join(',')})');
-          
-          // Calculate remaining visits needed for each place
-          int totalVisitsNeeded = 0;
-          
-          for (final routePlace in allRoutePlaces) {
-            final placeId = routePlace['place_id'];
-            final int visitFrequency = (routePlace['visit_frequency'] as int?) ?? 1;
-            
-            // Count completed visits for this place by this agent
-            final completedVisits = await supabase
-                .from('place_visits')
-                .select('id')
-                .eq('agent_id', userId)
-                .eq('place_id', placeId)
-                .eq('status', 'completed')
-                .count(CountOption.exact);
-            
-            final int completedCount = completedVisits.count;
-            final int remainingVisits = (visitFrequency - completedCount).clamp(0, visitFrequency);
-            totalVisitsNeeded += remainingVisits;
+          // Get route IDs safely
+          final routeIds = <String>[];
+          for (final assignment in routeAssignmentsResponse) {
+            final routeId = assignment['route_id']?.toString();
+            if (routeId != null) {
+              routeIds.add(routeId);
+            }
           }
           
-          todayPlacesCount = totalVisitsNeeded;
+          if (routeIds.isNotEmpty) {
+            // Get all route places in assigned routes
+            final allRoutePlaces = await supabase
+                .from('route_places')
+                .select('id, place_id, visit_frequency')
+                .inFilter('route_id', routeIds);
+            
+            // Calculate remaining visits needed for each place
+            int totalVisitsNeeded = 0;
+            
+            for (final routePlace in allRoutePlaces) {
+              try {
+                final placeId = routePlace['place_id']?.toString();
+                if (placeId == null) continue;
+                
+                final visitFrequency = (routePlace['visit_frequency'] as num?)?.toInt() ?? 1;
+                
+                // Count completed visits for this place by this agent
+                final completedVisits = await supabase
+                    .from('place_visits')
+                    .select('id')
+                    .eq('agent_id', userId)
+                    .eq('place_id', placeId)
+                    .eq('status', 'completed')
+                    .count(CountOption.exact);
+                
+                final completedCount = completedVisits.count;
+                final remainingVisits = (visitFrequency - completedCount).clamp(0, visitFrequency).toInt();
+                totalVisitsNeeded += remainingVisits;
+              } catch (e) {
+                debugPrint('Error processing route place: $e');
+                // Continue with next place
+              }
+            }
+            
+            todayPlacesCount = totalVisitsNeeded;
+          }
         } catch (e) {
           debugPrint('Error loading today places: $e');
           // Keep default 0
@@ -1001,7 +1048,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
             .eq('agent_id', userId)
             .gte('created_at', weekStart.toIso8601String())
             .count(CountOption.exact);
-        weeklyVisitsCount = weeklyVisits.count ?? 0;
+        weeklyVisitsCount = weeklyVisits.count;
       } catch (e) {
         debugPrint('Error loading weekly visits: $e');
         // Keep default 0
@@ -1014,8 +1061,8 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
         routeNames: routeNames,
       );
     } catch (e) {
-      // If there are still relationship issues, return default values
-      debugPrint('Error loading route stats: $e');
+      // If there are still issues, return safe default values
+      debugPrint('Critical error in route stats: $e');
       return AgentRouteStats(
         activeRoutes: 0,
         placesToVisitToday: 0,
@@ -1081,6 +1128,197 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
         activeCampaigns: 0,
         completedCampaigns: 0,
         totalCampaignTasks: 0,
+      );
+    }
+  }
+
+  Future<AgentVisitAnalytics> _getComprehensiveVisitAnalytics(String userId) async {
+    try {
+      final now = DateTime.now();
+      final todayStart = DateTime(now.year, now.month, now.day);
+      final yesterdayStart = todayStart.subtract(const Duration(days: 1));
+      final weekStart = todayStart.subtract(Duration(days: now.weekday - 1));
+      final monthStart = DateTime(now.year, now.month, 1);
+
+      // 1. Get place visits from routes
+      int placeVisitsToday = 0;
+      int placeVisitsThisWeek = 0;
+      int placeVisitsThisMonth = 0;
+      double totalDuration = 0;
+      int completedVisits = 0;
+      int totalVisits = 0;
+      Set<String> uniqueLocations = {};
+      Map<int, int> hourlyVisits = {};
+
+      try {
+        final placeVisits = await supabase
+            .from('place_visits')
+            .select('*')
+            .eq('agent_id', userId)
+            .gte('created_at', monthStart.toIso8601String());
+
+        for (final visit in placeVisits) {
+          final visitDate = DateTime.parse(visit['created_at']);
+          totalVisits++;
+          
+          if (visit['place_id'] != null) {
+            uniqueLocations.add(visit['place_id'].toString());
+          }
+          
+          if (visitDate.isAfter(todayStart)) {
+            placeVisitsToday++;
+            hourlyVisits[visitDate.hour] = (hourlyVisits[visitDate.hour] ?? 0) + 1;
+          }
+          
+          if (visitDate.isAfter(weekStart)) {
+            placeVisitsThisWeek++;
+          }
+          
+          placeVisitsThisMonth++;
+          
+          if (visit['status'] == 'completed') {
+            completedVisits++;
+            if (visit['duration_minutes'] != null) {
+              totalDuration += (visit['duration_minutes'] as num).toDouble();
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('Error loading place visits: $e');
+      }
+
+      // 2. Get task-based visits (task assignments with location check-ins)
+      int taskVisitsToday = 0;
+      int taskVisitsThisWeek = 0;
+      int taskVisitsThisMonth = 0;
+      try {
+        final taskAssignments = await supabase
+            .from('task_assignments')
+            .select('*, tasks!inner(enforce_geofence)')
+            .eq('agent_id', userId)
+            .inFilter('status', ['in_progress', 'completed'])
+            .gte('updated_at', monthStart.toIso8601String());
+
+        for (final assignment in taskAssignments) {
+          if (assignment['tasks']?['enforce_geofence'] == true) {
+            final updateDate = DateTime.parse(assignment['updated_at']);
+            
+            if (updateDate.isAfter(todayStart)) {
+              taskVisitsToday++;
+              final visitHour = updateDate.hour;
+              hourlyVisits[visitHour] = (hourlyVisits[visitHour] ?? 0) + 1;
+            }
+            
+            if (updateDate.isAfter(weekStart)) {
+              taskVisitsThisWeek++;
+            }
+            
+            taskVisitsThisMonth++;
+          }
+        }
+      } catch (e) {
+        debugPrint('Error loading task visits: $e');
+      }
+
+      // 3. Get evidence submissions (which represent field visits)
+      int evidenceSubmissionsToday = 0;
+      int evidenceSubmissionsThisWeek = 0;
+      int evidenceSubmissionsThisMonth = 0;
+      try {
+        final evidenceSubmissions = await supabase
+            .from('evidence')
+            .select('*')
+            .eq('uploader_id', userId)
+            .gte('created_at', monthStart.toIso8601String());
+
+        for (final evidence in evidenceSubmissions) {
+          final submissionDate = DateTime.parse(evidence['created_at']);
+          
+          if (submissionDate.isAfter(todayStart)) {
+            evidenceSubmissionsToday++;
+            final submissionHour = submissionDate.hour;
+            hourlyVisits[submissionHour] = (hourlyVisits[submissionHour] ?? 0) + 1;
+          }
+          
+          if (submissionDate.isAfter(weekStart)) {
+            evidenceSubmissionsThisWeek++;
+          }
+          
+          evidenceSubmissionsThisMonth++;
+          
+          // Track unique locations from evidence
+          if (evidence['latitude'] != null && evidence['longitude'] != null) {
+            uniqueLocations.add('${evidence['latitude']},${evidence['longitude']}');
+          }
+        }
+      } catch (e) {
+        debugPrint('Error loading evidence submissions: $e');
+      }
+
+      // Calculate totals
+      final totalVisitsToday = placeVisitsToday + taskVisitsToday + evidenceSubmissionsToday;
+      final totalVisitsThisWeek = placeVisitsThisWeek + taskVisitsThisWeek + evidenceSubmissionsThisWeek;
+      final totalVisitsThisMonth = placeVisitsThisMonth + taskVisitsThisMonth + evidenceSubmissionsThisMonth;
+
+      // Get yesterday's visits for comparison
+      int yesterdayVisits = 0;
+      try {
+        final yesterdayPlaceVisits = await supabase
+            .from('place_visits')
+            .select('id')
+            .eq('agent_id', userId)
+            .gte('created_at', yesterdayStart.toIso8601String())
+            .lt('created_at', todayStart.toIso8601String())
+            .count(CountOption.exact);
+        
+        yesterdayVisits = yesterdayPlaceVisits.count ?? 0;
+      } catch (e) {
+        debugPrint('Error loading yesterday visits: $e');
+      }
+
+      // Calculate metrics
+      final averageVisitDuration = completedVisits > 0 ? totalDuration / completedVisits : 0.0;
+      final visitCompletionRate = totalVisits > 0 ? (completedVisits / totalVisits * 100) : 0.0;
+      final visitsVsYesterday = totalVisitsToday - yesterdayVisits;
+
+      // Find peak visit hour
+      String peakVisitHour = 'N/A';
+      if (hourlyVisits.isNotEmpty) {
+        final peakHourEntry = hourlyVisits.entries
+            .reduce((a, b) => a.value > b.value ? a : b);
+        final hour = peakHourEntry.key;
+        final period = hour >= 12 ? 'PM' : 'AM';
+        final displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+        peakVisitHour = '$displayHour:00 $period';
+      }
+
+      return AgentVisitAnalytics(
+        totalVisitsToday: totalVisitsToday,
+        totalVisitsThisWeek: totalVisitsThisWeek,
+        totalVisitsThisMonth: totalVisitsThisMonth,
+        placeVisitsToday: placeVisitsToday,
+        taskVisitsToday: taskVisitsToday,
+        evidenceSubmissionsToday: evidenceSubmissionsToday,
+        averageVisitDuration: averageVisitDuration,
+        visitCompletionRate: visitCompletionRate,
+        uniqueLocationsVisited: uniqueLocations.length,
+        visitsVsYesterday: visitsVsYesterday,
+        peakVisitHour: peakVisitHour,
+      );
+    } catch (e) {
+      debugPrint('Error in comprehensive visit analytics: $e');
+      return AgentVisitAnalytics(
+        totalVisitsToday: 0,
+        totalVisitsThisWeek: 0,
+        totalVisitsThisMonth: 0,
+        placeVisitsToday: 0,
+        taskVisitsToday: 0,
+        evidenceSubmissionsToday: 0,
+        averageVisitDuration: 0.0,
+        visitCompletionRate: 0.0,
+        uniqueLocationsVisited: 0,
+        visitsVsYesterday: 0,
+        peakVisitHour: 'N/A',
       );
     }
   }
@@ -1270,12 +1508,6 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                               _buildQuickActionsSection(context),
                               const SizedBox(height: 24),
                               
-                              // Active Tasks & Routes
-                              _buildActiveWorkSection(data),
-                              const SizedBox(height: 24),
-                              
-                              // Recent Activity
-                              _buildRecentActivitySection(data.recentActivity),
                               const SizedBox(height: 120), // Space for floating nav
                             ]),
                           ),
@@ -1717,6 +1949,14 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
   Widget _buildQuickStatsGrid(AgentDashboardData data) {
     final stats = [
       {
+        'title': 'Visit Analytics',
+        'value': data.visitAnalytics.primaryMetric,
+        'subtitle': 'Visits today',
+        'icon': Icons.analytics,
+        'color': Colors.green,
+        'trend': data.visitAnalytics.trendIndicator,
+      },
+      {
         'title': 'Active Tasks',
         'value': '${data.taskStats.activeTasks}',
         'subtitle': 'Tasks in progress',
@@ -1758,20 +1998,21 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
 
     return Column(
       children: [
+        // Visit Analytics Card - Full width
+        _buildDynamicStatCard(
+          title: stats[0]['title'] as String,
+          value: stats[0]['value'] as String,
+          subtitle: stats[0]['subtitle'] as String,
+          icon: stats[0]['icon'] as IconData,
+          color: stats[0]['color'] as Color,
+          trend: stats[0]['trend'] as String,
+          isLarge: true,
+          details: _buildVisitAnalyticsDetails(data.visitAnalytics),
+        ),
+        const SizedBox(height: 12),
         // First row
         Row(
           children: [
-            Expanded(
-              child: _buildDynamicStatCard(
-                title: stats[0]['title'] as String,
-                value: stats[0]['value'] as String,
-                subtitle: stats[0]['subtitle'] as String,
-                icon: stats[0]['icon'] as IconData,
-                color: stats[0]['color'] as Color,
-                trend: stats[0]['trend'] as String,
-              ),
-            ),
-            const SizedBox(width: 12),
             Expanded(
               child: _buildDynamicStatCard(
                 title: stats[1]['title'] as String,
@@ -1782,12 +2023,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                 trend: stats[1]['trend'] as String,
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        // Second row
-        Row(
-          children: [
+            const SizedBox(width: 12),
             Expanded(
               child: _buildDynamicStatCard(
                 title: stats[2]['title'] as String,
@@ -1798,7 +2034,12 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                 trend: stats[2]['trend'] as String,
               ),
             ),
-            const SizedBox(width: 12),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // Second row
+        Row(
+          children: [
             Expanded(
               child: _buildDynamicStatCard(
                 title: stats[3]['title'] as String,
@@ -1807,6 +2048,17 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                 icon: stats[3]['icon'] as IconData,
                 color: stats[3]['color'] as Color,
                 trend: stats[3]['trend'] as String,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildDynamicStatCard(
+                title: stats[4]['title'] as String,
+                value: stats[4]['value'] as String,
+                subtitle: stats[4]['subtitle'] as String,
+                icon: stats[4]['icon'] as IconData,
+                color: stats[4]['color'] as Color,
+                trend: stats[4]['trend'] as String,
               ),
             ),
           ],
@@ -1823,6 +2075,8 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
     required IconData icon,
     required Color color,
     required String trend,
+    bool isLarge = false,
+    Widget? details,
   }) {
     return Container(
       width: double.infinity,
@@ -1913,8 +2167,173 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
               overflow: TextOverflow.ellipsis,
             ),
           ],
+          
+          // Details section for large cards
+          if (details != null) ...[
+            const SizedBox(height: 12),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            details,
+          ],
         ],
       ),
+    );
+  }
+
+  // Visit Analytics Details
+  Widget _buildVisitAnalyticsDetails(AgentVisitAnalytics analytics) {
+    return Column(
+      children: [
+        // Visit breakdown
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _buildMiniStat(
+              icon: Icons.location_on,
+              value: analytics.placeVisitsToday.toString(),
+              label: 'Places',
+              color: Colors.blue,
+            ),
+            _buildMiniStat(
+              icon: Icons.task_alt,
+              value: analytics.taskVisitsToday.toString(),
+              label: 'Tasks',
+              color: Colors.orange,
+            ),
+            _buildMiniStat(
+              icon: Icons.camera_alt,
+              value: analytics.evidenceSubmissionsToday.toString(),
+              label: 'Evidence',
+              color: Colors.purple,
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        // Performance metrics
+        Row(
+          children: [
+            Expanded(
+              child: _buildMetricRow(
+                label: 'Completion Rate',
+                value: '${analytics.visitCompletionRate.toStringAsFixed(1)}%',
+                icon: Icons.check_circle_outline,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildMetricRow(
+                label: 'Peak Hour',
+                value: analytics.peakVisitHour,
+                icon: Icons.schedule,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _buildMetricRow(
+                label: 'Avg Duration',
+                value: '${analytics.averageVisitDuration.toStringAsFixed(0)} min',
+                icon: Icons.timer,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildMetricRow(
+                label: 'Week Total',
+                value: analytics.totalVisitsThisWeek.toString(),
+                icon: Icons.calendar_view_week,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _buildMetricRow(
+                label: 'Month Total',
+                value: analytics.totalVisitsThisMonth.toString(),
+                icon: Icons.calendar_month,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildMetricRow(
+                label: 'Unique Locations',
+                value: analytics.uniqueLocationsVisited.toString(),
+                icon: Icons.place,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMiniStat({
+    required IconData icon,
+    required String value,
+    required String label,
+    required Color color,
+  }) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 16, color: color),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: textSecondaryColor,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMetricRow({
+    required String label,
+    required String value,
+    required IconData icon,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: textSecondaryColor),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              color: textSecondaryColor,
+            ),
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 
@@ -2012,402 +2431,11 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
     );
   }
 
-  // Active Work Section
-  Widget _buildActiveWorkSection(AgentDashboardData data) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Active Work',
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: textPrimaryColor,
-              ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AgentStandaloneTasksScreen(),
-                ),
-              ),
-              child: const Text('View All'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        
-        if (data.activeTasks.isEmpty && data.routeStats.activeRoutes == 0)
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: surfaceColor,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.grey[300]!,
-                width: 1,
-              ),
-            ),
-            child: Center(
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.assignment_turned_in,
-                    size: 48,
-                    color: Colors.grey[400],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'No active work',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Check back later for new assignments',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[500],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          )
-        else
-          Column(
-            children: [
-              // Active Tasks
-              ...data.activeTasks.map((task) => _buildActiveTaskCard(task)),
-              
-              // Active Routes (if any)
-              if (data.routeStats.activeRoutes > 0)
-                _buildActiveRouteCard(data.routeStats),
-            ],
-          ),
-      ],
-    );
-  }
 
-  // Active Task Card
-  Widget _buildActiveTaskCard(ActiveTaskPreview task) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: _getTaskStatusColor(task.status).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              task.status == 'in_progress' ? Icons.play_circle : Icons.assignment,
-              color: _getTaskStatusColor(task.status),
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  task.title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: textPrimaryColor,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.star, size: 16, color: Colors.amber),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${task.points} points',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: textSecondaryColor,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: _getTaskStatusColor(task.status).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        task.status.replaceAll('_', ' ').toUpperCase(),
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: _getTaskStatusColor(task.status),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Icon(
-            Icons.arrow_forward_ios,
-            color: textSecondaryColor,
-            size: 16,
-          ),
-        ],
-      ),
-    );
-  }
 
-  // Active Route Card
-  Widget _buildActiveRouteCard(AgentRouteStats routeStats) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            secondaryColor.withValues(alpha: 0.1),
-            primaryColor.withValues(alpha: 0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: secondaryColor.withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: secondaryColor.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.route,
-              color: secondaryColor,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Active Routes',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: textPrimaryColor,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${routeStats.placesToVisitToday} places to visit today',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: textSecondaryColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: secondaryColor,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              '${routeStats.activeRoutes}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  // Recent Activity Section
-  Widget _buildRecentActivitySection(List<AgentActivityItem> activities) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Recent Activity',
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: textPrimaryColor,
-          ),
-        ),
-        const SizedBox(height: 16),
-        
-        if (activities.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: surfaceColor,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: Colors.grey[300]!,
-                width: 1,
-              ),
-            ),
-            child: Center(
-              child: Text(
-                'No recent activity',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ),
-          )
-        else
-          Container(
-            decoration: BoxDecoration(
-              color: surfaceColor,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              children: activities
-                  .map((activity) => _buildRecentActivityItem(activity))
-                  .toList(),
-            ),
-          ),
-      ],
-    );
-  }
 
-  // Recent Activity Item
-  Widget _buildRecentActivityItem(AgentActivityItem activity) {
-    final timeAgo = _getTimeAgo(activity.timestamp);
-    
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: Colors.grey[200]!,
-            width: 1,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: activity.color.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              activity.icon,
-              color: activity.color,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  activity.title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: textPrimaryColor,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  timeAgo,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: textSecondaryColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  // Helper method to get time ago string
-  String _getTimeAgo(DateTime timestamp) {
-    final now = DateTime.now();
-    final difference = now.difference(timestamp);
-    
-    if (difference.inMinutes < 60) {
-      return '${difference.inMinutes} minutes ago';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours} hours ago';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays} days ago';
-    } else {
-      return DateFormat('MMM d').format(timestamp);
-    }
-  }
-
-  // Helper method to get task status color
-  Color _getTaskStatusColor(String status) {
-    switch (status) {
-      case 'assigned':
-        return primaryColor;
-      case 'in_progress':
-        return Colors.orange;
-      case 'completed':
-        return successColor;
-      default:
-        return textSecondaryColor;
-    }
-  }
 
   // Suggest new place functionality
   Future<void> _suggestNewPlace(BuildContext context) async {
@@ -3062,6 +3090,7 @@ class AgentDashboardData {
   final List<ActiveTaskPreview> activeTasks;
   final AgentRouteStats routeStats;
   final AgentCampaignStats campaignStats;
+  final AgentVisitAnalytics visitAnalytics;
 
   AgentDashboardData({
     required this.taskStats,
@@ -3070,6 +3099,7 @@ class AgentDashboardData {
     required this.activeTasks,
     required this.routeStats,
     required this.campaignStats,
+    required this.visitAnalytics,
   });
 }
 
@@ -3161,4 +3191,50 @@ class ActiveTaskPreview {
     required this.status,
     this.description,
   });
+}
+
+// Comprehensive Visit Analytics
+class AgentVisitAnalytics {
+  // Overall visit counts
+  final int totalVisitsToday;
+  final int totalVisitsThisWeek;
+  final int totalVisitsThisMonth;
+  
+  // Visit breakdown by type
+  final int placeVisitsToday;
+  final int taskVisitsToday;
+  final int evidenceSubmissionsToday;
+  
+  // Performance metrics
+  final double averageVisitDuration; // in minutes
+  final double visitCompletionRate; // percentage
+  final int uniqueLocationsVisited;
+  
+  // Trending data
+  final int visitsVsYesterday; // positive or negative change
+  final String peakVisitHour; // e.g., "2:00 PM"
+  
+  AgentVisitAnalytics({
+    required this.totalVisitsToday,
+    required this.totalVisitsThisWeek,
+    required this.totalVisitsThisMonth,
+    required this.placeVisitsToday,
+    required this.taskVisitsToday,
+    required this.evidenceSubmissionsToday,
+    required this.averageVisitDuration,
+    required this.visitCompletionRate,
+    required this.uniqueLocationsVisited,
+    required this.visitsVsYesterday,
+    required this.peakVisitHour,
+  });
+  
+  // Helper to get primary metric for display
+  String get primaryMetric => totalVisitsToday.toString();
+  
+  // Helper to get trend indicator
+  String get trendIndicator {
+    if (visitsVsYesterday > 0) return '+$visitsVsYesterday vs yesterday';
+    if (visitsVsYesterday < 0) return '$visitsVsYesterday vs yesterday';
+    return 'Same as yesterday';
+  }
 }
