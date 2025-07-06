@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:signature/signature.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/task.dart';
 import '../../models/task_template.dart';
 import '../../models/template_field.dart';
