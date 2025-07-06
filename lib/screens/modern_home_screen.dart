@@ -967,7 +967,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
           
           for (final routePlace in allRoutePlaces) {
             final placeId = routePlace['place_id'];
-            final visitFrequency = routePlace['visit_frequency'] ?? 1;
+            final int visitFrequency = (routePlace['visit_frequency'] as int?) ?? 1;
             
             // Count completed visits for this place by this agent
             final completedVisits = await supabase
@@ -978,8 +978,8 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                 .eq('status', 'completed')
                 .count(CountOption.exact);
             
-            final completedCount = completedVisits.count;
-            final remainingVisits = (visitFrequency - completedCount).clamp(0, visitFrequency).toInt();
+            final int completedCount = completedVisits.count;
+            final int remainingVisits = (visitFrequency - completedCount).clamp(0, visitFrequency);
             totalVisitsNeeded += remainingVisits;
           }
           
