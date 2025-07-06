@@ -932,32 +932,41 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
 
   Future<AgentRouteStats> _getAgentRouteStats(String userId) async {
     try {
-      // Get active routes assigned to this agent with names
-      final activeRoutesData = await supabase
-          .from('routes')
-          .select('id, name')
-          .eq('assigned_agent_id', userId)
-          .eq('status', 'active');
+      // Get active routes assigned to this agent via route_assignments table
+      final routeAssignmentsResponse = await supabase
+          .from('route_assignments')
+          .select('route_id, routes!inner(id, name, status)')
+          .eq('agent_id', userId)
+          .inFilter('status', ['assigned', 'in_progress'])
+          .eq('routes.status', 'active');
 
-      final routeNames = activeRoutesData.map((route) => route['name'] as String? ?? 'Route ${route['id']}').toList();
-      final activeRoutesCount = activeRoutesData.length;
+      final routeNames = routeAssignmentsResponse.map((assignment) {
+        final route = assignment['routes'] as Map<String, dynamic>?;
+        return route?['name'] as String? ?? 'Route ${route?['id'] ?? ''}';
+      }).toList();
+      final activeRoutesCount = routeAssignmentsResponse.length;
 
       // Get places to visit today (unvisited places in active routes)
       final today = DateTime.now();
       final todayStart = DateTime(today.year, today.month, today.day);
 
       int todayPlacesCount = 0;
-      try {
-        final todayPlaces = await supabase
-            .from('route_places')
-            .select('id, routes!inner(assigned_agent_id)')
-            .eq('routes.assigned_agent_id', userId)
-            .isFilter('visited_at', null)
-            .count(CountOption.exact);
-        todayPlacesCount = todayPlaces.count ?? 0;
-      } catch (e) {
-        debugPrint('Error loading today places: $e');
-        // Keep default 0
+      if (activeRoutesCount > 0) {
+        try {
+          // Get route IDs from assignments
+          final routeIds = routeAssignmentsResponse.map((assignment) => assignment['route_id'] as String).toList();
+          
+          final todayPlaces = await supabase
+              .from('route_places')
+              .select('id')
+              .inFilter('route_id', routeIds)
+              .isFilter('visited_at', null)
+              .count(CountOption.exact);
+          todayPlacesCount = todayPlaces.count ?? 0;
+        } catch (e) {
+          debugPrint('Error loading today places: $e');
+          // Keep default 0
+        }
       }
 
       // Get completed visits this week
@@ -996,53 +1005,63 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
   }
 
   Future<AgentCampaignStats> _getAgentCampaignStats(String userId) async {
-    // Get active campaigns count
-    final userGroups = await supabase
-        .from('user_groups')
-        .select('group_id')
-        .eq('user_id', userId);
+    try {
+      // Get campaigns assigned to this agent via campaign_agents table
+      final agentCampaigns = await supabase
+          .from('campaign_agents')
+          .select('campaign_id, campaigns!inner(id, start_date, end_date, status)')
+          .eq('agent_id', userId);
 
-    final groupIds = userGroups.map((g) => g['group_id']).toList();
+      if (agentCampaigns.isEmpty) {
+        return AgentCampaignStats(
+          activeCampaigns: 0,
+          completedCampaigns: 0,
+          totalCampaignTasks: 0,
+        );
+      }
 
-    if (groupIds.isEmpty) {
+      final now = DateTime.now();
+      int activeCampaigns = 0;
+      int completedCampaigns = 0;
+
+      // Count active and completed campaigns
+      for (final assignment in agentCampaigns) {
+        final campaign = assignment['campaigns'];
+        if (campaign != null) {
+          final startDate = DateTime.tryParse(campaign['start_date'] ?? '');
+          final endDate = DateTime.tryParse(campaign['end_date'] ?? '');
+          
+          if (startDate != null && endDate != null) {
+            if (now.isAfter(startDate) && now.isBefore(endDate)) {
+              activeCampaigns++;
+            } else if (now.isAfter(endDate)) {
+              completedCampaigns++;
+            }
+          }
+        }
+      }
+
+      // Total campaign tasks assigned to this agent
+      final campaignTasks = await supabase
+          .from('task_assignments')
+          .select('id, tasks!inner(campaign_id)')
+          .eq('agent_id', userId)
+          .not('tasks.campaign_id', 'is', null)
+          .count(CountOption.exact);
+
+      return AgentCampaignStats(
+        activeCampaigns: activeCampaigns,
+        completedCampaigns: completedCampaigns,
+        totalCampaignTasks: campaignTasks.count ?? 0,
+      );
+    } catch (e) {
+      debugPrint('Error loading agent campaign stats: $e');
       return AgentCampaignStats(
         activeCampaigns: 0,
         completedCampaigns: 0,
         totalCampaignTasks: 0,
       );
     }
-
-    // Active campaigns
-    final now = DateTime.now();
-    final activeCampaigns = await supabase
-        .from('campaigns')
-        .select('id')
-        .inFilter('group_id', groupIds)
-        .lte('start_date', now.toIso8601String())
-        .gte('end_date', now.toIso8601String())
-        .count(CountOption.exact);
-
-    // Completed campaigns (assuming campaigns with all tasks completed by this agent)
-    final completedCampaigns = await supabase
-        .from('campaigns')
-        .select('id')
-        .inFilter('group_id', groupIds)
-        .lt('end_date', now.toIso8601String())
-        .count(CountOption.exact);
-
-    // Total campaign tasks assigned
-    final campaignTasks = await supabase
-        .from('task_assignments')
-        .select('id, tasks!inner(campaign_id)')
-        .eq('agent_id', userId)
-        .not('tasks.campaign_id', 'is', null)
-        .count(CountOption.exact);
-
-    return AgentCampaignStats(
-      activeCampaigns: activeCampaigns.count ?? 0,
-      completedCampaigns: completedCampaigns.count ?? 0,
-      totalCampaignTasks: campaignTasks.count ?? 0,
-    );
   }
 
   @override

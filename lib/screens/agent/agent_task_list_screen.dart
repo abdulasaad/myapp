@@ -20,6 +20,7 @@ class AgentTask {
   final String status;
   final List<String> evidenceUrls;
   final bool? enforceGeofence;
+  final int? requiredEvidenceCount;
 
   AgentTask.fromJson(Map<String, dynamic> json)
       : taskId = json['task_id'],
@@ -28,7 +29,8 @@ class AgentTask {
         points = json['points'] ?? 0,
         status = json['assignment_status'],
         evidenceUrls = List<String>.from(json['evidence_urls'] ?? []),
-        enforceGeofence = json['enforce_geofence'];
+        enforceGeofence = json['enforce_geofence'],
+        requiredEvidenceCount = json['required_evidence_count'];
 }
 
 class AgentTaskListScreen extends StatefulWidget {
@@ -236,11 +238,40 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
   }
 
   Future<void> _markTaskAsCompleted(AgentTask task) async {
+    // Check if evidence is required but not uploaded
+    final requiredEvidence = task.requiredEvidenceCount ?? 0;
+    final uploadedEvidence = task.evidenceUrls.length;
+    
+    if (requiredEvidence > 0 && uploadedEvidence < requiredEvidence) {
+      // Show error dialog if evidence is missing
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Evidence Required'),
+          content: Text(
+            'This task requires $requiredEvidence evidence file(s) but only $uploadedEvidence uploaded.\n\n'
+            'Please upload the required evidence before marking the task as complete.'
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     final shouldComplete = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Confirm Completion'),
-        content: const Text('Are you sure you want to mark this task as complete?'),
+        content: Text(
+          requiredEvidence > 0 
+              ? 'You have uploaded $uploadedEvidence/$requiredEvidence required evidence files.\n\nAre you sure you want to mark this task as complete?'
+              : 'Are you sure you want to mark this task as complete?'
+        ),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
           ElevatedButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Confirm')),
@@ -566,21 +597,37 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                   ),
                 ],
                 
-                // Evidence preview (only show if not pending)
-                if (!isPending && task.evidenceUrls.isNotEmpty) ...[
+                // Evidence preview and requirements (only show if not pending)
+                if (!isPending) ...[
                   const SizedBox(height: 16),
                   Row(
                     children: [
                       Icon(Icons.photo_library, size: 16, color: Colors.grey[600]),
                       const SizedBox(width: 8),
                       Text(
-                        '${task.evidenceUrls.length} evidence file(s)',
+                        task.requiredEvidenceCount != null && task.requiredEvidenceCount! > 0
+                            ? '${task.evidenceUrls.length}/${task.requiredEvidenceCount} evidence required'
+                            : '${task.evidenceUrls.length} evidence file(s)',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey[600],
+                          color: task.requiredEvidenceCount != null && 
+                                 task.requiredEvidenceCount! > 0 && 
+                                 task.evidenceUrls.length < task.requiredEvidenceCount!
+                              ? Colors.orange[700]
+                              : Colors.grey[600],
                           fontWeight: FontWeight.w500,
                         ),
                       ),
+                      if (task.requiredEvidenceCount != null && 
+                          task.requiredEvidenceCount! > 0 && 
+                          task.evidenceUrls.length < task.requiredEvidenceCount!) ...[
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.warning_amber_rounded,
+                          size: 16,
+                          color: Colors.orange[700],
+                        ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -695,13 +742,59 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () => _markTaskAsCompleted(task),
-                          icon: const Icon(Icons.check_circle, size: 18),
-                          label: const Text('Mark Done'),
+                          onPressed: () {
+                            final requiredEvidence = task.requiredEvidenceCount ?? 0;
+                            final uploadedEvidence = task.evidenceUrls.length;
+                            
+                            if (requiredEvidence > 0 && uploadedEvidence < requiredEvidence) {
+                              // Show tooltip-like message for disabled button
+                              context.showSnackBar(
+                                'Upload ${requiredEvidence - uploadedEvidence} more evidence file(s) to complete this task',
+                                isError: true,
+                              );
+                            } else {
+                              _markTaskAsCompleted(task);
+                            }
+                          },
+                          icon: Icon(
+                            Icons.check_circle, 
+                            size: 18,
+                            color: () {
+                              final requiredEvidence = task.requiredEvidenceCount ?? 0;
+                              final uploadedEvidence = task.evidenceUrls.length;
+                              if (requiredEvidence > 0 && uploadedEvidence < requiredEvidence) {
+                                return Colors.grey;
+                              }
+                              return null;
+                            }(),
+                          ),
+                          label: Text(
+                            'Mark Done',
+                            style: TextStyle(
+                              color: () {
+                                final requiredEvidence = task.requiredEvidenceCount ?? 0;
+                                final uploadedEvidence = task.evidenceUrls.length;
+                                if (requiredEvidence > 0 && uploadedEvidence < requiredEvidence) {
+                                  return Colors.grey;
+                                }
+                                return null;
+                              }(),
+                            ),
+                          ),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
+                            ),
+                            side: BorderSide(
+                              color: () {
+                                final requiredEvidence = task.requiredEvidenceCount ?? 0;
+                                final uploadedEvidence = task.evidenceUrls.length;
+                                if (requiredEvidence > 0 && uploadedEvidence < requiredEvidence) {
+                                  return Colors.grey;
+                                }
+                                return Theme.of(context).primaryColor;
+                              }(),
                             ),
                           ),
                         ),
