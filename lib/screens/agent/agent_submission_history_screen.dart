@@ -102,7 +102,6 @@ class _AgentSubmissionHistoryScreenState extends State<AgentSubmissionHistoryScr
                 title,
                 custom_fields,
                 created_at,
-                updated_at,
                 campaigns(name)
               )
             ''')
@@ -123,7 +122,7 @@ class _AgentSubmissionHistoryScreenState extends State<AgentSubmissionHistoryScr
             taskTitle: task['title'],
             campaignName: campaignName,
             customFields: task['custom_fields'] ?? {},
-            submittedAt: DateTime.parse(task['updated_at'] ?? task['created_at']),
+            submittedAt: DateTime.parse(task['created_at']),
             status: 'submitted',
             type: 'form',
           ));
