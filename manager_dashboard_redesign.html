@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al-Tijwal Manager Dashboard Redesign</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0a0e27;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #64ffda;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .search-bar {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            color: white;
+            width: 300px;
+        }
+        
+        .notification-btn {
+            position: relative;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff4757;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+        }
+        
+        /* Quick Stats */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(100, 255, 218, 0.1) 0%, rgba(100, 255, 218, 0.05) 100%);
+            border: 1px solid rgba(100, 255, 218, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #64ffda;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #8892b0;
+            font-size: 14px;
+        }
+        
+        .stat-trend {
+            font-size: 12px;
+            color: #00ff88;
+            margin-top: 5px;
+        }
+        
+        /* Primary Actions */
+        .primary-actions {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #ccd6f6;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .priority-badge {
+            background: #ff4757;
+            color: white;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .action-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .action-card:hover {
+            background: rgba(100, 255, 218, 0.1);
+            border-color: rgba(100, 255, 218, 0.3);
+            transform: translateY(-5px);
+        }
+        
+        .action-card.urgent {
+            border-color: #ff4757;
+            background: rgba(255, 71, 87, 0.1);
+        }
+        
+        .action-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(100, 255, 218, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+        
+        .action-title {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: #ccd6f6;
+        }
+        
+        .action-desc {
+            color: #8892b0;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .action-count {
+            font-size: 24px;
+            font-weight: 700;
+            color: #64ffda;
+        }
+        
+        /* Quick Access Tools */
+        .quick-tools {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .tool-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .tool-pill {
+            padding: 10px 20px;
+            background: rgba(100, 255, 218, 0.1);
+            border: 1px solid rgba(100, 255, 218, 0.3);
+            border-radius: 25px;
+            color: #64ffda;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tool-pill:hover {
+            background: rgba(100, 255, 218, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        /* Two Column Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+        
+        /* Activity Feed */
+        .activity-section {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 25px;
+        }
+        
+        .activity-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(100, 255, 218, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .activity-content {
+            flex: 1;
+        }
+        
+        .activity-text {
+            color: #ccd6f6;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .activity-time {
+            color: #8892b0;
+            font-size: 12px;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .sidebar-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 25px;
+        }
+        
+        .team-member {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+        }
+        
+        .member-avatar {
+            width: 36px;
+            height: 36px;
+            background: rgba(100, 255, 218, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .member-info {
+            flex: 1;
+        }
+        
+        .member-name {
+            color: #ccd6f6;
+            font-size: 14px;
+        }
+        
+        .member-status {
+            color: #8892b0;
+            font-size: 12px;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            background: #00ff88;
+            border-radius: 50%;
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 14, 39, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px 0;
+        }
+        
+        .nav-items {
+            display: flex;
+            justify-content: space-around;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            color: #8892b0;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        
+        .nav-item.active {
+            color: #64ffda;
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+        }
+        
+        .nav-label {
+            font-size: 12px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .search-bar {
+                width: 100%;
+            }
+            
+            .action-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <h1>Manager Dashboard</h1>
+                <p style="color: #8892b0; margin-top: 5px;">Welcome back, Abdullah</p>
+            </div>
+            <div class="header-actions">
+                <input type="text" class="search-bar" placeholder="Search tasks, agents, campaigns...">
+                <div class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">5</span>
+                </div>
+                <div style="padding: 10px; background: rgba(255, 255, 255, 0.1); border-radius: 50%;">
+                    <span>👤</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div class="quick-stats">
+            <div class="stat-card">
+                <div class="stat-value">24</div>
+                <div class="stat-label">Active Agents</div>
+                <div class="stat-trend">↑ 12% from yesterday</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">156</div>
+                <div class="stat-label">Tasks Today</div>
+                <div class="stat-trend">↑ 8% completion rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">89%</div>
+                <div class="stat-label">Evidence Approved</div>
+                <div class="stat-trend">12 pending review</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">5</div>
+                <div class="stat-label">Active Campaigns</div>
+                <div class="stat-trend">2 ending soon</div>
+            </div>
+        </div>
+        
+        <!-- Primary Actions -->
+        <div class="primary-actions">
+            <h2 class="section-title">
+                Primary Actions
+                <span class="priority-badge">12 Urgent</span>
+            </h2>
+            <div class="action-grid">
+                <div class="action-card urgent">
+                    <div class="action-icon">📋</div>
+                    <div class="action-title">Pending Evidence</div>
+                    <div class="action-desc">Review submitted evidence</div>
+                    <div class="action-count">12 awaiting</div>
+                </div>
+                <div class="action-card">
+                    <div class="action-icon">👥</div>
+                    <div class="action-title">Assign Tasks</div>
+                    <div class="action-desc">Distribute tasks to agents</div>
+                    <div class="action-count">8 unassigned</div>
+                </div>
+                <div class="action-card">
+                    <div class="action-icon">📍</div>
+                    <div class="action-title">Live Tracking</div>
+                    <div class="action-desc">Monitor agent locations</div>
+                    <div class="action-count">24 online</div>
+                </div>
+                <div class="action-card">
+                    <div class="action-icon">📊</div>
+                    <div class="action-title">Analytics</div>
+                    <div class="action-desc">Campaign performance</div>
+                    <div class="action-count">View reports</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Access Tools -->
+        <div class="quick-tools">
+            <h2 class="section-title">Quick Tools</h2>
+            <div class="tool-pills">
+                <a href="#" class="tool-pill">
+                    <span>📥</span> Export Data
+                </a>
+                <a href="#" class="tool-pill">
+                    <span>🛣️</span> Route Manager
+                </a>
+                <a href="#" class="tool-pill">
+                    <span>📝</span> Template Builder
+                </a>
+                <a href="#" class="tool-pill">
+                    <span>📍</span> Place Approvals
+                </a>
+                <a href="#" class="tool-pill">
+                    <span>📅</span> Calendar View
+                </a>
+                <a href="#" class="tool-pill">
+                    <span>⚙️</span> GPS Settings
+                </a>
+                <a href="#" class="tool-pill">
+                    <span>📋</span> Form Responses
+                </a>
+            </div>
+        </div>
+        
+        <!-- Two Column Layout -->
+        <div class="dashboard-grid">
+            <!-- Left Column - Activity Feed -->
+            <div class="activity-section">
+                <h2 class="section-title">Recent Activity</h2>
+                <div class="activity-item">
+                    <div class="activity-icon">✅</div>
+                    <div class="activity-content">
+                        <div class="activity-text"><strong>Ahmed Ali</strong> completed task at Mall of Arabia</div>
+                        <div class="activity-time">2 minutes ago</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon">📸</div>
+                    <div class="activity-content">
+                        <div class="activity-text"><strong>Sara Mohammed</strong> submitted evidence for review</div>
+                        <div class="activity-time">15 minutes ago</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon">🚨</div>
+                    <div class="activity-content">
+                        <div class="activity-text"><strong>System Alert:</strong> Campaign "Weekend Survey" ending in 2 hours</div>
+                        <div class="activity-time">30 minutes ago</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-icon">📍</div>
+                    <div class="activity-content">
+                        <div class="activity-text"><strong>Omar Hassan</strong> started route in District 5</div>
+                        <div class="activity-time">1 hour ago</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Column - Sidebar -->
+            <div class="sidebar">
+                <!-- Active Team Members -->
+                <div class="sidebar-card">
+                    <h3 class="section-title">Active Team Members</h3>
+                    <div class="team-member">
+                        <div class="member-avatar">AA</div>
+                        <div class="member-info">
+                            <div class="member-name">Ahmed Ali</div>
+                            <div class="member-status">On task • Mall of Arabia</div>
+                        </div>
+                        <div class="status-indicator"></div>
+                    </div>
+                    <div class="team-member">
+                        <div class="member-avatar">SM</div>
+                        <div class="member-info">
+                            <div class="member-name">Sara Mohammed</div>
+                            <div class="member-status">Available</div>
+                        </div>
+                        <div class="status-indicator"></div>
+                    </div>
+                    <div class="team-member">
+                        <div class="member-avatar">OH</div>
+                        <div class="member-info">
+                            <div class="member-name">Omar Hassan</div>
+                            <div class="member-status">On route • District 5</div>
+                        </div>
+                        <div class="status-indicator"></div>
+                    </div>
+                    <a href="#" style="color: #64ffda; text-decoration: none; margin-top: 10px; display: block;">View all agents →</a>
+                </div>
+                
+                <!-- Upcoming Deadlines -->
+                <div class="sidebar-card">
+                    <h3 class="section-title">Upcoming Deadlines</h3>
+                    <div style="margin-top: 15px;">
+                        <div style="margin-bottom: 15px;">
+                            <div style="color: #ff4757; font-weight: 600;">Weekend Survey Campaign</div>
+                            <div style="color: #8892b0; font-size: 14px;">Ends in 2 hours</div>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <div style="color: #ffa502; font-weight: 600;">Mall Inspection Tasks</div>
+                            <div style="color: #8892b0; font-size: 14px;">Due tomorrow</div>
+                        </div>
+                        <div>
+                            <div style="color: #ccd6f6; font-weight: 600;">Monthly Reports</div>
+                            <div style="color: #8892b0; font-size: 14px;">Due in 3 days</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="nav-items">
+            <a href="#" class="nav-item active">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Dashboard</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">📋</span>
+                <span class="nav-label">Campaigns</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">✅</span>
+                <span class="nav-label">Tasks</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">🗺️</span>
+                <span class="nav-label">Map</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Analytics</span>
+            </a>
+        </div>
+    </div>
+    
+    <div style="height: 80px;"></div>
+    
+    <!-- Design Notes Section -->
+    <div style="background: rgba(100, 255, 218, 0.1); border: 2px solid rgba(100, 255, 218, 0.3); border-radius: 16px; padding: 30px; margin-top: 50px;">
+        <h2 style="color: #64ffda; margin-bottom: 20px;">📐 Design Improvements & Rationale</h2>
+        
+        <div style="display: grid; gap: 20px;">
+            <div>
+                <h3 style="color: #ccd6f6; margin-bottom: 10px;">1. Priority-Based Layout</h3>
+                <ul style="color: #8892b0; padding-left: 20px;">
+                    <li><strong>Urgent items first:</strong> Pending evidence reviews marked with red badges</li>
+                    <li><strong>Quick stats:</strong> Key metrics visible at a glance</li>
+                    <li><strong>Primary actions:</strong> Most-used functions in prominent cards</li>
+                </ul>
+            </div>
+            
+            <div>
+                <h3 style="color: #ccd6f6; margin-bottom: 10px;">2. Improved Navigation</h3>
+                <ul style="color: #8892b0; padding-left: 20px;">
+                    <li><strong>Global search:</strong> Find anything quickly</li>
+                    <li><strong>Quick tools pills:</strong> One-click access to important features</li>
+                    <li><strong>5-tab bottom nav:</strong> Added Analytics tab for easier report access</li>
+                </ul>
+            </div>
+            
+            <div>
+                <h3 style="color: #ccd6f6; margin-bottom: 10px;">3. Better Information Hierarchy</h3>
+                <ul style="color: #8892b0; padding-left: 20px;">
+                    <li><strong>Visual priorities:</strong> Color coding (red for urgent, teal for normal)</li>
+                    <li><strong>Grouped features:</strong> Related tools in "Quick Tools" section</li>
+                    <li><strong>Live updates:</strong> Activity feed and active agents sidebar</li>
+                </ul>
+            </div>
+            
+            <div>
+                <h3 style="color: #ccd6f6; margin-bottom: 10px;">4. Hidden Features Now Visible</h3>
+                <ul style="color: #8892b0; padding-left: 20px;">
+                    <li><strong>Export Data:</strong> Previously buried, now in quick tools</li>
+                    <li><strong>Route Manager:</strong> Elevated from sub-menu</li>
+                    <li><strong>Template Builder:</strong> Easy access for frequent users</li>
+                    <li><strong>GPS Settings:</strong> No longer hidden in profile settings</li>
+                </ul>
+            </div>
+            
+            <div>
+                <h3 style="color: #ccd6f6; margin-bottom: 10px;">5. Real-time Awareness</h3>
+                <ul style="color: #8892b0; padding-left: 20px;">
+                    <li><strong>Active agents list:</strong> See who's available at a glance</li>
+                    <li><strong>Notification badge:</strong> Never miss important updates</li>
+                    <li><strong>Deadline reminders:</strong> Prominent sidebar widget</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px; padding: 20px; background: rgba(255, 255, 255, 0.05); border-radius: 12px;">
+            <h3 style="color: #64ffda; margin-bottom: 10px;">🚀 Key Benefits</h3>
+            <p style="color: #ccd6f6;">
+                This redesign reduces the average clicks to reach any feature from 3-4 clicks to just 1-2 clicks. 
+                The priority-based layout ensures managers handle urgent tasks first, while the improved visibility 
+                of tools like data export and route management increases feature adoption and productivity.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

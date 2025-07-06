@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../utils/constants.dart';
@@ -252,72 +253,123 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: textPrimaryColor),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          'Work Areas',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-            fontSize: 20,
-            color: textPrimaryColor,
-          ),
-        ),
-        elevation: 0,
-        backgroundColor: surfaceColor,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
       ),
-      body: _isLoading
-          ? preloader
-          : _geofenceZones.isEmpty
-              ? _buildEmptyState()
-              : Stack(
+      child: Scaffold(
+        backgroundColor: backgroundColor,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Modern Title Header
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: Row(
                   children: [
-                    // Map
-                    GoogleMap(
-                      mapType: MapType.normal,
-                      initialCameraPosition: const CameraPosition(
-                        target: LatLng(33.3152, 44.3661),
-                        zoom: 11,
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      polygons: _polygons,
-                      onMapCreated: (GoogleMapController controller) {
-                        _mapController.complete(controller);
-                        if (_geofenceZones.isNotEmpty) {
-                          _focusOnZone(0);
-                        }
-                      },
-                      // Performance optimizations
-                      compassEnabled: false,
-                      mapToolbarEnabled: false,
-                      rotateGesturesEnabled: false,
-                      tiltGesturesEnabled: false,
-                      zoomControlsEnabled: false,
-                      indoorViewEnabled: false,
-                      trafficEnabled: false,
-                      buildingsEnabled: false,
-                      myLocationButtonEnabled: false,
-                      myLocationEnabled: false,
-                    ),
-                    // Zone carousel at bottom
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: _buildZoneCarousel(),
-                    ),
-                    // Zone counter at top
-                    if (_geofenceZones.length > 1)
-                      Positioned(
-                        top: 16,
-                        right: 16,
-                        child: _buildZoneCounter(),
+                      child: IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.arrow_back, color: Colors.black87),
+                        padding: const EdgeInsets.all(8),
                       ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          'Work Areas',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 20,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
+              ),
+              // Content
+              Expanded(
+                child: _isLoading
+                    ? preloader
+                    : _geofenceZones.isEmpty
+                        ? _buildEmptyState()
+                        : Stack(
+                            children: [
+                              // Map
+                              GoogleMap(
+                                mapType: MapType.normal,
+                                initialCameraPosition: const CameraPosition(
+                                  target: LatLng(33.3152, 44.3661),
+                                  zoom: 11,
+                                ),
+                                polygons: _polygons,
+                                onMapCreated: (GoogleMapController controller) {
+                                  _mapController.complete(controller);
+                                  if (_geofenceZones.isNotEmpty) {
+                                    _focusOnZone(0);
+                                  }
+                                },
+                                // Performance optimizations
+                                compassEnabled: false,
+                                mapToolbarEnabled: false,
+                                rotateGesturesEnabled: false,
+                                tiltGesturesEnabled: false,
+                                zoomControlsEnabled: false,
+                                indoorViewEnabled: false,
+                                trafficEnabled: false,
+                                buildingsEnabled: false,
+                                myLocationButtonEnabled: false,
+                                myLocationEnabled: false,
+                              ),
+                              // Zone carousel at bottom
+                              Positioned(
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                child: _buildZoneCarousel(),
+                              ),
+                              // Zone counter at top
+                              if (_geofenceZones.length > 1)
+                                Positioned(
+                                  top: 16,
+                                  right: 16,
+                                  child: _buildZoneCounter(),
+                                ),
+                            ],
+                          ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

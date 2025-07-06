@@ -1,12 +1,12 @@
 // lib/screens/admin/enhanced_manager_dashboard_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../../utils/constants.dart';
 import 'evidence_list_screen.dart';
 import '../tasks/standalone_tasks_screen.dart';
 import '../calendar_screen.dart';
-import 'pending_assignments_screen.dart';
 import '../reporting/location_history_screen.dart';
 import '../../services/group_service.dart';
 import '../manager/team_members_screen.dart';
@@ -22,137 +22,43 @@ class EnhancedManagerDashboardScreen extends StatefulWidget {
 }
 
 class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboardScreen> {
-  late Future<ManagerDashboardData> _dashboardFuture;
-  bool _isEditMode = false;
-  List<ActionCardData> _actionCards = [];
+  ManagerDashboardData? _dashboardData;
+  bool _hasError = false;
 
   @override
   void initState() {
     super.initState();
-    _dashboardFuture = _loadManagerDashboardData();
-    _initializeActionCards();
+    _loadDashboardData();
   }
 
-  void _initializeActionCards() {
-    _actionCards = [
-      ActionCardData(
-        id: 'pending_assignments',
-        title: 'Pending Assignments',
-        icon: Icons.assignment_late,
-        color: Colors.orange,
-        onTap: () => _navigateToPendingAssignments(),
-      ),
-      ActionCardData(
-        id: 'review_evidence',
-        title: 'Review Evidence',
-        icon: Icons.rate_review,
-        color: warningColor,
-        onTap: () => _navigateToEvidenceList(),
-      ),
-      ActionCardData(
-        id: 'manage_tasks',
-        title: 'Manage Tasks',
-        icon: Icons.list_alt,
-        color: successColor,
-        onTap: () => _navigateToManageTasks(),
-      ),
-      ActionCardData(
-        id: 'calendar',
-        title: 'Calendar',
-        icon: Icons.calendar_today,
-        color: secondaryColor,
-        onTap: () => _navigateToCalendar(),
-      ),
-      ActionCardData(
-        id: 'visit_analytics',
-        title: 'Visit Analytics',
-        icon: Icons.analytics,
-        color: Colors.teal,
-        onTap: () => _navigateToVisitAnalytics(),
-      ),
-      ActionCardData(
-        id: 'location_history',
-        title: 'Location History',
-        icon: Icons.location_history,
-        color: primaryColor,
-        onTap: () => _navigateToLocationHistory(),
-      ),
-      ActionCardData(
-        id: 'routes_places',
-        title: 'Routes & Places',
-        icon: Icons.route,
-        color: Colors.purple,
-        onTap: () => _navigateToRouteManagement(),
-      ),
-    ];
-  }
 
-  void _navigateToPendingAssignments() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const PendingAssignmentsScreen(),
-      ),
-    );
-  }
+  Future<void> _loadDashboardData() async {
+    if (!mounted) return;
+    
+    try {
+      setState(() {
+        _hasError = false;
+      });
 
-  void _navigateToEvidenceList() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const EvidenceListScreen(),
-      ),
-    );
-  }
-
-  void _navigateToManageTasks() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const StandaloneTasksScreen(),
-      ),
-    );
-  }
-
-  void _navigateToCalendar() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const CalendarScreen(),
-      ),
-    );
-  }
-
-  void _navigateToVisitAnalytics() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const RouteVisitAnalyticsScreen(),
-      ),
-    );
-  }
-
-  void _navigateToLocationHistory() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const LocationHistoryScreen(),
-      ),
-    );
-  }
-
-  void _navigateToRouteManagement() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const RouteManagementScreen(),
-      ),
-    );
-  }
-
-  void _toggleEditMode() {
-    setState(() {
-      _isEditMode = !_isEditMode;
-    });
+      final data = await _loadManagerDashboardData();
+      
+      if (mounted) {
+        setState(() {
+          _dashboardData = data;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+        });
+      }
+      debugPrint('Error loading dashboard data: $e');
+    }
   }
 
   void _refreshDashboard() {
-    setState(() {
-      _dashboardFuture = _loadManagerDashboardData();
-    });
+    _loadDashboardData();
   }
 
   Future<ManagerDashboardData> _loadManagerDashboardData() async {
@@ -161,21 +67,20 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
         _getManagerTaskStats(),
         _getAgentManagementStats(),
         _getCampaignOverview(),
-        _getEvidenceReviewQueue(),
-        _getRecentManagerActivity(),
-        _getUpcomingDeadlines(),
         _getGroupStats(),
       ]);
 
-      return ManagerDashboardData(
+      final data = ManagerDashboardData(
         taskStats: results[0] as ManagerTaskStats,
         agentStats: results[1] as AgentManagementStats,
         campaignOverview: results[2] as CampaignOverview,
-        evidenceQueue: results[3] as EvidenceReviewQueue,
-        recentActivity: results[4] as List<ManagerActivityItem>,
-        upcomingDeadlines: results[5] as List<UpcomingDeadline>,
-        groupStats: results[6] as GroupStats,
+        evidenceQueue: EvidenceReviewQueue(pending: 0, approved: 0, rejected: 0, urgent: 0),
+        recentActivity: <ManagerActivityItem>[],
+        upcomingDeadlines: <UpcomingDeadline>[],
+        groupStats: results[3] as GroupStats,
       );
+      
+      return data;
     } catch (e) {
       debugPrint('Error loading manager dashboard: $e');
       rethrow;
@@ -323,20 +228,20 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
         } else {
           final agentIds = agentsInGroups.map((a) => a['user_id'] as String).toList();
           
-          // Get agent profiles from these agents only
+          // Use the same database function as live map for consistent online status
           agentsResponse = await supabase
-              .from('profiles')
-              .select('id, status, role')
-              .eq('role', 'agent')
-              .inFilter('id', agentIds);
+              .rpc('get_agents_with_last_location')
+              .then((data) => (data as List<dynamic>)
+                  .cast<Map<String, dynamic>>()
+                  .where((agent) => agentIds.contains(agent['id']))
+                  .toList());
         }
       }
     } else {
-      // Admin sees all agents
+      // Admin sees all agents - use same function as live map
       agentsResponse = await supabase
-          .from('profiles')
-          .select('id, status, role')
-          .eq('role', 'agent');
+          .rpc('get_agents_with_last_location')
+          .then((data) => (data as List<dynamic>).cast<Map<String, dynamic>>());
     }
     
     int totalAgents = agentsResponse.length;
@@ -347,7 +252,11 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
       
       if (status == 'active') {
         activeAgents++;
-        onlineAgents++; // Consider active users as online
+      }
+      
+      // Use same online logic as live map
+      if (_isAgentOnline(agent)) {
+        onlineAgents++;
       }
     }
     
@@ -378,6 +287,31 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
     );
   }
 
+  // Same online status logic as live map
+  bool _isAgentOnline(Map<String, dynamic> agent) {
+    final lastSeenStr = agent['last_seen'] as String?;
+    if (lastSeenStr == null) return false;
+    
+    try {
+      final lastSeen = DateTime.parse(lastSeenStr);
+      final calculatedStatus = _getCalculatedStatus(lastSeen);
+      // Consider online if Active or Away (not Offline)
+      return calculatedStatus != 'Offline';
+    } catch (e) {
+      // If parsing fails, consider offline
+      return false;
+    }
+  }
+
+  // Same calculated status logic as live map
+  String _getCalculatedStatus(DateTime? lastSeen) {
+    if (lastSeen == null) return 'Offline';
+    final difference = DateTime.now().difference(lastSeen);
+    if (difference.inSeconds <= 45) return 'Active';
+    if (difference.inMinutes < 15) return 'Away';
+    return 'Offline';
+  }
+
   Future<CampaignOverview> _getCampaignOverview() async {
     final campaignsResponse = await supabase
         .from('campaigns')
@@ -402,8 +336,8 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
     return CampaignOverview(
       totalCampaigns: campaignsResponse.length,
       activeCampaigns: activeCampaigns,
-      upcomingCampaigns: upcomingCampaigns,
       completedCampaigns: completedCampaigns,
+      totalTasks: 0, // Placeholder since we removed task functionality
     );
   }
 
@@ -553,24 +487,16 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: AppBar(
-        title: const Text('Manager Dashboard'),
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
       ),
-      body: FutureBuilder<ManagerDashboardData>(
-        future: _dashboardFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          
-          if (snapshot.hasError) {
-            return Center(
+      child: Scaffold(
+        backgroundColor: backgroundColor,
+      body: _hasError
+          ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -587,66 +513,69 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
                   ),
                 ],
               ),
-            );
-          }
+            )
+          : _dashboardData != null
+              ? _buildDashboardContent(_dashboardData!)
+              : const Center(child: Text('Loading dashboard...')),
+      ),
+    );
+  }
 
-          final data = snapshot.data!;
-          
-          return RefreshIndicator(
-            onRefresh: () async => _refreshDashboard(),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildManagerWelcomeSection(),
-                  const SizedBox(height: 20),
-                  _buildManagementOverview(data),
-                  const SizedBox(height: 20),
-                  _buildQuickActionsSection(data),
-                  const SizedBox(height: 20),
-                  _buildAgentManagementSection(data.agentStats),
-                  const SizedBox(height: 20),
-                  _buildEvidenceReviewSection(data.evidenceQueue),
-                  const SizedBox(height: 20),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: _buildUpcomingDeadlines(data.upcomingDeadlines),
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: _buildRecentActivitySection(data.recentActivity),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                ],
+  Widget _buildDashboardContent(ManagerDashboardData data) {
+    return RefreshIndicator(
+      onRefresh: () async {
+        await _loadDashboardData();
+      },
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 40, 16, 120),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Dashboard Title
+            const Padding(
+              padding: EdgeInsets.only(bottom: 24),
+              child: Text(
+                'Dashboard',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                  letterSpacing: -0.5,
+                ),
               ),
             ),
-          );
-        },
+            _buildManagerWelcomeSection(),
+            const SizedBox(height: 20),
+            _buildManagementOverview(data),
+            const SizedBox(height: 20),
+            _buildQuickActionsSection(data),
+            const SizedBox(height: 40),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoChip(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }
 
   Widget _buildManagerWelcomeSection() {
-    final hour = DateTime.now().hour;
-    String greeting;
-    IconData greetingIcon;
-    
-    if (hour < 12) {
-      greeting = 'Good Morning';
-      greetingIcon = Icons.wb_sunny;
-    } else if (hour < 17) {
-      greeting = 'Good Afternoon';
-      greetingIcon = Icons.wb_sunny_outlined;
-    } else {
-      greeting = 'Good Evening';
-      greetingIcon = Icons.nightlight_round;
-    }
-
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -675,57 +604,96 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
               color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              greetingIcon,
+            child: const Icon(
+              Icons.person_outline,
               color: Colors.white,
               size: 24,
             ),
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  greeting,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Ready to lead your team to success?',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.9),
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          InkWell(
-            onTap: _toggleEditMode,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: _isEditMode ? 0.3 : 0.2),
-                borderRadius: BorderRadius.circular(8),
-                border: _isEditMode ? Border.all(color: Colors.white, width: 1) : null,
-              ),
-              child: Icon(
-                _isEditMode ? Icons.check : Icons.settings,
-                color: Colors.white,
-                size: 20,
-              ),
+            child: FutureBuilder<Map<String, dynamic>>(
+              future: _getManagerProfile(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  final profile = snapshot.data!;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Welcome ',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          Text(
+                            profile['full_name'] ?? 'Manager',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        profile['role'] ?? 'Manager',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        profile['group_name'] ?? 'No group assigned',
+                        style: const TextStyle(
+                          color: Colors.white60,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  );
+                } else {
+                  return const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Manager Dashboard',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Loading...',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  );
+                }
+              },
             ),
           ),
         ],
       ),
     );
   }
+
   
   Widget _buildManagementOverview(ManagerDashboardData data) {
     return Column(
@@ -740,95 +708,55 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
           ),
         ),
         const SizedBox(height: 12),
-        IntrinsicHeight(
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildOverviewCard(
-                  title: 'Team Members',
-                  value: data.agentStats.totalAgents.toString(),
-                  subtitle: '${data.agentStats.onlineAgents} online',
-                  icon: Icons.group,
-                  color: primaryColor,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const TeamMembersScreen(),
-                      ),
-                    );
-                  },
-                ),
+        _buildOverviewLine(
+          title: 'Team Members',
+          value: data.agentStats.totalAgents.toString(),
+          subtitle: '${data.agentStats.onlineAgents} online',
+          icon: Icons.group,
+          color: primaryColor,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const TeamMembersScreen(),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildOverviewCard(
-                  title: 'Active Campaigns',
-                  value: data.campaignOverview.activeCampaigns.toString(),
-                  subtitle: '${data.campaignOverview.upcomingCampaigns} upcoming',
-                  icon: Icons.campaign,
-                  color: secondaryColor,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildOverviewCard(
-                  title: 'Task Progress',
-                  value: data.taskStats.activeTasks.toString(),
-                  subtitle: '${data.taskStats.todayCompleted} completed today',
-                  icon: Icons.assignment,
-                  color: successColor,
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
         const SizedBox(height: 12),
-        IntrinsicHeight(
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildOverviewCard(
-                  title: 'Route Management',
-                  value: '🗺️',
-                  subtitle: 'Create & manage routes',
-                  icon: Icons.route,
-                  color: Colors.purple,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const RouteManagementScreen(),
-                      ),
-                    );
-                  },
-                ),
+        _buildOverviewLine(
+          title: 'Route Management',
+          value: '',
+          subtitle: 'Create & manage routes',
+          icon: Icons.route,
+          color: Colors.purple,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const RouteManagementScreen(),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildOverviewCard(
-                  title: 'Place Management',
-                  value: '📍',
-                  subtitle: 'Approve agent suggestions',
-                  icon: Icons.location_on,
-                  color: Colors.green,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const PlaceManagementScreen(),
-                      ),
-                    );
-                  },
-                ),
+            );
+          },
+        ),
+        const SizedBox(height: 12),
+        _buildOverviewLine(
+          title: 'Place Management',
+          value: '',
+          subtitle: 'Approve agent suggestions',
+          icon: Icons.location_on,
+          color: Colors.green,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const PlaceManagementScreen(),
               ),
-              const SizedBox(width: 12),
-              Expanded(child: Container()), // Empty space
-            ],
-          ),
+            );
+          },
         ),
       ],
     );
   }
   
-  Widget _buildOverviewCard({
+  Widget _buildOverviewLine({
     required String title,
     required String value,
     required String subtitle,
@@ -838,23 +766,17 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        constraints: const BoxConstraints(minHeight: 150),
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: surfaceColor,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
               color: shadowColor,
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-            BoxShadow(
-              color: lightShadowColor,
-              blurRadius: 2,
-              offset: const Offset(0, 1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
           border: Border.all(
@@ -862,60 +784,60 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
             width: 1,
           ),
         ),
-        child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  color.withValues(alpha: 0.15),
-                  color.withValues(alpha: 0.1),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    color.withValues(alpha: 0.15),
+                    color.withValues(alpha: 0.1),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: color.withValues(alpha: 0.2),
+                  width: 1,
+                ),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: textPrimaryColor,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: textSecondaryColor,
+                    ),
+                  ),
                 ],
               ),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: color.withValues(alpha: 0.2),
-                width: 1,
+            ),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w700,
+                color: color,
               ),
             ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.w700,
-              color: color,
-              letterSpacing: 0.5,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: textPrimaryColor,
-              letterSpacing: 0.1,
-            ),
-            softWrap: true,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: const TextStyle(
-              fontSize: 12,
-              color: textSecondaryColor,
-            ),
-            softWrap: true,
-          ),
-        ],
+          ],
         ),
       ),
     );
@@ -935,25 +857,6 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
                 color: textPrimaryColor,
               ),
             ),
-            if (_isEditMode) ...[
-              const SizedBox(width: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: primaryColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: primaryColor.withValues(alpha: 0.3)),
-                ),
-                child: Text(
-                  'Edit mode active',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: primaryColor,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
           ],
         ),
         const SizedBox(height: 12),
@@ -965,25 +868,23 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
   Widget _buildCardsGrid(ManagerDashboardData data) {
     return Column(
       children: [
-        // Row 1: 3 cards
+        // Row 1: 3 cards - Core Management
         IntrinsicHeight(
           child: Row(
             children: [
               Expanded(
                 child: _buildActionCard(
-                  title: 'Pending Assignments',
+                  title: 'Manage Tasks',
                   subtitle: '',
-                  icon: Icons.assignment_late,
-                  color: Colors.orange,
-                  badgeCount: data.taskStats.pendingAssignments,
-                  onTap: _isEditMode ? null : () {
+                  icon: Icons.list_alt,
+                  color: successColor,
+                  onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => const PendingAssignmentsScreen(),
+                        builder: (context) => const StandaloneTasksScreen(),
                       ),
                     );
                   },
-                  isDraggable: _isEditMode,
                 ),
               ),
               const SizedBox(width: 12),
@@ -993,38 +894,36 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
                   subtitle: '',
                   icon: Icons.rate_review,
                   color: warningColor,
-                  onTap: _isEditMode ? null : () {
+                  onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => const EvidenceListScreen(),
                       ),
                     );
                   },
-                  isDraggable: _isEditMode,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _buildActionCard(
-                  title: 'Manage Tasks',
+                  title: 'Routes & Places',
                   subtitle: '',
-                  icon: Icons.list_alt,
-                  color: successColor,
-                  onTap: _isEditMode ? null : () {
+                  icon: Icons.route,
+                  color: Colors.purple,
+                  onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => const StandaloneTasksScreen(),
+                        builder: (context) => const RouteManagementScreen(),
                       ),
                     );
                   },
-                  isDraggable: _isEditMode,
                 ),
               ),
             ],
           ),
         ),
         const SizedBox(height: 12),
-        // Row 2: 3 cards
+        // Row 2: 3 cards - Analytics & Planning
         IntrinsicHeight(
           child: Row(
             children: [
@@ -1034,14 +933,13 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
                   subtitle: '',
                   icon: Icons.calendar_today,
                   color: secondaryColor,
-                  onTap: _isEditMode ? null : () {
+                  onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => const CalendarScreen(),
                       ),
                     );
                   },
-                  isDraggable: _isEditMode,
                 ),
               ),
               const SizedBox(width: 12),
@@ -1051,14 +949,13 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
                   subtitle: '',
                   icon: Icons.analytics,
                   color: Colors.teal,
-                  onTap: _isEditMode ? null : () {
+                  onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => const RouteVisitAnalyticsScreen(),
                       ),
                     );
                   },
-                  isDraggable: _isEditMode,
                 ),
               ),
               const SizedBox(width: 12),
@@ -1068,107 +965,19 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
                   subtitle: '',
                   icon: Icons.location_history,
                   color: primaryColor,
-                  onTap: _isEditMode ? null : () {
+                  onTap: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (context) => const LocationHistoryScreen(),
                       ),
                     );
                   },
-                  isDraggable: _isEditMode,
                 ),
               ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        // Row 3: 1 card
-        IntrinsicHeight(
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildActionCard(
-                  title: 'Routes & Places',
-                  subtitle: '',
-                  icon: Icons.route,
-                  color: Colors.purple,
-                  onTap: _isEditMode ? null : () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const RouteManagementScreen(),
-                      ),
-                    );
-                  },
-                  isDraggable: _isEditMode,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(child: Container()), // Empty space
-              const SizedBox(width: 12),
-              Expanded(child: Container()), // Empty space
             ],
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildStaticGrid(ManagerDashboardData data) {
-    // Ensure cards are initialized
-    if (_actionCards.isEmpty) {
-      _initializeActionCards();
-    }
-    
-    // Split cards into rows of 3
-    List<Widget> rows = [];
-    for (int i = 0; i < _actionCards.length; i += 3) {
-      List<ActionCardData> rowCards = _actionCards.skip(i).take(3).toList();
-      rows.add(_buildCardRow(rowCards, data));
-      if (i + 3 < _actionCards.length) {
-        rows.add(const SizedBox(height: 12));
-      }
-    }
-    
-    return Column(children: rows);
-  }
-
-  Widget _buildCardRow(List<ActionCardData> cards, ManagerDashboardData data) {
-    return IntrinsicHeight(
-      child: Row(
-        children: [
-          for (int i = 0; i < 3; i++) ...[
-            if (i > 0) const SizedBox(width: 12),
-            Expanded(
-              child: i < cards.length
-                  ? _buildActionCardFromData(cards[i], data)
-                  : Container(), // Empty space
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildReorderableGrid(ManagerDashboardData data) {
-    // For now, just show the static grid with edit mode styling
-    // We can implement drag and drop later
-    return _buildStaticGrid(data);
-  }
-
-  Widget _buildActionCardFromData(ActionCardData cardData, ManagerDashboardData data, {bool isDraggable = false}) {
-    int? badgeCount;
-    if (cardData.id == 'pending_assignments') {
-      badgeCount = data.taskStats.pendingAssignments;
-    }
-
-    return _buildActionCard(
-      title: cardData.title,
-      subtitle: '',
-      icon: cardData.icon,
-      color: cardData.color,
-      badgeCount: badgeCount,
-      onTap: _isEditMode ? null : cardData.onTap,
-      isDraggable: isDraggable,
     );
   }
 
@@ -1179,7 +988,6 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
     required Color color,
     VoidCallback? onTap,
     int? badgeCount,
-    bool isDraggable = false,
   }) {
     return Material(
       color: Colors.transparent,
@@ -1193,10 +1001,8 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
             color: surfaceColor,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isDraggable && _isEditMode 
-                  ? color.withValues(alpha: 0.4)
-                  : color.withValues(alpha: 0.15),
-              width: isDraggable && _isEditMode ? 2 : 1,
+              color: color.withValues(alpha: 0.15),
+              width: 1,
             ),
             boxShadow: [
               BoxShadow(
@@ -1215,7 +1021,7 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
               end: Alignment.bottomRight,
               colors: [
                 surfaceColor,
-                color.withValues(alpha: isDraggable && _isEditMode ? 0.05 : 0.02),
+                color.withValues(alpha: 0.02),
               ],
             ),
           ),
@@ -1249,24 +1055,6 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
                       size: 22,
                     ),
                   ),
-                  if (isDraggable && _isEditMode)
-                    Positioned(
-                      top: -4,
-                      right: -4,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 1),
-                        ),
-                        child: const Icon(
-                          Icons.drag_indicator,
-                          color: Colors.white,
-                          size: 12,
-                        ),
-                      ),
-                    ),
                   if (badgeCount != null && badgeCount > 0)
                     Positioned(
                       right: -8,
@@ -1335,389 +1123,6 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
     );
   }
 
-  Widget _buildAgentManagementSection(AgentManagementStats stats) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Agent Management',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: textPrimaryColor,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: surfaceColor,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildAgentStatCard(
-                  'Total Agents',
-                  stats.totalAgents.toString(),
-                  Icons.group,
-                  primaryColor,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildAgentStatCard(
-                  'Online Now',
-                  stats.onlineAgents.toString(),
-                  Icons.wifi,
-                  successColor,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildAgentStatCard(
-                  'This Week',
-                  stats.weeklyCompletions.toString(),
-                  Icons.trending_up,
-                  secondaryColor,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAgentStatCard(String title, String value, IconData icon, Color color) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 12,
-            color: textSecondaryColor,
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEvidenceReviewSection(EvidenceReviewQueue queue) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Text(
-              'Evidence Review Queue',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: textPrimaryColor,
-              ),
-            ),
-            const Spacer(),
-            if (queue.urgent > 0)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: errorColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${queue.urgent} Urgent',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: errorColor,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: surfaceColor,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: InkWell(
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const EvidenceListScreen(),
-                ),
-              );
-            },
-            borderRadius: BorderRadius.circular(12),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: warningColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(Icons.pending_actions, color: warningColor, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${queue.pending} Pending Review',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: textPrimaryColor,
-                        ),
-                      ),
-                      Text(
-                        '${queue.approved} approved, ${queue.rejected} rejected',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: textSecondaryColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  color: textSecondaryColor,
-                  size: 16,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildUpcomingDeadlines(List<UpcomingDeadline> deadlines) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Upcoming Deadlines',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: textPrimaryColor,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: surfaceColor,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: deadlines.isEmpty
-              ? Center(
-                  child: Column(
-                    children: [
-                      Icon(Icons.event_available, size: 48, color: Colors.grey[400]),
-                      const SizedBox(height: 8),
-                      Text(
-                        'No upcoming deadlines',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                )
-              : Column(
-                  children: deadlines.map((deadline) {
-                    final daysUntil = deadline.deadline.difference(DateTime.now()).inDays;
-                    final isUrgent = daysUntil <= 2;
-                    
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: (isUrgent ? errorColor : warningColor).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              Icons.schedule,
-                              color: isUrgent ? errorColor : warningColor,
-                              size: 16,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  deadline.title,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: textPrimaryColor,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Text(
-                                  daysUntil == 0 ? 'Today' : daysUntil == 1 ? 'Tomorrow' : '$daysUntil days',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: isUrgent ? errorColor : textSecondaryColor,
-                                    fontWeight: isUrgent ? FontWeight.bold : FontWeight.normal,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRecentActivitySection(List<ManagerActivityItem> activities) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Recent Activity',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: textPrimaryColor,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: surfaceColor,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: activities.isEmpty
-              ? Center(
-                  child: Column(
-                    children: [
-                      Icon(Icons.history, size: 48, color: Colors.grey[400]),
-                      const SizedBox(height: 8),
-                      Text(
-                        'No recent activity',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                )
-              : Column(
-                  children: activities.map((activity) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: activity.color.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              activity.icon,
-                              color: activity.color,
-                              size: 16,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  activity.title,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: textPrimaryColor,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Text(
-                                  _formatRelativeTime(activity.timestamp),
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: textSecondaryColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-        ),
-      ],
-    );
-  }
-
   String _formatRelativeTime(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
@@ -1732,6 +1137,40 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
       return '${difference.inDays}d ago';
     } else {
       return DateFormat.MMMd().format(dateTime);
+    }
+  }
+
+  Future<Map<String, dynamic>> _getManagerProfile() async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return {};
+    
+    try {
+      // Get user profile
+      final profile = await supabase
+          .from('profiles')
+          .select('full_name, role')
+          .eq('id', user.id)
+          .single();
+      
+      // Get user's group
+      final userGroups = await supabase
+          .from('user_groups')
+          .select('group_id, groups(name)')
+          .eq('user_id', user.id)
+          .limit(1);
+      
+      String? groupName;
+      if (userGroups.isNotEmpty) {
+        groupName = userGroups.first['groups']['name'];
+      }
+      
+      return {
+        'full_name': profile['full_name'],
+        'role': profile['role'],
+        'group_name': groupName,
+      };
+    } catch (e) {
+      return {};
     }
   }
 }
@@ -1755,6 +1194,26 @@ class ManagerDashboardData {
     required this.upcomingDeadlines,
     required this.groupStats,
   });
+
+  ManagerDashboardData copyWith({
+    ManagerTaskStats? taskStats,
+    AgentManagementStats? agentStats,
+    CampaignOverview? campaignOverview,
+    EvidenceReviewQueue? evidenceQueue,
+    List<ManagerActivityItem>? recentActivity,
+    List<UpcomingDeadline>? upcomingDeadlines,
+    GroupStats? groupStats,
+  }) {
+    return ManagerDashboardData(
+      taskStats: taskStats ?? this.taskStats,
+      agentStats: agentStats ?? this.agentStats,
+      campaignOverview: campaignOverview ?? this.campaignOverview,
+      evidenceQueue: evidenceQueue ?? this.evidenceQueue,
+      recentActivity: recentActivity ?? this.recentActivity,
+      upcomingDeadlines: upcomingDeadlines ?? this.upcomingDeadlines,
+      groupStats: groupStats ?? this.groupStats,
+    );
+  }
 }
 
 class ManagerTaskStats {
@@ -1790,14 +1249,14 @@ class AgentManagementStats {
 class CampaignOverview {
   final int totalCampaigns;
   final int activeCampaigns;
-  final int upcomingCampaigns;
   final int completedCampaigns;
+  final int totalTasks;
 
   CampaignOverview({
     required this.totalCampaigns,
     required this.activeCampaigns,
-    required this.upcomingCampaigns,
     required this.completedCampaigns,
+    required this.totalTasks,
   });
 }
 
@@ -1852,21 +1311,5 @@ class GroupStats {
     required this.totalGroups,
     required this.totalMemberships,
     required this.myGroups,
-  });
-}
-
-class ActionCardData {
-  final String id;
-  final String title;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-
-  ActionCardData({
-    required this.id,
-    required this.title,
-    required this.icon,
-    required this.color,
-    required this.onTap,
   });
 }

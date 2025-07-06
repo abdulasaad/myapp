@@ -35,21 +35,68 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
 
   Future<List<TeamMemberInfo>> _fetchTeamMembers() async {
     try {
-      // Use UserManagementService to get agents filtered by manager's groups
-      final agents = await UserManagementService().getUsers(
-        roleFilter: 'agent',
-        statusFilter: null, // We'll filter by status in UI
-      );
+      final currentUser = supabase.auth.currentUser;
+      if (currentUser == null) return [];
+
+      // Check if current user is manager
+      final userProfile = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', currentUser.id)
+          .single();
+      
+      final isManager = userProfile['role'] == 'manager';
+      
+      List<Map<String, dynamic>> agentsResponse;
+      
+      if (isManager) {
+        // Get manager's groups
+        final managerGroups = await supabase
+            .from('user_groups')
+            .select('group_id')
+            .eq('user_id', currentUser.id);
+        
+        if (managerGroups.isEmpty) {
+          agentsResponse = [];
+        } else {
+          final groupIds = managerGroups.map((g) => g['group_id']).toList();
+          
+          // Get all agents in manager's groups with location data
+          final agentsInGroups = await supabase
+              .from('user_groups')
+              .select('user_id')
+              .inFilter('group_id', groupIds);
+          
+          if (agentsInGroups.isEmpty) {
+            agentsResponse = [];
+          } else {
+            final agentIds = agentsInGroups.map((a) => a['user_id'] as String).toList();
+            
+            // Use same database function as dashboard for consistent status
+            agentsResponse = await supabase
+                .rpc('get_agents_with_last_location')
+                .then((data) => (data as List<dynamic>)
+                    .cast<Map<String, dynamic>>()
+                    .where((agent) => agentIds.contains(agent['id']))
+                    .toList());
+          }
+        }
+      } else {
+        // Admin sees all agents
+        agentsResponse = await supabase
+            .rpc('get_agents_with_last_location')
+            .then((data) => (data as List<dynamic>).cast<Map<String, dynamic>>());
+      }
 
       // Get additional info for each agent
       final teamMembers = <TeamMemberInfo>[];
       
-      for (final agent in agents) {
+      for (final agentData in agentsResponse) {
         // Get agent's active tasks count
         final activeTasksResponse = await supabase
             .from('task_assignments')
             .select('id')
-            .eq('agent_id', agent.id)
+            .eq('agent_id', agentData['id'])
             .inFilter('status', ['assigned', 'in_progress']);
 
         // Get agent's groups
@@ -58,16 +105,32 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
             .select('''
               groups!inner(name)
             ''')
-            .eq('user_id', agent.id);
+            .eq('user_id', agentData['id']);
 
         final groupNames = userGroupsResponse
             .map((item) => item['groups']['name'] as String)
             .toList();
 
+        // Create AppUser from agent data
+        final user = AppUser(
+          id: agentData['id'],
+          fullName: agentData['full_name'] ?? 'Unknown',
+          email: agentData['email'],
+          username: agentData['username'],
+          role: 'agent',
+          status: agentData['status'] ?? 'offline',
+          createdAt: agentData['created_at'] != null 
+              ? DateTime.parse(agentData['created_at'])
+              : DateTime.now(),
+        );
+
         teamMembers.add(TeamMemberInfo(
-          user: agent,
+          user: user,
           activeTasks: activeTasksResponse.length,
           groupNames: groupNames,
+          lastSeen: agentData['last_seen'] != null 
+              ? DateTime.parse(agentData['last_seen'])
+              : null,
         ));
       }
 
@@ -84,10 +147,10 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
     // Apply status filter
     switch (_filterStatus) {
       case 'active':
-        filteredMembers = filteredMembers.where((m) => m.user.status == 'active').toList();
+        filteredMembers = filteredMembers.where((m) => _getCalculatedStatus(m.lastSeen) != 'Offline').toList();
         break;
       case 'offline':
-        filteredMembers = filteredMembers.where((m) => m.user.status != 'active').toList();
+        filteredMembers = filteredMembers.where((m) => _getCalculatedStatus(m.lastSeen) == 'Offline').toList();
         break;
     }
 
@@ -155,7 +218,7 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
             },
             itemBuilder: (context) => [
               const PopupMenuItem(value: 'all', child: Text('All Members')),
-              const PopupMenuItem(value: 'active', child: Text('Active')),
+              const PopupMenuItem(value: 'active', child: Text('Online (Active/Away)')),
               const PopupMenuItem(value: 'offline', child: Text('Offline')),
             ],
           ),
@@ -289,7 +352,7 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
       String filterText;
       switch (_filterStatus) {
         case 'active':
-          filterText = 'Active';
+          filterText = 'Online';
           break;
         case 'offline':
           filterText = 'Offline';
@@ -362,7 +425,7 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
     
     switch (_filterStatus) {
       case 'active':
-        return 'No active members';
+        return 'No online members';
       case 'offline':
         return 'No offline members';
       default:
@@ -377,9 +440,9 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
     
     switch (_filterStatus) {
       case 'active':
-        return 'All team members are currently offline.\nCheck back later for active members.';
+        return 'All team members are currently offline.\nCheck back later for online members.';
       case 'offline':
-        return 'All team members are currently active.\nGreat job keeping the team engaged!';
+        return 'All team members are currently online.\nGreat job keeping the team active!';
       default:
         return 'You don\'t have any team members assigned to your groups yet.\nContact your administrator to add agents to your groups.';
     }
@@ -387,13 +450,11 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
 
   Widget _buildTeamMemberCard(TeamMemberInfo member) {
     final user = member.user;
-    final isOnline = user.status == 'active';
-    final statusColor = isOnline ? successColor : Colors.grey;
+    final calculatedStatus = _getCalculatedStatus(member.lastSeen);
+    final statusColor = _getStatusColor(calculatedStatus);
     
-    // Get last seen text (for demo purposes, showing created date)
-    final lastSeenText = isOnline 
-        ? 'Active now' 
-        : 'Last seen ${DateFormat.MMMd().add_jm().format(user.createdAt)}';
+    // Get last seen text
+    final lastSeenText = _getLastSeenText(calculatedStatus, member.lastSeen);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -467,8 +528,8 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                     lastSeenText,
                     style: TextStyle(
                       fontSize: 12,
-                      color: isOnline ? successColor : textSecondaryColor,
-                      fontWeight: isOnline ? FontWeight.w500 : FontWeight.normal,
+                      color: calculatedStatus == 'Offline' ? textSecondaryColor : statusColor,
+                      fontWeight: calculatedStatus == 'Offline' ? FontWeight.normal : FontWeight.w500,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -1185,7 +1246,45 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
     }
   }
 
+  // Same calculated status logic as dashboard and live map
+  String _getCalculatedStatus(DateTime? lastSeen) {
+    if (lastSeen == null) return 'Offline';
+    final difference = DateTime.now().difference(lastSeen);
+    if (difference.inSeconds <= 45) return 'Active';
+    if (difference.inMinutes < 15) return 'Away';
+    return 'Offline';
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'Active':
+        return successColor; // Green
+      case 'Away':
+        return Colors.orange; // Orange
+      case 'Offline':
+      default:
+        return Colors.grey; // Grey
+    }
+  }
+
+  String _getLastSeenText(String status, DateTime? lastSeen) {
+    switch (status) {
+      case 'Active':
+        return 'Active now';
+      case 'Away':
+        return 'Away';
+      case 'Offline':
+      default:
+        if (lastSeen != null) {
+          return 'Last seen ${DateFormat.MMMd().add_jm().format(lastSeen)}';
+        }
+        return 'Offline';
+    }
+  }
+
   void _showMemberDetails(TeamMemberInfo member) {
+    final calculatedStatus = _getCalculatedStatus(member.lastSeen);
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1198,11 +1297,15 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
             const SizedBox(height: 8),
             Text('Username: ${member.user.username ?? 'Not set'}'),
             const SizedBox(height: 8),
-            Text('Status: ${member.user.status}'),
+            Text('Status: $calculatedStatus'),
             const SizedBox(height: 8),
             Text('Active Tasks: ${member.activeTasks}'),
             const SizedBox(height: 8),
             Text('Groups: ${member.groupNames.join(', ')}'),
+            if (member.lastSeen != null) ...[
+              const SizedBox(height: 8),
+              Text('Last Seen: ${DateFormat.yMMMd().add_jms().format(member.lastSeen!)}'),
+            ],
           ],
         ),
         actions: [
@@ -1220,10 +1323,12 @@ class TeamMemberInfo {
   final AppUser user;
   final int activeTasks;
   final List<String> groupNames;
+  final DateTime? lastSeen;
 
   TeamMemberInfo({
     required this.user,
     required this.activeTasks,
     required this.groupNames,
+    this.lastSeen,
   });
 }

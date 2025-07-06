@@ -57,6 +57,10 @@ flutter:
     - icons/logo2.png
     - icons/logo2_padded.png
     - icons/logo3.png
+    - assets/images/logo1.png
+    - assets/images/facebook.png
+    - assets/images/instagram.png
+    - assets/images/whatsapp.png
   
 
 # Flutter Launcher Icons Configuration

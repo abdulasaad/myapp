@@ -148,6 +148,9 @@ class UpdateService {
     
     _logger.i('Starting APK installation process for: $apkPath');
     
+    // Mark APK for cleanup after installation
+    await _markApkForCleanup(apkPath);
+    
     // First try: Android platform channel (most reliable)
     try {
       _logger.i('Attempting APK installation via platform channel');
@@ -200,15 +203,92 @@ class UpdateService {
   
   Future<void> cleanupAllApks() async {
     try {
+      // Clean up from external storage directory
+      final externalDir = await getExternalStorageDirectory();
+      if (externalDir != null) {
+        final updateDir = Directory('${externalDir.path}/updates');
+        
+        if (await updateDir.exists()) {
+          await updateDir.delete(recursive: true);
+          _logger.i('Cleaned up all APKs from external storage');
+        }
+        
+        // Also clean up the copied APK
+        final externalApk = File('${externalDir.path}/al-tijwal-update.apk');
+        if (await externalApk.exists()) {
+          await externalApk.delete();
+          _logger.i('Cleaned up external APK copy');
+        }
+      }
+      
+      // Clean up from application documents directory (legacy)
       final appDocDir = await getApplicationDocumentsDirectory();
       final updateDir = Directory('${appDocDir.path}/updates');
       
       if (await updateDir.exists()) {
         await updateDir.delete(recursive: true);
-        _logger.i('Cleaned up all APKs');
+        _logger.i('Cleaned up all APKs from app documents');
       }
     } catch (e) {
       _logger.e('Error cleaning up all APKs: $e');
+    }
+  }
+  
+  /// Marks an APK file for cleanup after installation
+  Future<void> _markApkForCleanup(String apkPath) async {
+    try {
+      final externalDir = await getExternalStorageDirectory();
+      if (externalDir == null) return;
+      
+      final markerFile = File('${externalDir.path}/.cleanup_after_install');
+      await markerFile.writeAsString(apkPath);
+      _logger.i('Marked APK for cleanup: $apkPath');
+    } catch (e) {
+      _logger.w('Failed to mark APK for cleanup: $e');
+    }
+  }
+  
+  /// Checks for and cleans up APKs after installation (called on app start)
+  Future<void> cleanupAfterInstallation() async {
+    try {
+      final externalDir = await getExternalStorageDirectory();
+      if (externalDir == null) return;
+      
+      final markerFile = File('${externalDir.path}/.cleanup_after_install');
+      
+      if (await markerFile.exists()) {
+        final apkPath = await markerFile.readAsString();
+        _logger.i('Found APK marked for cleanup: $apkPath');
+        
+        // Clean up the APK file
+        final apkFile = File(apkPath);
+        if (await apkFile.exists()) {
+          await apkFile.delete();
+          _logger.i('Successfully cleaned up APK after installation: $apkPath');
+        }
+        
+        // Clean up the external copy if it exists
+        final externalApk = File('${externalDir.path}/al-tijwal-update.apk');
+        if (await externalApk.exists()) {
+          await externalApk.delete();
+          _logger.i('Cleaned up external APK copy');
+        }
+        
+        // Clean up entire updates directory
+        final updateDir = Directory('${externalDir.path}/updates');
+        if (await updateDir.exists()) {
+          await updateDir.delete(recursive: true);
+          _logger.i('Cleaned up updates directory');
+        }
+        
+        // Remove the marker file
+        await markerFile.delete();
+        _logger.i('Removed cleanup marker file');
+        
+        _logger.i('APK cleanup after installation completed successfully');
+      }
+    } catch (e) {
+      _logger.e('Error cleaning up after installation: $e');
     }
   }
 }

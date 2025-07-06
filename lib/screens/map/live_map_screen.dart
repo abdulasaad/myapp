@@ -484,22 +484,14 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
   
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Live Map'),
-        actions: [
-          if (_hasConnectivityIssue)
-            Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: Icon(
-                Icons.wifi_off,
-                color: Colors.orange[300],
-                size: 20,
-              ),
-            ),
-        ],
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
       ),
-      body: _isLoading
+      child: Scaffold(
+        body: _isLoading
           ? preloader
           : Stack(
               children: [
@@ -549,6 +541,131 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
                   polylines: const <Polyline>{},
                   circles: const <Circle>{},
                 ),
+                // Tech-Style Location Title Overlay
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 16,
+                  left: 20,
+                  right: 20,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.black.withValues(alpha: 0.8),
+                            Colors.black.withValues(alpha: 0.9),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(25),
+                        border: Border.all(
+                          color: Colors.green.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 15,
+                            offset: const Offset(0, 4),
+                          ),
+                          BoxShadow(
+                            color: Colors.green.withValues(alpha: 0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 0),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // GPS Signal Icon
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(
+                              Icons.gps_fixed,
+                              color: Colors.green[300],
+                              size: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // Title with tech styling
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'LIVE TRACKING',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.green[300],
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Real-time Location',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(width: 12),
+                          // Status indicators
+                          Row(
+                            children: [
+                              // Connection status
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: _hasConnectivityIssue 
+                                      ? Colors.orange 
+                                      : Colors.green,
+                                  borderRadius: BorderRadius.circular(4),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: (_hasConnectivityIssue 
+                                          ? Colors.orange 
+                                          : Colors.green).withValues(alpha: 0.5),
+                                      blurRadius: 4,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // Signal strength bars
+                              Row(
+                                children: List.generate(3, (index) {
+                                  return Container(
+                                    width: 2,
+                                    height: 4 + (index * 2.0),
+                                    margin: const EdgeInsets.only(right: 1),
+                                    decoration: BoxDecoration(
+                                      color: _hasConnectivityIssue
+                                          ? Colors.orange.withValues(alpha: 0.3)
+                                          : Colors.green.withValues(alpha: 0.7),
+                                      borderRadius: BorderRadius.circular(1),
+                                    ),
+                                  );
+                                }),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
                 // Left Panel (Agents)
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 300),
@@ -572,35 +689,74 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
                 // Left Toggle Button
                 if (!_isAgentPanelVisible)
                   Positioned(
-                    top: 16,
+                    top: MediaQuery.of(context).padding.top + 80,
                     left: 16,
-                    child: FloatingActionButton(
-                      mini: true,
-                      heroTag: 'agent-fab',
-                      onPressed: () => setState(() {
-                        _isGeofencePanelVisible = false;
-                        _isAgentPanelVisible = true;
-                      }),
-                      tooltip: 'Show Agent List',
-                      child: const Icon(Icons.people_alt_outlined),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.black.withValues(alpha: 0.7),
+                            Colors.black.withValues(alpha: 0.8),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(
+                          color: Colors.blue.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: FloatingActionButton(
+                        mini: true,
+                        heroTag: 'agent-fab',
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
+                        onPressed: () => setState(() {
+                          _isGeofencePanelVisible = false;
+                          _isAgentPanelVisible = true;
+                        }),
+                        tooltip: 'Show Agent List',
+                        child: Icon(
+                          Icons.people_alt_outlined,
+                          color: Colors.blue[300],
+                        ),
+                      ),
                     ),
                   ),
                 
                 // Right Toggle Button
                 if (!_isGeofencePanelVisible)
                   Positioned(
-                    top: 16,
+                    top: MediaQuery.of(context).padding.top + 80,
                     right: 16,
-                    child: FloatingActionButton(
-                      mini: true,
-                      heroTag: 'geofence-fab',
-                      backgroundColor: Colors.amber,
-                      onPressed: () => setState(() {
-                        _isAgentPanelVisible = false;
-                        _isGeofencePanelVisible = true;
-                      }),
-                      tooltip: 'Show Geofences',
-                      child: const Icon(Icons.layers_outlined),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.black.withValues(alpha: 0.7),
+                            Colors.black.withValues(alpha: 0.8),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(
+                          color: Colors.orange.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: FloatingActionButton(
+                        mini: true,
+                        heroTag: 'geofence-fab',
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
+                        onPressed: () => setState(() {
+                          _isAgentPanelVisible = false;
+                          _isGeofencePanelVisible = true;
+                        }),
+                        tooltip: 'Show Geofences',
+                        child: Icon(
+                          Icons.layers_outlined,
+                          color: Colors.orange[300],
+                        ),
+                      ),
                     ),
                   ),
                 
@@ -609,26 +765,46 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
                   Positioned(
                     bottom: 16,
                     right: 16,
-                    child: FloatingActionButton(
-                      mini: true,
-                      heroTag: 'stop-tracking-fab',
-                      backgroundColor: Colors.purple,
-                      onPressed: () {
-                        final trackedAgentName = _agents[_trackedAgentId]?.fullName ?? 'Agent';
-                        setState(() {
-                          _trackedAgentId = null;
-                          _updateMarkers();
-                        });
-                        if (mounted) {
-                          context.showSnackBar('Stopped tracking $trackedAgentName');
-                        }
-                      },
-                      tooltip: 'Stop Tracking',
-                      child: const Icon(Icons.location_off, color: Colors.white),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.black.withValues(alpha: 0.8),
+                            Colors.black.withValues(alpha: 0.9),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(
+                          color: Colors.purple.withValues(alpha: 0.4),
+                          width: 1,
+                        ),
+                      ),
+                      child: FloatingActionButton(
+                        mini: true,
+                        heroTag: 'stop-tracking-fab',
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
+                        onPressed: () {
+                          final trackedAgentName = _agents[_trackedAgentId]?.fullName ?? 'Agent';
+                          setState(() {
+                            _trackedAgentId = null;
+                            _updateMarkers();
+                          });
+                          if (mounted) {
+                            context.showSnackBar('Stopped tracking $trackedAgentName');
+                          }
+                        },
+                        tooltip: 'Stop Tracking',
+                        child: Icon(
+                          Icons.location_off,
+                          color: Colors.purple[300],
+                        ),
+                      ),
                     ),
                   ),
               ],
             ),
+      ),
     );
   }
 

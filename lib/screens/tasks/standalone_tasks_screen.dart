@@ -1,6 +1,7 @@
 // lib/screens/tasks/standalone_tasks_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../models/task.dart';
 import '../../utils/constants.dart';
 import './standalone_task_detail_screen.dart';
@@ -268,18 +269,37 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: AppBar(
-        title: const Text('Task Management'),
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
       ),
-      body: FutureBuilder<List<Task>>(
-        future: _tasksFuture,
-        builder: (context, snapshot) {
+      child: Scaffold(
+        backgroundColor: backgroundColor,
+      body: Column(
+        children: [
+          SizedBox(height: MediaQuery.of(context).padding.top + 16),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Task Management',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: FutureBuilder<List<Task>>(
+              future: _tasksFuture,
+              builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -365,7 +385,7 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
           return RefreshIndicator(
             onRefresh: () async { setState(() { _tasksFuture = _fetchTasks(); }); },
             child: ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
               itemCount: tasks.length,
               itemBuilder: (context, index) {
                 final task = tasks[index];
@@ -530,14 +550,21 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
             ),
           );
         },
+            ),
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showCreateTaskMenu,
-        icon: const Icon(Icons.add),
-        label: const Text('New Task'),
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 4,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80),
+        child: FloatingActionButton.extended(
+          onPressed: _showCreateTaskMenu,
+          icon: const Icon(Icons.add),
+          label: const Text('New Task'),
+          backgroundColor: primaryColor,
+          foregroundColor: Colors.white,
+          elevation: 4,
+        ),
+        ),
       ),
     );
   }

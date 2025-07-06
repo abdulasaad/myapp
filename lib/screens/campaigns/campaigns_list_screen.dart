@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:myapp/screens/agent/task_location_viewer_screen.dart';
 import '../../models/campaign.dart';
@@ -247,56 +248,75 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
 
   /// Builds the view for a manager (a simple list of campaigns).
   Widget _buildManagerView() {
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: AppBar(
-        title: const Text('Campaigns'),
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
       ),
-      body: FutureBuilder<List<Campaign>>(
-        future: _managerCampaignsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            // Check if this is a network error
-            if (ConnectivityService.isNetworkError(snapshot.error)) {
-              return OfflineWidget(
-                title: 'No Internet Connection',
-                subtitle: 'Unable to load campaigns. Please check your connection and try again.',
-                onRetry: () => refreshAll(),
-              );
-            }
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error, size: 64, color: Colors.red[400]),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error loading campaigns',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: refreshAll,
-                    child: const Text('Retry'),
-                  ),
-                ],
+      child: Scaffold(
+        backgroundColor: backgroundColor,
+      body: Column(
+        children: [
+          SizedBox(height: MediaQuery.of(context).padding.top + 16),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Campaigns',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                  letterSpacing: -0.5,
+                ),
               ),
-            );
-          }
-          final campaigns = snapshot.data ?? [];
-          if (campaigns.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
+            ),
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: FutureBuilder<List<Campaign>>(
+              future: _managerCampaignsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  // Check if this is a network error
+                  if (ConnectivityService.isNetworkError(snapshot.error)) {
+                    return OfflineWidget(
+                      title: 'No Internet Connection',
+                      subtitle: 'Unable to load campaigns. Please check your connection and try again.',
+                      onRetry: () => refreshAll(),
+                    );
+                  }
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error, size: 64, color: Colors.red[400]),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Error loading campaigns',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: refreshAll,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+                final campaigns = snapshot.data ?? [];
+                if (campaigns.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
                     width: 120,
                     height: 120,
                     decoration: BoxDecoration(
@@ -353,26 +373,26 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
                   //     elevation: 2,
                   //   ),
                   // ),
-                ],
-              ),
-            );
-          }
-          return RefreshIndicator(
-            onRefresh: () async => refreshAll(),
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: campaigns.length,
-              itemBuilder: (context, index) {
-                final campaign = campaigns[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: CampaignCard(
-                    campaign: campaign,
-                    showAdminActions: true,
-                    onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                        builder: (context) =>
-                            CampaignDetailScreen(campaign: campaign))),
-                    onEdit: () async {
+                      ],
+                    ),
+                  );
+                }
+                return RefreshIndicator(
+                  onRefresh: () async => refreshAll(),
+                  child: ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+                    itemCount: campaigns.length,
+                    itemBuilder: (context, index) {
+                      final campaign = campaigns[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: CampaignCard(
+                          campaign: campaign,
+                          showAdminActions: true,
+                          onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) =>
+                                  CampaignDetailScreen(campaign: campaign))),
+                          onEdit: () async {
                       // Navigate to CreateCampaignScreen for editing
                       final result = await Navigator.of(context).push(MaterialPageRoute(
                         builder: (context) => CreateCampaignScreen(campaignToEdit: campaign),
@@ -444,47 +464,73 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
                         }
                       }
                     },
+                        ),
+                      );
+                    },
                   ),
                 );
               },
             ),
-          );
-        },
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final result = await Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const CreateCampaignScreen(),
-            ),
-          );
-          if (result == true && mounted) {
-            refreshAll();
-          }
-        },
-        icon: const Icon(Icons.add),
-        label: const Text('Create Campaign'),
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 4,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80),
+        child: FloatingActionButton.extended(
+          onPressed: () async {
+            final result = await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const CreateCampaignScreen(),
+              ),
+            );
+            if (result == true && mounted) {
+              refreshAll();
+            }
+          },
+          icon: const Icon(Icons.add),
+          label: const Text('Create Campaign'),
+          backgroundColor: primaryColor,
+          foregroundColor: Colors.white,
+          elevation: 4,
+        ),
+        ),
       ),
     );
   }
 
   /// Builds the campaigns view for an agent.
   Widget _buildAgentView() {
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: AppBar(
-        title: const Text('My Campaigns'),
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
       ),
-      body: FutureBuilder<List<dynamic>>(
-        future: _agentDataFuture,
-        builder: (context, snapshot) {
+      child: Scaffold(
+        backgroundColor: backgroundColor,
+      body: Column(
+        children: [
+          SizedBox(height: MediaQuery.of(context).padding.top + 16),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'My Campaigns',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: FutureBuilder<List<dynamic>>(
+              future: _agentDataFuture,
+              builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -565,6 +611,10 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
           // Show campaigns directly without tabs
           return _buildCampaignsList(campaigns);
         },
+            ),
+          ),
+        ],
+        ),
       ),
     );
   }
@@ -574,7 +624,7 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
     return RefreshIndicator(
       onRefresh: () async => refreshAll(),
       child: ListView.builder(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 100.0),
         itemCount: campaigns.length,
         itemBuilder: (context, index) {
           final campaign = campaigns[index];

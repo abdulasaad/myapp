@@ -2,6 +2,7 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:myapp/models/task.dart';
 import 'package:myapp/utils/constants.dart';
@@ -213,74 +214,141 @@ class _TaskLocationViewerScreenState extends State<TaskLocationViewerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('${widget.task.title} - Location')),
-      body: _isLoading
-          ? preloader
-          // This logic from your working version is more robust.
-          : _initialCameraPosition == null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.location_off,
-                          size: 64,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          'No Location Set',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.bold,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Modern Title Header
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
                           ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          widget.task.locationName != null && widget.task.locationName!.isNotEmpty
-                              ? 'This task has a location name but no geofence area defined. You can submit evidence from any location.'
-                              : 'The manager has not set a specific location or geofence for this task. You can submit evidence from any location.',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey[500],
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
+                        ],
+                      ),
+                      child: IconButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.arrow_back, color: Colors.black87),
+                        padding: const EdgeInsets.all(8),
+                      ),
                     ),
-                  ),
-                )
-              : GoogleMap(
-                  // Use the initial position from the loaded data.
-                  initialCameraPosition: CameraPosition(
-                    target: _initialCameraPosition!,
-                    zoom: 15,
-                  ),
-                  onMapCreated: _onMapCreated,
-                  polygons: _polygons,
-                  markers: _markers,
-                  myLocationButtonEnabled: true,
-                  myLocationEnabled: true,
-                  // Enable map interactions
-                  zoomGesturesEnabled: true,
-                  scrollGesturesEnabled: true,
-                  rotateGesturesEnabled: true,
-                  tiltGesturesEnabled: true,
-                  // UI controls
-                  zoomControlsEnabled: true,
-                  mapToolbarEnabled: true,
-                  compassEnabled: true,
-                  // Disable lite mode for full interactivity
-                  liteModeEnabled: false,
-                  // Performance settings
-                  indoorViewEnabled: false,
-                  trafficEnabled: false,
-                  buildingsEnabled: true,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          '${widget.task.title} - Location',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-      bottomSheet: _geofenceInfos.isNotEmpty ? Container(
+              ),
+              // Content
+              Expanded(
+                child: _isLoading
+                    ? preloader
+                    // This logic from your working version is more robust.
+                    : _initialCameraPosition == null
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(32.0),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.location_off,
+                                    size: 64,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 24),
+                                  Text(
+                                    'No Location Set',
+                                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                      color: Colors.grey[600],
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    widget.task.locationName != null && widget.task.locationName!.isNotEmpty
+                                        ? 'This task has a location name but no geofence area defined. You can submit evidence from any location.'
+                                        : 'The manager has not set a specific location or geofence for this task. You can submit evidence from any location.',
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      color: Colors.grey[500],
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        : GoogleMap(
+                            // Use the initial position from the loaded data.
+                            initialCameraPosition: CameraPosition(
+                              target: _initialCameraPosition!,
+                              zoom: 15,
+                            ),
+                            onMapCreated: _onMapCreated,
+                            polygons: _polygons,
+                            markers: _markers,
+                            myLocationButtonEnabled: true,
+                            myLocationEnabled: true,
+                            // Enable map interactions
+                            zoomGesturesEnabled: true,
+                            scrollGesturesEnabled: true,
+                            rotateGesturesEnabled: true,
+                            tiltGesturesEnabled: true,
+                            // UI controls
+                            zoomControlsEnabled: true,
+                            mapToolbarEnabled: true,
+                            compassEnabled: true,
+                            // Disable lite mode for full interactivity
+                            liteModeEnabled: false,
+                            // Performance settings
+                            indoorViewEnabled: false,
+                            trafficEnabled: false,
+                            buildingsEnabled: true,
+                          ),
+              ),
+            ],
+          ),
+        ),
+        bottomSheet: _geofenceInfos.isNotEmpty ? Container(
         height: 120,
         decoration: BoxDecoration(
           color: Colors.white,
@@ -364,6 +432,7 @@ class _TaskLocationViewerScreenState extends State<TaskLocationViewerScreen> {
           ),
         ),
       ) : null,
+    ),
     );
   }
 

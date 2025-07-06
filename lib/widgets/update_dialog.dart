@@ -66,6 +66,12 @@ class _UpdateDialogState extends State<UpdateDialog> {
             _statusMessage = 'Installation started. If you see a security scan dialog, tap "Install without scanning" to proceed quickly.';
             _isDownloading = false;
           });
+          
+          // Schedule cleanup after a few seconds in case the installation completes
+          // but doesn't restart the app immediately
+          Future.delayed(const Duration(seconds: 5), () {
+            _updateService.cleanupAfterInstallation();
+          });
         }
       } else if (Platform.isIOS) {
         // iOS redirects to App Store, close dialog

@@ -51,6 +51,9 @@ class _SplashScreenState extends State<SplashScreen> {
     // Small delay to show splash screen briefly before transition
     await Future.delayed(const Duration(milliseconds: 1500));
     
+    // Clean up any APKs from previous installation
+    _updateService.cleanupAfterInstallation();
+    
     // Check for app updates first
     await _checkForUpdate();
     
