@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:convert';
 import '../utils/constants.dart';
 import '../screens/agent/agent_submission_history_screen.dart';
 
@@ -36,27 +37,47 @@ class _TaskSubmissionPreviewState extends State<TaskSubmissionPreview> {
 
       List<TaskSubmissionItem> submissions = [];
 
-      // Load form submissions for this task
+      // Load form submissions for this task by checking evidence table for form data
       final formSubmissions = await supabase
-          .from('tasks')
-          .select('id, custom_fields, created_at')
-          .eq('id', widget.taskId)
-          .not('custom_fields', 'is', null)
+          .from('evidence')
+          .select('''
+            id,
+            title,
+            created_at,
+            file_url,
+            task_assignments!inner(task_id)
+          ''')
+          .eq('uploader_id', userId)
+          .eq('task_assignments.task_id', widget.taskId)
+          .like('title', 'Form Data:%')
+          .order('created_at', ascending: false)
           .limit(3);
 
       for (final item in formSubmissions) {
-        if (item['custom_fields'] != null && (item['custom_fields'] as Map).isNotEmpty) {
-          submissions.add(TaskSubmissionItem(
-            id: item['id'],
-            type: 'form',
-            title: 'Form Submission',
-            submittedAt: DateTime.parse(item['created_at']),
-            preview: _formatFormPreview(item['custom_fields']),
-          ));
+        // Try to extract form data from file_url if it's a data URL
+        String preview = 'Form submitted';
+        if (item['file_url'] != null && item['file_url'].toString().startsWith('data:application/json')) {
+          try {
+            final dataUrl = item['file_url'] as String;
+            final base64Data = dataUrl.split(',')[1];
+            final jsonString = utf8.decode(base64.decode(base64Data));
+            final formData = jsonDecode(jsonString) as Map<String, dynamic>;
+            preview = _formatFormPreview(formData);
+          } catch (e) {
+            preview = 'Form data available';
+          }
         }
+        
+        submissions.add(TaskSubmissionItem(
+          id: item['id'],
+          type: 'form',
+          title: item['title'] ?? 'Form Submission',
+          submittedAt: DateTime.parse(item['created_at']),
+          preview: preview,
+        ));
       }
 
-      // Load evidence submissions for this task
+      // Load evidence submissions for this task (excluding form data)
       final evidenceSubmissions = await supabase
           .from('evidence')
           .select('''
@@ -64,11 +85,12 @@ class _TaskSubmissionPreviewState extends State<TaskSubmissionPreview> {
             title,
             file_url,
             created_at,
-            approval_status,
+            status,
             task_assignments!inner(task_id)
           ''')
           .eq('uploader_id', userId)
           .eq('task_assignments.task_id', widget.taskId)
+          .not('title', 'like', 'Form Data:%')
           .order('created_at', ascending: false)
           .limit(3);
 
@@ -79,7 +101,7 @@ class _TaskSubmissionPreviewState extends State<TaskSubmissionPreview> {
           title: item['title'] ?? 'Evidence File',
           submittedAt: DateTime.parse(item['created_at']),
           preview: 'File uploaded',
-          status: item['approval_status'] ?? 'pending',
+          status: item['status'] ?? 'pending',
         ));
       }
 
