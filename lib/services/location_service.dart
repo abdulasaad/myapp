@@ -246,6 +246,26 @@ class LocationService {
     }
   }
 
+  /// Public method to request location permissions
+  Future<bool> requestLocationPermission() async {
+    return await _handlePermission();
+  }
+
+  /// Check if location permissions are granted
+  Future<bool> hasLocationPermission() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return false;
+      
+      LocationPermission permission = await Geolocator.checkPermission();
+      return permission == LocationPermission.whileInUse || 
+             permission == LocationPermission.always;
+    } catch (e) {
+      logger.e('Error checking location permission: $e');
+      return false;
+    }
+  }
+
   Future<bool> _handlePermission() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();

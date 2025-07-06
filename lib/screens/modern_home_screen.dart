@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../utils/constants.dart';
 import '../models/app_user.dart';
 import '../services/smart_location_manager.dart';
@@ -13,6 +14,7 @@ import '../services/connectivity_service.dart';
 import '../services/update_service.dart';
 import '../services/timezone_service.dart';
 import '../widgets/offline_widget.dart';
+import 'agent/agent_route_dashboard_screen.dart';
 import '../widgets/update_dialog.dart';
 import 'package:logger/logger.dart';
 import 'campaigns/campaigns_list_screen.dart';
@@ -21,11 +23,12 @@ import 'map/live_map_screen.dart';
 import 'admin/enhanced_manager_dashboard_screen.dart';
 import 'admin/admin_dashboard_screen.dart';
 import 'agent/agent_standalone_tasks_screen.dart';
-import 'agent/earnings_screen.dart';
 import 'login_screen.dart';
 import 'admin/settings_screen.dart';
 import 'admin/group_management_screen.dart';
 import 'agent/agent_geofence_map_screen.dart';
+import 'manager/map_location_picker_screen.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class ModernHomeScreen extends StatefulWidget {
   const ModernHomeScreen({super.key});
@@ -46,7 +49,8 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
     WidgetsBinding.instance.addObserver(this);
     _loadUserProfile();
     _setupSessionManagement();
-    // Clean up old APKs on app start
+    // Clean up APKs after installation and old APKs on app start
+    _updateService.cleanupAfterInstallation();
     _updateService.cleanupAllApks();
   }
 
@@ -60,6 +64,8 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      // Clean up any APKs from installation when app resumes
+      _updateService.cleanupAfterInstallation();
       // Check for updates when app comes back to foreground
       _checkForUpdate();
     }
@@ -300,7 +306,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
             right: 16,
             child: _currentUser!.role == 'admin' || _currentUser!.role == 'manager'
                 ? _buildFloatingAdminNav(safeIndex, navItems)
-                : _buildAgentBottomNav(),
+                : _buildAgentBottomNavWithButton(),
           ),
         ],
       ),
@@ -384,28 +390,44 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
     );
   }
 
-  Widget _buildAgentBottomNav() {
-    return Container(
-      height: 80,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+  Widget _buildAgentBottomNavWithButton() {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        // Main navigation bar
+        Container(
+          height: 80,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.95),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.15),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(child: _buildEnhancedNavItem(Icons.home_filled, 'Home', 0)),
-          Expanded(child: _buildEnhancedNavItem(Icons.work_outline_rounded, 'Campaigns', 1)),
-          Expanded(child: _buildEnhancedNavItem(Icons.assignment_outlined, 'Tasks', 2)),
-          Expanded(child: _buildEnhancedNavItem(Icons.person_outline_rounded, 'Profile', 3)),
-        ],
-      ),
+          child: Row(
+            children: [
+              Expanded(child: _buildEnhancedNavItem(Icons.home_filled, 'Home', 0)),
+              Expanded(child: _buildEnhancedNavItem(Icons.work_outline_rounded, 'Campaigns', 1)),
+              const SizedBox(width: 64), // Space for floating button
+              Expanded(child: _buildEnhancedNavItem(Icons.assignment_outlined, 'Tasks', 2)),
+              Expanded(child: _buildEnhancedNavItem(Icons.person_outline_rounded, 'Profile', 3)),
+            ],
+          ),
+        ),
+        // Floating Action Button positioned above the nav
+        Positioned(
+          top: -28,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: _buildEnhancedUploadButton(),
+          ),
+        ),
+      ],
     );
   }
 
@@ -451,6 +473,45 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
     );
   }
 
+  Widget _buildEnhancedUploadButton() {
+    return GestureDetector(
+      onTap: _showRoutesDashboard,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 64,
+        height: 64,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
+          ),
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF667EEA).withValues(alpha: 0.4),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+              spreadRadius: -5,
+            ),
+          ],
+        ),
+        child: const Icon(
+          Icons.route_rounded,
+          color: Colors.white,
+          size: 28,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showRoutesDashboard() async {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const AgentRouteDashboardScreen(),
+      ),
+    );
+  }
 
 }
 
@@ -512,6 +573,8 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
   late Future<AgentDashboardData> _dashboardFuture;
   final SmartLocationManager _locationManager = SmartLocationManager();
   final Logger _logger = Logger();
+  bool _isLocationEnabled = false;
+  String? _currentLocationStatus;
 
   @override
   void initState() {
@@ -541,25 +604,45 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
     try {
       _logger.i('Starting smart location tracking for agent: ${widget.user.fullName}');
       
+      // First check location permission status
+      final locationService = LocationService();
+      final hasPermission = await locationService.hasLocationPermission();
+      
+      if (!hasPermission) {
+        if (mounted) {
+          setState(() {
+            _isLocationEnabled = false;
+            _currentLocationStatus = 'Permission required';
+          });
+        }
+        return;
+      }
+      
       final success = await _locationManager.initialize();
       if (success) {
         await _locationManager.startTracking();
         _logger.i('✅ Smart location tracking started successfully');
+        if (mounted) {
+          setState(() {
+            _isLocationEnabled = true;
+            _currentLocationStatus = 'Active';
+          });
+        }
       } else {
         if (mounted) {
-          context.showSnackBar(
-            'Failed to initialize location tracking. Please check permissions.',
-            isError: true,
-          );
+          setState(() {
+            _isLocationEnabled = false;
+            _currentLocationStatus = 'Disabled';
+          });
         }
       }
     } catch (e) {
       _logger.e('Failed to start smart location tracking: $e');
       if (mounted) {
-        context.showSnackBar(
-          'Failed to start location tracking: $e',
-          isError: true,
-        );
+        setState(() {
+          _isLocationEnabled = false;
+          _currentLocationStatus = 'Error';
+        });
       }
     }
   }
@@ -575,18 +658,65 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
       final userId = supabase.auth.currentUser?.id;
       if (userId == null) throw Exception('No authenticated user');
 
-      final results = await Future.wait([
-        _getAgentTaskStats(userId),
-        _getAgentEarningsStats(userId),
-        _getRecentAgentActivity(userId),
-        _getActiveTasksPreview(userId),
-      ]);
+      // Load data with individual error handling
+      final taskStats = await _getAgentTaskStats(userId).catchError((e) {
+        debugPrint('Error loading task stats: $e');
+        return AgentTaskStats(
+          activeTasks: 0,
+          completedTasks: 0,
+          totalPoints: 0,
+          todayCompleted: 0,
+          weeklyCompleted: 0,
+        );
+      });
+
+      final earningsStats = await _getAgentEarningsStats(userId).catchError((e) {
+        debugPrint('Error loading earnings stats: $e');
+        return AgentEarningsStats(
+          totalEarned: 0,
+          totalPaid: 0,
+          pendingPayment: 0,
+          monthlyEarnings: 0,
+          weeklyEarnings: 0,
+        );
+      });
+
+      final recentActivity = await _getRecentAgentActivity(userId).catchError((e) {
+        debugPrint('Error loading recent activity: $e');
+        return <AgentActivityItem>[];
+      });
+
+      final activeTasks = await _getActiveTasksPreview(userId).catchError((e) {
+        debugPrint('Error loading active tasks: $e');
+        return <ActiveTaskPreview>[];
+      });
+
+      final routeStats = await _getAgentRouteStats(userId).catchError((e) {
+        debugPrint('Error loading route stats: $e');
+        return AgentRouteStats(
+          activeRoutes: 0,
+          placesToVisitToday: 0,
+          completedVisitsThisWeek: 0,
+          routeNames: [],
+        );
+      });
+
+      final campaignStats = await _getAgentCampaignStats(userId).catchError((e) {
+        debugPrint('Error loading campaign stats: $e');
+        return AgentCampaignStats(
+          activeCampaigns: 0,
+          completedCampaigns: 0,
+          totalCampaignTasks: 0,
+        );
+      });
 
       return AgentDashboardData(
-        taskStats: results[0] as AgentTaskStats,
-        earningsStats: results[1] as AgentEarningsStats,
-        recentActivity: results[2] as List<AgentActivityItem>,
-        activeTasks: results[3] as List<ActiveTaskPreview>,
+        taskStats: taskStats,
+        earningsStats: earningsStats,
+        recentActivity: recentActivity,
+        activeTasks: activeTasks,
+        routeStats: routeStats,
+        campaignStats: campaignStats,
       );
     } catch (e) {
       debugPrint('Error loading agent dashboard: $e');
@@ -601,9 +731,10 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
         .eq('agent_id', userId);
 
     int activeTasks = 0, completedTasks = 0, totalPoints = 0;
-    int todayCompleted = 0;
+    int todayCompleted = 0, weeklyCompleted = 0;
     final today = DateTime.now();
     final todayStart = DateTime(today.year, today.month, today.day);
+    final weekStart = todayStart.subtract(Duration(days: today.weekday - 1));
 
     for (final assignment in taskAssignments) {
       final status = assignment['status'] as String;
@@ -624,6 +755,9 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
             if (completedDate.isAfter(todayStart)) {
               todayCompleted++;
             }
+            if (completedDate.isAfter(weekStart)) {
+              weeklyCompleted++;
+            }
           }
           break;
       }
@@ -634,54 +768,81 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
       completedTasks: completedTasks,
       totalPoints: totalPoints,
       todayCompleted: todayCompleted,
+      weeklyCompleted: weeklyCompleted,
     );
   }
 
   Future<AgentEarningsStats> _getAgentEarningsStats(String userId) async {
-    // Get total earned points
-    final completedAssignments = await supabase
-        .from('task_assignments')
-        .select('tasks!inner(points)')
-        .eq('agent_id', userId)
-        .eq('status', 'completed');
+    try {
+      // Get total earned points
+      final completedAssignments = await supabase
+          .from('task_assignments')
+          .select('tasks!inner(points)')
+          .eq('agent_id', userId)
+          .eq('status', 'completed');
 
-    final totalEarned = completedAssignments.fold<int>(
-      0, (sum, assignment) => sum + (assignment['tasks']['points'] as int? ?? 0)
-    );
+      final totalEarned = completedAssignments.fold<int>(
+        0, (sum, assignment) => sum + (assignment['tasks']['points'] as int? ?? 0)
+      );
 
-    // Get total paid
-    final payments = await supabase
-        .from('payments')
-        .select('amount')
-        .eq('agent_id', userId);
+      // Get total paid - handle case where payments table might not exist
+      int totalPaid = 0;
+      try {
+        final payments = await supabase
+            .from('payments')
+            .select('amount')
+            .eq('agent_id', userId);
 
-    final totalPaid = payments.fold<int>(
-      0, (sum, payment) => sum + (payment['amount'] as int? ?? 0)
-    );
+        totalPaid = payments.fold<int>(
+          0, (sum, payment) => sum + (payment['amount'] as int? ?? 0)
+        );
+      } catch (e) {
+        debugPrint('Payments table not accessible: $e');
+        // Keep totalPaid as 0
+      }
 
-    final pendingPayment = totalEarned - totalPaid;
+      final pendingPayment = totalEarned - totalPaid;
 
-    // Get this month's earnings
-    final now = DateTime.now();
-    final monthStart = DateTime(now.year, now.month, 1);
-    
-    final monthlyAssignments = await supabase
-        .from('task_assignments')
-        .select('tasks!inner(points), completed_at')
-        .eq('agent_id', userId)
-        .eq('status', 'completed')
-        .gte('completed_at', monthStart.toIso8601String());
+      // Get this month's earnings
+      final now = DateTime.now();
+      final monthStart = DateTime(now.year, now.month, 1);
+      
+      final monthlyAssignments = await supabase
+          .from('task_assignments')
+          .select('tasks!inner(points), completed_at')
+          .eq('agent_id', userId)
+          .eq('status', 'completed')
+          .gte('completed_at', monthStart.toIso8601String());
 
-    final monthlyEarnings = monthlyAssignments.fold<int>(
-      0, (sum, assignment) => sum + (assignment['tasks']['points'] as int? ?? 0)
-    );
+      final monthlyEarnings = monthlyAssignments.fold<int>(
+        0, (sum, assignment) => sum + (assignment['tasks']['points'] as int? ?? 0)
+      );
 
-    return AgentEarningsStats(
-      totalEarned: totalEarned,
-      totalPaid: totalPaid,
-      pendingPayment: pendingPayment,
-      monthlyEarnings: monthlyEarnings,
-    );
+      // Get weekly earnings
+      final weekStart = DateTime(now.year, now.month, now.day).subtract(Duration(days: now.weekday - 1));
+      
+      final weeklyAssignments = await supabase
+          .from('task_assignments')
+          .select('tasks!inner(points), completed_at')
+          .eq('agent_id', userId)
+          .eq('status', 'completed')
+          .gte('completed_at', weekStart.toIso8601String());
+
+      final weeklyEarnings = weeklyAssignments.fold<int>(
+        0, (sum, assignment) => sum + (assignment['tasks']['points'] as int? ?? 0)
+      );
+
+      return AgentEarningsStats(
+        totalEarned: totalEarned,
+        totalPaid: totalPaid,
+        pendingPayment: pendingPayment,
+        monthlyEarnings: monthlyEarnings,
+        weeklyEarnings: weeklyEarnings,
+      );
+    } catch (e) {
+      debugPrint('Error in _getAgentEarningsStats: $e');
+      rethrow;
+    }
   }
 
   Future<List<AgentActivityItem>> _getRecentAgentActivity(String userId) async {
@@ -721,13 +882,31 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
         type: 'evidence_submitted',
         title: 'Uploaded: ${evidence['title']}',
         timestamp: DateTime.parse(evidence['created_at']),
-        icon: Icons.upload,
+        icon: Icons.camera_alt,
         color: primaryColor,
       ));
     }
 
+    // Get recent place visits
+    final recentVisits = await supabase
+        .from('place_visits')
+        .select('created_at, places!inner(name)')
+        .eq('agent_id', userId)
+        .order('created_at', ascending: false)
+        .limit(3);
+
+    for (final visit in recentVisits) {
+      activities.add(AgentActivityItem(
+        type: 'place_visited',
+        title: 'Visited: ${visit['places']['name']}',
+        timestamp: DateTime.parse(visit['created_at']),
+        icon: Icons.location_on,
+        color: secondaryColor,
+      ));
+    }
+
     activities.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-    return activities.take(5).toList();
+    return activities.take(7).toList();
   }
 
   Future<List<ActiveTaskPreview>> _getActiveTasksPreview(String userId) async {
@@ -751,6 +930,121 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
     )).toList();
   }
 
+  Future<AgentRouteStats> _getAgentRouteStats(String userId) async {
+    try {
+      // Get active routes assigned to this agent with names
+      final activeRoutesData = await supabase
+          .from('routes')
+          .select('id, name')
+          .eq('assigned_agent_id', userId)
+          .eq('status', 'active');
+
+      final routeNames = activeRoutesData.map((route) => route['name'] as String? ?? 'Route ${route['id']}').toList();
+      final activeRoutesCount = activeRoutesData.length;
+
+      // Get places to visit today (unvisited places in active routes)
+      final today = DateTime.now();
+      final todayStart = DateTime(today.year, today.month, today.day);
+
+      int todayPlacesCount = 0;
+      try {
+        final todayPlaces = await supabase
+            .from('route_places')
+            .select('id, routes!inner(assigned_agent_id)')
+            .eq('routes.assigned_agent_id', userId)
+            .isFilter('visited_at', null)
+            .count(CountOption.exact);
+        todayPlacesCount = todayPlaces.count ?? 0;
+      } catch (e) {
+        debugPrint('Error loading today places: $e');
+        // Keep default 0
+      }
+
+      // Get completed visits this week
+      final weekStart = todayStart.subtract(Duration(days: today.weekday - 1));
+      
+      int weeklyVisitsCount = 0;
+      try {
+        final weeklyVisits = await supabase
+            .from('place_visits')
+            .select('id')
+            .eq('agent_id', userId)
+            .gte('created_at', weekStart.toIso8601String())
+            .count(CountOption.exact);
+        weeklyVisitsCount = weeklyVisits.count ?? 0;
+      } catch (e) {
+        debugPrint('Error loading weekly visits: $e');
+        // Keep default 0
+      }
+
+      return AgentRouteStats(
+        activeRoutes: activeRoutesCount,
+        placesToVisitToday: todayPlacesCount,
+        completedVisitsThisWeek: weeklyVisitsCount,
+        routeNames: routeNames,
+      );
+    } catch (e) {
+      // If there are still relationship issues, return default values
+      debugPrint('Error loading route stats: $e');
+      return AgentRouteStats(
+        activeRoutes: 0,
+        placesToVisitToday: 0,
+        completedVisitsThisWeek: 0,
+        routeNames: [],
+      );
+    }
+  }
+
+  Future<AgentCampaignStats> _getAgentCampaignStats(String userId) async {
+    // Get active campaigns count
+    final userGroups = await supabase
+        .from('user_groups')
+        .select('group_id')
+        .eq('user_id', userId);
+
+    final groupIds = userGroups.map((g) => g['group_id']).toList();
+
+    if (groupIds.isEmpty) {
+      return AgentCampaignStats(
+        activeCampaigns: 0,
+        completedCampaigns: 0,
+        totalCampaignTasks: 0,
+      );
+    }
+
+    // Active campaigns
+    final now = DateTime.now();
+    final activeCampaigns = await supabase
+        .from('campaigns')
+        .select('id')
+        .inFilter('group_id', groupIds)
+        .lte('start_date', now.toIso8601String())
+        .gte('end_date', now.toIso8601String())
+        .count(CountOption.exact);
+
+    // Completed campaigns (assuming campaigns with all tasks completed by this agent)
+    final completedCampaigns = await supabase
+        .from('campaigns')
+        .select('id')
+        .inFilter('group_id', groupIds)
+        .lt('end_date', now.toIso8601String())
+        .count(CountOption.exact);
+
+    // Total campaign tasks assigned
+    final campaignTasks = await supabase
+        .from('task_assignments')
+        .select('id, tasks!inner(campaign_id)')
+        .eq('agent_id', userId)
+        .not('tasks.campaign_id', 'is', null)
+        .count(CountOption.exact);
+
+    return AgentCampaignStats(
+      activeCampaigns: activeCampaigns.count ?? 0,
+      completedCampaigns: completedCampaigns.count ?? 0,
+      totalCampaignTasks: campaignTasks.count ?? 0,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -767,7 +1061,11 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                 future: _dashboardFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const Center(
+                      child: CircularProgressIndicator(
+                        color: primaryColor,
+                      ),
+                    );
                   }
                   
                   if (snapshot.hasError) {
@@ -784,15 +1082,29 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.error, size: 64, color: Colors.red[400]),
+                          Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
                           const SizedBox(height: 16),
                           Text(
                             'Error loading dashboard',
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           const SizedBox(height: 8),
+                          Text(
+                            'Please try again later',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: textSecondaryColor,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
                           ElevatedButton(
                             onPressed: _refreshDashboard,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryColor,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
                             child: const Text('Retry'),
                           ),
                         ],
@@ -804,89 +1116,136 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                   
                   return RefreshIndicator(
                     onRefresh: () async => _refreshDashboard(),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Enhanced Dashboard Header with notification
-                          SafeArea(
-                            bottom: false,
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Dashboard',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF1F2937),
-                                    ),
+                    color: primaryColor,
+                    child: CustomScrollView(
+                      slivers: [
+                        // Modern App Bar
+                        SliverAppBar(
+                          expandedHeight: 120.0,
+                          floating: false,
+                          pinned: true,
+                          elevation: 0,
+                          backgroundColor: surfaceColor,
+                          flexibleSpace: FlexibleSpaceBar(
+                            titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
+                            title: Row(
+                              children: [
+                                Text(
+                                  'Agent Dashboard',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: textPrimaryColor,
                                   ),
-                                  Stack(
+                                ),
+                              ],
+                            ),
+                            background: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    primaryColor.withValues(alpha: 0.1),
+                                    secondaryColor.withValues(alpha: 0.05),
+                                  ],
+                                ),
+                              ),
+                              child: SafeArea(
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 60),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withValues(alpha: 0.8),
-                                          borderRadius: BorderRadius.circular(12),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withValues(alpha: 0.1),
-                                              blurRadius: 4,
-                                              offset: const Offset(0, 2),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Welcome back,',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              color: textSecondaryColor,
                                             ),
-                                          ],
-                                        ),
-                                        child: const Icon(
-                                          Icons.notifications_outlined,
-                                          color: Color(0xFF6B7280),
-                                          size: 28,
-                                        ),
-                                      ),
-                                      Positioned(
-                                        top: 6,
-                                        right: 6,
-                                        child: Container(
-                                          width: 8,
-                                          height: 8,
-                                          decoration: const BoxDecoration(
-                                            color: Colors.red,
-                                            shape: BoxShape.circle,
                                           ),
-                                        ),
+                                          Text(
+                                            widget.user.fullName ?? 'Agent',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.bold,
+                                              color: textPrimaryColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      // Notification & Settings
+                                      Row(
+                                        children: [
+                                          _buildHeaderIconButton(
+                                            icon: Icons.notifications_outlined,
+                                            hasNotification: true,
+                                            onTap: () {
+                                              // Handle notifications
+                                            },
+                                          ),
+                                          const SizedBox(width: 12),
+                                          _buildHeaderIconButton(
+                                            icon: Icons.settings_outlined,
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => const SettingsScreen(),
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
-                                ],
+                                ),
                               ),
                             ),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildEnhancedWelcomeCard(data.taskStats),
-                                const SizedBox(height: 32),
-                                _buildEnhancedPerformanceStats(data.taskStats, data.earningsStats),
-                                const SizedBox(height: 20),
-                                _buildQuickActions(context),
-                                const SizedBox(height: 20),
-                                _buildActiveTasksPreview(data.activeTasks),
-                                const SizedBox(height: 20),
-                                _buildRecentActivity(data.recentActivity),
-                                const SizedBox(height: 120), // Extra space for floating nav
-                              ],
-                            ),
+                        ),
+                        
+                        // Dashboard Content
+                        SliverPadding(
+                          padding: const EdgeInsets.all(20),
+                          sliver: SliverList(
+                            delegate: SliverChildListDelegate([
+                              // Location Status Card
+                              _buildLocationStatusCard(),
+                              const SizedBox(height: 20),
+                              
+                              // Performance Overview
+                              _buildPerformanceOverview(data),
+                              const SizedBox(height: 20),
+                              
+                              // Quick Stats Grid
+                              _buildQuickStatsGrid(data),
+                              const SizedBox(height: 24),
+                              
+                              // Quick Actions
+                              _buildQuickActionsSection(context),
+                              const SizedBox(height: 24),
+                              
+                              // Active Tasks & Routes
+                              _buildActiveWorkSection(data),
+                              const SizedBox(height: 24),
+                              
+                              // Recent Activity
+                              _buildRecentActivitySection(data.recentActivity),
+                              const SizedBox(height: 120), // Space for floating nav
+                            ]),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   );
                 },
               ),
+              
               // Offline banner at the top
               if (!isOnline)
                 Positioned(
@@ -897,7 +1256,16 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                     bottom: false,
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                      color: Colors.orange[700],
+                      decoration: BoxDecoration(
+                        color: Colors.orange[700],
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
                       child: const Row(
                         children: [
                           Icon(Icons.wifi_off, color: Colors.white, size: 20),
@@ -918,643 +1286,70 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
     );
   }
 
-
-
-
-
-  Widget _buildQuickActions(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Quick Actions',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: textPrimaryColor,
-          ),
-        ),
-        const SizedBox(height: 12),
-        // First row with 2 items for better spacing
-        IntrinsicHeight(
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildActionCard(
-                  icon: Icons.assignment,
-                  title: 'View Tasks',
-                  subtitle: 'See all tasks',
-                  color: primaryColor,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const AgentStandaloneTasksScreen(),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildActionCard(
-                  icon: Icons.account_balance_wallet,
-                  title: 'Earnings',
-                  subtitle: 'Check payments',
-                  color: successColor,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const EarningsScreen(),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        // Second row with 2 items
-        IntrinsicHeight(
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildActionCard(
-                  icon: Icons.campaign,
-                  title: 'Campaigns',
-                  subtitle: 'Active campaigns',
-                  color: secondaryColor,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => CampaignsListScreen(locationService: LocationService()),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildActionCard(
-                  icon: Icons.map,
-                  title: 'MAP',
-                  subtitle: 'Work areas',
-                  color: warningColor,
-                  onTap: () {
-                    // Navigate to agent geofence map
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const AgentGeofenceMapScreen(),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionCard({
+  // Header Icon Button
+  Widget _buildHeaderIconButton({
     required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
+    bool hasNotification = false,
     required VoidCallback onTap,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 120),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: surfaceColor,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withValues(alpha: 0.15)),
-            boxShadow: [
-              BoxShadow(
-                color: shadowColor,
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-              BoxShadow(
-                color: lightShadowColor,
-                blurRadius: 1,
-                offset: const Offset(0, 1),
-              ),
-            ],
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                surfaceColor,
-                color.withValues(alpha: 0.02),
-              ],
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      color.withValues(alpha: 0.15),
-                      color.withValues(alpha: 0.1),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: color.withValues(alpha: 0.2),
-                    width: 1,
-                  ),
-                ),
-                child: Icon(
-                  icon,
-                  color: color,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                    color: textPrimaryColor,
-                    letterSpacing: 0.1,
-                  ),
-                  textAlign: TextAlign.center,
-                  softWrap: true,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: textSecondaryColor,
-                ),
-                textAlign: TextAlign.center,
-                softWrap: true,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActiveTasksPreview(List<ActiveTaskPreview> tasks) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Active Tasks',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: textPrimaryColor,
-          ),
-        ),
-        const SizedBox(height: 12),
-        if (tasks.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: surfaceColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Column(
-                children: [
-                  Icon(Icons.assignment_turned_in, size: 48, color: Colors.grey[400]),
-                  const SizedBox(height: 8),
-                  Text(
-                    'No active tasks',
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Check back later for new assignments',
-                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-          )
-        else
-          ...tasks.map((task) => Container(
-            margin: const EdgeInsets.only(bottom: 8),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: surfaceColor,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: _getTaskStatusColor(task.status).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    task.status == 'in_progress' ? Icons.play_arrow : Icons.assignment,
-                    color: _getTaskStatusColor(task.status),
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        task.title,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: textPrimaryColor,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Row(
-                        children: [
-                          Icon(Icons.stars, size: 12, color: secondaryColor),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${task.points} pts',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: textSecondaryColor,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: _getTaskStatusColor(task.status).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              task.status.replaceAll('_', ' ').toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: _getTaskStatusColor(task.status),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  color: textSecondaryColor,
-                  size: 16,
-                ),
-              ],
-            ),
-          )),
-      ],
-    );
-  }
-
-  Color _getTaskStatusColor(String status) {
-    switch (status) {
-      case 'in_progress':
-        return primaryColor;
-      case 'assigned':
-        return warningColor;
-      default:
-        return textSecondaryColor;
-    }
-  }
-
-  Widget _buildRecentActivity(List<AgentActivityItem> activities) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Recent Activity',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: textPrimaryColor,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: surfaceColor,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: activities.isEmpty
-              ? Center(
-                  child: Column(
-                    children: [
-                      Icon(Icons.history, size: 48, color: Colors.grey[400]),
-                      const SizedBox(height: 8),
-                      Text(
-                        'No recent activity',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                )
-              : Column(
-                  children: activities.map((activity) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: activity.color.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Icon(
-                              activity.icon,
-                              color: activity.color,
-                              size: 16,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  activity.title,
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: textPrimaryColor,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Text(
-                                  _formatRelativeTime(activity.timestamp),
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: textSecondaryColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-        ),
-      ],
-    );
-  }
-
-  String _formatRelativeTime(DateTime dateTime) {
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
-
-    if (difference.inMinutes < 1) {
-      return 'Just now';
-    } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
-    } else {
-      return DateFormat.MMMd().format(dateTime);
-    }
-  }
-
-  // Enhanced Welcome Card matching the new design
-  Widget _buildEnhancedWelcomeCard(AgentTaskStats stats) {
-    final hour = DateTime.now().hour;
-    String greeting;
-    
-    if (hour < 12) {
-      greeting = 'Good Morning';
-    } else if (hour < 17) {
-      greeting = 'Good Afternoon';
-    } else {
-      greeting = 'Good Evening';
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF667EEA).withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '$greeting, ${widget.user.fullName}',
-            style: GoogleFonts.poppins(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            "Here's a summary of your activities.",
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w300,
-              color: Colors.white.withValues(alpha: 0.9),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  children: [
-                    Text(
-                      stats.todayCompleted.toString(),
-                      style: GoogleFonts.poppins(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      "Today's Tasks",
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.8),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  children: [
-                    Text(
-                      stats.activeTasks.toString(),
-                      style: GoogleFonts.poppins(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      "Active Tasks",
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: Colors.white.withValues(alpha: 0.8),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Enhanced Performance Stats with horizontal layout
-  Widget _buildEnhancedPerformanceStats(AgentTaskStats taskStats, AgentEarningsStats earningsStats) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Performance Overview',
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: const Color(0xFF374151),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: _buildEnhancedStatCard(
-                    icon: Icons.check_circle_outline,
-                    iconColor: const Color(0xFF10B981),
-                    iconBgColor: const Color(0xFFDCFCE7),
-                    value: taskStats.completedTasks.toString(),
-                    label: 'Completed',
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildEnhancedStatCard(
-                    icon: Icons.star_outline,
-                    iconColor: const Color(0xFFF59E0B),
-                    iconBgColor: const Color(0xFFFEF3C7),
-                    value: taskStats.totalPoints.toString(),
-                    label: 'Points Earned',
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildEnhancedStatCard(
-                    icon: Icons.schedule_outlined,
-                    iconColor: const Color(0xFFF97316),
-                    iconBgColor: const Color(0xFFFFEDD5),
-                    value: earningsStats.pendingPayment.toString(),
-                    label: 'Pending',
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildEnhancedStatCard(
-                    icon: Icons.trending_up_outlined,
-                    iconColor: const Color(0xFF3B82F6),
-                    iconBgColor: const Color(0xFFDBEAFE),
-                    value: earningsStats.monthlyEarnings.toString(),
-                    label: 'This Month',
-                  ),
-                ),
-              ],
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: surfaceColor,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
-      ],
+        child: Stack(
+          children: [
+            Icon(icon, color: textSecondaryColor, size: 24),
+            if (hasNotification)
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: errorColor,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: surfaceColor, width: 1),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildEnhancedStatCard({
-    required IconData icon,
-    required Color iconColor,
-    required Color iconBgColor,
-    required String value,
-    required String label,
-  }) {
+  // Location Status Card
+  Widget _buildLocationStatusCard() {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: _isLocationEnabled
+              ? [primaryColor, primaryColor.withValues(alpha: 0.8)]
+              : [Colors.orange, Colors.orange.withValues(alpha: 0.8)],
+        ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+            color: (_isLocationEnabled ? primaryColor : Colors.orange)
+                .withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -1563,12 +1358,12 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: iconBgColor,
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
-              icon,
-              color: iconColor,
+              _isLocationEnabled ? Icons.location_on : Icons.location_off,
+              color: Colors.white,
               size: 24,
             ),
           ),
@@ -1578,18 +1373,962 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  value,
+                  'Location Service',
                   style: GoogleFonts.poppins(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF1F2937),
+                    fontSize: 14,
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
                 Text(
-                  label,
+                  _currentLocationStatus ?? 'Checking...',
                   style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (!_isLocationEnabled)
+            TextButton(
+              onPressed: () async {
+                try {
+                  setState(() {
+                    _currentLocationStatus = 'Requesting permission...';
+                  });
+                  
+                  final locationService = LocationService();
+                  final permissionGranted = await locationService.requestLocationPermission();
+                  
+                  if (permissionGranted) {
+                    if (mounted) {
+                      setState(() {
+                        _isLocationEnabled = true;
+                        _currentLocationStatus = 'Starting...';
+                      });
+                      context.showSnackBar('Location service enabled successfully!');
+                      // Restart location tracking with new permissions
+                      _startSmartLocationTracking();
+                      _refreshDashboard(); // Refresh the dashboard data
+                    }
+                  } else {
+                    if (mounted) {
+                      setState(() {
+                        _currentLocationStatus = 'Permission denied';
+                      });
+                      context.showSnackBar(
+                        'Location permission denied. Please enable it in device settings.',
+                        isError: true,
+                      );
+                    }
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    setState(() {
+                      _currentLocationStatus = 'Error occurred';
+                    });
+                    context.showSnackBar(
+                      'Failed to enable location service: $e',
+                      isError: true,
+                    );
+                  }
+                }
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.white.withValues(alpha: 0.2),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text('Enable'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // Today's Activity Overview
+  Widget _buildPerformanceOverview(AgentDashboardData data) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Today\'s Activity',
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: textPrimaryColor,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  _getTodayStatus(data),
+                  style: TextStyle(
+                    color: primaryColor,
+                    fontWeight: FontWeight.bold,
                     fontSize: 12,
-                    color: const Color(0xFF6B7280),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          
+          // Main Activity Summary
+          Row(
+            children: [
+              // Routes Activity
+              Expanded(
+                child: _buildActivityItem(
+                  icon: Icons.route,
+                  title: 'Routes',
+                  value: data.routeStats.activeRoutes > 0 
+                      ? '${data.routeStats.placesToVisitToday} places'
+                      : 'None assigned',
+                  subtitle: data.routeStats.activeRoutes > 0 
+                      ? 'to visit today'
+                      : '',
+                  color: secondaryColor,
+                ),
+              ),
+              Container(
+                width: 1,
+                height: 60,
+                color: Colors.grey[300],
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+              ),
+              // Tasks Activity
+              Expanded(
+                child: _buildActivityItem(
+                  icon: Icons.assignment,
+                  title: 'Tasks',
+                  value: data.taskStats.activeTasks > 0 
+                      ? '${data.taskStats.activeTasks} active'
+                      : 'None active',
+                  subtitle: data.taskStats.todayCompleted > 0 
+                      ? '${data.taskStats.todayCompleted} completed today'
+                      : '',
+                  color: primaryColor,
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Campaigns Activity
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey[200]!),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.campaign, color: Colors.purple, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Campaigns',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: textPrimaryColor,
+                        ),
+                      ),
+                      Text(
+                        data.campaignStats.activeCampaigns > 0 
+                            ? '${data.campaignStats.activeCampaigns} active campaign${data.campaignStats.activeCampaigns != 1 ? 's' : ''}'
+                            : 'No active campaigns',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: textSecondaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (data.campaignStats.totalCampaignTasks > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.purple.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${data.campaignStats.totalCampaignTasks} tasks',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.purple,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Get today's status based on activity
+  String _getTodayStatus(AgentDashboardData data) {
+    if (data.routeStats.activeRoutes > 0) {
+      return 'On Route';
+    } else if (data.taskStats.activeTasks > 0) {
+      return 'Working Tasks';
+    } else if (data.campaignStats.activeCampaigns > 0) {
+      return 'In Campaign';
+    } else {
+      return 'Available';
+    }
+  }
+
+  // Build activity item
+  Widget _buildActivityItem({
+    required IconData icon,
+    required String title,
+    required String value,
+    required String subtitle,
+    required Color color,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: color, size: 18),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: textPrimaryColor,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        if (subtitle.isNotEmpty)
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 11,
+              color: textSecondaryColor,
+            ),
+          ),
+      ],
+    );
+  }
+
+
+  // Quick Stats Grid - Extended Layout
+  Widget _buildQuickStatsGrid(AgentDashboardData data) {
+    final stats = [
+      {
+        'title': 'Active Tasks',
+        'value': '${data.taskStats.activeTasks}',
+        'subtitle': 'Tasks in progress',
+        'icon': Icons.assignment,
+        'color': primaryColor,
+        'trend': '${data.taskStats.todayCompleted} completed today',
+      },
+      {
+        'title': 'Total Points',
+        'value': '${data.taskStats.totalPoints}',
+        'subtitle': 'Points earned',
+        'icon': Icons.star,
+        'color': Colors.amber,
+        'trend': '${data.taskStats.weeklyCompleted} completed this week',
+      },
+      {
+        'title': 'Active Campaigns',
+        'value': '${data.campaignStats.activeCampaigns}',
+        'subtitle': 'Campaigns running',
+        'icon': Icons.campaign,
+        'color': secondaryColor,
+        'trend': '${data.campaignStats.totalCampaignTasks} total tasks',
+      },
+      {
+        'title': 'Active Routes',
+        'value': data.routeStats.routeNames.isNotEmpty 
+            ? data.routeStats.routeNames.first 
+            : '${data.routeStats.activeRoutes}',
+        'subtitle': data.routeStats.routeNames.isNotEmpty 
+            ? '${data.routeStats.activeRoutes} route${data.routeStats.activeRoutes != 1 ? 's' : ''} assigned'
+            : 'Routes assigned',
+        'icon': Icons.route,
+        'color': Colors.purple,
+        'trend': data.routeStats.routeNames.length > 1 
+            ? '+${data.routeStats.routeNames.length - 1} more routes'
+            : '${data.routeStats.placesToVisitToday} places today',
+      },
+    ];
+
+    return Column(
+      children: [
+        // First row
+        Row(
+          children: [
+            Expanded(
+              child: _buildDynamicStatCard(
+                title: stats[0]['title'] as String,
+                value: stats[0]['value'] as String,
+                subtitle: stats[0]['subtitle'] as String,
+                icon: stats[0]['icon'] as IconData,
+                color: stats[0]['color'] as Color,
+                trend: stats[0]['trend'] as String,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildDynamicStatCard(
+                title: stats[1]['title'] as String,
+                value: stats[1]['value'] as String,
+                subtitle: stats[1]['subtitle'] as String,
+                icon: stats[1]['icon'] as IconData,
+                color: stats[1]['color'] as Color,
+                trend: stats[1]['trend'] as String,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // Second row
+        Row(
+          children: [
+            Expanded(
+              child: _buildDynamicStatCard(
+                title: stats[2]['title'] as String,
+                value: stats[2]['value'] as String,
+                subtitle: stats[2]['subtitle'] as String,
+                icon: stats[2]['icon'] as IconData,
+                color: stats[2]['color'] as Color,
+                trend: stats[2]['trend'] as String,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildDynamicStatCard(
+                title: stats[3]['title'] as String,
+                value: stats[3]['value'] as String,
+                subtitle: stats[3]['subtitle'] as String,
+                icon: stats[3]['icon'] as IconData,
+                color: stats[3]['color'] as Color,
+                trend: stats[3]['trend'] as String,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // Dynamic Stat Card - Adapts to content size
+  Widget _buildDynamicStatCard({
+    required String title,
+    required String value,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required String trend,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header with icon and title
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: textSecondaryColor,
+                    ),
+                    textAlign: TextAlign.right,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          
+          // Value
+          Text(
+            value,
+            style: GoogleFonts.poppins(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: textPrimaryColor,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          
+          // Subtitle
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 12,
+              color: textSecondaryColor,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          
+          // Trend (if exists)
+          if (trend.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              trend,
+              style: TextStyle(
+                fontSize: 11,
+                color: color,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // Quick Actions Section
+  Widget _buildQuickActionsSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Quick Actions',
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: textPrimaryColor,
+          ),
+        ),
+        const SizedBox(height: 16),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          mainAxisSpacing: 16,
+          crossAxisSpacing: 16,
+          childAspectRatio: 1.5,
+          children: [
+            _buildQuickActionItem(
+              icon: Icons.add_location_alt,
+              label: 'Suggest',
+              color: Colors.indigo,
+              onTap: () => _suggestNewPlace(context),
+            ),
+            _buildQuickActionItem(
+              icon: Icons.map,
+              label: 'Map',
+              color: Colors.teal,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AgentGeofenceMapScreen(),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // Quick Action Item
+  Widget _buildQuickActionItem({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: surfaceColor,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: textPrimaryColor,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Active Work Section
+  Widget _buildActiveWorkSection(AgentDashboardData data) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Active Work',
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: textPrimaryColor,
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AgentStandaloneTasksScreen(),
+                ),
+              ),
+              child: const Text('View All'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        
+        if (data.activeTasks.isEmpty && data.routeStats.activeRoutes == 0)
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.grey[300]!,
+                width: 1,
+              ),
+            ),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.assignment_turned_in,
+                    size: 48,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'No active work',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Check back later for new assignments',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[500],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          Column(
+            children: [
+              // Active Tasks
+              ...data.activeTasks.map((task) => _buildActiveTaskCard(task)),
+              
+              // Active Routes (if any)
+              if (data.routeStats.activeRoutes > 0)
+                _buildActiveRouteCard(data.routeStats),
+            ],
+          ),
+      ],
+    );
+  }
+
+  // Active Task Card
+  Widget _buildActiveTaskCard(ActiveTaskPreview task) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: _getTaskStatusColor(task.status).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              task.status == 'in_progress' ? Icons.play_circle : Icons.assignment,
+              color: _getTaskStatusColor(task.status),
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  task.title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: textPrimaryColor,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.star, size: 16, color: Colors.amber),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${task.points} points',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: textSecondaryColor,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _getTaskStatusColor(task.status).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        task.status.replaceAll('_', ' ').toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: _getTaskStatusColor(task.status),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.arrow_forward_ios,
+            color: textSecondaryColor,
+            size: 16,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Active Route Card
+  Widget _buildActiveRouteCard(AgentRouteStats routeStats) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            secondaryColor.withValues(alpha: 0.1),
+            primaryColor.withValues(alpha: 0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: secondaryColor.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: secondaryColor.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.route,
+              color: secondaryColor,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Active Routes',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: textPrimaryColor,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${routeStats.placesToVisitToday} places to visit today',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: textSecondaryColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: secondaryColor,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              '${routeStats.activeRoutes}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Recent Activity Section
+  Widget _buildRecentActivitySection(List<AgentActivityItem> activities) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Recent Activity',
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: textPrimaryColor,
+          ),
+        ),
+        const SizedBox(height: 16),
+        
+        if (activities.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: Colors.grey[300]!,
+                width: 1,
+              ),
+            ),
+            child: Center(
+              child: Text(
+                'No recent activity',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                ),
+              ),
+            ),
+          )
+        else
+          Container(
+            decoration: BoxDecoration(
+              color: surfaceColor,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              children: activities
+                  .map((activity) => _buildRecentActivityItem(activity))
+                  .toList(),
+            ),
+          ),
+      ],
+    );
+  }
+
+  // Recent Activity Item
+  Widget _buildRecentActivityItem(AgentActivityItem activity) {
+    final timeAgo = _getTimeAgo(activity.timestamp);
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.grey[200]!,
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: activity.color.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              activity.icon,
+              color: activity.color,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  activity.title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: textPrimaryColor,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  timeAgo,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: textSecondaryColor,
                   ),
                 ),
               ],
@@ -1599,8 +2338,350 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
       ),
     );
   }
-}
 
+  // Helper method to get time ago string
+  String _getTimeAgo(DateTime timestamp) {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+    
+    if (difference.inMinutes < 60) {
+      return '${difference.inMinutes} minutes ago';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours} hours ago';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays} days ago';
+    } else {
+      return DateFormat('MMM d').format(timestamp);
+    }
+  }
+
+  // Helper method to get task status color
+  Color _getTaskStatusColor(String status) {
+    switch (status) {
+      case 'assigned':
+        return primaryColor;
+      case 'in_progress':
+        return Colors.orange;
+      case 'completed':
+        return successColor;
+      default:
+        return textSecondaryColor;
+    }
+  }
+
+  // Suggest new place functionality
+  Future<void> _suggestNewPlace(BuildContext context) async {
+    final TextEditingController nameController = TextEditingController();
+    final TextEditingController descriptionController = TextEditingController();
+    final TextEditingController addressController = TextEditingController();
+    
+    double? selectedLat;
+    double? selectedLng;
+    double geofenceRadius = 50.0; // Default radius
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Row(
+                children: [
+                  Icon(Icons.add_location, color: primaryColor),
+                  const SizedBox(width: 8),
+                  const Text('Suggest New Place'),
+                ],
+              ),
+              content: SingleChildScrollView(
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.8,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Place Name Field
+                      TextField(
+                        controller: nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Place Name *',
+                          hintText: 'Enter the name of the place',
+                          prefixIcon: Icon(Icons.location_on),
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Description Field
+                      TextField(
+                        controller: descriptionController,
+                        maxLines: 3,
+                        decoration: const InputDecoration(
+                          labelText: 'Description (Optional)',
+                          hintText: 'Describe this place...',
+                          prefixIcon: Icon(Icons.description),
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Address Field
+                      TextField(
+                        controller: addressController,
+                        decoration: const InputDecoration(
+                          labelText: 'Address (Optional)',
+                          hintText: 'Enter the address',
+                          prefixIcon: Icon(Icons.location_city),
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Location Selection
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey[300]!),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.map, color: primaryColor),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Location',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            if (selectedLat != null && selectedLng != null)
+                              Text(
+                                'Lat: ${selectedLat!.toStringAsFixed(6)}, Lng: ${selectedLng!.toStringAsFixed(6)}',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                ),
+                              )
+                            else
+                              Text(
+                                'No location selected',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 12,
+                                ),
+                              ),
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: () async {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => MapLocationPickerScreen(
+                                        initialLocation: selectedLat != null && selectedLng != null 
+                                            ? LatLng(selectedLat!, selectedLng!)
+                                            : null,
+                                        initialRadius: geofenceRadius,
+                                      ),
+                                    ),
+                                  );
+                                  
+                                  if (result != null) {
+                                    setState(() {
+                                      selectedLat = result['latitude'];
+                                      selectedLng = result['longitude'];
+                                      geofenceRadius = result['radius'] ?? 50.0;
+                                    });
+                                  }
+                                },
+                                icon: const Icon(Icons.map),
+                                label: Text(selectedLat != null ? 'Change Location' : 'Select Location'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: primaryColor,
+                                  foregroundColor: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      // Geofence Radius
+                      if (selectedLat != null && selectedLng != null) ...[
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey[300]!),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.radio_button_unchecked, color: primaryColor),
+                                  const SizedBox(width: 8),
+                                  const Text(
+                                    'Geofence Radius',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                '${geofenceRadius.round()} meters',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                              ),
+                              Slider(
+                                value: geofenceRadius,
+                                min: 10.0,
+                                max: 500.0,
+                                divisions: 49,
+                                label: '${geofenceRadius.round()}m',
+                                onChanged: (value) {
+                                  setState(() {
+                                    geofenceRadius = value;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: nameController.text.trim().isEmpty || 
+                           selectedLat == null || 
+                           selectedLng == null
+                      ? null
+                      : () async {
+                          await _submitPlaceSuggestion(
+                            dialogContext,
+                            nameController.text.trim(),
+                            descriptionController.text.trim(),
+                            addressController.text.trim(),
+                            selectedLat!,
+                            selectedLng!,
+                            geofenceRadius,
+                          );
+                          if (dialogContext.mounted) {
+                            Navigator.of(dialogContext).pop();
+                          }
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Submit Suggestion'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // Submit place suggestion to database
+  Future<void> _submitPlaceSuggestion(
+    BuildContext context,
+    String name,
+    String description,
+    String address,
+    double latitude,
+    double longitude,
+    double geofenceRadius,
+  ) async {
+    try {
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+
+      // Prepare place data
+      final placeData = {
+        'name': name,
+        'description': description.isEmpty ? null : description,
+        'address': address.isEmpty ? null : address,
+        'latitude': latitude,
+        'longitude': longitude,
+        'created_by': userId,
+        'approval_status': 'pending',
+        'status': 'pending_approval',
+        'metadata': {
+          'geofence_radius': geofenceRadius,
+          'created_by_role': 'agent',
+          'creation_source': 'agent_dashboard',
+        },
+      };
+
+      // Insert into database
+      await supabase.from('places').insert(placeData);
+
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Place suggestion submitted successfully! It will be reviewed by a manager.'),
+            backgroundColor: successColor,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        
+        // Show error message
+        context.showSnackBar(
+          'Failed to submit place suggestion: $e',
+          isError: true,
+        );
+      }
+    }
+  }
+}
 
 // Agent Campaigns Tab
 class _AgentCampaignsTab extends StatelessWidget {
@@ -1939,12 +3020,16 @@ class AgentDashboardData {
   final AgentEarningsStats earningsStats;
   final List<AgentActivityItem> recentActivity;
   final List<ActiveTaskPreview> activeTasks;
+  final AgentRouteStats routeStats;
+  final AgentCampaignStats campaignStats;
 
   AgentDashboardData({
     required this.taskStats,
     required this.earningsStats,
     required this.recentActivity,
     required this.activeTasks,
+    required this.routeStats,
+    required this.campaignStats,
   });
 }
 
@@ -1953,12 +3038,14 @@ class AgentTaskStats {
   final int completedTasks;
   final int totalPoints;
   final int todayCompleted;
+  final int weeklyCompleted;
 
   AgentTaskStats({
     required this.activeTasks,
     required this.completedTasks,
     required this.totalPoints,
     required this.todayCompleted,
+    required this.weeklyCompleted,
   });
 }
 
@@ -1967,12 +3054,40 @@ class AgentEarningsStats {
   final int totalPaid;
   final int pendingPayment;
   final int monthlyEarnings;
+  final int weeklyEarnings;
 
   AgentEarningsStats({
     required this.totalEarned,
     required this.totalPaid,
     required this.pendingPayment,
     required this.monthlyEarnings,
+    required this.weeklyEarnings,
+  });
+}
+
+class AgentRouteStats {
+  final int activeRoutes;
+  final int placesToVisitToday;
+  final int completedVisitsThisWeek;
+  final List<String> routeNames;
+
+  AgentRouteStats({
+    required this.activeRoutes,
+    required this.placesToVisitToday,
+    required this.completedVisitsThisWeek,
+    required this.routeNames,
+  });
+}
+
+class AgentCampaignStats {
+  final int activeCampaigns;
+  final int completedCampaigns;
+  final int totalCampaignTasks;
+
+  AgentCampaignStats({
+    required this.activeCampaigns,
+    required this.completedCampaigns,
+    required this.totalCampaignTasks,
   });
 }
 
