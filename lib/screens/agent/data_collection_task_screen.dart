@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:signature/signature.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:mime/mime.dart';
 import '../../models/task.dart';
 import '../../models/task_template.dart';
 import '../../models/template_field.dart';
@@ -201,6 +203,8 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
                     const SizedBox(height: 20),
                     _buildSignatureField(),
                   ],
+                  const SizedBox(height: 20),
+                  _buildEvidenceUploadSection(),
                   const SizedBox(height: 100), // Space for submit button
                 ],
               ),
@@ -751,5 +755,193 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
         .single();
     
     return response['id'];
+  }
+
+  Widget _buildEvidenceUploadSection() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.attach_file,
+                  color: Theme.of(context).primaryColor,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Evidence Upload',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Upload supporting evidence for this task (optional)',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _uploadEvidence,
+                icon: const Icon(Icons.cloud_upload),
+                label: const Text('Upload Evidence'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _uploadEvidence() async {
+    final formKey = GlobalKey<FormState>();
+    final titleController = TextEditingController();
+    XFile? selectedFile;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Upload Evidence'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: titleController,
+                  decoration: const InputDecoration(
+                    labelText: 'Evidence Name',
+                    hintText: 'Enter evidence name',
+                  ),
+                  validator: (v) => (v == null || v.isEmpty)
+                      ? 'Evidence name is required'
+                      : null,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          final picker = ImagePicker();
+                          final imageFile = await picker.pickImage(
+                            source: ImageSource.gallery,
+                            imageQuality: 70,
+                          );
+                          if (imageFile != null) {
+                            setState(() {
+                              selectedFile = imageFile;
+                            });
+                          }
+                        },
+                        icon: const Icon(Icons.attach_file),
+                        label: Text(selectedFile == null
+                            ? 'Select File'
+                            : 'Change File'),
+                      ),
+                    ),
+                  ],
+                ),
+                if (selectedFile != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.image, size: 16, color: Colors.green),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            selectedFile!.name,
+                            style: const TextStyle(fontSize: 12),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: selectedFile == null
+                  ? null
+                  : () {
+                      if (formKey.currentState!.validate()) {
+                        final title = titleController.text;
+                        Navigator.of(context).pop();
+                        _performEvidenceUpload(title, selectedFile!);
+                      }
+                    },
+              child: const Text('Upload'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _performEvidenceUpload(String title, XFile imageFile) async {
+    try {
+      final fileBytes = await imageFile.readAsBytes();
+      final mimeType = lookupMimeType(imageFile.path, headerBytes: fileBytes);
+      final fileExt = extensionFromMime(mimeType ?? 'image/jpeg');
+      final fileName = '${supabase.auth.currentUser!.id}/${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+
+      await supabase.storage.from('task-evidence').uploadBinary(
+        fileName, fileBytes, fileOptions: FileOptions(contentType: mimeType ?? 'image/jpeg'));
+      
+      final imageUrl = supabase.storage.from('task-evidence').getPublicUrl(fileName);
+      
+      // Get the task assignment ID for the evidence table
+      final taskAssignmentId = await _getTaskAssignmentId();
+      
+      // Store evidence
+      await supabase.from('evidence').insert({
+        'task_assignment_id': taskAssignmentId,
+        'uploader_id': supabase.auth.currentUser!.id,
+        'title': title,
+        'file_url': imageUrl,
+      });
+      
+      if(mounted) {
+        context.showSnackBar('Evidence "$title" uploaded successfully!');
+        // Refresh the submission preview
+        setState(() {});
+      }
+    } catch (e) {
+      if(mounted) context.showSnackBar('Failed to upload evidence: $e', isError: true);
+    }
   }
 }

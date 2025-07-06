@@ -22,7 +22,6 @@ class TaskSubmissionPreview extends StatefulWidget {
 class _TaskSubmissionPreviewState extends State<TaskSubmissionPreview> {
   List<TaskSubmissionItem> _submissions = [];
   bool _isLoading = true;
-  bool _isExpanded = false;
 
   @override
   void initState() {
@@ -123,181 +122,175 @@ class _TaskSubmissionPreviewState extends State<TaskSubmissionPreview> {
       return const SizedBox.shrink(); // Don't show anything if no submissions
     }
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Card(
-        elevation: 1,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Column(
-          children: [
-            // Header
-            InkWell(
-              onTap: () {
-                setState(() {
-                  _isExpanded = !_isExpanded;
-                });
-              },
-              borderRadius: BorderRadius.circular(12),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.history,
-                      color: Colors.blue[600],
-                      size: 20,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Previous Submissions (${_submissions.length})',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    Icon(
-                      _isExpanded ? Icons.expand_less : Icons.expand_more,
-                      color: Colors.grey[600],
-                    ),
-                  ],
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: Row(
+            children: [
+              Icon(
+                Icons.history,
+                color: Colors.blue[600],
+                size: 20,
               ),
-            ),
-            
-            // Expandable content
-            if (_isExpanded) ...[
-              const Divider(height: 1),
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  children: [
-                    // Submissions list
-                    ...(_submissions.map((submission) => _buildSubmissionItem(submission))),
-                    
-                    const SizedBox(height: 8),
-                    
-                    // View all link
-                    SizedBox(
-                      width: double.infinity,
-                      child: TextButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const AgentSubmissionHistoryScreen(),
-                            ),
-                          );
-                        },
-                        icon: Icon(Icons.open_in_new, size: 16, color: Colors.blue[600]),
-                        label: Text(
-                          'View All Submissions',
-                          style: TextStyle(
-                            color: Colors.blue[600],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                        ),
-                      ),
-                    ),
-                  ],
+              const SizedBox(width: 8),
+              Text(
+                'Previous Submissions (${_submissions.length})',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ],
-          ],
+          ),
         ),
-      ),
+        
+        // Individual submission cards
+        ...(_submissions.map((submission) => _buildSubmissionCard(submission))),
+        
+        // View all submissions link
+        if (_submissions.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Center(
+            child: TextButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AgentSubmissionHistoryScreen(),
+                  ),
+                );
+              },
+              icon: Icon(Icons.open_in_new, size: 16, color: Colors.blue[600]),
+              label: Text(
+                'View All Submissions',
+                style: TextStyle(
+                  color: Colors.blue[600],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
-  Widget _buildSubmissionItem(TaskSubmissionItem submission) {
+  Widget _buildSubmissionCard(TaskSubmissionItem submission) {
     final isForm = submission.type == 'form';
     final statusColor = _getStatusColor(submission.status);
     
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: isForm ? Colors.blue[50] : Colors.green[50],
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Icon(
-              isForm ? Icons.assignment : Icons.attach_file,
-              color: isForm ? Colors.blue : Colors.green,
-              size: 16,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        submission.title,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Card(
+        elevation: 2,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with icon and status
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: isForm ? Colors.blue[50] : Colors.green[50],
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    if (submission.status != null) ...[
-                      const SizedBox(width: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                        decoration: BoxDecoration(
-                          color: statusColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          submission.status!.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 8,
+                    child: Icon(
+                      isForm ? Icons.assignment : Icons.attach_file,
+                      color: isForm ? Colors.blue : Colors.green,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          submission.title,
+                          style: const TextStyle(
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: statusColor,
                           ),
                         ),
+                        const SizedBox(height: 2),
+                        Text(
+                          DateFormat('MMM dd, yyyy • hh:mm a').format(submission.submittedAt),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (submission.status != null) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: statusColor.withValues(alpha: 0.3)),
                       ),
-                    ],
+                      child: Text(
+                        submission.status!.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: statusColor,
+                        ),
+                      ),
+                    ),
                   ],
+                ],
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // Content preview
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                const SizedBox(height: 2),
-                Text(
+                width: double.infinity,
+                child: Text(
                   submission.preview,
                   style: TextStyle(
-                    fontSize: 10,
-                    color: Colors.grey[600],
+                    fontSize: 14,
+                    color: Colors.grey[700],
                   ),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                Text(
-                  DateFormat('MMM dd, hh:mm a').format(submission.submittedAt),
-                  style: TextStyle(
-                    fontSize: 9,
-                    color: Colors.grey[500],
+              ),
+              
+              const SizedBox(height: 8),
+              
+              // Type indicator
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(
+                    isForm ? 'FORM SUBMISSION' : 'EVIDENCE UPLOAD',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey[500],
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
