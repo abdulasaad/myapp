@@ -9,6 +9,7 @@ import '../../models/task_template.dart';
 import '../../models/template_field.dart';
 import '../../services/template_service.dart';
 import '../../utils/constants.dart';
+import '../../widgets/task_submission_preview.dart';
 
 class DataCollectionTaskScreen extends StatefulWidget {
   final Task task;
@@ -190,6 +191,10 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildTaskHeader(),
+                  TaskSubmissionPreview(
+                    taskId: widget.task.id,
+                    taskTitle: widget.task.title,
+                  ),
                   const SizedBox(height: 20),
                   ...fields.map((field) => _buildField(field)),
                   if (widget.template.requiresSignature) ...[

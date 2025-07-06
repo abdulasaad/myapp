@@ -12,6 +12,7 @@ import '../../models/task.dart';
 import '../../utils/constants.dart';
 import '../../services/profile_service.dart';
 import '../../services/location_service.dart';
+import '../../widgets/task_submission_preview.dart';
 import '../full_screen_image_viewer.dart';
 
 class Evidence {
@@ -1091,6 +1092,13 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
                                       fontWeight: FontWeight.bold)),
                             ),
                         ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: TaskSubmissionPreview(
+                        taskId: widget.task.id,
+                        taskTitle: widget.task.title,
                       ),
                     ),
                     const Divider(),
