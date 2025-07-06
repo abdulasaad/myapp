@@ -99,6 +99,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
   }
 
   Future<void> _uploadEvidence(AgentTask task) async {
+    debugPrint('🔍 _uploadEvidence called for task: ${task.title}');
     final formKey = GlobalKey<FormState>();
     final titleController = TextEditingController();
     XFile? selectedFile;
@@ -130,6 +131,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () async {
+                          debugPrint('📸 File picker button tapped');
                           final picker = ImagePicker();
                           final imageFile = await picker.pickImage(
                             source: ImageSource.gallery,
