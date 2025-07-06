@@ -2540,14 +2540,14 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                                   
                                   if (result != null) {
                                     setState(() {
-                                      selectedLat = result['latitude'];
-                                      selectedLng = result['longitude'];
+                                      selectedLat = result['location'].latitude;
+                                      selectedLng = result['location'].longitude;
                                       geofenceRadius = result['radius'] ?? 50.0;
                                     });
                                   }
                                 },
                                 icon: const Icon(Icons.map),
-                                label: Text(selectedLat != null ? 'Change Location' : 'Select Location'),
+                                label: Text(selectedLat != null ? 'Change Location' : 'Select Location on Map'),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: primaryColor,
                                   foregroundColor: Colors.white,
@@ -2660,10 +2660,17 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
     double longitude,
     double geofenceRadius,
   ) async {
+    // Validation (matching route screen)
+    if (name.trim().isEmpty) {
+      context.showSnackBar('Please fill required fields (Name)', isError: true);
+      return;
+    }
+
     try {
       final userId = supabase.auth.currentUser?.id;
       if (userId == null) {
-        throw Exception('User not authenticated');
+        context.showSnackBar('Authentication required', isError: true);
+        return;
       }
 
       // Show loading indicator
@@ -2675,7 +2682,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
         ),
       );
 
-      // Prepare place data
+      // Prepare place data (matching route screen exactly)
       final placeData = {
         'name': name,
         'description': description.isEmpty ? null : description,
@@ -2683,12 +2690,11 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
         'latitude': latitude,
         'longitude': longitude,
         'created_by': userId,
-        'approval_status': 'pending',
+        'approval_status': 'pending', // Requires manager approval
         'status': 'pending_approval',
         'metadata': {
-          'geofence_radius': geofenceRadius,
           'created_by_role': 'agent',
-          'creation_source': 'agent_dashboard',
+          'geofence_radius': geofenceRadius,
         },
       };
 
@@ -2699,14 +2705,8 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
       if (context.mounted) {
         Navigator.of(context).pop();
         
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Place suggestion submitted successfully! It will be reviewed by a manager.'),
-            backgroundColor: successColor,
-            duration: const Duration(seconds: 4),
-          ),
-        );
+        // Show success message (matching route screen)
+        context.showSnackBar('Place suggestion submitted! Waiting for manager approval.');
       }
     } catch (e) {
       // Close loading dialog
