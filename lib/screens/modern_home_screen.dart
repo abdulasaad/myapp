@@ -12,6 +12,7 @@ import '../services/profile_service.dart';
 import '../services/connectivity_service.dart';
 import '../services/update_service.dart';
 import '../services/timezone_service.dart';
+import '../services/simple_notification_service.dart';
 import '../widgets/offline_widget.dart';
 import 'agent/agent_route_dashboard_screen.dart';
 import '../widgets/update_dialog.dart';
@@ -26,6 +27,7 @@ import 'login_screen.dart';
 import 'admin/settings_screen.dart';
 import 'admin/group_management_screen.dart';
 import 'agent/agent_geofence_map_screen.dart';
+import 'agent/notifications_screen.dart';
 import 'manager/map_location_picker_screen.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -41,6 +43,8 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
   AppUser? _currentUser;
   bool _isLoading = true;
   final UpdateService _updateService = UpdateService();
+  final SimpleNotificationService _notificationService = SimpleNotificationService();
+  int _unreadNotificationCount = 0;
 
   @override
   void initState() {
@@ -48,6 +52,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
     WidgetsBinding.instance.addObserver(this);
     _loadUserProfile();
     _setupSessionManagement();
+    _loadNotificationCount();
     // Clean up APKs after installation and old APKs on app start
     _updateService.cleanupAfterInstallation();
     _updateService.cleanupAllApks();
@@ -138,6 +143,20 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
       if (mounted) {
         context.showSnackBar('Error loading profile: $e', isError: true);
       }
+    }
+  }
+
+  Future<void> _loadNotificationCount() async {
+    try {
+      final count = await _notificationService.getUnreadCount();
+      if (mounted) {
+        setState(() {
+          _unreadNotificationCount = count;
+        });
+      }
+    } catch (e) {
+      // Silently handle notification count errors
+      debugPrint('Error loading notification count: $e');
     }
   }
 
@@ -572,14 +591,17 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
   late Future<AgentDashboardData> _dashboardFuture;
   final SmartLocationManager _locationManager = SmartLocationManager();
   final Logger _logger = Logger();
+  final SimpleNotificationService _notificationService = SimpleNotificationService();
   bool _isLocationEnabled = false;
   String? _currentLocationStatus;
+  int _unreadNotificationCount = 0;
 
   @override
   void initState() {
     super.initState();
     _dashboardFuture = _loadAgentDashboardData();
     _startSmartLocationTracking();
+    _loadNotificationCount();
     // Initialize connectivity monitoring
     ConnectivityService().initialize();
     // Add lifecycle observer for app state changes
@@ -1323,6 +1345,20 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
     }
   }
 
+  Future<void> _loadNotificationCount() async {
+    try {
+      final count = await _notificationService.getUnreadCount();
+      if (mounted) {
+        setState(() {
+          _unreadNotificationCount = count;
+        });
+      }
+    } catch (e) {
+      // Silently handle notification count errors
+      debugPrint('Error loading notification count: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1460,9 +1496,17 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                                         children: [
                                           _buildHeaderIconButton(
                                             icon: Icons.notifications_outlined,
-                                            hasNotification: true,
+                                            hasNotification: _unreadNotificationCount > 0,
                                             onTap: () {
-                                              // Handle notifications
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) => const NotificationsScreen(),
+                                                ),
+                                              ).then((_) {
+                                                // Refresh notification count when returning
+                                                _loadNotificationCount();
+                                              });
                                             },
                                           ),
                                           const SizedBox(width: 12),

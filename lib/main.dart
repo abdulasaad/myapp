@@ -5,6 +5,7 @@ import './screens/splash_screen.dart';
 import './services/connectivity_service.dart';
 import './services/settings_service.dart';
 import './services/timezone_service.dart';
+import './services/simple_notification_service.dart';
 import './utils/constants.dart';
 
 final logger = Logger();
@@ -44,6 +45,14 @@ Future<void> main() async {
     logger.w('TimezoneService initialization failed: $e');
   }
 
+  // Initialize notification service (handle gracefully if fails)
+  try {
+    await SimpleNotificationService().initialize();
+  } catch (e) {
+    // If notification initialization fails, continue anyway
+    logger.w('SimpleNotificationService initialization failed: $e');
+  }
+
   runApp(const MyApp());
 }
 
@@ -54,6 +63,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Al-Tijwal App',
+      navigatorKey: navigatorKey,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(

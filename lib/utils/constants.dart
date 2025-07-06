@@ -6,6 +6,10 @@ import '../widgets/advanced_notification.dart';
 // Global access to the Supabase client
 final supabase = Supabase.instance.client;
 
+// --- NAVIGATION ---
+// Global navigator key for navigation without context
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 // --- COLORS AND THEMES ---
 const primaryColor = Color(0xFF2196F3); // Modern blue
 const primaryLightColor = Color(0xFF64B5F6); // Lighter blue for gradients
