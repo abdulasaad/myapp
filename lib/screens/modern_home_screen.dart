@@ -27,6 +27,7 @@ import 'login_screen.dart';
 import 'admin/settings_screen.dart';
 import 'admin/group_management_screen.dart';
 import 'agent/agent_geofence_map_screen.dart';
+import 'agent/agent_submission_history_screen.dart';
 import 'manager/map_location_picker_screen.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -1935,10 +1936,10 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
         GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
+          crossAxisCount: 3,
           mainAxisSpacing: 16,
           crossAxisSpacing: 16,
-          childAspectRatio: 1.5,
+          childAspectRatio: 1.2,
           children: [
             _buildQuickActionItem(
               icon: Icons.add_location_alt,
@@ -1954,6 +1955,17 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                 context,
                 MaterialPageRoute(
                   builder: (context) => const AgentGeofenceMapScreen(),
+                ),
+              ),
+            ),
+            _buildQuickActionItem(
+              icon: Icons.history,
+              label: 'Submissions',
+              color: Colors.purple,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AgentSubmissionHistoryScreen(),
                 ),
               ),
             ),
