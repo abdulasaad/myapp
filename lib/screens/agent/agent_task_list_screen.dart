@@ -50,12 +50,46 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
     _tasksFuture = _fetchAgentTasks();
   }
 
-  Future<List<AgentTask>> _fetchAgentTasks() {
-    return supabase.rpc('get_agent_tasks_for_campaign', params: {'p_campaign_id': widget.campaign.id})
-      .then((response) {
-        final data = response as List;
-        return data.map((json) => AgentTask.fromJson(json.cast<String, dynamic>())).toList();
-      });
+  Future<List<AgentTask>> _fetchAgentTasks() async {
+    try {
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) throw Exception('No authenticated user');
+
+      // Query task assignments directly instead of using RPC
+      final response = await supabase
+          .from('task_assignments')
+          .select('''
+            task_id,
+            status,
+            evidence_urls,
+            tasks!inner(
+              title,
+              description,
+              points,
+              enforce_geofence,
+              required_evidence_count
+            )
+          ''')
+          .eq('agent_id', userId)
+          .eq('tasks.campaign_id', widget.campaign.id);
+
+      return response.map((json) {
+        final task = json['tasks'] as Map<String, dynamic>;
+        return AgentTask.fromJson({
+          'task_id': json['task_id'],
+          'assignment_status': json['status'],
+          'evidence_urls': json['evidence_urls'] ?? [],
+          'title': task['title'],
+          'description': task['description'],
+          'points': task['points'] ?? 0,
+          'enforce_geofence': task['enforce_geofence'],
+          'required_evidence_count': task['required_evidence_count'],
+        });
+      }).toList();
+    } catch (e) {
+      debugPrint('Error fetching agent tasks: $e');
+      rethrow;
+    }
   }
 
   void _refreshTasks() {
