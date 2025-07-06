@@ -953,16 +953,37 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
       int todayPlacesCount = 0;
       if (activeRoutesCount > 0) {
         try {
-          // Get route IDs from assignments
-          final routeIds = routeAssignmentsResponse.map((assignment) => assignment['route_id'] as String).toList();
+          // Get route assignment IDs for this agent
+          final routeAssignmentIds = routeAssignmentsResponse.map((assignment) => assignment['route_id'] as String).toList();
           
-          final todayPlaces = await supabase
+          // Get all route places in assigned routes
+          final allRoutePlaces = await supabase
               .from('route_places')
-              .select('id')
-              .inFilter('route_id', routeIds)
-              .isFilter('visited_at', null)
-              .count(CountOption.exact);
-          todayPlacesCount = todayPlaces.count ?? 0;
+              .select('id, place_id, visit_frequency')
+              .filter('route_id', 'in', '(${routeAssignmentIds.join(',')})');
+          
+          // Calculate remaining visits needed for each place
+          int totalVisitsNeeded = 0;
+          
+          for (final routePlace in allRoutePlaces) {
+            final placeId = routePlace['place_id'];
+            final visitFrequency = routePlace['visit_frequency'] ?? 1;
+            
+            // Count completed visits for this place by this agent
+            final completedVisits = await supabase
+                .from('place_visits')
+                .select('id')
+                .eq('agent_id', userId)
+                .eq('place_id', placeId)
+                .eq('status', 'completed')
+                .count(CountOption.exact);
+            
+            final completedCount = completedVisits.count;
+            final remainingVisits = (visitFrequency - completedCount).clamp(0, visitFrequency).toInt();
+            totalVisitsNeeded += remainingVisits;
+          }
+          
+          todayPlacesCount = totalVisitsNeeded;
         } catch (e) {
           debugPrint('Error loading today places: $e');
           // Keep default 0
