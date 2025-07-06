@@ -76,15 +76,39 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   Future<void> _addTask(
       {required String title, String? description, required int points}) async {
     try {
-      await supabase.from('tasks').insert({
+      // Create the task
+      final taskResponse = await supabase.from('tasks').insert({
         'campaign_id': widget.campaign.id,
         'title': title,
         'description': description,
         'points': points,
         'created_by': supabase.auth.currentUser!.id,
-      });
+      }).select().single();
+      
+      final taskId = taskResponse['id'];
+      
+      // Get all agents assigned to this campaign
+      final campaignAgents = await supabase
+          .from('campaign_agents')
+          .select('agent_id')
+          .eq('campaign_id', widget.campaign.id);
+      
+      // Auto-assign the task to all campaign agents
+      for (final agent in campaignAgents) {
+        try {
+          await supabase.from('task_assignments').insert({
+            'task_id': taskId,
+            'agent_id': agent['agent_id'],
+            'status': 'assigned',
+            'created_at': DateTime.now().toIso8601String(),
+          });
+        } catch (e) {
+          Logger().e('Failed to assign task to agent ${agent['agent_id']}: $e');
+        }
+      }
+      
       if (mounted) {
-        context.showSnackBar('Task added successfully! It has been auto-assigned.');
+        context.showSnackBar('Task added and assigned to all campaign agents!');
         _refreshAll();
       }
     } catch (e) {
@@ -158,16 +182,182 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
         'assigned_by': currentUserId
       }); 
 
+      // Auto-assign all campaign tasks to the agent
+      final tasks = await supabase
+          .from('tasks')
+          .select('id')
+          .eq('campaign_id', widget.campaign.id);
+      
+      for (final task in tasks) {
+        try {
+          // Check if assignment already exists
+          final existingAssignment = await supabase
+              .from('task_assignments')
+              .select('id, status')
+              .eq('task_id', task['id'])
+              .eq('agent_id', agentId)
+              .maybeSingle();
+          
+          if (existingAssignment == null) {
+            // Create new assignment with 'assigned' status
+            await supabase.from('task_assignments').insert({
+              'task_id': task['id'],
+              'agent_id': agentId,
+              'status': 'assigned',
+              'created_at': DateTime.now().toIso8601String(),
+            });
+          } else if (existingAssignment['status'] == 'pending') {
+            // Update pending assignments to assigned
+            await supabase
+                .from('task_assignments')
+                .update({'status': 'assigned'})
+                .eq('id', existingAssignment['id']);
+          }
+        } catch (e) {
+          Logger().e('Failed to assign task ${task['id']} to agent: $e');
+        }
+      }
+
       if (mounted) {
         context.showSnackBar(
-            'Agent processed for campaign. Existing tasks are auto-assigned if newly added.');
+            'Agent assigned to campaign. All tasks have been assigned.');
         _refreshAll();
       }
     } catch (e) {
       if (mounted) {
         context.showSnackBar(
-            'Failed to assign agent. They may already be assigned.',
+            'Failed to assign agent: $e',
             isError: true);
+      }
+    }
+  }
+
+  Future<void> _editTask(Task task) async {
+    final formKey = GlobalKey<FormState>();
+    final titleController = TextEditingController(text: task.title);
+    final descriptionController = TextEditingController(text: task.description ?? '');
+    final pointsController = TextEditingController(text: task.points.toString());
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Task'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: titleController,
+                decoration: const InputDecoration(labelText: 'Title'),
+                validator: (v) => v!.isEmpty ? 'Title is required' : null,
+              ),
+              TextFormField(
+                controller: descriptionController,
+                decoration: const InputDecoration(labelText: 'Description'),
+                maxLines: 3,
+              ),
+              TextFormField(
+                controller: pointsController,
+                decoration: const InputDecoration(labelText: 'Points'),
+                keyboardType: TextInputType.number,
+                validator: (v) {
+                  if (v!.isEmpty) return 'Points are required';
+                  if (int.tryParse(v) == null) return 'Invalid number';
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                Navigator.of(context).pop(); // Close dialog first
+                
+                try {
+                  await supabase.from('tasks').update({
+                    'title': titleController.text,
+                    'description': descriptionController.text.isEmpty ? null : descriptionController.text,
+                    'points': int.parse(pointsController.text),
+                  }).eq('id', task.id);
+                  
+                  if (mounted) {
+                    context.showSnackBar('Task updated successfully!');
+                    _refreshAll();
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    context.showSnackBar('Failed to update task: $e', isError: true);
+                  }
+                }
+              }
+            },
+            child: const Text('Update'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deleteTask(Task task) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Task'),
+        content: Text('Are you sure you want to delete "${task.title}"? This will also remove all assignments and evidence for this task.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete == true) {
+      try {
+        // Get all task assignment IDs for this task
+        final assignmentIds = await supabase
+            .from('task_assignments')
+            .select('id')
+            .eq('task_id', task.id);
+        
+        // Delete evidence for each assignment
+        for (final assignment in assignmentIds) {
+          await supabase.from('evidence').delete().eq('task_assignment_id', assignment['id']);
+        }
+        
+        // Delete task assignments
+        await supabase.from('task_assignments').delete().eq('task_id', task.id);
+        
+        // Delete geofences associated with this task
+        await supabase.from('geofences').delete().eq('task_id', task.id);
+        
+        // Delete the task itself
+        await supabase.from('tasks').delete().eq('id', task.id);
+        
+        if (mounted) {
+          context.showSnackBar('Task deleted successfully!');
+          _refreshAll();
+        }
+      } catch (e) {
+        if (mounted) {
+          context.showSnackBar('Failed to delete task: $e', isError: true);
+        }
       }
     }
   }
@@ -275,10 +465,54 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
               child: ListTile(
                 leading: const Icon(Icons.check_box_outline_blank),
                 title: Text(task.title),
-                subtitle: task.description != null && task.description!.isNotEmpty
-                    ? Text(task.description!)
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (task.description != null && task.description!.isNotEmpty)
+                      Text(task.description!),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${task.points} points',
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                trailing: ProfileService.instance.canManageCampaigns
+                    ? PopupMenuButton<String>(
+                        onSelected: (value) {
+                          if (value == 'edit') {
+                            _editTask(task);
+                          } else if (value == 'delete') {
+                            _deleteTask(task);
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit, size: 18),
+                                SizedBox(width: 8),
+                                Text('Edit'),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete, size: 18, color: Colors.red),
+                                SizedBox(width: 8),
+                                Text('Delete', style: TextStyle(color: Colors.red)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      )
                     : null,
-                trailing: Text('${task.points} pts'),
               ),
             );
           },
@@ -350,14 +584,29 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
           if (ProfileService.instance.canManageCampaigns) ...[
             formSpacer,
             ElevatedButton.icon(
-              icon: const Icon(Icons.map_outlined),
-              label: const Text('Set/Edit Geofence'),
+              icon: const Icon(Icons.map_outlined, color: Colors.white),
+              label: const Text(
+                'Manage Geofences',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                ),
+              ),
               onPressed: () {
                 Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => GeofenceEditorScreen(campaign: widget.campaign),
                 ));
               },
-              style: ElevatedButton.styleFrom(backgroundColor: primaryColor.withAlpha(200)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 2,
+              ),
             ),
           ],
         ]),
