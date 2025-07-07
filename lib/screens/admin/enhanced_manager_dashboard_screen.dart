@@ -14,6 +14,7 @@ import '../manager/route_management_screen.dart';
 import '../manager/place_management_screen.dart';
 import '../manager/route_visit_analytics_screen.dart';
 import '../map/live_map_screen.dart';
+import 'send_notification_screen.dart';
 
 class EnhancedManagerDashboardScreen extends StatefulWidget {
   const EnhancedManagerDashboardScreen({super.key});
@@ -1003,6 +1004,49 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
             ],
           ),
         ),
+        
+        const SizedBox(height: 12),
+        
+        // Row 3: Admin Features (only show for admin role)
+        FutureBuilder<String?>(
+          future: _getCurrentUserRole(),
+          builder: (context, snapshot) {
+            final userRole = snapshot.data;
+            if (userRole != 'admin') {
+              return const SizedBox.shrink();
+            }
+            
+            return IntrinsicHeight(
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _buildActionCard(
+                      title: 'Send Notification',
+                      subtitle: 'Message users',
+                      icon: Icons.notification_add,
+                      color: Colors.blue,
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const SendNotificationScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Container(), // Placeholder for future admin feature
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Container(), // Placeholder for future admin feature
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ],
     );
   }
@@ -1197,6 +1241,25 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
       };
     } catch (e) {
       return {};
+    }
+  }
+
+  // Helper method to get current user role
+  Future<String?> _getCurrentUserRole() async {
+    try {
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) return null;
+      
+      final response = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', userId)
+          .single();
+      
+      return response['role'] as String?;
+    } catch (e) {
+      debugPrint('Error getting user role: $e');
+      return null;
     }
   }
 }
