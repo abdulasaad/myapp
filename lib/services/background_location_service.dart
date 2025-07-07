@@ -23,7 +23,7 @@ class BackgroundLocationService {
       androidConfiguration: AndroidConfiguration(
         onStart: onStart,
         autoStart: false,
-        isForegroundMode: true,
+        isForegroundMode: false,  // Disable foreground service notification
         notificationChannelId: _channelId,
         initialNotificationTitle: _channelName,
         initialNotificationContent: 'Tracking location in background...',
@@ -95,18 +95,7 @@ class BackgroundLocationService {
         service.setAsBackgroundService();
       });
       
-      // Set as foreground service with proper notification after a small delay
-      Future.delayed(const Duration(milliseconds: 500), () {
-        try {
-          service.setForegroundNotificationInfo(
-            title: _channelName,
-            content: 'Initializing location tracking...',
-          );
-          logger.i('Foreground notification set successfully');
-        } catch (e) {
-          logger.e('Failed to set foreground notification: $e');
-        }
-      });
+      // Location tracking will run in background without notifications
     }
 
     String? activeCampaignId;
@@ -224,17 +213,7 @@ class BackgroundLocationService {
           }
         }
 
-        // Update notification with latest location info
-        if (service is AndroidServiceInstance) {
-          try {
-            service.setForegroundNotificationInfo(
-              title: _channelName,
-              content: 'Last update: ${DateTime.now().toString().substring(11, 16)} (${position.accuracy.toStringAsFixed(0)}m)',
-            );
-          } catch (e) {
-            // Silently ignore notification errors
-          }
-        }
+        // Location tracking continues silently in background
 
       } catch (e) {
         // Silent fail for background errors
