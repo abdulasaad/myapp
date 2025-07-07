@@ -25,10 +25,10 @@ class BackgroundLocationService {
         autoStart: false,
         isForegroundMode: false,  // Disable foreground service notification
         notificationChannelId: _channelId,
-        initialNotificationTitle: _channelName,
-        initialNotificationContent: 'Tracking location in background...',
+        initialNotificationTitle: '',  // Empty title
+        initialNotificationContent: '',  // Empty content
         foregroundServiceNotificationId: 888,
-        autoStartOnBoot: true,  // Auto-start on device boot
+        autoStartOnBoot: false,  // Disable auto-start to reduce notifications
       ),
       iosConfiguration: IosConfiguration(
         autoStart: false,
@@ -87,15 +87,8 @@ class BackgroundLocationService {
     DartPluginRegistrant.ensureInitialized();
     
     if (service is AndroidServiceInstance) {
-      service.on('setAsForeground').listen((event) {
-        service.setAsForegroundService();
-      });
-      
-      service.on('setAsBackground').listen((event) {
-        service.setAsBackgroundService();
-      });
-      
-      // Location tracking will run in background without notifications
+      // Force service to run in background mode without notifications
+      service.setAsBackgroundService();
     }
 
     String? activeCampaignId;

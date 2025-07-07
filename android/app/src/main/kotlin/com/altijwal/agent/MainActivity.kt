@@ -210,13 +210,14 @@ class MainActivity : FlutterActivity() {
             val channelId = "al_tijwal_location_service"
             val channelName = "Al-Tijwal Location Service"
             val channelDescription = "Tracks agent location in background"
-            val importance = NotificationManager.IMPORTANCE_LOW
+            val importance = NotificationManager.IMPORTANCE_MIN  // Minimal importance - should not show
             
             val channel = NotificationChannel(channelId, channelName, importance).apply {
                 description = channelDescription
                 setShowBadge(false)
                 enableLights(false)
                 enableVibration(false)
+                setSound(null, null)  // No sound
             }
             
             val notificationManager: NotificationManager =
