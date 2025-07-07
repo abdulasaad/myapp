@@ -31,7 +31,7 @@ class UpdateService {
         // In development, use default version 1
         packageInfo = PackageInfo(
           appName: 'Al-Tijwal',
-          packageName: 'com.altijwal.app',
+          packageName: 'com.altijwal.agent',
           version: '1.0.0',
           buildNumber: '1',
         );
@@ -154,7 +154,7 @@ class UpdateService {
     // First try: Android platform channel (most reliable)
     try {
       _logger.i('Attempting APK installation via platform channel');
-      const platform = MethodChannel('com.altijwal.app/installer');
+      const platform = MethodChannel('com.altijwal.agent/installer');
       _logger.i('Platform channel created, invoking installApk method');
       final result = await platform.invokeMethod('installApk', {'path': apkPath});
       _logger.i('Platform channel result: $result');
