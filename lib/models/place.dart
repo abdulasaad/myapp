@@ -1,5 +1,6 @@
 // lib/models/place.dart
 
+import 'package:flutter/foundation.dart';
 import 'app_user.dart';
 
 class Place {
@@ -81,8 +82,8 @@ class Place {
             : null,
       );
     } catch (e) {
-      print('Error parsing Place: $e');
-      print('JSON data: $json');
+      debugPrint('Error parsing Place: $e');
+      debugPrint('JSON data: $json');
       // Return a default Place with safe values
       return Place(
         id: (json['id'] ?? '').toString(),

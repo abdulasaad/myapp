@@ -26,9 +26,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   void _loadNotifications() {
     setState(() {
       _notificationsFuture = _notificationService.getNotifications(limit: 50).then((notifications) {
-        print('Loaded ${notifications.length} notifications');
+        debugPrint('Loaded ${notifications.length} notifications');
         for (var n in notifications) {
-          print('Notification: ${n.type} - ${n.title} - ${n.message}');
+          debugPrint('Notification: ${n.type} - ${n.title} - ${n.message}');
         }
         return notifications;
       });

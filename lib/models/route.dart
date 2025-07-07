@@ -1,5 +1,6 @@
 // lib/models/route.dart
 
+import 'package:flutter/foundation.dart';
 import 'app_user.dart';
 import 'route_place.dart';
 
@@ -78,8 +79,8 @@ class Route {
             : null,
       );
     } catch (e) {
-      print('Error parsing Route: $e');
-      print('JSON data: $json');
+      debugPrint('Error parsing Route: $e');
+      debugPrint('JSON data: $json');
       // Return a default Route with safe values
       return Route(
         id: (json['id'] ?? '').toString(),

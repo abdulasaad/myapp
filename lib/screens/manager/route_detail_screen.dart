@@ -40,7 +40,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
     
     try {
       // Load route places with place details and assigned agents in parallel
-      final results = await Future.wait([
+      await Future.wait([
         _loadRoutePlaces(),
         _loadAssignedAgents(),
       ]);
@@ -56,7 +56,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
   Future<void> _loadRoutePlaces() async {
     // Load route places with place details
-    print('Loading route places for manager route ID: ${_route.id}');
+    debugPrint('Loading route places for manager route ID: ${_route.id}');
     
     final routePlacesResponse = await supabase
         .from('route_places')
@@ -64,8 +64,8 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         .eq('route_id', _route.id)
         .order('visit_order');
 
-    print('Manager route places response: $routePlacesResponse');
-    print('Manager route places count: ${routePlacesResponse.length}');
+    debugPrint('Manager route places response: $routePlacesResponse');
+    debugPrint('Manager route places count: ${routePlacesResponse.length}');
 
     List<RoutePlace> routePlaces = [];
       
@@ -87,8 +87,8 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         final routePlace = RoutePlace.fromJson(json);
         routePlaces.add(routePlace);
       } catch (e) {
-        print('Error parsing manager route place: $e');
-        print('JSON data: $json');
+        debugPrint('Error parsing manager route place: $e');
+        debugPrint('JSON data: $json');
       }
     }
 
@@ -99,7 +99,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
   Future<void> _loadAssignedAgents() async {
     // Load route assignments with agent details and visit progress
-    print('Loading assigned agents for route ${_route.id}');
+    debugPrint('Loading assigned agents for route ${_route.id}');
     final assignmentsResponse = await supabase
         .from('route_assignments')
         .select('''
@@ -109,7 +109,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         .eq('route_id', _route.id)
         .order('assigned_at', ascending: false);
     
-    print('Found ${assignmentsResponse.length} assignments for route ${_route.id}');
+    debugPrint('Found ${assignmentsResponse.length} assignments for route ${_route.id}');
 
     List<Map<String, dynamic>> agentsWithProgress = [];
 
@@ -123,7 +123,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
             .maybeSingle();
         
         if (agentProfileResponse == null) {
-          print('No profile found for agent_id: ${assignment['agent_id']}');
+          debugPrint('No profile found for agent_id: ${assignment['agent_id']}');
           continue;
         }
 
@@ -185,13 +185,13 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
           'progress_percentage': totalPlaces > 0 ? (completedVisits / totalPlaces * 100).round() : 0,
         });
       } catch (e) {
-        print('Error loading progress for agent ${assignment['agent_id']}: $e');
+        debugPrint('Error loading progress for agent ${assignment['agent_id']}: $e');
       }
     }
 
     setState(() {
       _assignedAgents = agentsWithProgress;
-      print('Loaded ${_assignedAgents.length} agents with progress');
+      debugPrint('Loaded ${_assignedAgents.length} agents with progress');
     });
   }
 
@@ -473,7 +473,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
   Widget _buildRouteStats() {
     final placesCount = _routePlaces.length;
     final totalDuration = _routePlaces.fold<int>(
-      0, (sum, rp) => sum + (rp.estimatedDurationMinutes ?? 0)
+      0, (sum, rp) => sum + rp.estimatedDurationMinutes
     );
 
     return Card(
@@ -1016,7 +1016,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                 children: (visit['evidence_files'] as List).map<Widget>((evidence) {
                   final fileName = evidence['title'] ?? 'Unknown File';
                   final fileType = evidence['file_type'] ?? 'unknown';  
-                  final evidenceId = evidence['id'];
+                  // evidenceId not needed here
                   
                   return GestureDetector(
                     onTap: () => _viewEvidenceFile(evidence),
@@ -1883,7 +1883,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
             .eq('id', routePlaceId);
       }
     } catch (e) {
-      print('Error updating visit orders: $e');
+      debugPrint('Error updating visit orders: $e');
     }
   }
 
@@ -1935,7 +1935,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
       return results;
     } catch (e) {
-      print('Error checking route usage: $e');
+      debugPrint('Error checking route usage: $e');
       return {
         'hasAssignments': true, // Assume usage if we can't check
         'hasVisits': true,

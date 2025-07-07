@@ -1,5 +1,6 @@
 // lib/models/place_visit.dart
 
+import 'package:flutter/foundation.dart';
 import 'place.dart';
 import 'route_assignment.dart';
 
@@ -88,8 +89,8 @@ class PlaceVisit {
             : null,
       );
     } catch (e) {
-      print('Error parsing PlaceVisit: $e');
-      print('JSON data: $json');
+      debugPrint('Error parsing PlaceVisit: $e');
+      debugPrint('JSON data: $json');
       // Return a default PlaceVisit with safe values
       return PlaceVisit(
         id: (json['id'] ?? '').toString(),

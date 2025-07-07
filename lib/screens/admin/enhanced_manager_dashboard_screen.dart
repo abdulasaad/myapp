@@ -319,7 +319,7 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
         .select('id, name, start_date, end_date, status');
     
     final now = DateTime.now();
-    int activeCampaigns = 0, upcomingCampaigns = 0, completedCampaigns = 0;
+    int activeCampaigns = 0, completedCampaigns = 0;
     
     for (final campaign in campaignsResponse) {
       final startDate = DateTime.parse(campaign['start_date']);
@@ -330,7 +330,7 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
       } else if (now.isAfter(startDate)) {
         activeCampaigns++;
       } else {
-        upcomingCampaigns++;
+        // upcomingCampaigns not needed
       }
     }
     

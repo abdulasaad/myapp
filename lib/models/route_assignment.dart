@@ -1,5 +1,6 @@
 // lib/models/route_assignment.dart
 
+import 'package:flutter/foundation.dart';
 import 'route.dart' as route_model;
 import '../models/app_user.dart';
 
@@ -63,8 +64,8 @@ class RouteAssignment {
             : null,
       );
     } catch (e) {
-      print('Error parsing RouteAssignment: $e');
-      print('JSON data: $json');
+      debugPrint('Error parsing RouteAssignment: $e');
+      debugPrint('JSON data: $json');
       // Return a default RouteAssignment with safe values
       return RouteAssignment(
         id: (json['id'] ?? '').toString(),

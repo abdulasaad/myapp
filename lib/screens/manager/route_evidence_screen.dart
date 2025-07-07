@@ -62,8 +62,8 @@ class _RouteEvidenceScreenState extends State<RouteEvidenceScreen> {
 
       final agentIds = agentsInGroups.map((a) => a['user_id'] as String).toList();
 
-      // Build query
-      var query = supabase
+      // Build base query
+      var queryBuilder = supabase
           .from('evidence')
           .select('''
             id,
@@ -103,15 +103,14 @@ class _RouteEvidenceScreenState extends State<RouteEvidenceScreen> {
             )
           ''')
           .not('route_assignment_id', 'is', null) // Only route evidence
-          .inFilter('uploader_id', agentIds)
-          .order('created_at', ascending: false);
+          .inFilter('uploader_id', agentIds);
 
       // Apply status filter
       if (_selectedStatus != 'all') {
-        query = query.eq('status', _selectedStatus);
+        queryBuilder = queryBuilder.eq('status', _selectedStatus);
       }
 
-      final response = await query;
+      final response = await queryBuilder.order('created_at', ascending: false);
 
       final evidenceList = response.map((json) {
         return RouteEvidenceItem.fromJson(json);

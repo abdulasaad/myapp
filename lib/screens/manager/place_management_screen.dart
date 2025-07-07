@@ -1234,7 +1234,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
 
       return results;
     } catch (e) {
-      print('Error checking place usage: $e');
+      debugPrint('Error checking place usage: $e');
       return {
         'inRoutes': true,
         'inVisits': true,

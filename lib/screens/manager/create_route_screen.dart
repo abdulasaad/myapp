@@ -623,8 +623,8 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
 
   void _editRoutePlace(int index) {
     final routePlace = _selectedPlaces[index];
-    final durationHours = (routePlace.estimatedDurationMinutes ?? 30) ~/ 60;
-    final durationMinutes = (routePlace.estimatedDurationMinutes ?? 30) % 60;
+    final durationHours = routePlace.estimatedDurationMinutes ~/ 60;
+    final durationMinutes = routePlace.estimatedDurationMinutes % 60;
     final hoursController = TextEditingController(text: durationHours.toString());
     final minutesController = TextEditingController(text: durationMinutes.toString());
     final evidenceController = TextEditingController(text: routePlace.requiredEvidenceCount.toString());

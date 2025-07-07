@@ -1,5 +1,6 @@
 // lib/models/route_place.dart
 
+import 'package:flutter/foundation.dart';
 import 'place.dart';
 
 class RoutePlace {
@@ -54,8 +55,8 @@ class RoutePlace {
             : null,
       );
     } catch (e) {
-      print('Error parsing RoutePlace: $e');
-      print('JSON data: $json');
+      debugPrint('Error parsing RoutePlace: $e');
+      debugPrint('JSON data: $json');
       // Return a default RoutePlace with safe values
       return RoutePlace(
         id: (json['id'] ?? '').toString(),

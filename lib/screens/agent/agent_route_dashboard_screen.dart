@@ -65,7 +65,7 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
           final assignment = RouteAssignment.fromJson(json);
           routeAssignments.add(assignment);
         } catch (e) {
-          print('Error parsing route assignment: $e');
+          debugPrint('Error parsing route assignment: $e');
         }
       }
 
