@@ -162,14 +162,12 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
         if (isNewTask) {
           // For a new task
           context.showSnackBar('Task created successfully.');
-          // Navigate to the tasks screen, replacing the current screen
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const StandaloneTasksScreen()),
-          );
+          // Pop back with success result
+          Navigator.of(context).pop(true);
         } else {
           // For an existing task (editing)
           context.showSnackBar('Task details saved.');
-          Navigator.of(context).pop(); // Pop back as before
+          Navigator.of(context).pop(true); // Return true for success
         }
       }
     } catch (e) {

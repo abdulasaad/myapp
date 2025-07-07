@@ -25,7 +25,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   void _loadNotifications() {
     setState(() {
-      _notificationsFuture = _notificationService.getNotifications(limit: 50);
+      _notificationsFuture = _notificationService.getNotifications(limit: 50).then((notifications) {
+        print('Loaded ${notifications.length} notifications');
+        for (var n in notifications) {
+          print('Notification: ${n.type} - ${n.title} - ${n.message}');
+        }
+        return notifications;
+      });
     });
   }
 
@@ -72,6 +78,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             fontSize: 32,
             fontWeight: FontWeight.bold,
             letterSpacing: -0.5,
+            color: Colors.black87,
           ),
         ),
         backgroundColor: backgroundColor,

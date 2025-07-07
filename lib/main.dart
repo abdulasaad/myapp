@@ -6,6 +6,7 @@ import './services/connectivity_service.dart';
 import './services/settings_service.dart';
 import './services/timezone_service.dart';
 import './services/simple_notification_service.dart';
+import './services/notification_manager.dart';
 import './utils/constants.dart';
 
 final logger = Logger();
@@ -45,12 +46,18 @@ Future<void> main() async {
     logger.w('TimezoneService initialization failed: $e');
   }
 
-  // Initialize notification service (handle gracefully if fails)
+  // Initialize simple notification service first (always works)
   try {
     await SimpleNotificationService().initialize();
   } catch (e) {
-    // If notification initialization fails, continue anyway
     logger.w('SimpleNotificationService initialization failed: $e');
+  }
+
+  // Initialize NotificationManager (may fail if Firebase not configured)
+  try {
+    await NotificationManager().initialize();
+  } catch (e) {
+    logger.w('NotificationManager initialization failed: $e');
   }
 
   runApp(const MyApp());

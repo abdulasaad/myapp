@@ -215,6 +215,25 @@ class _StandaloneTaskDetailScreenState
             'status': 'assigned',
             'started_at': DateTime.now().toIso8601String(),
           });
+      
+      // Send notification to agent about task assignment
+      try {
+        await supabase.from('notifications').insert({
+          'recipient_id': selectedAgent.id,
+          'title': 'New Task Assigned',
+          'message': 'You have been assigned a new task: ${widget.task.title}',
+          'type': 'task_assignment',
+          'data': {
+            'task_id': widget.task.id,
+            'task_title': widget.task.title,
+          },
+          'created_at': DateTime.now().toIso8601String(),
+        });
+        debugPrint('Task assignment notification sent to agent: ${selectedAgent.id}');
+      } catch (notificationError) {
+        debugPrint('Failed to send task assignment notification: $notificationError');
+      }
+      
       if (mounted) {
         context.showSnackBar('Agent assigned successfully.');
       }

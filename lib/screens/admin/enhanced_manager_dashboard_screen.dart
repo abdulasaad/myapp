@@ -13,6 +13,7 @@ import '../manager/team_members_screen.dart';
 import '../manager/route_management_screen.dart';
 import '../manager/place_management_screen.dart';
 import '../manager/route_visit_analytics_screen.dart';
+import '../map/live_map_screen.dart';
 
 class EnhancedManagerDashboardScreen extends StatefulWidget {
   const EnhancedManagerDashboardScreen({super.key});
@@ -522,37 +523,47 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
   }
 
   Widget _buildDashboardContent(ManagerDashboardData data) {
-    return RefreshIndicator(
-      onRefresh: () async {
-        await _loadDashboardData();
-      },
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 40, 16, 120),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Dashboard Title
-            const Padding(
-              padding: EdgeInsets.only(bottom: 24),
-              child: Text(
-                'Dashboard',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                  letterSpacing: -0.5,
-                ),
+    return Column(
+      children: [
+        // Fixed Dashboard Title Header
+        Container(
+          width: double.infinity,
+          color: backgroundColor,
+          padding: const EdgeInsets.fromLTRB(16, 40, 16, 24),
+          child: const Text(
+            'Dashboard',
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+              letterSpacing: -0.5,
+            ),
+          ),
+        ),
+        
+        // Scrollable content below the fixed title
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () async {
+              await _loadDashboardData();
+            },
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildManagerWelcomeSection(),
+                  const SizedBox(height: 20),
+                  _buildManagementOverview(data),
+                  const SizedBox(height: 20),
+                  _buildQuickActionsSection(data),
+                  const SizedBox(height: 40),
+                ],
               ),
             ),
-            _buildManagerWelcomeSection(),
-            const SizedBox(height: 20),
-            _buildManagementOverview(data),
-            const SizedBox(height: 20),
-            _buildQuickActionsSection(data),
-            const SizedBox(height: 40),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -748,6 +759,21 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (context) => const PlaceManagementScreen(),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 12),
+        _buildOverviewLine(
+          title: 'Live Map',
+          value: '${data.agentStats.onlineAgents}',
+          subtitle: 'Track agents in real-time',
+          icon: Icons.map,
+          color: Colors.orange,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const LiveMapScreen(),
               ),
             );
           },

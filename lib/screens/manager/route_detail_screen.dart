@@ -1718,6 +1718,26 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
       await supabase.from('route_assignments').insert(assignments);
 
+      // Send notifications to newly assigned agents
+      for (final agentId in newAgentIds) {
+        try {
+          await supabase.from('notifications').insert({
+            'recipient_id': agentId,
+            'title': 'New Route Assigned',
+            'message': 'You have been assigned to route: ${_route.name}',
+            'type': 'route_assignment',
+            'data': {
+              'route_id': _route.id,
+              'route_name': _route.name,
+            },
+            'created_at': DateTime.now().toIso8601String(),
+          });
+          debugPrint('Route assignment notification sent to agent: $agentId');
+        } catch (notificationError) {
+          debugPrint('Failed to send route assignment notification: $notificationError');
+        }
+      }
+
       if (mounted) {
         if (alreadyAssignedIds.isNotEmpty) {
           ModernNotification.success(context, 

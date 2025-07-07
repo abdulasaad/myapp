@@ -1,4 +1,4 @@
-package com.example.myapp
+package com.altijwal.agent
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -18,9 +18,9 @@ import java.io.File
 import java.io.FileOutputStream
 
 class MainActivity : FlutterActivity() {
-    private val NOTIFICATION_CHANNEL = "com.example.myapp/notification"
-    private val DOWNLOAD_CHANNEL = "com.example.myapp/download"
-    private val INSTALLER_CHANNEL = "com.altijwal.app/installer"
+    private val NOTIFICATION_CHANNEL = "com.altijwal.agent/notification"
+    private val DOWNLOAD_CHANNEL = "com.altijwal.agent/download"
+    private val INSTALLER_CHANNEL = "com.altijwal.agent/installer"
     
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)

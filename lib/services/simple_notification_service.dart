@@ -128,9 +128,13 @@ class SimpleNotificationService {
     int offset = 0,
   }) async {
     try {
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) return [];
+
       final response = await supabase
           .from('notifications')
           .select('*')
+          .eq('recipient_id', userId)
           .order('created_at', ascending: false)
           .range(offset, offset + limit - 1);
 
@@ -144,9 +148,14 @@ class SimpleNotificationService {
   // Get unread notification count
   Future<int> getUnreadCount() async {
     try {
+      final userId = supabase.auth.currentUser?.id;
+      if (userId == null) return 0;
+      
+      debugPrint('Getting unread count for user: $userId');
       final count = await supabase.rpc('get_unread_notification_count', params: {
-        'user_id': supabase.auth.currentUser?.id,
+        'user_id': userId,
       });
+      debugPrint('Unread count result: $count');
       return count ?? 0;
     } catch (e) {
       debugPrint('Error getting unread count: $e');
@@ -187,16 +196,23 @@ class SimpleNotificationService {
     Map<String, dynamic>? data,
   }) async {
     try {
-      await supabase.rpc('create_notification', params: {
+      debugPrint('Creating notification: recipient=$recipientId, type=$type, title=$title');
+      debugPrint('Current user: ${supabase.auth.currentUser?.id}');
+      
+      final result = await supabase.rpc('create_notification', params: {
         'p_recipient_id': recipientId,
-        'p_sender_id': supabase.auth.currentUser?.id,
         'p_type': type,
         'p_title': title,
         'p_message': message,
+        'p_sender_id': supabase.auth.currentUser?.id,
         'p_data': data ?? {},
       });
+      
+      debugPrint('Notification created successfully. Result: $result');
     } catch (e) {
       debugPrint('Error creating notification: $e');
+      debugPrint('Stack trace: ${StackTrace.current}');
+      rethrow; // Re-throw to see the error in campaign assignment
     }
   }
 

@@ -13,6 +13,7 @@ import '../services/connectivity_service.dart';
 import '../services/update_service.dart';
 import '../services/timezone_service.dart';
 import '../services/simple_notification_service.dart';
+import '../services/notification_manager.dart';
 import '../widgets/offline_widget.dart';
 import 'agent/agent_route_dashboard_screen.dart';
 import '../widgets/update_dialog.dart';
@@ -29,6 +30,10 @@ import 'admin/group_management_screen.dart';
 import 'agent/agent_geofence_map_screen.dart';
 import 'agent/notifications_screen.dart';
 import 'manager/map_location_picker_screen.dart';
+import 'manager/create_route_screen.dart';
+import 'campaigns/create_campaign_screen.dart';
+import 'tasks/create_evidence_task_screen.dart';
+import 'tasks/template_categories_screen.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class ModernHomeScreen extends StatefulWidget {
@@ -44,6 +49,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
   bool _isLoading = true;
   final UpdateService _updateService = UpdateService();
   final SimpleNotificationService _notificationService = SimpleNotificationService();
+  NotificationManager? _notificationManager;
   int _unreadNotificationCount = 0;
 
   @override
@@ -53,6 +59,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
     _loadUserProfile();
     _setupSessionManagement();
     _loadNotificationCount();
+    _setupNotificationManager();
     // Clean up APKs after installation and old APKs on app start
     _updateService.cleanupAfterInstallation();
     _updateService.cleanupAllApks();
@@ -62,6 +69,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     SessionService().stopPeriodicValidation();
+    _notificationManager?.dispose();
     super.dispose();
   }
   
@@ -146,17 +154,66 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
     }
   }
 
-  Future<void> _loadNotificationCount() async {
-    try {
-      final count = await _notificationService.getUnreadCount();
+  void _setupNotificationManager() {
+    debugPrint('🚀 Setting up NotificationManager for main screen');
+    
+    // Initialize NotificationManager lazily
+    _notificationManager = NotificationManager();
+    
+    // Setup callback for notification count changes
+    _notificationManager!.setOnNotificationCountChanged((count) {
+      debugPrint('📊 Main screen: Notification count callback triggered: $count');
       if (mounted) {
         setState(() {
           _unreadNotificationCount = count;
         });
+        debugPrint('✅ Main screen: Badge count updated to: $count');
+      } else {
+        debugPrint('❌ Main screen: Widget not mounted, skipping update');
+      }
+    });
+
+    // Setup callback for received notifications (show in-app notification)
+    _notificationManager!.setOnNotificationReceived((title, message, type) {
+      debugPrint('🔔 Main screen: Notification received callback: $title - $message');
+      if (mounted) {
+        debugPrint('✅ Main screen: Showing in-app notification');
+        _notificationManager!.showInAppNotification(
+          context,
+          title: title,
+          message: message,
+          type: type,
+        );
+        debugPrint('✅ Main screen: In-app notification displayed');
+      } else {
+        debugPrint('❌ Main screen: Widget not mounted, skipping notification');
+      }
+    });
+    
+    debugPrint('✅ Main screen: NotificationManager setup completed');
+  }
+
+  Future<void> _loadNotificationCount() async {
+    try {
+      debugPrint('Loading notification count for user: ${supabase.auth.currentUser?.id}');
+      final count = await _notificationService.getUnreadCount();
+      debugPrint('Notification count loaded: $count');
+      debugPrint('Setting _unreadNotificationCount to: $count');
+      if (mounted) {
+        setState(() {
+          _unreadNotificationCount = count;
+        });
+        debugPrint('State updated, _unreadNotificationCount is now: $_unreadNotificationCount');
+        debugPrint('Badge should show: ${_unreadNotificationCount > 0}');
       }
     } catch (e) {
-      // Silently handle notification count errors
+      // Silently handle notification count errors and set to 0
       debugPrint('Error loading notification count: $e');
+      if (mounted) {
+        setState(() {
+          _unreadNotificationCount = 0;
+        });
+      }
     }
   }
 
@@ -170,7 +227,6 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
         _DashboardTab(user: _currentUser!),
         _CampaignsTab(),
         _TasksTab(),
-        _MapTab(),
         _ProfileTab(user: _currentUser!),
       ];
     } else {
@@ -201,10 +257,6 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
         BottomNavigationBarItem(
           icon: Icon(Icons.task),
           label: 'Tasks',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.map),
-          label: 'Map',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.person),
@@ -322,6 +374,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
             bottom: 16,
             left: 16,
             right: 16,
+            height: _currentUser!.role == 'admin' || _currentUser!.role == 'manager' ? 120 : 80, // Extended height for admin button
             child: _currentUser!.role == 'admin' || _currentUser!.role == 'manager'
                 ? _buildFloatingAdminNav(safeIndex, navItems)
                 : _buildAgentBottomNavWithButton(),
@@ -332,38 +385,77 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
   }
 
   Widget _buildFloatingAdminNav(int currentIndex, List<BottomNavigationBarItem> navItems) {
-    return Container(
-      height: 80,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.95),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: List.generate(navItems.length, (index) {
-          final item = navItems[index];
-          final isSelected = currentIndex == index;
-          // Extract IconData from the BottomNavigationBarItem
-          IconData iconData = Icons.help; // fallback
-          if (item.icon is Icon) {
-            iconData = (item.icon as Icon).icon ?? Icons.help;
-          }
-          return Expanded(
-            child: _buildAdminNavItem(
-              iconData,
-              item.label ?? '',
-              index,
-              isSelected,
+    return Stack(
+      children: [
+        // Main navigation bar positioned at bottom
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: 80,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.95),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-          );
-        }),
-      ),
+            child: Row(
+              children: [
+                // First two nav items
+                Expanded(
+                  child: _buildAdminNavItem(
+                    (navItems[0].icon as Icon).icon ?? Icons.dashboard,
+                    navItems[0].label ?? '',
+                    0,
+                    currentIndex == 0,
+                  ),
+                ),
+                Expanded(
+                  child: _buildAdminNavItem(
+                    (navItems[1].icon as Icon).icon ?? Icons.campaign,
+                    navItems[1].label ?? '',
+                    1,
+                    currentIndex == 1,
+                  ),
+                ),
+                const SizedBox(width: 64), // Space for floating button
+                // Last two nav items
+                Expanded(
+                  child: _buildAdminNavItem(
+                    (navItems[2].icon as Icon).icon ?? Icons.task,
+                    navItems[2].label ?? '',
+                    2,
+                    currentIndex == 2,
+                  ),
+                ),
+                Expanded(
+                  child: _buildAdminNavItem(
+                    (navItems[3].icon as Icon).icon ?? Icons.person,
+                    navItems[3].label ?? '',
+                    3,
+                    currentIndex == 3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        // Floating Action Button positioned in the top area
+        Positioned(
+          top: 12, // Positioned in the available space above nav bar
+          left: 0,
+          right: 0,
+          child: Center(
+            child: _buildAdminAddButton(),
+          ),
+        ),
+      ],
     );
   }
 
@@ -531,9 +623,568 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
     );
   }
 
-}
+  Widget _buildAdminAddButton() {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _showAdminCreateOptions,
+        borderRadius: BorderRadius.circular(40),
+        splashColor: Colors.white.withValues(alpha: 0.3),
+        highlightColor: Colors.white.withValues(alpha: 0.1),
+        child: Container(
+          width: 80, // Larger tap area
+          height: 80, // Larger tap area
+          alignment: Alignment.center,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutBack,
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF8B89F1), // Lighter indigo
+                  Color(0xFF6366F1), // Selected tab color
+                  Color(0xFF4F46E5), // Darker indigo
+                ],
+                stops: [0.0, 0.5, 1.0],
+              ),
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.3),
+                width: 2,
+              ),
+              boxShadow: [
+                // Main shadow
+                BoxShadow(
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.5),
+                  blurRadius: 25,
+                  offset: const Offset(0, 12),
+                  spreadRadius: -5,
+                ),
+                // Inner glow effect
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  blurRadius: 15,
+                  offset: const Offset(-3, -3),
+                  spreadRadius: -8,
+                ),
+                // Colored glow
+                BoxShadow(
+                  color: const Color(0xFF8B89F1).withValues(alpha: 0.3),
+                  blurRadius: 30,
+                  offset: const Offset(0, 5),
+                  spreadRadius: -10,
+                ),
+              ],
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.white.withValues(alpha: 0.2),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.7],
+                ),
+              ),
+              child: const Icon(
+                Icons.add_rounded,
+                color: Colors.white,
+                size: 28,
+                weight: 700,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
-// Dashboard Tab for Admins/Managers
+  Future<void> _showAdminCreateOptions() async {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Modern handle
+              Container(
+                width: 48,
+                height: 5,
+                margin: const EdgeInsets.symmetric(vertical: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+              
+              // Header section with enhanced styling
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.symmetric(horizontal: 24),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      const Color(0xFF6366F1).withValues(alpha: 0.08),
+                      const Color(0xFF8B89F1).withValues(alpha: 0.04),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color(0xFF6366F1).withValues(alpha: 0.1),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF8B89F1),
+                            Color(0xFF6366F1),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF6366F1).withValues(alpha: 0.3),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.add_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Create New',
+                      style: GoogleFonts.poppins(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF1F2937),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Choose what you\'d like to create',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: const Color(0xFF6B7280),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Options with modern cards
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: [
+                    _buildModernCreateOption(
+                      icon: Icons.campaign_rounded,
+                      title: 'Campaign',
+                      subtitle: 'Create a new campaign with tasks',
+                      color: const Color(0xFF10B981),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _createNewCampaign();
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    _buildModernCreateOption(
+                      icon: Icons.task_alt_rounded,
+                      title: 'Task',
+                      subtitle: 'Create a standalone task',
+                      color: const Color(0xFF6366F1),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _createNewTask();
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    _buildModernCreateOption(
+                      icon: Icons.route_rounded,
+                      title: 'Route',
+                      subtitle: 'Create a new route',
+                      color: const Color(0xFFF59E0B),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _createNewRoute();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 32),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernCreateOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: color.withValues(alpha: 0.1),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+                spreadRadius: 0,
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              // Icon container with gradient
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      color.withValues(alpha: 0.1),
+                      color.withValues(alpha: 0.05),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: color.withValues(alpha: 0.2),
+                    width: 1,
+                  ),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 28,
+                ),
+              ),
+              
+              const SizedBox(width: 16),
+              
+              // Text content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1F2937),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: const Color(0xFF6B7280),
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Arrow icon
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: color,
+                  size: 16,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _createNewCampaign() async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const CreateCampaignScreen(),
+      ),
+    );
+    
+    // If campaign was created successfully, refresh the current screen
+    if (result == true && mounted) {
+      setState(() {
+        // This will trigger a rebuild which will refresh the campaigns tab
+      });
+    }
+  }
+
+  void _createNewTask() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 15,
+              offset: const Offset(0, -3),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              
+              // Title
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  'Choose Task Type',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF1F2937),
+                  ),
+                ),
+              ),
+              
+              // Options
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    _buildTaskTypeOption(
+                      icon: Icons.ballot_rounded,
+                      title: 'Template Task',
+                      subtitle: 'Create from existing template',
+                      color: const Color(0xFF6366F1),
+                      onTap: () async {
+                        Navigator.pop(context);
+                        final result = await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const TemplateCategoriesScreen(),
+                          ),
+                        );
+                        // Refresh if template task was created
+                        if (mounted) {
+                          setState(() {});
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    _buildTaskTypeOption(
+                      icon: Icons.edit_note_rounded,
+                      title: 'Custom Task',
+                      subtitle: 'Create evidence-based task',
+                      color: const Color(0xFF10B981),
+                      onTap: () async {
+                        Navigator.pop(context);
+                        final result = await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const CreateEvidenceTaskScreen(),
+                          ),
+                        );
+                        // Refresh if needed
+                        if (mounted) {
+                          setState(() {});
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTaskTypeOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: color.withValues(alpha: 0.2),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1F2937),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: const Color(0xFF6B7280),
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: color,
+                size: 16,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _createNewRoute() async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const CreateRouteScreen(),
+      ),
+    );
+    
+    // If route was created successfully, refresh the current screen
+    if (result == true && mounted) {
+      setState(() {
+        // This will trigger a rebuild
+      });
+    }
+  }
+
+}
 class _DashboardTab extends StatelessWidget {
   final AppUser user;
   
@@ -592,6 +1243,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
   final SmartLocationManager _locationManager = SmartLocationManager();
   final Logger _logger = Logger();
   final SimpleNotificationService _notificationService = SimpleNotificationService();
+  NotificationManager? _notificationManager;
   bool _isLocationEnabled = false;
   String? _currentLocationStatus;
   int _unreadNotificationCount = 0;
@@ -602,6 +1254,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
     _dashboardFuture = _loadAgentDashboardData();
     _startSmartLocationTracking();
     _loadNotificationCount();
+    _setupAgentNotificationManager();
     // Initialize connectivity monitoring
     ConnectivityService().initialize();
     // Add lifecycle observer for app state changes
@@ -611,6 +1264,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
   @override
   void dispose() {
     _locationManager.stopTracking();
+    _notificationManager?.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -1345,17 +1999,66 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
     }
   }
 
-  Future<void> _loadNotificationCount() async {
-    try {
-      final count = await _notificationService.getUnreadCount();
+  void _setupAgentNotificationManager() {
+    debugPrint('🚀 Setting up NotificationManager for AGENT screen');
+    
+    // Initialize NotificationManager lazily for agent
+    _notificationManager = NotificationManager();
+    
+    // Setup callback for notification count changes for agent
+    _notificationManager!.setOnNotificationCountChanged((count) {
+      debugPrint('📊 Agent screen: Notification count callback triggered: $count');
       if (mounted) {
         setState(() {
           _unreadNotificationCount = count;
         });
+        debugPrint('✅ Agent screen: Badge count updated to: $count');
+      } else {
+        debugPrint('❌ Agent screen: Widget not mounted, skipping update');
+      }
+    });
+
+    // Setup callback for received notifications (show in-app notification) for agent
+    _notificationManager!.setOnNotificationReceived((title, message, type) {
+      debugPrint('🔔 Agent screen: Notification received callback: $title - $message');
+      if (mounted) {
+        debugPrint('✅ Agent screen: Showing in-app notification');
+        _notificationManager!.showInAppNotification(
+          context,
+          title: title,
+          message: message,
+          type: type,
+        );
+        debugPrint('✅ Agent screen: In-app notification displayed');
+      } else {
+        debugPrint('❌ Agent screen: Widget not mounted, skipping notification');
+      }
+    });
+    
+    debugPrint('✅ Agent screen: NotificationManager setup completed');
+  }
+
+  Future<void> _loadNotificationCount() async {
+    try {
+      debugPrint('Loading notification count for agent user: ${supabase.auth.currentUser?.id}');
+      final count = await _notificationService.getUnreadCount();
+      debugPrint('Agent notification count loaded: $count');
+      debugPrint('Setting agent _unreadNotificationCount to: $count');
+      if (mounted) {
+        setState(() {
+          _unreadNotificationCount = count;
+        });
+        debugPrint('Agent state updated, _unreadNotificationCount is now: $_unreadNotificationCount');
+        debugPrint('Agent badge should show: ${_unreadNotificationCount > 0}');
       }
     } catch (e) {
-      // Silently handle notification count errors
-      debugPrint('Error loading notification count: $e');
+      // Silently handle notification count errors and set to 0
+      debugPrint('Error loading agent notification count: $e');
+      if (mounted) {
+        setState(() {
+          _unreadNotificationCount = 0;
+        });
+      }
     }
   }
 

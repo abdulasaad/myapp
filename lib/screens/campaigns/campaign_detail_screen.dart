@@ -7,6 +7,7 @@ import '../../models/app_user.dart';
 import '../../models/campaign.dart';
 import '../../models/task.dart';
 import '../../services/profile_service.dart';
+import '../../services/simple_notification_service.dart';
 import '../../utils/constants.dart';
 import 'geofence_editor_screen.dart';
 import 'agent_campaign_progress_screen.dart';
@@ -22,6 +23,7 @@ class CampaignDetailScreen extends StatefulWidget {
 class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   late Future<List<AppUser>> _assignedAgentsFuture;
   late Future<List<Task>> _tasksFuture;
+  final SimpleNotificationService _notificationService = SimpleNotificationService();
 
   @override
   void initState() {
@@ -102,6 +104,25 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
             'status': 'assigned',
             'created_at': DateTime.now().toIso8601String(),
           });
+          
+          // Send notification to agent about task assignment
+          try {
+            await supabase.from('notifications').insert({
+              'recipient_id': agent['agent_id'],
+              'title': 'New Task Assigned',
+              'message': 'You have been assigned a new task: $title',
+              'type': 'task_assignment',
+              'data': {
+                'task_id': taskId,
+                'campaign_id': widget.campaign.id,
+                'campaign_name': widget.campaign.name,
+              },
+              'created_at': DateTime.now().toIso8601String(),
+            });
+            Logger().i('Task assignment notification sent to agent: ${agent['agent_id']}');
+          } catch (notificationError) {
+            Logger().e('Failed to send task assignment notification: $notificationError');
+          }
         } catch (e) {
           Logger().e('Failed to assign task to agent ${agent['agent_id']}: $e');
         }
@@ -216,6 +237,25 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
         } catch (e) {
           Logger().e('Failed to assign task ${task['id']} to agent: $e');
         }
+      }
+
+      // Send notification to the agent
+      try {
+        Logger().i('Sending notification to agent: $agentId for campaign: ${widget.campaign.name}');
+        await _notificationService.createNotification(
+          recipientId: agentId,
+          title: 'Campaign Assignment',
+          message: 'You have been assigned to campaign "${widget.campaign.name}"',
+          type: 'campaign_assignment',
+          data: {
+            'campaign_id': widget.campaign.id,
+            'campaign_name': widget.campaign.name,
+          },
+        );
+        Logger().i('Notification sent successfully to agent: $agentId');
+      } catch (e) {
+        Logger().e('Failed to send notification to agent: $e');
+        Logger().e('Stack trace: ${StackTrace.current}');
       }
 
       if (mounted) {
