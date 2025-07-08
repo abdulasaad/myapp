@@ -1,5 +1,6 @@
 // lib/services/task_assignment_service.dart
 
+import 'package:flutter/foundation.dart';
 import '../utils/constants.dart';
 
 class TaskAssignmentService {
@@ -153,9 +154,35 @@ class TaskAssignmentService {
     }
   }
 
-  /// Check if agent can access a task (not pending approval)
+  /// Check if agent can access a task (campaign assignment or approved task assignment)
   Future<bool> canAgentAccessTask(String taskId, String agentId) async {
     try {
+      // First check if agent is assigned to the campaign containing this task
+      final taskData = await supabase
+          .from('tasks')
+          .select('campaign_id')
+          .eq('id', taskId)
+          .single();
+      
+      final campaignId = taskData['campaign_id'];
+      
+      // If task belongs to a campaign, check if agent is assigned to that campaign
+      if (campaignId != null) {
+        final campaignAssignment = await supabase
+            .from('campaign_agents')
+            .select('campaign_id')
+            .eq('campaign_id', campaignId)
+            .eq('agent_id', agentId)
+            .maybeSingle();
+        
+        // If agent is assigned to the campaign, they have direct access
+        if (campaignAssignment != null) {
+          debugPrint('✅ Agent $agentId has campaign access to task $taskId via campaign $campaignId');
+          return true;
+        }
+      }
+      
+      // Fall back to checking individual task assignment for standalone tasks
       final assignment = await supabase
           .from('task_assignments')
           .select('status')
@@ -164,20 +191,51 @@ class TaskAssignmentService {
           .maybeSingle();
       
       // No assignment means no access
-      if (assignment == null) return false;
+      if (assignment == null) {
+        debugPrint('❌ Agent $agentId has no access to task $taskId (no assignment)');
+        return false;
+      }
       
       // Can access if status is anything except 'pending'
       final status = assignment['status'] as String;
-      return status != 'pending';
+      final hasAccess = status != 'pending';
+      debugPrint('${hasAccess ? '✅' : '❌'} Agent $agentId task assignment status: $status');
+      return hasAccess;
     } catch (e) {
+      debugPrint('❌ Error checking task access: $e');
       // If any error, deny access for safety
       return false;
     }
   }
 
-  /// Get agent's task assignment status
+  /// Get agent's task assignment status (campaign assignment returns 'assigned')
   Future<String?> getTaskAssignmentStatus(String taskId, String agentId) async {
     try {
+      // First check if agent is assigned to the campaign containing this task
+      final taskData = await supabase
+          .from('tasks')
+          .select('campaign_id')
+          .eq('id', taskId)
+          .single();
+      
+      final campaignId = taskData['campaign_id'];
+      
+      // If task belongs to a campaign, check if agent is assigned to that campaign
+      if (campaignId != null) {
+        final campaignAssignment = await supabase
+            .from('campaign_agents')
+            .select('campaign_id')
+            .eq('campaign_id', campaignId)
+            .eq('agent_id', agentId)
+            .maybeSingle();
+        
+        // If agent is assigned to the campaign, return 'assigned' status
+        if (campaignAssignment != null) {
+          return 'assigned';
+        }
+      }
+      
+      // Fall back to checking individual task assignment
       final assignment = await supabase
           .from('task_assignments')
           .select('status')

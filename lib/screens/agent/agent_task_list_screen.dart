@@ -55,37 +55,55 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
       final userId = supabase.auth.currentUser?.id;
       if (userId == null) throw Exception('No authenticated user');
 
-      // Query task assignments directly instead of using RPC
-      final response = await supabase
-          .from('task_assignments')
+      // First, get all tasks in this campaign
+      final tasksResponse = await supabase
+          .from('tasks')
           .select('''
-            task_id,
-            status,
-            evidence_urls,
-            tasks!inner(
-              title,
-              description,
-              points,
-              enforce_geofence,
-              required_evidence_count
-            )
+            id,
+            title,
+            description,
+            points,
+            enforce_geofence,
+            required_evidence_count
           ''')
-          .eq('agent_id', userId)
-          .eq('tasks.campaign_id', widget.campaign.id);
+          .eq('campaign_id', widget.campaign.id);
 
-      return response.map((json) {
-        final task = json['tasks'] as Map<String, dynamic>;
-        return AgentTask.fromJson({
-          'task_id': json['task_id'],
-          'assignment_status': json['status'],
-          'evidence_urls': json['evidence_urls'] ?? [],
-          'title': task['title'],
-          'description': task['description'],
-          'points': task['points'] ?? 0,
-          'enforce_geofence': task['enforce_geofence'],
-          'required_evidence_count': task['required_evidence_count'],
-        });
-      }).toList();
+      final List<AgentTask> agentTasks = [];
+
+      for (final taskData in tasksResponse) {
+        final taskId = taskData['id'] as String;
+        
+        // Use TaskAssignmentService to check access and get status
+        final canAccess = await TaskAssignmentService().canAgentAccessTask(taskId, userId);
+        
+        if (canAccess) {
+          // Get the assignment status using the updated logic
+          final status = await TaskAssignmentService().getTaskAssignmentStatus(taskId, userId) ?? 'not_assigned';
+          
+          // Get evidence URLs from task_assignments if they exist
+          final assignmentResponse = await supabase
+              .from('task_assignments')
+              .select('evidence_urls')
+              .eq('task_id', taskId)
+              .eq('agent_id', userId)
+              .maybeSingle();
+          
+          final evidenceUrls = assignmentResponse?['evidence_urls'] ?? [];
+
+          agentTasks.add(AgentTask.fromJson({
+            'task_id': taskId,
+            'assignment_status': status,
+            'evidence_urls': evidenceUrls,
+            'title': taskData['title'],
+            'description': taskData['description'],
+            'points': taskData['points'] ?? 0,
+            'enforce_geofence': taskData['enforce_geofence'],
+            'required_evidence_count': taskData['required_evidence_count'],
+          }));
+        }
+      }
+
+      return agentTasks;
     } catch (e) {
       debugPrint('Error fetching agent tasks: $e');
       rethrow;
