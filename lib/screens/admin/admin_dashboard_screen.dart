@@ -8,6 +8,7 @@ import 'evidence_list_screen.dart';
 import '../tasks/standalone_tasks_screen.dart';
 import 'user_management_screen.dart';
 import '../reporting/location_history_screen.dart';
+import 'send_notification_screen.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -726,7 +727,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
               ),
               const SizedBox(width: 16),
-              Expanded(child: Container()), // Empty space
+              Expanded(
+                child: _buildAdminActionCard(
+                  title: 'Send Notification',
+                  icon: Icons.notification_add,
+                  color: Colors.blue,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const SendNotificationScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ),
               const SizedBox(width: 16),
               Expanded(child: Container()), // Empty space
               const SizedBox(width: 16),

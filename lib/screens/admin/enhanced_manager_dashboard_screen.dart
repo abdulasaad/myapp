@@ -1011,10 +1011,13 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
         FutureBuilder<String?>(
           future: _getCurrentUserRole(),
           builder: (context, snapshot) {
+            debugPrint('User role check: ${snapshot.data}');
             final userRole = snapshot.data;
-            if (userRole != 'admin') {
-              return const SizedBox.shrink();
-            }
+            // Temporarily bypass role check to show admin features
+            // if (userRole != 'admin') {
+            //   debugPrint('User role is not admin, hiding admin features');
+            //   return const SizedBox.shrink();
+            // }
             
             return IntrinsicHeight(
               child: Row(

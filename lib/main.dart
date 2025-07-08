@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import './screens/splash_screen.dart';
 import './services/connectivity_service.dart';
 import './services/settings_service.dart';
@@ -11,8 +13,65 @@ import './utils/constants.dart';
 
 final logger = Logger();
 
+// Top-level function for background message handling
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  debugPrint('🔔 Background message received: ${message.messageId}');
+  debugPrint('📱 Title: ${message.notification?.title}');
+  debugPrint('📱 Body: ${message.notification?.body}');
+  debugPrint('📱 Data: ${message.data}');
+  
+  try {
+    // Initialize local notifications for background context
+    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const iosSettings = DarwinInitializationSettings();
+    const initSettings = InitializationSettings(
+      android: androidSettings,
+      iOS: iosSettings,
+    );
+    
+    final localNotifications = FlutterLocalNotificationsPlugin();
+    await localNotifications.initialize(initSettings);
+    
+    // Show notification immediately
+    const notificationDetails = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'al_tijwal_notifications',
+        'AL-Tijwal Notifications',
+        channelDescription: 'Notifications for campaigns, tasks, and assignments',
+        importance: Importance.high,
+        priority: Priority.high,
+        showWhen: true,
+        enableVibration: true,
+        playSound: true,
+        largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
+        icon: '@mipmap/ic_launcher',
+      ),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
+    );
+    
+    await localNotifications.show(
+      message.hashCode,
+      message.notification?.title ?? 'AL-Tijwal',
+      message.notification?.body ?? 'You have a new notification',
+      notificationDetails,
+    );
+    
+    debugPrint('✅ Background notification displayed successfully');
+  } catch (e) {
+    debugPrint('❌ Error in background handler: $e');
+  }
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Register FCM background message handler BEFORE any other Firebase initialization
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   await Supabase.initialize(
     

@@ -7,6 +7,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:dio/dio.dart';
 import '../utils/constants.dart';
 import '../widgets/modern_notification.dart';
 
@@ -190,13 +191,18 @@ class NotificationService {
     try {
       final userId = supabase.auth.currentUser?.id;
       if (userId != null) {
+        debugPrint('📱 Storing FCM token for user: $userId');
+        debugPrint('📱 Token: ${token.substring(0, 20)}...');
+        
         await supabase
             .from('profiles')
             .update({'fcm_token': token})
             .eq('id', userId);
+            
+        debugPrint('✅ FCM token stored successfully');
       }
     } catch (e) {
-      debugPrint('Error storing FCM token: $e');
+      debugPrint('❌ Error storing FCM token: $e');
     }
   }
 
@@ -254,8 +260,53 @@ class NotificationService {
   // Handle background messages
   static Future<void> _handleBackgroundMessage(RemoteMessage message) async {
     debugPrint('Received background message: ${message.messageId}');
-    // Background message handling is limited
-    // The actual notification display is handled by the system
+    debugPrint('Title: ${message.notification?.title}');
+    debugPrint('Body: ${message.notification?.body}');
+    
+    // Show local notification when app is in background
+    try {
+      final localNotifications = FlutterLocalNotificationsPlugin();
+      
+      // Initialize local notifications for background context
+      const androidInitSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const iosInitSettings = DarwinInitializationSettings();
+      const initSettings = InitializationSettings(
+        android: androidInitSettings,
+        iOS: iosInitSettings,
+      );
+      
+      await localNotifications.initialize(initSettings);
+      
+      const notificationDetails = NotificationDetails(
+        android: AndroidNotificationDetails(
+          'admin_notifications',
+          'Admin Notifications',
+          channelDescription: 'Notifications sent by administrators',
+          importance: Importance.high,
+          priority: Priority.high,
+          showWhen: true,
+          enableVibration: true,
+          playSound: true,
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+      );
+      
+      await localNotifications.show(
+        message.hashCode,
+        message.notification?.title ?? 'New Notification',
+        message.notification?.body ?? 'You have a new message',
+        notificationDetails,
+        payload: message.data.isNotEmpty ? jsonEncode(message.data) : null,
+      );
+      
+      debugPrint('Background notification displayed successfully');
+    } catch (e) {
+      debugPrint('Error displaying background notification: $e');
+    }
   }
 
   // Handle notification tap
@@ -411,21 +462,216 @@ class NotificationService {
     Map<String, dynamic>? data,
   }) async {
     try {
+      final senderId = supabase.auth.currentUser?.id;
+      
+      debugPrint('🔔 Creating notification:');
+      debugPrint('   From: $senderId');
+      debugPrint('   To: $recipientId');
+      debugPrint('   Type: $type');
+      debugPrint('   Title: $title');
+      debugPrint('   Message: $message');
+      
+      // First create the notification in database
       await supabase.rpc('create_notification', params: {
         'p_recipient_id': recipientId,
-        'p_sender_id': supabase.auth.currentUser?.id,
+        'p_sender_id': senderId,
         'p_type': type,
         'p_title': title,
         'p_message': message,
         'p_data': data ?? {},
       });
+      
+      debugPrint('✅ Database notification created successfully');
+      
+      // Get recipient's FCM token
+      final recipientProfile = await supabase
+          .from('profiles')
+          .select('fcm_token, email, full_name')
+          .eq('id', recipientId)
+          .single();
+      
+      final recipientFcmToken = recipientProfile['fcm_token'] as String?;
+      final recipientEmail = recipientProfile['email'] as String?;
+      final recipientName = recipientProfile['full_name'] as String?;
+      
+      debugPrint('📱 Recipient info:');
+      debugPrint('   ID: $recipientId');
+      debugPrint('   Name: $recipientName');
+      debugPrint('   Email: $recipientEmail');
+      debugPrint('   Has FCM Token: ${recipientFcmToken != null && recipientFcmToken.isNotEmpty}');
+      debugPrint('   FCM Token: ${recipientFcmToken?.substring(0, 20) ?? 'null'}...');
+
+      // Also check sender's FCM token for comparison
+      final senderProfile = await supabase
+          .from('profiles')
+          .select('fcm_token, email, full_name')
+          .eq('id', senderId!)
+          .single();
+      
+      final senderFcmToken = senderProfile['fcm_token'] as String?;
+      final senderEmail = senderProfile['email'] as String?;
+      final senderName = senderProfile['full_name'] as String?;
+      
+      debugPrint('📤 Sender info:');
+      debugPrint('   ID: $senderId');
+      debugPrint('   Name: $senderName');
+      debugPrint('   Email: $senderEmail');
+      debugPrint('   Has FCM Token: ${senderFcmToken != null && senderFcmToken.isNotEmpty}');
+      debugPrint('   FCM Token: ${senderFcmToken?.substring(0, 20) ?? 'null'}...');
+      debugPrint('   Same Token? ${recipientFcmToken == senderFcmToken}');
+      
+      if (recipientFcmToken != null && recipientFcmToken.isNotEmpty) {
+        // Prepare push notification for server-side sending
+        await _sendPushNotification(
+          token: recipientFcmToken,
+          title: title,
+          body: message,
+          data: data ?? {},
+        );
+      } else {
+        debugPrint('⚠️  No FCM token for recipient - notification available via in-app polling only');
+      }
+      
     } catch (e) {
-      debugPrint('Error creating notification: $e');
+      debugPrint('❌ Error creating notification: $e');
     }
+  }
+
+  // Send push notification via multiple methods
+  Future<void> _sendPushNotification({
+    required String token,
+    required String title,
+    required String body,
+    Map<String, dynamic>? data,
+  }) async {
+    debugPrint('📨 Sending push notification:');
+    debugPrint('   FCM Token: ${token.substring(0, 20)}...');
+    debugPrint('   Title: $title');
+    debugPrint('   Body: $body');
+    debugPrint('   Data: $data');
+    
+    // Try multiple methods in order of preference
+    bool success = false;
+    
+    // Method 1: Try Supabase Edge Function first
+    try {
+      debugPrint('📡 Method 1: Trying edge function...');
+      
+      final response = await supabase.functions.invoke(
+        'send-push-notification',
+        body: {
+          'recipientId': '',
+          'title': title,
+          'message': body,
+          'data': data,
+          'fcmToken': token,
+        },
+      );
+      
+      if (response.status == 200) {
+        debugPrint('✅ Push notification sent via edge function');
+        success = true;
+      } else {
+        throw Exception('Edge function failed: ${response.status}');
+      }
+    } catch (e) {
+      debugPrint('❌ Edge function failed: $e');
+    }
+    
+    // Method 2: Direct FCM HTTP API (fallback)
+    if (!success) {
+      try {
+        debugPrint('📡 Method 2: Trying direct FCM API...');
+        await _sendDirectFCMNotification(token, title, body, data);
+        debugPrint('✅ Push notification sent via direct FCM');
+        success = true;
+      } catch (e) {
+        debugPrint('❌ Direct FCM failed: $e');
+      }
+    }
+    
+    // Method 3: Local notification fallback
+    if (!success) {
+      debugPrint('📡 Method 3: Showing local notification as fallback...');
+      // This will only show on current device, but at least provides some notification
+      await _showLocalFallbackNotification(title, body, data);
+      debugPrint('⚠️  Showed local notification as fallback');
+    }
+    
+    if (!success) {
+      debugPrint('❌ All notification methods failed');
+      debugPrint('✅ Recipient will receive notification via in-app polling');
+    }
+  }
+
+  // Direct FCM HTTP API call
+  Future<void> _sendDirectFCMNotification(
+    String token,
+    String title,
+    String body,
+    Map<String, dynamic>? data,
+  ) async {
+    // FCM Server Key - this should be stored securely
+    // For now, we'll use the new Firebase v1 API with service account
+    
+    // Note: This requires Firebase project configuration
+    // Since we can't store server keys client-side securely,
+    // this will throw an error but demonstrates the approach
+    
+    throw Exception('Direct FCM requires server-side implementation for security');
+  }
+
+  // Local notification fallback
+  Future<void> _showLocalFallbackNotification(
+    String title,
+    String body,
+    Map<String, dynamic>? data,
+  ) async {
+    await _localNotifications.show(
+      DateTime.now().millisecondsSinceEpoch.remainder(100000),
+      title,
+      body,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'admin_notifications',
+          'Admin Notifications',
+          channelDescription: 'Notifications sent by administrators',
+          importance: Importance.high,
+          priority: Priority.high,
+          showWhen: true,
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+      ),
+      payload: data != null ? jsonEncode(data) : null,
+    );
   }
 
   // Get FCM token
   String? get fcmToken => _fcmToken;
+
+  // Clear FCM token on logout
+  Future<void> clearFCMToken() async {
+    try {
+      final userId = supabase.auth.currentUser?.id;
+      if (userId != null) {
+        debugPrint('🧹 Clearing FCM token for user: $userId');
+        
+        await supabase
+            .from('profiles')
+            .update({'fcm_token': null})
+            .eq('id', userId);
+            
+        _fcmToken = null;
+        debugPrint('✅ FCM token cleared successfully');
+      }
+    } catch (e) {
+      debugPrint('❌ Error clearing FCM token: $e');
+    }
+  }
 
   // Check if notifications are enabled
   Future<bool> areNotificationsEnabled() async {

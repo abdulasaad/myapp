@@ -1,1 +1,1 @@
-postgres://postgres:[YOUR-PASSWORD]@db.jnuzpixgfskjcoqmgkxb.supabase.co:6543/postgres
+postgresql://postgres.jnuzpixgfskjcoqmgkxb:[YOUR-PASSWORD]@aws-0-eu-central-1.pooler.supabase.com:6543/postgres

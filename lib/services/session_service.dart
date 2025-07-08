@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:logger/logger.dart';
 import 'package:uuid/uuid.dart';
 import '../utils/constants.dart';
+import 'notification_service.dart';
 
 final logger = Logger();
 
@@ -254,6 +255,14 @@ class SessionService {
     try {
       stopPeriodicValidation();
       await clearStoredSessionId();
+      
+      // Clear FCM token to prevent cross-user notifications
+      try {
+        await NotificationService().clearFCMToken();
+      } catch (e) {
+        logger.w('Failed to clear FCM token during force logout: $e');
+      }
+      
       await supabase.auth.signOut();
       logger.i('Forced logout completed');
     } catch (e) {
@@ -337,6 +346,14 @@ class SessionService {
       _frequentValidationTimer?.cancel();
       _frequentValidationTimer = null;
       await invalidateCurrentSession();
+      
+      // Clear FCM token to prevent cross-user notifications
+      try {
+        await NotificationService().clearFCMToken();
+      } catch (e) {
+        logger.w('Failed to clear FCM token during logout: $e');
+      }
+      
       await supabase.auth.signOut();
       logger.i('Complete logout successful');
     } catch (e) {

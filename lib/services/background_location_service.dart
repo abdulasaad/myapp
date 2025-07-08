@@ -23,12 +23,12 @@ class BackgroundLocationService {
       androidConfiguration: AndroidConfiguration(
         onStart: onStart,
         autoStart: false,
-        isForegroundMode: false,  // Disable foreground service notification
+        isForegroundMode: true,  // Enable foreground service for background protection
         notificationChannelId: _channelId,
-        initialNotificationTitle: '',  // Empty title
-        initialNotificationContent: '',  // Empty content
+        initialNotificationTitle: 'Al-Tijwal Location',
+        initialNotificationContent: 'Tracking location for active tasks',
         foregroundServiceNotificationId: 888,
-        autoStartOnBoot: false,  // Disable auto-start to reduce notifications
+        autoStartOnBoot: false,
       ),
       iosConfiguration: IosConfiguration(
         autoStart: false,
@@ -87,8 +87,8 @@ class BackgroundLocationService {
     DartPluginRegistrant.ensureInitialized();
     
     if (service is AndroidServiceInstance) {
-      // Force service to run in background mode without notifications
-      service.setAsBackgroundService();
+      // Keep as foreground service for background protection
+      service.setAsForegroundService();
     }
 
     String? activeCampaignId;
