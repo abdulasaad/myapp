@@ -7,6 +7,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../services/profile_service.dart';
 import '../services/session_service.dart';
 import '../services/connectivity_service.dart';
+import '../services/notification_service.dart';
+import '../services/background_notification_manager.dart';
 import '../widgets/session_conflict_dialog.dart';
 import '../widgets/offline_widget.dart';
 import '../utils/constants.dart';
@@ -155,6 +157,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // --- SUCCESS PATH ---
       await ProfileService.instance.loadProfile();
+      
+      // Initialize background notification management (fully automatic)
+      try {
+        await BackgroundNotificationManager().initialize();
+        debugPrint('✅ Background notification management started after login');
+      } catch (e) {
+        debugPrint('⚠️ Background notification management failed after login: $e');
+      }
       
       if (mounted) {
         context.showSnackBar('Login successful!');

@@ -14,6 +14,8 @@ import '../services/update_service.dart';
 import '../services/timezone_service.dart';
 import '../services/simple_notification_service.dart';
 import '../services/notification_manager.dart';
+import '../services/notification_service.dart';
+import '../services/background_notification_manager.dart';
 import '../widgets/offline_widget.dart';
 import 'agent/agent_route_dashboard_screen.dart';
 import '../widgets/update_dialog.dart';
@@ -2194,37 +2196,21 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                                           ),
                                         ],
                                       ),
-                                      // Notification & Settings
-                                      Row(
-                                        children: [
-                                          _buildHeaderIconButton(
-                                            icon: Icons.notifications_outlined,
-                                            hasNotification: _unreadNotificationCount > 0,
-                                            onTap: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) => const NotificationsScreen(),
-                                                ),
-                                              ).then((_) {
-                                                // Refresh notification count when returning
-                                                _loadNotificationCount();
-                                              });
-                                            },
-                                          ),
-                                          const SizedBox(width: 12),
-                                          _buildHeaderIconButton(
-                                            icon: Icons.settings_outlined,
-                                            onTap: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) => const SettingsScreen(),
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ],
+                                      // Notification only (removed settings for agents)
+                                      _buildHeaderIconButton(
+                                        icon: Icons.notifications_outlined,
+                                        hasNotification: _unreadNotificationCount > 0,
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => const NotificationsScreen(),
+                                            ),
+                                          ).then((_) {
+                                            // Refresh notification count when returning
+                                            _loadNotificationCount();
+                                          });
+                                        },
                                       ),
                                     ],
                                   ),
@@ -3639,6 +3625,21 @@ class _ProfileTab extends StatelessWidget {
           ),
         if (user.role == 'admin' || user.role == 'manager')
           const SizedBox(height: 12),
+        
+        // FCM Token Status for all users (read-only status)
+        FutureBuilder<bool>(
+          future: _checkFCMTokenStatus(),
+          builder: (context, snapshot) {
+            final hasToken = snapshot.data ?? false;
+            return _buildOptionCard(
+              icon: hasToken ? Icons.notifications_active : Icons.sync,
+              title: 'Notifications',
+              subtitle: hasToken ? 'Notifications enabled' : 'Setting up notifications...',
+              color: hasToken ? successColor : Colors.blue,
+              onTap: null, // No user action required - fully automatic
+            );
+          },
+        ),
         const SizedBox(height: 12),
         _buildOptionCard(
           icon: Icons.help_outline,
@@ -3677,7 +3678,7 @@ class _ProfileTab extends StatelessWidget {
     required IconData icon,
     required String title,
     required String subtitle,
-    required VoidCallback onTap,
+    VoidCallback? onTap,
     Color? color,
   }) {
     final optionColor = color ?? textPrimaryColor;
@@ -3741,6 +3742,46 @@ class _ProfileTab extends StatelessWidget {
     );
   }
 
+  Future<bool> _checkFCMTokenStatus() async {
+    try {
+      final currentUserId = supabase.auth.currentUser?.id;
+      if (currentUserId == null) return false;
+      
+      final response = await supabase
+          .from('profiles')
+          .select('fcm_token')
+          .eq('id', currentUserId)
+          .single();
+      
+      final fcmToken = response['fcm_token'] as String?;
+      return fcmToken != null && fcmToken.isNotEmpty && fcmToken.length > 100;
+    } catch (e) {
+      debugPrint('Error checking FCM token status: $e');
+      return false;
+    }
+  }
+
+  Future<void> _refreshFCMToken(BuildContext context) async {
+    try {
+      context.showSnackBar('Refreshing notification token...');
+      
+      final newToken = await NotificationService().forceRefreshFCMToken();
+      
+      if (newToken != null && newToken.isNotEmpty) {
+        context.showSnackBar('Notification token refreshed successfully!');
+        
+        // Trigger rebuild to update the UI
+        if (context.mounted) {
+          (context.findAncestorStateOfType<_ModernHomeScreenState>())?.setState(() {});
+        }
+      } else {
+        context.showSnackBar('Failed to refresh notification token', isError: true);
+      }
+    } catch (e) {
+      context.showSnackBar('Error refreshing notification token: $e', isError: true);
+    }
+  }
+
   Future<void> _handleSignOut(BuildContext context) async {
     try {
       // Show confirmation dialog
@@ -3785,6 +3826,12 @@ class _ProfileTab extends StatelessWidget {
           } catch (e) {
             // Continue with logout even if location cleanup fails
           }
+          
+          // Stop background notification management
+          BackgroundNotificationManager().stop();
+          
+          // Clear FCM token
+          await NotificationService().clearFCMToken();
           
           // Clean up session in database
           await SessionService().forceLogout();

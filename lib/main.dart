@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import './screens/splash_screen.dart';
@@ -13,15 +14,68 @@ import './utils/constants.dart';
 
 final logger = Logger();
 
+// Create notification channels for background notifications
+Future<void> _createNotificationChannels() async {
+  try {
+    final localNotifications = FlutterLocalNotificationsPlugin();
+    
+    // Create Android notification channel
+    const androidChannel = AndroidNotificationChannel(
+      'al_tijwal_notifications',
+      'AL-Tijwal Notifications',
+      description: 'Notifications for campaigns, tasks, and assignments',
+      importance: Importance.max,
+      playSound: true,
+      enableVibration: true,
+      showBadge: true,
+    );
+    
+    // Create the channel
+    await localNotifications
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(androidChannel);
+    
+    // Create fallback channel
+    const fallbackChannel = AndroidNotificationChannel(
+      'al_tijwal_fallback',
+      'AL-Tijwal Fallback',
+      description: 'Fallback notification channel',
+      importance: Importance.high,
+      playSound: true,
+      enableVibration: true,
+    );
+    
+    await localNotifications
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(fallbackChannel);
+    
+    debugPrint('✅ Notification channels created successfully');
+  } catch (e) {
+    debugPrint('❌ Error creating notification channels: $e');
+  }
+}
+
 // Top-level function for background message handling
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint('🔔 Background message received: ${message.messageId}');
-  debugPrint('📱 Title: ${message.notification?.title}');
-  debugPrint('📱 Body: ${message.notification?.body}');
+  
+  // Extract title and body from data field (to avoid Firebase auto-display)
+  final title = message.data['title'] ?? message.notification?.title ?? 'AL-Tijwal';
+  final body = message.data['body'] ?? message.notification?.body ?? 'You have a new notification';
+  
+  debugPrint('📱 Title: $title');
+  debugPrint('📱 Body: $body');
   debugPrint('📱 Data: ${message.data}');
   
   try {
+    // Ensure Firebase is initialized for background context
+    try {
+      await Firebase.initializeApp();
+    } catch (e) {
+      // Firebase might already be initialized, continue
+      debugPrint('Firebase already initialized or error: $e');
+    }
     // Initialize local notifications for background context
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosSettings = DarwinInitializationSettings();
@@ -33,45 +87,87 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     final localNotifications = FlutterLocalNotificationsPlugin();
     await localNotifications.initialize(initSettings);
     
-    // Show notification immediately
+    // Show notification immediately with enhanced configuration
     const notificationDetails = NotificationDetails(
       android: AndroidNotificationDetails(
         'al_tijwal_notifications',
         'AL-Tijwal Notifications',
         channelDescription: 'Notifications for campaigns, tasks, and assignments',
-        importance: Importance.high,
+        importance: Importance.max,
         priority: Priority.high,
         showWhen: true,
         enableVibration: true,
         playSound: true,
-        largeIcon: const DrawableResourceAndroidBitmap('@mipmap/ic_launcher'),
-        icon: '@mipmap/ic_launcher',
+        // Use the custom notification icon we set up
+        icon: 'notification_icon',
+        // Remove largeIcon to prevent cutoff and improve appearance
+        // Ensure notification shows even when app is closed
+        autoCancel: true,
+        ongoing: false,
+        // Make notification interactive
+        category: AndroidNotificationCategory.message,
+        visibility: NotificationVisibility.public,
       ),
       iOS: DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
+        // Ensure iOS notifications work when app is closed
+        interruptionLevel: InterruptionLevel.active,
       ),
     );
     
     await localNotifications.show(
       message.hashCode,
-      message.notification?.title ?? 'AL-Tijwal',
-      message.notification?.body ?? 'You have a new notification',
+      title,
+      body,
       notificationDetails,
+      payload: message.data.isNotEmpty ? message.data.toString() : null,
     );
     
     debugPrint('✅ Background notification displayed successfully');
   } catch (e) {
     debugPrint('❌ Error in background handler: $e');
+    
+    // Fallback: try a simple notification
+    try {
+      final localNotifications = FlutterLocalNotificationsPlugin();
+      await localNotifications.initialize(const InitializationSettings(
+        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+      ));
+      
+      await localNotifications.show(
+        message.hashCode,
+        title,
+        body,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'al_tijwal_fallback',
+            'AL-Tijwal Fallback',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+        ),
+      );
+      
+      debugPrint('✅ Fallback background notification displayed');
+    } catch (e2) {
+      debugPrint('❌ Fallback notification also failed: $e2');
+    }
   }
 }
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize Firebase first for background messaging
+  await Firebase.initializeApp();
+
   // Register FCM background message handler BEFORE any other Firebase initialization
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  // Create notification channels early for background notifications
+  await _createNotificationChannels();
 
   await Supabase.initialize(
     

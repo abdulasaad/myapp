@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:logger/logger.dart';
@@ -82,6 +83,61 @@ class BackgroundLocationService {
     service.invoke('setActiveCampaign', {'campaignId': campaignId});
   }
 
+  // Create custom notification with GPS icon
+  @pragma('vm:entry-point')
+  static Future<void> _createCustomLocationNotification(ServiceInstance service) async {
+    try {
+      final localNotifications = FlutterLocalNotificationsPlugin();
+      
+      // Initialize local notifications
+      const androidInitSettings = AndroidInitializationSettings('ic_gps_location');
+      await localNotifications.initialize(const InitializationSettings(
+        android: androidInitSettings,
+      ));
+      
+      // Create notification channel
+      const androidChannel = AndroidNotificationChannel(
+        'al_tijwal_location_service',
+        'Al-Tijwal Location Service',
+        description: 'Location tracking for active tasks',
+        importance: Importance.low,
+        playSound: false,
+        enableVibration: false,
+        showBadge: false,
+      );
+      
+      await localNotifications
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(androidChannel);
+      
+      // Show persistent notification with GPS icon
+      await localNotifications.show(
+        888, // Same ID as foreground service
+        'Al-Tijwal Location',
+        'Tracking location for active tasks',
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'al_tijwal_location_service',
+            'Al-Tijwal Location Service',
+            channelDescription: 'Location tracking for active tasks',
+            importance: Importance.low,
+            priority: Priority.low,
+            icon: 'ic_gps_location',
+            ongoing: true,
+            autoCancel: false,
+            playSound: false,
+            enableVibration: false,
+            showWhen: true,
+          ),
+        ),
+      );
+      
+      debugPrint('✅ Custom GPS notification created');
+    } catch (e) {
+      debugPrint('❌ Error creating custom GPS notification: $e');
+    }
+  }
+
   @pragma('vm:entry-point')
   static void onStart(ServiceInstance service) async {
     DartPluginRegistrant.ensureInitialized();
@@ -89,6 +145,9 @@ class BackgroundLocationService {
     if (service is AndroidServiceInstance) {
       // Keep as foreground service for background protection
       service.setAsForegroundService();
+      
+      // Create custom notification with GPS icon
+      await _createCustomLocationNotification(service);
     }
 
     String? activeCampaignId;

@@ -6,6 +6,8 @@ import 'package:myapp/services/profile_service.dart';
 import 'package:myapp/services/session_service.dart';
 import 'package:myapp/services/connectivity_service.dart';
 import 'package:myapp/services/update_service.dart';
+import 'package:myapp/services/notification_service.dart';
+import 'package:myapp/services/background_notification_manager.dart';
 import 'package:myapp/widgets/update_dialog.dart';
 import 'modern_home_screen.dart';
 import 'login_screen.dart';
@@ -73,6 +75,14 @@ class _SplashScreenState extends State<SplashScreen> {
             // Both sessions are valid - proceed to home
             await ProfileService.instance.loadProfile();
             await ProfileService.instance.updateUserStatus('active');
+            
+            // Initialize background notification management (fully automatic)
+            try {
+              await BackgroundNotificationManager().initialize();
+              debugPrint('✅ Background notification management started');
+            } catch (e) {
+              debugPrint('⚠️ Background notification management failed: $e');
+            }
             
             if (mounted) {
               Navigator.of(context).pushReplacement(

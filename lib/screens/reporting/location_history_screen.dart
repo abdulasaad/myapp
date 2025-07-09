@@ -37,6 +37,9 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      setState(() {}); // Rebuild to show/hide filters based on tab
+    });
     _loadAgents();
   }
 
@@ -354,6 +357,11 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
   }
 
   Widget _buildFilters() {
+    // Only show filters in the History tab (index 0)
+    if (_tabController.index != 0) {
+      return const SizedBox.shrink();
+    }
+    
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

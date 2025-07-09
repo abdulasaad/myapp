@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -105,6 +106,7 @@ class NotificationService {
   
   bool _initialized = false;
   String? _fcmToken;
+  Timer? _tokenValidationTimer;
 
   // Initialize the notification service
   Future<void> initialize() async {
@@ -117,16 +119,95 @@ class NotificationService {
       // Initialize local notifications
       await _initializeLocalNotifications();
       
-      // Request permissions
+      // Request permissions automatically
       await requestPermissions();
       
       // Set up FCM
       await _setupFCM();
       
+      // Ensure we have a valid FCM token
+      await _ensureValidFCMToken();
+      
+      // Start periodic token validation (every 30 minutes)
+      _startPeriodicTokenValidation();
+      
       _initialized = true;
-      debugPrint('NotificationService initialized successfully');
+      debugPrint('✅ NotificationService initialized successfully with automatic FCM token management');
     } catch (e) {
-      debugPrint('Error initializing NotificationService: $e');
+      debugPrint('❌ Error initializing NotificationService: $e');
+    }
+  }
+
+  // Ensure we have a valid FCM token
+  Future<void> _ensureValidFCMToken() async {
+    try {
+      final currentUserId = supabase.auth.currentUser?.id;
+      if (currentUserId == null) {
+        debugPrint('⚠️ No authenticated user, skipping FCM token validation');
+        return;
+      }
+
+      // Check if user already has a valid FCM token
+      final profile = await supabase
+          .from('profiles')
+          .select('fcm_token')
+          .eq('id', currentUserId)
+          .single();
+
+      final existingToken = profile['fcm_token'] as String?;
+      
+      // Validate existing token
+      bool needsNewToken = false;
+      if (existingToken == null || existingToken.isEmpty) {
+        debugPrint('🔄 No FCM token found, getting new one...');
+        needsNewToken = true;
+      } else if (existingToken.length < 100) {
+        debugPrint('🔄 Invalid FCM token format, getting new one...');
+        needsNewToken = true;
+      } else {
+        // Check if current token matches stored token
+        final currentToken = await _fcm.getToken();
+        if (currentToken != existingToken) {
+          debugPrint('🔄 FCM token mismatch (device changed), updating...');
+          needsNewToken = true;
+        } else {
+          debugPrint('✅ Valid FCM token already exists');
+        }
+      }
+
+      if (needsNewToken) {
+        await _refreshAndStoreFCMToken();
+      }
+    } catch (e) {
+      debugPrint('❌ Error ensuring valid FCM token: $e');
+      // Try to get a new token anyway
+      try {
+        await _refreshAndStoreFCMToken();
+      } catch (e2) {
+        debugPrint('❌ Failed to get new FCM token: $e2');
+      }
+    }
+  }
+
+  // Refresh and store FCM token
+  Future<void> _refreshAndStoreFCMToken() async {
+    try {
+      debugPrint('🔄 Refreshing FCM token...');
+      
+      // Delete old token to force new one
+      await _fcm.deleteToken();
+      
+      // Get new token
+      _fcmToken = await _fcm.getToken();
+      
+      if (_fcmToken != null && _fcmToken!.isNotEmpty) {
+        debugPrint('✅ New FCM token obtained: ${_fcmToken!.substring(0, 20)}...');
+        await _storeFCMToken(_fcmToken!);
+      } else {
+        debugPrint('❌ Failed to obtain FCM token');
+      }
+    } catch (e) {
+      debugPrint('❌ Error refreshing FCM token: $e');
     }
   }
 
@@ -166,17 +247,18 @@ class NotificationService {
         await _storeFCMToken(_fcmToken!);
       }
       
-      // Listen for token refresh
-      _fcm.onTokenRefresh.listen((newToken) {
+      // Listen for token refresh and automatically update
+      _fcm.onTokenRefresh.listen((newToken) async {
+        debugPrint('🔄 FCM token automatically refreshed: ${newToken.substring(0, 20)}...');
         _fcmToken = newToken;
-        _storeFCMToken(newToken);
+        await _storeFCMToken(newToken);
       });
       
       // Handle foreground messages
       FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
       
-      // Handle background messages
-      FirebaseMessaging.onBackgroundMessage(_handleBackgroundMessage);
+      // Note: Background message handler is registered in main.dart
+      // Only one background handler can be registered per app
       
       // Handle notification tap when app is in background
       FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
@@ -257,57 +339,8 @@ class NotificationService {
     await _showLocalNotification(message);
   }
 
-  // Handle background messages
-  static Future<void> _handleBackgroundMessage(RemoteMessage message) async {
-    debugPrint('Received background message: ${message.messageId}');
-    debugPrint('Title: ${message.notification?.title}');
-    debugPrint('Body: ${message.notification?.body}');
-    
-    // Show local notification when app is in background
-    try {
-      final localNotifications = FlutterLocalNotificationsPlugin();
-      
-      // Initialize local notifications for background context
-      const androidInitSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-      const iosInitSettings = DarwinInitializationSettings();
-      const initSettings = InitializationSettings(
-        android: androidInitSettings,
-        iOS: iosInitSettings,
-      );
-      
-      await localNotifications.initialize(initSettings);
-      
-      const notificationDetails = NotificationDetails(
-        android: AndroidNotificationDetails(
-          'admin_notifications',
-          'Admin Notifications',
-          channelDescription: 'Notifications sent by administrators',
-          importance: Importance.high,
-          priority: Priority.high,
-          showWhen: true,
-          enableVibration: true,
-          playSound: true,
-        ),
-        iOS: DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-        ),
-      );
-      
-      await localNotifications.show(
-        message.hashCode,
-        message.notification?.title ?? 'New Notification',
-        message.notification?.body ?? 'You have a new message',
-        notificationDetails,
-        payload: message.data.isNotEmpty ? jsonEncode(message.data) : null,
-      );
-      
-      debugPrint('Background notification displayed successfully');
-    } catch (e) {
-      debugPrint('Error displaying background notification: $e');
-    }
-  }
+  // Note: Background message handler is in main.dart
+  // This avoids conflicts with Firebase background message registration
 
   // Handle notification tap
   Future<void> _handleNotificationTap(RemoteMessage message) async {
@@ -500,6 +533,22 @@ class NotificationService {
       debugPrint('   Email: $recipientEmail');
       debugPrint('   Has FCM Token: ${recipientFcmToken != null && recipientFcmToken.isNotEmpty}');
       debugPrint('   FCM Token: ${recipientFcmToken?.substring(0, 20) ?? 'null'}...');
+      
+      // Detailed token validation
+      if (recipientFcmToken != null && recipientFcmToken.isNotEmpty) {
+        debugPrint('🔍 Token validation:');
+        debugPrint('   Token length: ${recipientFcmToken.length}');
+        debugPrint('   Token starts with: ${recipientFcmToken.substring(0, 10)}...');
+        debugPrint('   Token ends with: ...${recipientFcmToken.substring(recipientFcmToken.length - 10)}');
+        
+        // Check if token format looks valid (FCM tokens typically start with specific patterns)
+        final isValidFormat = recipientFcmToken.length > 100 && 
+                            (recipientFcmToken.contains(':') || recipientFcmToken.contains('-'));
+        debugPrint('   Token format looks valid: $isValidFormat');
+      } else {
+        debugPrint('❌ CRITICAL: No FCM token found for recipient!');
+        debugPrint('   This is likely why notifications aren\'t working');
+      }
 
       // Also check sender's FCM token for comparison
       final senderProfile = await supabase
@@ -530,6 +579,19 @@ class NotificationService {
         );
       } else {
         debugPrint('⚠️  No FCM token for recipient - notification available via in-app polling only');
+        debugPrint('💡 Suggestion: Ask the recipient to:');
+        debugPrint('   1. Open the app to refresh FCM token');
+        debugPrint('   2. Check notification permissions');
+        debugPrint('   3. Restart the app if needed');
+        
+        // Log this issue for debugging
+        await _logNotificationIssue(
+          recipientId: recipientId,
+          recipientEmail: recipientEmail,
+          issue: 'missing_fcm_token',
+          title: title,
+          message: message,
+        );
       }
       
     } catch (e) {
@@ -653,9 +715,58 @@ class NotificationService {
   // Get FCM token
   String? get fcmToken => _fcmToken;
 
+  // Force refresh FCM token
+  Future<String?> forceRefreshFCMToken() async {
+    try {
+      debugPrint('🔄 Force refreshing FCM token...');
+      
+      // Delete old token
+      await _fcm.deleteToken();
+      
+      // Get new token
+      _fcmToken = await _fcm.getToken();
+      
+      debugPrint('✅ New FCM token obtained: ${_fcmToken?.substring(0, 20) ?? 'null'}...');
+      
+      // Store new token
+      if (_fcmToken != null) {
+        await _storeFCMToken(_fcmToken!);
+      }
+      
+      return _fcmToken;
+    } catch (e) {
+      debugPrint('❌ Error force refreshing FCM token: $e');
+      return null;
+    }
+  }
+
+  // Start periodic FCM token validation
+  void _startPeriodicTokenValidation() {
+    // Cancel existing timer if any
+    _tokenValidationTimer?.cancel();
+    
+    // Validate token every 30 minutes
+    _tokenValidationTimer = Timer.periodic(const Duration(minutes: 30), (timer) async {
+      debugPrint('🔄 Periodic FCM token validation started...');
+      await _ensureValidFCMToken();
+    });
+    
+    debugPrint('✅ Periodic FCM token validation started (every 30 minutes)');
+  }
+
+  // Stop periodic token validation
+  void _stopPeriodicTokenValidation() {
+    _tokenValidationTimer?.cancel();
+    _tokenValidationTimer = null;
+    debugPrint('🛑 Periodic FCM token validation stopped');
+  }
+
   // Clear FCM token on logout
   Future<void> clearFCMToken() async {
     try {
+      // Stop periodic validation
+      _stopPeriodicTokenValidation();
+      
       final userId = supabase.auth.currentUser?.id;
       if (userId != null) {
         debugPrint('🧹 Clearing FCM token for user: $userId');
@@ -696,6 +807,38 @@ class NotificationService {
       debugPrint('Unsubscribed from topic: $topic');
     } catch (e) {
       debugPrint('Error unsubscribing from topic: $e');
+    }
+  }
+
+  // Log notification issues for debugging
+  Future<void> _logNotificationIssue({
+    required String recipientId,
+    required String? recipientEmail,
+    required String issue,
+    required String title,
+    required String message,
+  }) async {
+    try {
+      final senderId = supabase.auth.currentUser?.id;
+      
+      // Create a log entry in the database for debugging
+      await supabase.rpc('create_notification', params: {
+        'p_recipient_id': recipientId,
+        'p_sender_id': senderId,
+        'p_type': 'system_log',
+        'p_title': 'Notification Issue: $issue',
+        'p_message': 'Failed to send notification: $title\nRecipient: $recipientEmail\nOriginal message: $message',
+        'p_data': {
+          'issue_type': issue,
+          'timestamp': DateTime.now().toIso8601String(),
+          'original_title': title,
+          'original_message': message,
+        },
+      });
+      
+      debugPrint('📝 Notification issue logged successfully');
+    } catch (e) {
+      debugPrint('❌ Error logging notification issue: $e');
     }
   }
 }

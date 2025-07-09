@@ -541,11 +541,49 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
                   polylines: const <Polyline>{},
                   circles: const <Circle>{},
                 ),
+                // Back Button - Separate from label
+                Positioned(
+                  top: MediaQuery.of(context).padding.top + 28,
+                  left: 20,
+                  child: GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.black.withValues(alpha: 0.8),
+                            Colors.black.withValues(alpha: 0.9),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 15,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.arrow_back_ios,
+                        color: Colors.white.withValues(alpha: 0.9),
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ),
                 // Tech-Style Location Title Overlay
                 Positioned(
                   top: MediaQuery.of(context).padding.top + 16,
-                  left: 20,
-                  right: 20,
+                  left: 0,
+                  right: 0,
                   child: Center(
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),

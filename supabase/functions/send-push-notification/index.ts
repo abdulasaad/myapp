@@ -76,23 +76,24 @@ serve(async (req) => {
         body: JSON.stringify({
           message: {
             token: finalFcmToken,
-            notification: {
+            // Remove notification field to prevent Firebase auto-display
+            // Our background handler will display the notification
+            data: {
               title,
               body: message,
+              ...(data || {}),
             },
-            data: data || {},
             android: {
               priority: 'high',
-              notification: {
-                sound: 'default',
-                notification_count: 1,
-              },
+              // Remove notification config to prevent auto-display
             },
             apns: {
               payload: {
                 aps: {
                   badge: 1,
                   sound: 'default',
+                  // For iOS, we need content-available for background delivery
+                  'content-available': 1,
                 },
               },
             },
