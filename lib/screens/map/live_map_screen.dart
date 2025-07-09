@@ -196,27 +196,34 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
         // Admins can see all agents
         return await supabase.rpc('get_agents_with_last_location');
       } else if (userRole == 'manager') {
-        // Managers can only see agents in their shared groups
-        // Get current manager's groups
-        final userGroupsResponse = await supabase
+        // Managers can see agents in groups they manage OR groups they're members of
+        // Get groups where current user is the manager (via manager_id)
+        final managedGroups = await supabase
+            .from('groups')
+            .select('id')
+            .eq('manager_id', currentUser.id);
+        
+        // Also get groups where manager is a member (via user_groups)
+        final memberGroups = await supabase
             .from('user_groups')
             .select('group_id')
             .eq('user_id', currentUser.id);
         
-        final userGroupIds = userGroupsResponse
-            .map((item) => item['group_id'] as String)
-            .toSet();
+        // Combine both lists of group IDs
+        final managedGroupIds = managedGroups.map((g) => g['id'] as String).toSet();
+        final memberGroupIds = memberGroups.map((g) => g['group_id'] as String).toSet();
+        final allGroupIds = {...managedGroupIds, ...memberGroupIds};
         
-        if (userGroupIds.isEmpty) {
-          // Manager not in any groups, can't see any agents
+        if (allGroupIds.isEmpty) {
+          // Manager not assigned to any groups, can't see any agents
           return [];
         }
 
-        // Get all agents in the same groups
+        // Get all agents in manager's groups
         final agentGroupsResponse = await supabase
             .from('user_groups')
             .select('user_id')
-            .inFilter('group_id', userGroupIds.toList());
+            .inFilter('group_id', allGroupIds.toList());
         
         final agentIds = agentGroupsResponse
             .map((item) => item['user_id'] as String)

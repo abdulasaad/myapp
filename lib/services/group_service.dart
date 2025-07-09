@@ -163,9 +163,15 @@ class GroupService {
 
       final group = Group.fromJson(groupResponse);
 
+      // Automatically add manager as a member if managerId is provided
+      final allMemberIds = List<String>.from(memberIds);
+      if (managerId != null && !allMemberIds.contains(managerId)) {
+        allMemberIds.add(managerId);
+      }
+
       // Add members if provided
-      if (memberIds.isNotEmpty) {
-        await addMembersToGroup(group.id, memberIds);
+      if (allMemberIds.isNotEmpty) {
+        await addMembersToGroup(group.id, allMemberIds);
       }
 
       return group;
@@ -195,6 +201,22 @@ class GroupService {
           .eq('id', groupId)
           .select()
           .single();
+
+      // If manager was updated, ensure the new manager is also a member
+      if (managerId != null) {
+        // Check if manager is already a member
+        final existingMember = await supabase
+            .from('user_groups')
+            .select('id')
+            .eq('group_id', groupId)
+            .eq('user_id', managerId)
+            .maybeSingle();
+        
+        // If manager is not a member, add them
+        if (existingMember == null) {
+          await addMembersToGroup(groupId, [managerId]);
+        }
+      }
 
       return Group.fromJson(response);
     } catch (e) {
