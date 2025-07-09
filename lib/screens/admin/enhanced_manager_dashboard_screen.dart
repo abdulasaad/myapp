@@ -119,31 +119,22 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
     List<Map<String, dynamic>> assignmentsResponse;
     
     if (isManager) {
-      // Get groups where current user is the manager (via manager_id)
-      final managedGroups = await supabase
-          .from('groups')
-          .select('id')
-          .eq('manager_id', currentUser.id);
-      
-      // Also get groups where manager is a member (via user_groups)
+      // Get groups where manager is a member (via user_groups)
       final memberGroups = await supabase
           .from('user_groups')
           .select('group_id')
           .eq('user_id', currentUser.id);
       
-      // Combine both lists of group IDs
-      final managedGroupIds = managedGroups.map((g) => g['id'] as String).toSet();
-      final memberGroupIds = memberGroups.map((g) => g['group_id'] as String).toSet();
-      final allGroupIds = {...managedGroupIds, ...memberGroupIds}.toList();
-      
-      if (allGroupIds.isEmpty) {
+      if (memberGroups.isEmpty) {
         assignmentsResponse = [];
       } else {
+        final groupIds = memberGroups.map((g) => g['group_id'] as String).toList();
+        
         // Get all agents in manager's groups
         final agentsInGroups = await supabase
             .from('user_groups')
             .select('user_id')
-            .inFilter('group_id', allGroupIds);
+            .inFilter('group_id', groupIds);
         
         if (agentsInGroups.isEmpty) {
           assignmentsResponse = [];
@@ -217,31 +208,22 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
     List<Map<String, dynamic>> agentsResponse;
     
     if (isManager) {
-      // Get groups where current user is the manager (via manager_id)
-      final managedGroups = await supabase
-          .from('groups')
-          .select('id')
-          .eq('manager_id', currentUser.id);
-      
-      // Also get groups where manager is a member (via user_groups)
+      // Get groups where manager is a member (via user_groups)
       final memberGroups = await supabase
           .from('user_groups')
           .select('group_id')
           .eq('user_id', currentUser.id);
       
-      // Combine both lists of group IDs
-      final managedGroupIds = managedGroups.map((g) => g['id'] as String).toSet();
-      final memberGroupIds = memberGroups.map((g) => g['group_id'] as String).toSet();
-      final allGroupIds = {...managedGroupIds, ...memberGroupIds}.toList();
-      
-      if (allGroupIds.isEmpty) {
+      if (memberGroups.isEmpty) {
         agentsResponse = [];
       } else {
+        final groupIds = memberGroups.map((g) => g['group_id'] as String).toList();
+        
         // Get all agents in manager's groups
         final agentsInGroups = await supabase
             .from('user_groups')
             .select('user_id')
-            .inFilter('group_id', allGroupIds);
+            .inFilter('group_id', groupIds);
         
         if (agentsInGroups.isEmpty) {
           agentsResponse = [];

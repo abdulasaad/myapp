@@ -146,7 +146,6 @@ class GroupService {
   Future<Group> createGroup({
     required String name,
     String? description,
-    String? managerId,
     List<String> memberIds = const [],
   }) async {
     try {
@@ -156,22 +155,15 @@ class GroupService {
           .insert({
             'name': name,
             'description': description,
-            'manager_id': managerId,
           })
           .select()
           .single();
 
       final group = Group.fromJson(groupResponse);
 
-      // Automatically add manager as a member if managerId is provided
-      final allMemberIds = List<String>.from(memberIds);
-      if (managerId != null && !allMemberIds.contains(managerId)) {
-        allMemberIds.add(managerId);
-      }
-
       // Add members if provided
-      if (allMemberIds.isNotEmpty) {
-        await addMembersToGroup(group.id, allMemberIds);
+      if (memberIds.isNotEmpty) {
+        await addMembersToGroup(group.id, memberIds);
       }
 
       return group;
@@ -186,13 +178,11 @@ class GroupService {
     required String groupId,
     String? name,
     String? description,
-    String? managerId,
   }) async {
     try {
       final updateData = <String, dynamic>{};
       if (name != null) updateData['name'] = name;
       if (description != null) updateData['description'] = description;
-      if (managerId != null) updateData['manager_id'] = managerId;
       updateData['updated_at'] = DateTime.now().toIso8601String();
 
       final response = await supabase
@@ -201,22 +191,6 @@ class GroupService {
           .eq('id', groupId)
           .select()
           .single();
-
-      // If manager was updated, ensure the new manager is also a member
-      if (managerId != null) {
-        // Check if manager is already a member
-        final existingMember = await supabase
-            .from('user_groups')
-            .select('id')
-            .eq('group_id', groupId)
-            .eq('user_id', managerId)
-            .maybeSingle();
-        
-        // If manager is not a member, add them
-        if (existingMember == null) {
-          await addMembersToGroup(groupId, [managerId]);
-        }
-      }
 
       return Group.fromJson(response);
     } catch (e) {

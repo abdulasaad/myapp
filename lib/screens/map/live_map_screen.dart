@@ -196,34 +196,26 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
         // Admins can see all agents
         return await supabase.rpc('get_agents_with_last_location');
       } else if (userRole == 'manager') {
-        // Managers can see agents in groups they manage OR groups they're members of
-        // Get groups where current user is the manager (via manager_id)
-        final managedGroups = await supabase
-            .from('groups')
-            .select('id')
-            .eq('manager_id', currentUser.id);
-        
-        // Also get groups where manager is a member (via user_groups)
+        // Managers can see agents in groups they're members of
         final memberGroups = await supabase
             .from('user_groups')
             .select('group_id')
             .eq('user_id', currentUser.id);
         
-        // Combine both lists of group IDs
-        final managedGroupIds = managedGroups.map((g) => g['id'] as String).toSet();
-        final memberGroupIds = memberGroups.map((g) => g['group_id'] as String).toSet();
-        final allGroupIds = {...managedGroupIds, ...memberGroupIds};
+        final userGroupIds = memberGroups
+            .map((item) => item['group_id'] as String)
+            .toSet();
         
-        if (allGroupIds.isEmpty) {
-          // Manager not assigned to any groups, can't see any agents
+        if (userGroupIds.isEmpty) {
+          // Manager not in any groups, can't see any agents
           return [];
         }
 
-        // Get all agents in manager's groups
+        // Get all agents in the same groups
         final agentGroupsResponse = await supabase
             .from('user_groups')
             .select('user_id')
-            .inFilter('group_id', allGroupIds.toList());
+            .inFilter('group_id', userGroupIds.toList());
         
         final agentIds = agentGroupsResponse
             .map((item) => item['user_id'] as String)

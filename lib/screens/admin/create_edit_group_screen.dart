@@ -23,9 +23,7 @@ class _CreateEditGroupScreenState extends State<CreateEditGroupScreen> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
 
-  AppUser? _selectedManager;
-  List<AppUser> _availableManagers = [];
-  List<AppUser> _availableAgents = [];
+  List<AppUser> _availableMembers = [];
   List<AppUser> _selectedMembers = [];
   
   bool _isLoading = false;
@@ -54,41 +52,23 @@ class _CreateEditGroupScreenState extends State<CreateEditGroupScreen> {
 
   Future<void> _loadData() async {
     try {
-      final managers = await _groupService.getManagers();
-      // Get available members (both agents and managers with one-group policy)
+      // Get available members (both agents and managers)
       final availableMembers = await _groupService.getAvailableMembersForGroup(widget.group?.id);
       
-      // Separate agents and managers from the available members
-      final agents = availableMembers.where((m) => m.role == 'agent').toList();
-      final memberManagers = availableMembers.where((m) => m.role == 'manager').toList();
-      
       setState(() {
-        _availableManagers = managers;
-        _availableAgents = [...agents, ...memberManagers]; // Include both in the member list
+        _availableMembers = availableMembers;
       });
 
       if (widget.isEditing) {
         // Load existing group data
         final groupWithMembers = await _groupService.getGroupWithMembers(widget.group!.id);
         setState(() {
-          // Find the manager in the available managers list by ID
-          if (groupWithMembers.manager != null) {
-            final managerId = groupWithMembers.manager!.id;
-            _selectedManager = _availableManagers.firstWhere(
-              (m) => m.id == managerId,
-              orElse: () {
-                // If manager is not in available list, add them to avoid dropdown error
-                _availableManagers.add(groupWithMembers.manager!);
-                return groupWithMembers.manager!;
-              },
-            );
-          }
           _selectedMembers = List.from(groupWithMembers.members);
           
-          // Ensure all current members are in the available agents list to avoid selection issues
+          // Ensure all current members are in the available members list to avoid selection issues
           for (final member in groupWithMembers.members) {
-            if (!_availableAgents.any((agent) => agent.id == member.id)) {
-              _availableAgents.add(member);
+            if (!_availableMembers.any((availableMember) => availableMember.id == member.id)) {
+              _availableMembers.add(member);
             }
           }
         });
@@ -120,7 +100,6 @@ class _CreateEditGroupScreenState extends State<CreateEditGroupScreen> {
           description: _descriptionController.text.trim().isEmpty 
               ? null 
               : _descriptionController.text.trim(),
-          managerId: _selectedManager?.id,
         );
 
         // Update group members
@@ -150,7 +129,6 @@ class _CreateEditGroupScreenState extends State<CreateEditGroupScreen> {
           description: _descriptionController.text.trim().isEmpty 
               ? null 
               : _descriptionController.text.trim(),
-          managerId: _selectedManager?.id,
           memberIds: memberIds,
         );
 
@@ -215,38 +193,38 @@ class _CreateEditGroupScreenState extends State<CreateEditGroupScreen> {
               Expanded(
                 child: ListView.builder(
                   controller: scrollController,
-                  itemCount: _availableAgents.length,
+                  itemCount: _availableMembers.length,
                   itemBuilder: (context, index) {
-                    final agent = _availableAgents[index];
-                    final isSelected = _selectedMembers.any((member) => member.id == agent.id);
+                    final member = _availableMembers[index];
+                    final isSelected = _selectedMembers.any((selectedMember) => selectedMember.id == member.id);
                     
                     return CheckboxListTile(
                       value: isSelected,
                       onChanged: (selected) {
                         setState(() {
                           if (selected == true) {
-                            _selectedMembers.add(agent);
+                            _selectedMembers.add(member);
                           } else {
-                            _selectedMembers.removeWhere((member) => member.id == agent.id);
+                            _selectedMembers.removeWhere((selectedMember) => selectedMember.id == member.id);
                           }
                         });
                         setSheetState(() {}); // Update the sheet state too
                       },
-                      title: Text(agent.fullName),
+                      title: Text(member.fullName),
                       subtitle: Text(
-                        agent.role.toUpperCase(),
+                        member.role.toUpperCase(),
                         style: TextStyle(
-                          color: agent.role == 'manager' ? Colors.orange : Colors.blue,
+                          color: member.role == 'manager' ? Colors.orange : Colors.blue,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                       secondary: CircleAvatar(
-                        backgroundColor: agent.role == 'manager' 
+                        backgroundColor: member.role == 'manager' 
                             ? Colors.orange.withValues(alpha: 0.1)
                             : primaryColor.withValues(alpha: 0.1),
                         child: Icon(
-                          agent.role == 'manager' ? Icons.supervisor_account : Icons.person,
-                          color: agent.role == 'manager' ? Colors.orange : primaryColor,
+                          member.role == 'manager' ? Icons.supervisor_account : Icons.person,
+                          color: member.role == 'manager' ? Colors.orange : primaryColor,
                         ),
                       ),
                     );
@@ -344,49 +322,6 @@ class _CreateEditGroupScreenState extends State<CreateEditGroupScreen> {
 
                   const SizedBox(height: 16),
 
-                  // Manager Selection
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Group Manager',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          DropdownButtonFormField<AppUser>(
-                            value: _selectedManager,
-                            decoration: const InputDecoration(
-                              labelText: 'Select Manager',
-                              prefixIcon: Icon(Icons.supervisor_account),
-                            ),
-                            items: [
-                              const DropdownMenuItem<AppUser>(
-                                value: null,
-                                child: Text('No manager assigned'),
-                              ),
-                              ..._availableManagers.map((manager) => DropdownMenuItem(
-                                value: manager,
-                                child: Text(manager.fullName),
-                              )),
-                            ],
-                            onChanged: (manager) {
-                              setState(() {
-                                _selectedManager = manager;
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
                   // Members Selection
                   Card(
                     child: Padding(
@@ -436,7 +371,7 @@ class _CreateEditGroupScreenState extends State<CreateEditGroupScreen> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'Tap "Add Members" to select agents',
+                                    'Tap "Add Members" to select agents and managers',
                                     style: TextStyle(
                                       color: Colors.grey[500],
                                       fontSize: 12,
