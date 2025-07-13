@@ -7,6 +7,7 @@ import '../../models/task.dart';
 import '../../models/task_template.dart';
 import '../../services/location_service.dart';
 import '../../utils/constants.dart';
+import '../../l10n/app_localizations.dart';
 
 class GeofenceStayTaskScreen extends StatefulWidget {
   final Task task;
@@ -30,7 +31,7 @@ class _GeofenceStayTaskScreenState extends State<GeofenceStayTaskScreen> {
   bool _taskStarted = false;
   bool _taskCompleted = false;
   bool _isCheckingLocation = false;
-  String _currentStatus = 'Not Started';
+  String _currentStatus = 'Not Started'; // Will be localized in UI
   DateTime? _startTime;
   DateTime? _expectedEndTime;
 
@@ -59,12 +60,12 @@ class _GeofenceStayTaskScreenState extends State<GeofenceStayTaskScreen> {
       
       setState(() {
         _isInGeofence = isInArea;
-        _currentStatus = isInArea ? 'In Area - Ready to Start' : 'Outside Area';
+        _currentStatus = isInArea ? 'ready' : 'outside';
         _isCheckingLocation = false;
       });
     } catch (e) {
       setState(() {
-        _currentStatus = 'Location Check Failed';
+        _currentStatus = 'failed';
         _isCheckingLocation = false;
       });
     }
@@ -75,7 +76,7 @@ class _GeofenceStayTaskScreenState extends State<GeofenceStayTaskScreen> {
 
     setState(() {
       _taskStarted = true;
-      _currentStatus = 'Task Active';
+      _currentStatus = 'active';
       _startTime = DateTime.now();
       _expectedEndTime = _startTime!.add(Duration(minutes: requiredMinutes));
     });
@@ -140,7 +141,7 @@ class _GeofenceStayTaskScreenState extends State<GeofenceStayTaskScreen> {
     if (_taskCompleted) return;
     
     setState(() {
-      _currentStatus = 'Task Active';
+      _currentStatus = 'active';
     });
     
     // Resume timer from where it left off
@@ -164,7 +165,7 @@ class _GeofenceStayTaskScreenState extends State<GeofenceStayTaskScreen> {
     
     setState(() {
       _taskCompleted = true;
-      _currentStatus = 'Completed';
+      _currentStatus = 'completed';
     });
 
     context.showSnackBar('Task completed successfully!');
@@ -195,19 +196,19 @@ class _GeofenceStayTaskScreenState extends State<GeofenceStayTaskScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Early Completion'),
+        title: Text(AppLocalizations.of(context)!.earlyCompletion),
         content: const Text('Are you sure you want to complete this task early?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop();
               _completeTask();
             },
-            child: const Text('Complete'),
+            child: Text(AppLocalizations.of(context)!.complete),
           ),
         ],
       ),
@@ -254,7 +255,7 @@ class _GeofenceStayTaskScreenState extends State<GeofenceStayTaskScreen> {
                 Icon(Icons.location_on, color: Theme.of(context).primaryColor),
                 const SizedBox(width: 8),
                 Text(
-                  'Geofence Stay Task',
+                  AppLocalizations.of(context)!.geofenceStayTask,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -327,7 +328,7 @@ class _GeofenceStayTaskScreenState extends State<GeofenceStayTaskScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Location Status',
+                    AppLocalizations.of(context)!.locationStatus,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -337,8 +338,8 @@ class _GeofenceStayTaskScreenState extends State<GeofenceStayTaskScreen> {
                     _isCheckingLocation 
                         ? 'Checking location...'
                         : _isInGeofence 
-                            ? 'Inside designated area'
-                            : 'Outside designated area',
+                            ? AppLocalizations.of(context)!.insideDesignatedArea
+                            : AppLocalizations.of(context)!.outsideDesignatedArea,
                     style: TextStyle(
                       color: statusColor,
                       fontWeight: FontWeight.w500,
@@ -360,7 +361,7 @@ class _GeofenceStayTaskScreenState extends State<GeofenceStayTaskScreen> {
         child: Column(
           children: [
             Text(
-              'Time Progress',
+              AppLocalizations.of(context)!.timeProgress,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -408,7 +409,7 @@ class _GeofenceStayTaskScreenState extends State<GeofenceStayTaskScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Progress',
+                  AppLocalizations.of(context)!.progress,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -445,7 +446,7 @@ class _GeofenceStayTaskScreenState extends State<GeofenceStayTaskScreen> {
           child: ElevatedButton.icon(
             onPressed: _canStartTask() ? _startTask : null,
             icon: Icon(_taskStarted ? Icons.pause : Icons.play_arrow),
-            label: Text(_getButtonText()),
+            label: Text(_getButtonText(context)),
             style: ElevatedButton.styleFrom(
               backgroundColor: _getButtonColor(),
               foregroundColor: Colors.white,
@@ -460,7 +461,7 @@ class _GeofenceStayTaskScreenState extends State<GeofenceStayTaskScreen> {
             child: OutlinedButton.icon(
               onPressed: _forceComplete,
               icon: const Icon(Icons.check_circle_outline),
-              label: const Text('Complete Early'),
+              label: Text(AppLocalizations.of(context)!.completeEarly),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
@@ -475,12 +476,23 @@ class _GeofenceStayTaskScreenState extends State<GeofenceStayTaskScreen> {
     return _isInGeofence && !_taskStarted && !_taskCompleted && !_isCheckingLocation;
   }
 
-  String _getButtonText() {
-    if (_taskCompleted) return 'Task Completed';
-    if (_taskStarted) return _currentStatus;
-    if (_isCheckingLocation) return 'Checking Location...';
-    if (!_isInGeofence) return 'Move to Designated Area';
-    return 'Start Task';
+  String _getLocalizedStatus(BuildContext context) {
+    switch (_currentStatus) {
+      case 'ready': return AppLocalizations.of(context)!.inAreaReadyToStart;
+      case 'outside': return AppLocalizations.of(context)!.outsideArea;
+      case 'failed': return AppLocalizations.of(context)!.locationCheckFailed;
+      case 'active': return AppLocalizations.of(context)!.taskActive;
+      case 'completed': return AppLocalizations.of(context)!.taskCompleted;
+      default: return AppLocalizations.of(context)!.notStarted;
+    }
+  }
+
+  String _getButtonText(BuildContext context) {
+    if (_taskCompleted) return AppLocalizations.of(context)!.taskCompleted;
+    if (_taskStarted) return _getLocalizedStatus(context);
+    if (_isCheckingLocation) return AppLocalizations.of(context)!.checkingLocation;
+    if (!_isInGeofence) return AppLocalizations.of(context)!.moveToDesignatedArea;
+    return AppLocalizations.of(context)!.startTask;
   }
 
   Color _getButtonColor() {

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../l10n/app_localizations.dart';
 
 class FeedbackSystem {
   static final FeedbackSystem _instance = FeedbackSystem._internal();
@@ -226,7 +227,7 @@ class LoadingStates {
             const CircularProgressIndicator(),
             const SizedBox(height: 16),
             Text(
-              'Loading...',
+              AppLocalizations.of(context)!.loading,
               style: TextStyle(color: Colors.grey[600]),
             ),
           ],
@@ -254,7 +255,7 @@ class LoadingStates {
               ElevatedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Try Again'),
+                label: Text(AppLocalizations.of(context)!.tryAgain),
               ),
             ],
           ],

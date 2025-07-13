@@ -1,6 +1,7 @@
 // lib/widgets/offline_widget.dart
 
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 
 class OfflineWidget extends StatelessWidget {
   final String? title;
@@ -31,7 +32,7 @@ class OfflineWidget extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              title ?? 'You\'re Offline',
+              title ?? AppLocalizations.of(context)!.youreOffline,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 color: Colors.grey[600],
                 fontWeight: FontWeight.bold,
@@ -40,7 +41,7 @@ class OfflineWidget extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              subtitle ?? 'No internet connection. Please check your network settings and try again.',
+              subtitle ?? AppLocalizations.of(context)!.noInternetConnection,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Colors.grey[500],
               ),
@@ -51,7 +52,7 @@ class OfflineWidget extends StatelessWidget {
               ElevatedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Try Again'),
+                label: Text(AppLocalizations.of(context)!.tryAgain),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),
@@ -68,11 +69,11 @@ class OfflineSnackBar {
   static void show(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Row(
+        content: Row(
           children: [
             Icon(Icons.wifi_off, color: Colors.white),
             SizedBox(width: 12),
-            Text('You\'re offline'),
+            Text(AppLocalizations.of(context)!.youreOffline),
           ],
         ),
         backgroundColor: Colors.orange[700],
@@ -91,11 +92,11 @@ class OnlineSnackBar {
   static void show(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Row(
+        content: Row(
           children: [
             Icon(Icons.wifi, color: Colors.white),
             SizedBox(width: 12),
-            Text('Back online'),
+            Text(AppLocalizations.of(context)!.backOnline),
           ],
         ),
         backgroundColor: Colors.green[700],

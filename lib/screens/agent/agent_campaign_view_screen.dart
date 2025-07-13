@@ -7,6 +7,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:myapp/models/campaign.dart';
 import 'package:myapp/models/task_assignment.dart';
 import 'package:myapp/utils/constants.dart';
+import '../../l10n/app_localizations.dart';
+import 'agent_touring_task_list_screen.dart';
 
 class AgentCampaignViewScreen extends StatefulWidget {
   final Campaign campaign;
@@ -49,14 +51,14 @@ class _AgentCampaignViewScreenState extends State<AgentCampaignViewScreen> {
           .eq('id', assignmentId);
 
       if (mounted) {
-        context.showSnackBar('Task status updated!');
+        context.showSnackBar(AppLocalizations.of(context)!.taskStatusUpdated);
         setState(() {
           _myAssignmentsFuture = _fetchMyAssignments();
         });
       }
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Failed to update status.', isError: true);
+        context.showSnackBar(AppLocalizations.of(context)!.failedToUpdateStatus, isError: true);
       }
     }
   }
@@ -78,7 +80,7 @@ class _AgentCampaignViewScreenState extends State<AgentCampaignViewScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('Upload Evidence'),
+              title: Text(AppLocalizations.of(context)!.uploadEvidence),
               content: Form(
                 key: formKey,
                 child: Column(
@@ -86,12 +88,12 @@ class _AgentCampaignViewScreenState extends State<AgentCampaignViewScreen> {
                   children: [
                     TextFormField(
                       controller: titleController,
-                      decoration: const InputDecoration(
-                        labelText: 'Evidence Name',
-                        hintText: 'Enter evidence name',
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.evidenceName,
+                        hintText: AppLocalizations.of(context)!.enterEvidenceName,
                       ),
                       validator: (v) => (v == null || v.isEmpty)
-                          ? 'Evidence name is required'
+                          ? AppLocalizations.of(context)!.evidenceNameRequired
                           : null,
                     ),
                     const SizedBox(height: 16),
@@ -114,8 +116,8 @@ class _AgentCampaignViewScreenState extends State<AgentCampaignViewScreen> {
                             },
                             icon: const Icon(Icons.attach_file),
                             label: Text(selectedFile == null
-                                ? 'Select File'
-                                : 'Change File'),
+                                ? AppLocalizations.of(context)!.selectFile
+                                : AppLocalizations.of(context)!.changeFile),
                           ),
                         ),
                       ],
@@ -149,7 +151,7 @@ class _AgentCampaignViewScreenState extends State<AgentCampaignViewScreen> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('Cancel'),
+                  child: Text(AppLocalizations.of(context)!.cancel),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -158,11 +160,11 @@ class _AgentCampaignViewScreenState extends State<AgentCampaignViewScreen> {
                       Navigator.of(context).pop(true);
                     } else if (selectedFile == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please select a file')),
+                        SnackBar(content: Text(AppLocalizations.of(context)!.pleaseSelectFile)),
                       );
                     }
                   },
-                  child: const Text('Upload'),
+                  child: Text(AppLocalizations.of(context)!.upload),
                 ),
               ],
             );
@@ -204,10 +206,10 @@ class _AgentCampaignViewScreenState extends State<AgentCampaignViewScreen> {
           .update({'evidence_urls': existingUrls})
           .eq('id', assignmentId);
       
-      if (mounted) context.showSnackBar('Evidence "$evidenceTitle" uploaded successfully!');
+      if (mounted) context.showSnackBar('${AppLocalizations.of(context)!.evidenceUploadedSuccess}: "$evidenceTitle"');
 
     } catch (e) {
-      if (mounted) context.showSnackBar('Error uploading evidence: $e', isError: true);
+      if (mounted) context.showSnackBar('${AppLocalizations.of(context)!.errorUploadingEvidence}: $e', isError: true);
     } finally {
       if (mounted) setState(() => _isUploading = false);
     }
@@ -217,7 +219,46 @@ class _AgentCampaignViewScreenState extends State<AgentCampaignViewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.campaign.name)),
+      appBar: AppBar(
+        title: Text(widget.campaign.name),
+        actions: [
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.red,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: IconButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => AgentTouringTaskListScreen(
+                      campaign: widget.campaign,
+                      agentId: supabase.auth.currentUser!.id,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.directions_walk, color: Colors.white, size: 30),
+              tooltip: 'Touring Tasks',
+            ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => AgentTouringTaskListScreen(
+                campaign: widget.campaign,
+                agentId: supabase.auth.currentUser!.id,
+              ),
+            ),
+          );
+        },
+        backgroundColor: Colors.red,
+        icon: const Icon(Icons.directions_walk, color: Colors.white),
+        label: const Text('TOURING TASKS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      ),
       // NEW: A Stack allows us to place the loading indicator ON TOP of the list
       body: Stack(
         children: [
@@ -228,12 +269,36 @@ class _AgentCampaignViewScreenState extends State<AgentCampaignViewScreen> {
                 return preloader;
               }
               if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
+                return Center(child: Text('${AppLocalizations.of(context)!.error}: ${snapshot.error}'));
               }
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(
-                  child: Text(
-                    'You have not been assigned any tasks for this campaign.',
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        AppLocalizations.of(context)!.noTasksAssigned,
+                      ),
+                      const SizedBox(height: 40),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => AgentTouringTaskListScreen(
+                                campaign: widget.campaign,
+                                agentId: supabase.auth.currentUser!.id,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.directions_walk, color: Colors.white),
+                        label: const Text('VIEW TOURING TASKS', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                        ),
+                      ),
+                    ],
                   ),
                 );
               }
@@ -265,11 +330,11 @@ class _AgentCampaignViewScreenState extends State<AgentCampaignViewScreen> {
                         side: const BorderSide(color: Colors.white),
                       ),
                       title: Text(assignment.task.title),
-                      subtitle: Text('${assignment.task.points} pts'),
+                      subtitle: Text(AppLocalizations.of(context)!.pointsFormat(assignment.task.points.toString())),
                       // The upload button is now the trailing widget
                       trailing: IconButton(
                         icon: const Icon(Icons.upload_file),
-                        tooltip: 'Upload Evidence',
+                        tooltip: AppLocalizations.of(context)!.uploadEvidence,
                         onPressed: () => _uploadEvidence(assignment.id),
                       ),
                     ),
@@ -282,13 +347,13 @@ class _AgentCampaignViewScreenState extends State<AgentCampaignViewScreen> {
           if (_isUploading)
             Container(
               color: Colors.black.withValues(red: 0, green: 0, blue: 0, alpha: 0.5),
-              child: const Center(
+              child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    CircularProgressIndicator(color: Colors.white),
-                    SizedBox(height: 16),
-                    Text('Uploading evidence...', style: TextStyle(color: Colors.white)),
+                    const CircularProgressIndicator(color: Colors.white),
+                    const SizedBox(height: 16),
+                    Text(AppLocalizations.of(context)!.uploadingEvidence, style: const TextStyle(color: Colors.white)),
                   ],
                 ),
               ),

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/task_template.dart';
 import '../../models/template_field.dart';
 import '../../models/task.dart';
@@ -170,7 +171,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Custom Form Fields',
+                  AppLocalizations.of(context)!.customFormFields,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -178,7 +179,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
                 ElevatedButton.icon(
                   onPressed: _addDynamicField,
                   icon: const Icon(Icons.add),
-                  label: const Text('Add Field'),
+                  label: Text(AppLocalizations.of(context)!.addField),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).primaryColor,
                     foregroundColor: Colors.white,
@@ -188,7 +189,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
             ),
             const SizedBox(height: 8),
             Text(
-              'Create custom fields that agents will fill out when completing this task',
+              AppLocalizations.of(context)!.createCustomFieldsInfo,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.grey[600],
               ),
@@ -208,12 +209,12 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
                       Icon(Icons.text_fields, size: 48, color: Colors.grey[400]),
                       const SizedBox(height: 8),
                       Text(
-                        'No custom fields yet',
+                        AppLocalizations.of(context)!.noCustomFieldsYet,
                         style: TextStyle(color: Colors.grey[600]),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Click "Add Field" to create form fields',
+                        AppLocalizations.of(context)!.clickAddFieldToCreate,
                         style: TextStyle(color: Colors.grey[500], fontSize: 12),
                       ),
                     ],
@@ -300,9 +301,9 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
                     color: Colors.red.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: const Text(
-                    'Required',
-                    style: TextStyle(
+                  child: Text(
+                    AppLocalizations.of(context)!.required,
+                    style: const TextStyle(
                       fontSize: 11,
                       color: Colors.red,
                       fontWeight: FontWeight.w500,
@@ -314,7 +315,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
           if (field.placeholderText != null && field.placeholderText!.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
-              'Placeholder: ${field.placeholderText}',
+              '${AppLocalizations.of(context)!.placeholderTextOptional}: ${field.placeholderText}',
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey[600],
@@ -324,7 +325,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
           if (field.fieldOptions != null && field.fieldOptions!.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
-              'Options: ${field.fieldOptions!.join(', ')}',
+              '${AppLocalizations.of(context)!.optionsCommaSeparated}: ${field.fieldOptions!.join(', ')}',
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey[600],
@@ -394,7 +395,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
       barrierDismissible: false,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text(isEditing ? 'Edit Field' : 'Add Custom Field'),
+          title: Text(isEditing ? AppLocalizations.of(context)!.editField : AppLocalizations.of(context)!.addCustomField),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -402,18 +403,18 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
               children: [
                 TextField(
                   controller: labelController,
-                  decoration: const InputDecoration(
-                    labelText: 'Field Label*',
-                    hintText: 'e.g., Customer Name, Satisfaction Level',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.fieldLabelRequired,
+                    hintText: AppLocalizations.of(context)!.fieldLabelHint,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<TemplateFieldType>(
                   value: selectedType,
-                  decoration: const InputDecoration(
-                    labelText: 'Field Type',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.fieldType,
+                    border: const OutlineInputBorder(),
                   ),
                   items: TemplateFieldType.values.map((type) => DropdownMenuItem(
                     value: type,
@@ -428,10 +429,10 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
                 const SizedBox(height: 16),
                 TextField(
                   controller: placeholderController,
-                  decoration: const InputDecoration(
-                    labelText: 'Placeholder Text (Optional)',
-                    hintText: 'Hint text shown in the field',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.placeholderTextOptional,
+                    hintText: AppLocalizations.of(context)!.hintTextShownInField,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 if (selectedType == TemplateFieldType.select || 
@@ -440,18 +441,18 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
                   const SizedBox(height: 16),
                   TextField(
                     controller: optionsController,
-                    decoration: const InputDecoration(
-                      labelText: 'Options (comma separated)*',
-                      hintText: 'Option 1, Option 2, Option 3',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.optionsCommaSeparated,
+                      hintText: AppLocalizations.of(context)!.optionsHint,
+                      border: const OutlineInputBorder(),
                     ),
                     maxLines: 3,
                   ),
                 ],
                 const SizedBox(height: 16),
                 CheckboxListTile(
-                  title: const Text('Required Field'),
-                  subtitle: const Text('Agent must fill this field'),
+                  title: Text(AppLocalizations.of(context)!.requiredField),
+                  subtitle: Text(AppLocalizations.of(context)!.agentMustFillField),
                   value: isRequired,
                   onChanged: (value) => setState(() => isRequired = value ?? false),
                   controlAffinity: ListTileControlAffinity.leading,
@@ -468,7 +469,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
               onPressed: () {
                 if (labelController.text.trim().isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Field label is required')),
+                    SnackBar(content: Text(AppLocalizations.of(context)!.fieldLabelIsRequired)),
                   );
                   return;
                 }
@@ -485,7 +486,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
                   
                   if (options.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Options are required for this field type')),
+                      SnackBar(content: Text(AppLocalizations.of(context)!.optionsRequiredForFieldType)),
                     );
                     return;
                   }
@@ -515,7 +516,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
                   }
                 });
               },
-              child: Text(isEditing ? 'Update' : 'Add'),
+              child: Text(isEditing ? AppLocalizations.of(context)!.update : AppLocalizations.of(context)!.add),
             ),
           ],
         ),
@@ -536,7 +537,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
     // Check for required title
     if (_titleController.text.trim().isEmpty) {
       debugPrint('[TaskCreation] Title is empty');
-      context.showSnackBar('Task title is required', isError: true);
+      context.showSnackBar(AppLocalizations.of(context)!.taskTitleIsRequired, isError: true);
       return;
     }
 
@@ -589,7 +590,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
         }
         
         if (mounted) {
-          context.showSnackBar('Task created successfully!');
+          context.showSnackBar(AppLocalizations.of(context)!.taskCreatedSuccessfully);
         }
         
         // If geofence is enabled and points were set, save them automatically
@@ -615,7 +616,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        context.showSnackBar('Failed to create task: $e', isError: true);
+        context.showSnackBar('${AppLocalizations.of(context)!.failedToSaveTask}: $e', isError: true);
       }
     }
   }
@@ -624,7 +625,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Validation Errors'),
+        title: Text(AppLocalizations.of(context)!.validationErrors),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -638,7 +639,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+            child: Text(AppLocalizations.of(context)!.ok),
           ),
         ],
       ),
@@ -651,7 +652,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
       MaterialPageRoute(
         builder: (context) => _GeofencePreviewScreen(
           initialPoints: _geofencePoints,
-          taskTitle: _titleController.text.isNotEmpty ? _titleController.text : 'New Task',
+          taskTitle: _titleController.text.isNotEmpty ? _titleController.text : AppLocalizations.of(context)!.newEvidenceTask,
         ),
       ),
     );
@@ -735,7 +736,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
       debugPrint('Geofence saved successfully for task ${task.id}');
       
       if (mounted) {
-        context.showSnackBar('Task created with geofence successfully!');
+        context.showSnackBar(AppLocalizations.of(context)!.taskCreatedSuccessfully);
       }
     } catch (e) {
       debugPrint('Error saving geofence: $e');
@@ -749,15 +750,15 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Set Up Geofence'),
-        content: const Text('This task requires a location boundary. Would you like to set up the geofence now?'),
+        title: Text(AppLocalizations.of(context)!.setUpGeofence),
+        content: Text(AppLocalizations.of(context)!.taskRequiresLocationBoundary),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               Navigator.of(this.context).pop(task);
             },
-            child: const Text('Skip'),
+            child: Text(AppLocalizations.of(context)!.skip),
           ),
           ElevatedButton(
             onPressed: () {
@@ -768,7 +769,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
                 ),
               );
             },
-            child: const Text('Set Up Now'),
+            child: Text(AppLocalizations.of(context)!.setUpNow),
           ),
         ],
       ),
@@ -779,7 +780,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Create from ${widget.template.name}'),
+        title: Text(AppLocalizations.of(context)!.createFromTemplate(widget.template.name)),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         elevation: 0,
       ),
@@ -798,7 +799,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
                   Icon(Icons.error, size: 64, color: Colors.red[400]),
                   const SizedBox(height: 16),
                   Text(
-                    'Error loading template details',
+                    AppLocalizations.of(context)!.errorLoadingTemplateDetails,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
@@ -924,7 +925,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Task Details',
+              AppLocalizations.of(context)!.taskDetails,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -932,14 +933,14 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
             const SizedBox(height: 16),
             TextFormField(
               controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Task Title *',
-                hintText: 'Enter a descriptive title for this task',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.taskTitleRequired,
+                hintText: AppLocalizations.of(context)!.enterDescriptiveTitle,
+                border: const OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Task title is required';
+                  return AppLocalizations.of(context)!.taskTitleIsRequired;
                 }
                 return null;
               },
@@ -947,21 +948,21 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
             const SizedBox(height: 16),
             TextFormField(
               controller: _descriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Description',
-                hintText: 'Optional: Add more details about this task',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.description,
+                hintText: AppLocalizations.of(context)!.addMoreDetailsOptional,
+                border: const OutlineInputBorder(),
               ),
               maxLines: 3,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _locationNameController,
-              decoration: const InputDecoration(
-                labelText: 'Location Name',
-                hintText: 'Optional: Name of the location (e.g., Main Hospital)',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.location_on),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.locationName,
+                hintText: AppLocalizations.of(context)!.locationNameOptional,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.location_on),
               ),
             ),
           ],
@@ -980,7 +981,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Configuration',
+              AppLocalizations.of(context)!.configuration,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -991,16 +992,16 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
                 Expanded(
                   child: TextFormField(
                     controller: _pointsController,
-                    decoration: const InputDecoration(
-                      labelText: 'Points',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.stars),
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.points,
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.stars),
                     ),
                     keyboardType: TextInputType.number,
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Points required';
-                      if (int.tryParse(value) == null) return 'Invalid number';
-                      if (int.parse(value) < 0) return 'Must be positive';
+                      if (value == null || value.isEmpty) return AppLocalizations.of(context)!.pointsRequired;
+                      if (int.tryParse(value) == null) return AppLocalizations.of(context)!.invalidNumber;
+                      if (int.parse(value) < 0) return AppLocalizations.of(context)!.mustBePositive;
                       return null;
                     },
                   ),
@@ -1009,16 +1010,16 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
                 Expanded(
                   child: TextFormField(
                     controller: _evidenceCountController,
-                    decoration: const InputDecoration(
-                      labelText: 'Evidence Files',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.upload_file),
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.evidenceFiles,
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.upload_file),
                     ),
                     keyboardType: TextInputType.number,
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Evidence count required';
-                      if (int.tryParse(value) == null) return 'Invalid number';
-                      if (int.parse(value) < 1) return 'Must be at least 1';
+                      if (value == null || value.isEmpty) return AppLocalizations.of(context)!.evidenceCountRequired;
+                      if (int.tryParse(value) == null) return AppLocalizations.of(context)!.invalidNumber;
+                      if (int.parse(value) < 1) return AppLocalizations.of(context)!.mustBeAtLeastOne;
                       return null;
                     },
                   ),
@@ -1047,8 +1048,8 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
             ),
             const SizedBox(height: 16),
             SwitchListTile(
-              title: const Text('Require Location Verification'),
-              subtitle: const Text('Agent must be at the correct location to submit evidence'),
+              title: Text(AppLocalizations.of(context)!.requireLocationVerification),
+              subtitle: Text(AppLocalizations.of(context)!.agentMustBeAtCorrectLocation),
               value: _enableGeofence,
               onChanged: (value) => setState(() => _enableGeofence = value),
               contentPadding: EdgeInsets.zero,
@@ -1076,8 +1077,8 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
                         Expanded(
                           child: Text(
                             _geofencePoints != null 
-                                ? 'Geofence configured (${_geofencePoints!.length} points)'
-                                : 'Geofence not set',
+                                ? AppLocalizations.of(context)!.geofenceConfigured(_geofencePoints!.length)
+                                : AppLocalizations.of(context)!.geofenceNotSet,
                             style: TextStyle(
                               fontWeight: FontWeight.w500,
                               color: _geofencePoints != null ? Colors.green[700] : Colors.blue[700],
@@ -1087,7 +1088,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
                         ElevatedButton.icon(
                           onPressed: _openGeofenceEditor,
                           icon: Icon(_geofencePoints != null ? Icons.edit : Icons.add_location),
-                          label: Text(_geofencePoints != null ? 'Edit' : 'Set Geofence'),
+                          label: Text(_geofencePoints != null ? AppLocalizations.of(context)!.edit : AppLocalizations.of(context)!.setGeofence),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue,
                             foregroundColor: Colors.white,
@@ -1098,7 +1099,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Define the area where agents must be located to complete this task.',
+                      AppLocalizations.of(context)!.defineAreaForAgents,
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[600],
@@ -1124,14 +1125,14 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Additional Information',
+              AppLocalizations.of(context)!.additionalInformation,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'This template requires additional information to be collected from agents.',
+              AppLocalizations.of(context)!.templateRequiresAdditionalInfo,
               style: TextStyle(color: Colors.grey[600]),
             ),
             const SizedBox(height: 16),
@@ -1458,7 +1459,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : const Icon(Icons.add_task),
-        label: Text(_isLoading ? 'Creating Task...' : 'Create Task'),
+        label: Text(_isLoading ? AppLocalizations.of(context)!.creatingTask : AppLocalizations.of(context)!.createTask),
         style: ElevatedButton.styleFrom(
           backgroundColor: Theme.of(context).primaryColor,
           foregroundColor: Colors.white,
@@ -1481,7 +1482,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
                 Icon(Icons.manage_accounts, color: Colors.green[600]),
                 const SizedBox(width: 8),
                 Text(
-                  'Manager Assignment',
+                  AppLocalizations.of(context)!.managerAssignment,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -1507,15 +1508,15 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
             ],
             DropdownButtonFormField<String>(
               value: _selectedManagerId,
-              decoration: const InputDecoration(
-                labelText: 'Assign to Manager',
-                hintText: 'Select a manager to oversee this task',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.assignToManager,
+                hintText: AppLocalizations.of(context)!.selectManagerToOversee,
+                border: const OutlineInputBorder(),
               ),
               items: [
-                const DropdownMenuItem<String>(
+                DropdownMenuItem<String>(
                   value: null,
-                  child: Text('No specific manager'),
+                  child: Text(AppLocalizations.of(context)!.noSpecificManager),
                 ),
                 ..._managers.map((manager) {
                   return DropdownMenuItem<String>(
@@ -1545,7 +1546,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'This task will be assigned to the selected manager. Only they and their agents will be able to see and work on this task.',
+                        AppLocalizations.of(context)!.taskAssignmentInfo,
                         style: TextStyle(
                           color: Colors.blue[700],
                           fontSize: 12,
@@ -1665,7 +1666,7 @@ class _GeofencePreviewScreenState extends State<_GeofencePreviewScreen> {
     if (_points.length >= 3) {
       Navigator.of(context).pop(_points);
     } else {
-      context.showSnackBar('Please add at least 3 points to create a geofence', isError: true);
+      context.showSnackBar(AppLocalizations.of(context)!.addAtLeastThreePoints, isError: true);
     }
   }
 
@@ -1673,14 +1674,14 @@ class _GeofencePreviewScreenState extends State<_GeofencePreviewScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Set Geofence - ${widget.taskTitle}'),
+        title: Text(AppLocalizations.of(context)!.setGeofenceTaskTitle(widget.taskTitle)),
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
         actions: [
           IconButton(
             onPressed: _clearPoints,
             icon: const Icon(Icons.clear),
-            tooltip: 'Clear all points',
+            tooltip: AppLocalizations.of(context)!.clearAllPoints,
           ),
         ],
       ),
@@ -1695,7 +1696,7 @@ class _GeofencePreviewScreenState extends State<_GeofencePreviewScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Tap on the map to add points. You need at least 3 points to create a geofence.',
+                    AppLocalizations.of(context)!.tapMapToAddPoints,
                     style: TextStyle(color: Colors.blue[700]),
                   ),
                 ),
@@ -1752,7 +1753,7 @@ class _GeofencePreviewScreenState extends State<_GeofencePreviewScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '${_points.length} points added',
+                      AppLocalizations.of(context)!.pointsAdded(_points.length),
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
                         color: _points.length >= 3 ? Colors.green : Colors.orange,
@@ -1760,9 +1761,9 @@ class _GeofencePreviewScreenState extends State<_GeofencePreviewScreen> {
                     ),
                     if (_points.length >= 3) ...[
                       const SizedBox(width: 8),
-                      const Text(
-                        '(Ready to save)',
-                        style: TextStyle(color: Colors.green, fontSize: 12),
+                      Text(
+                        AppLocalizations.of(context)!.readyToSave,
+                        style: const TextStyle(color: Colors.green, fontSize: 12),
                       ),
                     ],
                   ],
@@ -1773,7 +1774,7 @@ class _GeofencePreviewScreenState extends State<_GeofencePreviewScreen> {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Cancel'),
+                        child: Text(AppLocalizations.of(context)!.cancel),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1782,7 +1783,7 @@ class _GeofencePreviewScreenState extends State<_GeofencePreviewScreen> {
                       child: ElevatedButton.icon(
                         onPressed: _points.length >= 3 ? _saveAndExit : null,
                         icon: const Icon(Icons.save),
-                        label: const Text('Save Geofence'),
+                        label: Text(AppLocalizations.of(context)!.saveGeofence),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue,
                           foregroundColor: Colors.white,

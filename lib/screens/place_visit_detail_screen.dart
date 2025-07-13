@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/place_visit.dart';
 import '../utils/constants.dart';
+import '../l10n/app_localizations.dart';
 
 class PlaceVisitDetailScreen extends StatefulWidget {
   final PlaceVisit placeVisit;
@@ -63,7 +64,7 @@ class _PlaceVisitDetailScreenState extends State<PlaceVisitDetailScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: Text('Place Visit Details'),
+        title: Text(AppLocalizations.of(context)!.placeVisitDetails),
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -104,8 +105,8 @@ class _PlaceVisitDetailScreenState extends State<PlaceVisitDetailScreen> {
               children: [
                 Icon(Icons.location_on, color: primaryColor),
                 const SizedBox(width: 8),
-                const Text(
-                  'Place Information',
+                Text(
+                  AppLocalizations.of(context)!.placeInformation,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -115,7 +116,7 @@ class _PlaceVisitDetailScreenState extends State<PlaceVisitDetailScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              place?.name ?? 'Unknown Place',
+              place?.name ?? AppLocalizations.of(context)!.unknownPlace,
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -135,7 +136,7 @@ class _PlaceVisitDetailScreenState extends State<PlaceVisitDetailScreen> {
             if (place != null) ...[
               const SizedBox(height: 8),
               Text(
-                'Coordinates: ${place.latitude.toStringAsFixed(6)}, ${place.longitude.toStringAsFixed(6)}',
+                '${AppLocalizations.of(context)!.coordinates}: ${place.latitude.toStringAsFixed(6)}, ${place.longitude.toStringAsFixed(6)}',
                 style: const TextStyle(
                   fontSize: 12,
                   color: textSecondaryColor,
@@ -162,8 +163,8 @@ class _PlaceVisitDetailScreenState extends State<PlaceVisitDetailScreen> {
               children: [
                 Icon(Icons.info_outline, color: primaryColor),
                 const SizedBox(width: 8),
-                const Text(
-                  'Visit Status',
+                Text(
+                  AppLocalizations.of(context)!.visitStatus,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -228,8 +229,8 @@ class _PlaceVisitDetailScreenState extends State<PlaceVisitDetailScreen> {
               children: [
                 Icon(Icons.schedule, color: primaryColor),
                 const SizedBox(width: 8),
-                const Text(
-                  'Visit Timing',
+                Text(
+                  AppLocalizations.of(context)!.visitTiming,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -238,9 +239,9 @@ class _PlaceVisitDetailScreenState extends State<PlaceVisitDetailScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            _buildTimingRow('Check-in:', _placeVisit.checkedInAt),
+            _buildTimingRow(AppLocalizations.of(context)!.checkIn, _placeVisit.checkedInAt),
             const SizedBox(height: 8),
-            _buildTimingRow('Check-out:', _placeVisit.checkedOutAt),
+            _buildTimingRow(AppLocalizations.of(context)!.checkOut, _placeVisit.checkedOutAt),
             if (_placeVisit.durationMinutes != null) ...[
               const SizedBox(height: 8),
               Row(
@@ -248,7 +249,7 @@ class _PlaceVisitDetailScreenState extends State<PlaceVisitDetailScreen> {
                   const Icon(Icons.timer, size: 16, color: textSecondaryColor),
                   const SizedBox(width: 8),
                   Text(
-                    'Duration: ${_placeVisit.formattedDuration}',
+                    '${AppLocalizations.of(context)!.duration}: ${_placeVisit.formattedDuration}',
                     style: const TextStyle(
                       fontSize: 14,
                       color: textPrimaryColor,
@@ -282,7 +283,7 @@ class _PlaceVisitDetailScreenState extends State<PlaceVisitDetailScreen> {
           child: Text(
             dateTime != null
                 ? DateFormat('MMM d, y - h:mm a').format(dateTime)
-                : 'Not yet',
+                : AppLocalizations.of(context)!.notYet,
             style: const TextStyle(
               fontSize: 14,
               color: textPrimaryColor,
@@ -307,8 +308,8 @@ class _PlaceVisitDetailScreenState extends State<PlaceVisitDetailScreen> {
               children: [
                 Icon(Icons.route, color: primaryColor),
                 const SizedBox(width: 8),
-                const Text(
-                  'Route Information',
+                Text(
+                  AppLocalizations.of(context)!.routeInformation,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -318,7 +319,7 @@ class _PlaceVisitDetailScreenState extends State<PlaceVisitDetailScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              route?.name ?? 'Unknown Route',
+              route?.name ?? AppLocalizations.of(context)!.unknownRoute,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -338,7 +339,7 @@ class _PlaceVisitDetailScreenState extends State<PlaceVisitDetailScreen> {
             if (routeAssignment != null) ...[
               const SizedBox(height: 8),
               Text(
-                'Assigned: ${DateFormat('MMM d, y').format(routeAssignment.assignedAt)}',
+                '${AppLocalizations.of(context)!.assigned}: ${DateFormat('MMM d, y').format(routeAssignment.assignedAt)}',
                 style: const TextStyle(
                   fontSize: 12,
                   color: textSecondaryColor,
@@ -362,8 +363,8 @@ class _PlaceVisitDetailScreenState extends State<PlaceVisitDetailScreen> {
               children: [
                 Icon(Icons.note, color: primaryColor),
                 const SizedBox(width: 8),
-                const Text(
-                  'Visit Notes',
+                Text(
+                  AppLocalizations.of(context)!.visitNotes,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -418,15 +419,15 @@ class _PlaceVisitDetailScreenState extends State<PlaceVisitDetailScreen> {
   String _getStatusDescription(String status) {
     switch (status.toLowerCase()) {
       case 'pending':
-        return 'Visit has not started yet';
+        return AppLocalizations.of(context)!.visitNotStartedYet;
       case 'checked_in':
-        return 'Currently at the location';
+        return AppLocalizations.of(context)!.currentlyAtLocation;
       case 'completed':
-        return 'Visit completed successfully';
+        return AppLocalizations.of(context)!.visitCompletedSuccessfully;
       case 'skipped':
-        return 'Visit was skipped';
+        return AppLocalizations.of(context)!.visitWasSkipped;
       default:
-        return 'Unknown status';
+        return AppLocalizations.of(context)!.unknownStatus;
     }
   }
 }

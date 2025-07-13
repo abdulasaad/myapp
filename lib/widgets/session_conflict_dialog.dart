@@ -1,6 +1,7 @@
 // lib/widgets/session_conflict_dialog.dart
 
 import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
 
 class SessionConflictDialog extends StatelessWidget {
   final VoidCallback onLogoutOtherDevice;
@@ -15,34 +16,34 @@ class SessionConflictDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Row(
+      title: Row(
         children: [
-          Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 24),
-          SizedBox(width: 8),
-          Text('Another Device Active'),
+          const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 24),
+          const SizedBox(width: 8),
+          Text(AppLocalizations.of(context)!.anotherDeviceActive),
         ],
       ),
-      content: const Column(
+      content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Your account is currently logged in on another device.',
-            style: TextStyle(fontSize: 16),
+            AppLocalizations.of(context)!.accountLoggedInElsewhere,
+            style: const TextStyle(fontSize: 16),
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Text(
-            'To continue logging in on this device, you need to logout from the other device first.',
-            style: TextStyle(fontSize: 14, color: Colors.grey),
+            AppLocalizations.of(context)!.logoutOtherDeviceInstruction,
+            style: const TextStyle(fontSize: 14, color: Colors.grey),
           ),
         ],
       ),
       actions: [
         TextButton(
           onPressed: onCancel,
-          child: const Text(
-            'Cancel',
-            style: TextStyle(color: Colors.grey),
+          child: Text(
+            AppLocalizations.of(context)!.cancel,
+            style: const TextStyle(color: Colors.grey),
           ),
         ),
         ElevatedButton(
@@ -51,7 +52,7 @@ class SessionConflictDialog extends StatelessWidget {
             backgroundColor: Colors.orange,
             foregroundColor: Colors.white,
           ),
-          child: const Text('Logout Other Device'),
+          child: Text(AppLocalizations.of(context)!.logoutOtherDevice),
         ),
       ],
     );

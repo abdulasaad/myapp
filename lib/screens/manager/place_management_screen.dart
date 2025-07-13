@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import '../../l10n/app_localizations.dart';
 import '../../utils/constants.dart';
 import '../../models/place.dart';
 import 'map_location_picker_screen.dart';
@@ -115,7 +116,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Place Management'),
+        title: Text('${AppLocalizations.of(context)!.places} Management'),
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -133,7 +134,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                 children: [
                   const Icon(Icons.pending_actions, size: 16),
                   const SizedBox(width: 4),
-                  Text('Pending (${_pendingPlaces.length})', 
+                  Text('${AppLocalizations.of(context)!.pending} (${_pendingPlaces.length})', 
                     style: const TextStyle(fontSize: 12)),
                 ],
               ),
@@ -144,7 +145,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                 children: [
                   const Icon(Icons.check_circle, size: 16),
                   const SizedBox(width: 4),
-                  Text('Approved (${_approvedPlaces.length})', 
+                  Text('${AppLocalizations.of(context)!.approved} (${_approvedPlaces.length})', 
                     style: const TextStyle(fontSize: 12)),
                 ],
               ),
@@ -155,7 +156,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                 children: [
                   const Icon(Icons.cancel, size: 16),
                   const SizedBox(width: 4),
-                  Text('Rejected (${_rejectedPlaces.length})', 
+                  Text('${AppLocalizations.of(context)!.rejected} (${_rejectedPlaces.length})', 
                     style: const TextStyle(fontSize: 12)),
                 ],
               ),
@@ -166,7 +167,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                 children: [
                   const Icon(Icons.visibility_off, size: 16),
                   const SizedBox(width: 4),
-                  Text('Inactive (${_inactivePlaces.length})', 
+                  Text('${AppLocalizations.of(context)!.inactive} (${_inactivePlaces.length})', 
                     style: const TextStyle(fontSize: 12)),
                 ],
               ),
@@ -190,7 +191,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_location),
-        label: const Text('Add Place'),
+        label: Text('${AppLocalizations.of(context)!.add} ${AppLocalizations.of(context)!.place}'),
       ),
     );
   }
@@ -203,16 +204,16 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
       
       if (isPending) {
         emptyIcon = Icons.pending_actions;
-        emptyTitle = 'No pending suggestions';
-        emptySubtitle = 'Agent suggestions will appear here';
+        emptyTitle = AppLocalizations.of(context)!.noPendingSuggestions;
+        emptySubtitle = AppLocalizations.of(context)!.agentSuggestionsWillAppearHere;
       } else if (isInactive) {
         emptyIcon = Icons.visibility_off;
-        emptyTitle = 'No inactive places';
-        emptySubtitle = 'Deactivated places will appear here';
+        emptyTitle = AppLocalizations.of(context)!.noInactivePlaces;
+        emptySubtitle = AppLocalizations.of(context)!.deactivatedPlacesWillAppearHere;
       } else {
         emptyIcon = Icons.location_on;
-        emptyTitle = 'No places found';
-        emptySubtitle = 'Places will appear here once added';
+        emptyTitle = AppLocalizations.of(context)!.noPlacesFound;
+        emptySubtitle = AppLocalizations.of(context)!.placesWillAppearHereOnceAdded;
       }
       
       return Center(
@@ -366,7 +367,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                         Icon(Icons.map, size: 12, color: primaryColor),
                         const SizedBox(width: 4),
                         Text(
-                          'View',
+                          AppLocalizations.of(context)!.view,
                           style: TextStyle(
                             fontSize: 10,
                             color: primaryColor,
@@ -385,7 +386,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                 Icon(Icons.person, size: 16, color: Colors.grey[600]),
                 const SizedBox(width: 4),
                 Text(
-                  'Suggested by: ${place.createdByUser?.fullName ?? 'Unknown'}',
+                  '${AppLocalizations.of(context)!.suggestedBy}: ${place.createdByUser?.fullName ?? AppLocalizations.of(context)!.unknown}',
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
                 const Spacer(),
@@ -407,7 +408,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                         side: const BorderSide(color: Colors.red),
                       ),
                       icon: const Icon(Icons.close, size: 18),
-                      label: const Text('Reject'),
+                      label: Text(AppLocalizations.of(context)!.reject),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -419,7 +420,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                         foregroundColor: Colors.white,
                       ),
                       icon: const Icon(Icons.check, size: 18),
-                      label: const Text('Approve'),
+                      label: Text(AppLocalizations.of(context)!.approve),
                     ),
                   ),
                 ],
@@ -440,7 +441,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Rejection reason: ${place.rejectionReason}',
+                        '${AppLocalizations.of(context)!.rejectionReason}: ${place.rejectionReason}',
                         style: TextStyle(fontSize: 12, color: Colors.red[700]),
                       ),
                     ),
@@ -465,7 +466,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                     Icon(Icons.visibility_off, color: Colors.orange[700], size: 16),
                     const SizedBox(width: 8),
                     Text(
-                      'This place is inactive and hidden from new routes',
+                      AppLocalizations.of(context)!.thisPlaceIsInactiveAndHiddenFromNewRoutes,
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.orange[700],
@@ -486,7 +487,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                       foregroundColor: Colors.white,
                     ),
                     icon: const Icon(Icons.visibility, size: 18),
-                    label: const Text('Reactivate Place'),
+                    label: Text('${AppLocalizations.of(context)!.reactivate} ${AppLocalizations.of(context)!.place}'),
                   ),
                 ],
               ),
@@ -503,7 +504,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                       side: const BorderSide(color: Colors.red),
                     ),
                     icon: const Icon(Icons.delete_outline, size: 18),
-                    label: const Text('Remove Place'),
+                    label: Text('${AppLocalizations.of(context)!.remove} ${AppLocalizations.of(context)!.place}'),
                   ),
                 ],
               ),
@@ -571,18 +572,18 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reject Place Suggestion'),
+        title: Text('${AppLocalizations.of(context)!.reject} ${AppLocalizations.of(context)!.place} ${AppLocalizations.of(context)!.suggestion}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Are you sure you want to reject "${place.name}"?'),
+            Text('${AppLocalizations.of(context)!.areYouSureYouWantToReject} "${place.name}"?'),
             const SizedBox(height: 16),
             TextField(
               controller: reasonController,
-              decoration: const InputDecoration(
-                labelText: 'Rejection Reason (Optional)',
-                hintText: 'Explain why this place was rejected',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: '${AppLocalizations.of(context)!.rejectionReason} (${AppLocalizations.of(context)!.optional})',
+                hintText: AppLocalizations.of(context)!.explainWhyThisPlaceWasRejected,
+                border: const OutlineInputBorder(),
               ),
               maxLines: 3,
             ),
@@ -591,7 +592,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -599,7 +600,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Reject'),
+            child: Text(AppLocalizations.of(context)!.reject),
           ),
         ],
       ),
@@ -652,7 +653,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
     return StatefulBuilder(
       builder: (context, setDialogState) {
         return AlertDialog(
-          title: const Text('Add New Place'),
+          title: Text('${AppLocalizations.of(context)!.add} ${AppLocalizations.of(context)!.newPlace}'),
           content: SizedBox(
             width: double.maxFinite,
             child: SingleChildScrollView(
@@ -663,14 +664,14 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                   children: [
                     TextFormField(
                       controller: nameController,
-                      decoration: const InputDecoration(
-                        labelText: 'Place Name *',
-                        hintText: 'Enter place name',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: '${AppLocalizations.of(context)!.placeName} *',
+                        hintText: AppLocalizations.of(context)!.enterPlaceName,
+                        border: const OutlineInputBorder(),
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
-                          return 'Place name is required';
+                          return AppLocalizations.of(context)!.placeNameIsRequired;
                         }
                         return null;
                       },
@@ -678,20 +679,20 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: descriptionController,
-                      decoration: const InputDecoration(
-                        labelText: 'Description',
-                        hintText: 'Brief description of the place',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.description,
+                        hintText: AppLocalizations.of(context)!.briefDescriptionOfThePlace,
+                        border: const OutlineInputBorder(),
                       ),
                       maxLines: 3,
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: addressController,
-                      decoration: const InputDecoration(
-                        labelText: 'Address',
-                        hintText: 'Physical address (optional)',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        labelText: AppLocalizations.of(context)!.address,
+                        hintText: '${AppLocalizations.of(context)!.physicalAddress} (${AppLocalizations.of(context)!.optional})',
+                        border: const OutlineInputBorder(),
                       ),
                       maxLines: 2,
                     ),
@@ -720,9 +721,9 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                               children: [
                                 Icon(Icons.location_on, color: primaryColor, size: 20),
                                 const SizedBox(width: 8),
-                                const Text(
-                                  'Location & Geofence *',
-                                  style: TextStyle(
+                                Text(
+                                  '${AppLocalizations.of(context)!.location} & ${AppLocalizations.of(context)!.geofence} *',
+                                  style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                     color: textPrimaryColor,
@@ -752,7 +753,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                                             Icon(Icons.check_circle, color: Colors.green[700], size: 16),
                                             const SizedBox(width: 6),
                                             Text(
-                                              'Location Selected',
+                                              AppLocalizations.of(context)!.locationSelected,
                                               style: TextStyle(
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.w600,
@@ -780,7 +781,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                                         ),
                                         if (geofenceRadius != null)
                                           Text(
-                                            'Geofence: ${geofenceRadius!.round()}m radius',
+                                            '${AppLocalizations.of(context)!.geofence}: ${geofenceRadius!.round()}m ${AppLocalizations.of(context)!.radius}',
                                             style: TextStyle(
                                               fontSize: 11,
                                               color: Colors.green[700],
@@ -818,7 +819,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                                       padding: const EdgeInsets.symmetric(vertical: 12),
                                     ),
                                     icon: Icon(selectedLocation == null ? Icons.map : Icons.edit_location),
-                                    label: Text(selectedLocation == null ? 'Select Location on Map' : 'Change Location'),
+                                    label: Text(selectedLocation == null ? AppLocalizations.of(context)!.selectLocationOnMap : AppLocalizations.of(context)!.changeLocation),
                                   ),
                                 ),
                               ],
@@ -842,7 +843,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Manager-created places are automatically approved and ready for use.',
+                              AppLocalizations.of(context)!.managerCreatedPlacesAreAutomaticallyApprovedAndReadyForUse,
                               style: TextStyle(fontSize: 12, color: Colors.blue[700]),
                             ),
                           ),
@@ -857,14 +858,14 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(AppLocalizations.of(context)!.cancel),
             ),
             ElevatedButton(
               onPressed: () async {
                 if (selectedLocation == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please select a location on the map'),
+                    SnackBar(
+                      content: Text(AppLocalizations.of(context)!.pleaseSelectLocationOnMap),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -887,7 +888,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                 backgroundColor: primaryColor,
                 foregroundColor: Colors.white,
               ),
-              child: const Text('Add Place'),
+              child: Text('${AppLocalizations.of(context)!.add} ${AppLocalizations.of(context)!.place}'),
             ),
           ],
         );
@@ -906,7 +907,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
     try {
       final currentUser = supabase.auth.currentUser;
       if (currentUser == null) {
-        context.showSnackBar('Authentication required', isError: true);
+        context.showSnackBar(AppLocalizations.of(context)!.authenticationRequired, isError: true);
         return;
       }
 
@@ -951,14 +952,14 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Cannot Remove Place'),
+            title: Text(AppLocalizations.of(context)!.cannotRemovePlace),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'The place "${place.name}" cannot be deleted because it has historical data or is currently in use:',
+                    '${AppLocalizations.of(context)!.thePlaceCannotBeDeletedBecauseItHasHistoricalDataOrIsCurrentlyInUse.replaceFirst('{placeName}', place.name)}:',
                   ),
                   const SizedBox(height: 16),
                   
@@ -979,7 +980,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                               Icon(Icons.route, color: Colors.orange[700], size: 16),
                               const SizedBox(width: 8),
                               Text(
-                                'Used in ${usageDetails['routeCount']} route(s):',
+                                '${AppLocalizations.of(context)!.usedInRoutes.replaceFirst('{count}', usageDetails['routeCount'].toString())}:',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
@@ -1019,7 +1020,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Has ${usageDetails['visitCount']} historical visit record(s). This data cannot be deleted to maintain audit trail.',
+                              AppLocalizations.of(context)!.hasHistoricalVisitRecords.replaceFirst('{count}', usageDetails['visitCount'].toString()),
                               style: TextStyle(fontSize: 12, color: Colors.red[700]),
                             ),
                           ),
@@ -1045,7 +1046,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                             Icon(Icons.info_outline, color: Colors.blue[700], size: 16),
                             const SizedBox(width: 8),
                             Text(
-                              'What you can do:',
+                              AppLocalizations.of(context)!.whatYouCanDo,
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
@@ -1057,12 +1058,12 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                         const SizedBox(height: 8),
                         if (usageDetails['inRoutes'] as bool)
                           Text(
-                            '• Remove this place from all routes first',
+                            '• ${AppLocalizations.of(context)!.removeThisPlaceFromAllRoutesFirst}',
                             style: TextStyle(fontSize: 11, color: Colors.blue[700]),
                           ),
                         if (usageDetails['inVisits'] as bool)
                           Text(
-                            '• Mark the place as inactive to hide it from new routes while preserving history',
+                            '• ${AppLocalizations.of(context)!.markThePlaceAsInactiveToHideItFromNewRoutesWhilePreservingHistory}',
                             style: TextStyle(fontSize: 11, color: Colors.blue[700]),
                           ),
                       ],
@@ -1074,7 +1075,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+                child: Text(AppLocalizations.of(context)!.cancel),
               ),
               if (usageDetails['inRoutes'] as bool)
                 ElevatedButton(
@@ -1086,7 +1087,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                     backgroundColor: primaryColor,
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text('Go to Routes'),
+                  child: Text('${AppLocalizations.of(context)!.goTo} ${AppLocalizations.of(context)!.routes}'),
                 ),
               if (usageDetails['inVisits'] as bool && !(usageDetails['inRoutes'] as bool))
                 ElevatedButton(
@@ -1098,7 +1099,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                     backgroundColor: Colors.orange,
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text('Deactivate Place'),
+                  child: Text('${AppLocalizations.of(context)!.deactivate} ${AppLocalizations.of(context)!.place}'),
                 ),
             ],
           ),
@@ -1111,12 +1112,12 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Remove Place'),
+        title: Text('${AppLocalizations.of(context)!.remove} ${AppLocalizations.of(context)!.place}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Are you sure you want to permanently remove "${place.name}"?'),
+            Text('${AppLocalizations.of(context)!.areYouSureYouWantToPermanentlyRemove} "${place.name}"?'),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
@@ -1131,7 +1132,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'This place is not used in any routes or visits and can be safely deleted.',
+                      AppLocalizations.of(context)!.thisPlaceIsNotUsedInAnyRoutesOrVisitsAndCanBeSafelyDeleted,
                       style: TextStyle(fontSize: 12, color: Colors.green[700]),
                     ),
                   ),
@@ -1152,7 +1153,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'This action cannot be undone. The place will be permanently deleted from the system.',
+                      AppLocalizations.of(context)!.thisActionCannotBeUndoneThePlaceWillBePermanentlyDeletedFromTheSystem,
                       style: TextStyle(fontSize: 12, color: Colors.red[700]),
                     ),
                   ),
@@ -1164,7 +1165,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -1172,7 +1173,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Delete Permanently'),
+            child: Text(AppLocalizations.of(context)!.deletePermanently),
           ),
         ],
       ),
@@ -1249,12 +1250,12 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Deactivate Place'),
+        title: Text('${AppLocalizations.of(context)!.deactivate} ${AppLocalizations.of(context)!.place}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Are you sure you want to deactivate "${place.name}"?'),
+            Text('${AppLocalizations.of(context)!.areYouSureYouWantToDeactivate} "${place.name}"?'),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
@@ -1269,7 +1270,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'The place will be hidden from new routes but all historical data will be preserved. You can reactivate it later.',
+                      AppLocalizations.of(context)!.thePlaceWillBeHiddenFromNewRoutesButAllHistoricalDataWillBePreservedYouCanReactivateItLater,
                       style: TextStyle(fontSize: 12, color: Colors.orange[700]),
                     ),
                   ),
@@ -1281,7 +1282,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -1289,7 +1290,7 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Deactivate'),
+            child: Text(AppLocalizations.of(context)!.deactivate),
           ),
         ],
       ),
@@ -1381,7 +1382,7 @@ class _PlaceMapViewScreenState extends State<PlaceMapViewScreen> {
         position: displayLocation,
         infoWindow: InfoWindow(
           title: widget.place.name,
-          snippet: _isEditing ? 'Tap to move location' : widget.place.address,
+          snippet: _isEditing ? AppLocalizations.of(context)!.tapToMoveLocation : widget.place.address,
         ),
         draggable: _isEditing,
         onDragEnd: _isEditing
@@ -1436,7 +1437,7 @@ class _PlaceMapViewScreenState extends State<PlaceMapViewScreen> {
                 });
               },
               icon: const Icon(Icons.edit_location),
-              tooltip: 'Edit Location',
+              tooltip: AppLocalizations.of(context)!.editLocation,
             )
           else ...[
             TextButton(
@@ -1447,9 +1448,9 @@ class _PlaceMapViewScreenState extends State<PlaceMapViewScreen> {
                   _updateMapElements();
                 });
               },
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Colors.white),
+              child: Text(
+                AppLocalizations.of(context)!.cancel,
+                style: const TextStyle(color: Colors.white),
               ),
             ),
             TextButton(
@@ -1463,9 +1464,9 @@ class _PlaceMapViewScreenState extends State<PlaceMapViewScreen> {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : const Text(
-                      'Save',
-                      style: TextStyle(
+                  : Text(
+                      AppLocalizations.of(context)!.save,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
                       ),
@@ -1520,10 +1521,10 @@ class _PlaceMapViewScreenState extends State<PlaceMapViewScreen> {
                       children: [
                         Icon(Icons.info, color: primaryColor, size: 20),
                         const SizedBox(width: 8),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            'Edit Mode Active',
-                            style: TextStyle(
+                            AppLocalizations.of(context)!.editModeActive,
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),
@@ -1532,9 +1533,9 @@ class _PlaceMapViewScreenState extends State<PlaceMapViewScreen> {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    const Text(
-                      'Tap on the map or drag the marker to change the location',
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    Text(
+                      AppLocalizations.of(context)!.tapOnTheMapOrDragTheMarkerToChangeTheLocation,
+                      style: const TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                     if (_newLocation != null) ...[
                       const SizedBox(height: 12),
@@ -1563,9 +1564,9 @@ class _PlaceMapViewScreenState extends State<PlaceMapViewScreen> {
                     // Geofence radius selector
                     Row(
                       children: [
-                        const Text(
-                          'Geofence Radius:',
-                          style: TextStyle(
+                        Text(
+                          '${AppLocalizations.of(context)!.geofence} ${AppLocalizations.of(context)!.radius}:',
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),

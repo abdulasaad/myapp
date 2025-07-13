@@ -6,6 +6,7 @@ import '../../models/task.dart';
 import '../../utils/constants.dart';
 import '../agent/task_execution_router.dart';
 import '../agent/task_location_viewer_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 class AgentStandaloneTasksScreen extends StatefulWidget {
   const AgentStandaloneTasksScreen({super.key});
@@ -105,16 +106,16 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
           children: [
             Icon(Icons.hourglass_empty, color: Colors.orange[700]),
             const SizedBox(width: 8),
-            const Text('Assignment Pending'),
+            Text(AppLocalizations.of(context)!.assignmentPendingTitle),
           ],
         ),
-        content: const Text(
-          'Your assignment request for this task is currently pending approval from a manager. You cannot start work until it is approved.\n\nPlease check back later or contact your manager for more information.',
+        content: Text(
+          AppLocalizations.of(context)!.assignmentRequestPending,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+            child: Text(AppLocalizations.of(context)!.ok),
           ),
         ],
       ),
@@ -126,16 +127,16 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
     final shouldRequest = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Request Task Assignment'),
-        content: Text('Do you want to request assignment to "${task.title}"? This will notify the manager.'),
+        title: Text(AppLocalizations.of(context)!.requestTaskAssignment),
+        content: Text(AppLocalizations.of(context)!.requestAssignmentMessage(task.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Request'),
+            child: Text(AppLocalizations.of(context)!.request),
           ),
         ],
       ),
@@ -151,14 +152,14 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
       });
 
       if (mounted) {
-        context.showSnackBar('Task assignment requested successfully!');
+        context.showSnackBar(AppLocalizations.of(context)!.taskAssignmentRequested);
         setState(() {
           _tasksFuture = _fetchTasks();
         });
       }
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Failed to request assignment: $e', isError: true);
+        context.showSnackBar(AppLocalizations.of(context)!.failedToRequestAssignment(e.toString()), isError: true);
       }
     }
   }
@@ -181,9 +182,9 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       // Title
-                      const Text(
-                        'My Tasks',
-                        style: TextStyle(
+                      Text(
+                        AppLocalizations.of(context)!.myTasks,
+                        style: const TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
@@ -216,16 +217,16 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
                       children: [
                         Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
                         const SizedBox(height: 16),
-                        const Text(
-                          'Unable to load tasks',
-                          style: TextStyle(
+                        Text(
+                          AppLocalizations.of(context)!.unableToLoadTasks,
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Please check your connection and try again',
+                          AppLocalizations.of(context)!.pleaseCheckConnection,
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 14,
@@ -240,7 +241,7 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
                             });
                           },
                           icon: const Icon(Icons.refresh),
-                          label: const Text('Retry'),
+                          label: Text(AppLocalizations.of(context)!.retry),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryColor,
                             foregroundColor: Colors.white,
@@ -276,7 +277,7 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
                         ),
                         const SizedBox(height: 24),
                         Text(
-                          'Account Not Assigned to Group',
+                          AppLocalizations.of(context)!.accountNotAssignedToGroup,
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -288,7 +289,7 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 32),
                           child: Text(
-                            'This account has not been set to a group. Contact the system administrator.',
+                            AppLocalizations.of(context)!.accountNotAssignedMessage,
                             style: TextStyle(
                               fontSize: 16,
                               color: Colors.grey[600],
@@ -311,7 +312,7 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
                               Icon(Icons.info_outline, color: Colors.orange[700], size: 20),
                               const SizedBox(width: 8),
                               Text(
-                                'Tasks will appear once you are assigned to a group',
+                                AppLocalizations.of(context)!.tasksWillAppear,
                                 style: TextStyle(
                                   color: Colors.orange[700],
                                   fontSize: 14,
@@ -334,7 +335,7 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
                         Icon(Icons.assignment, size: 64, color: Colors.grey[400]),
                         const SizedBox(height: 16),
                         Text(
-                          'No tasks found.\nStandalone tasks will appear here when created.',
+                          AppLocalizations.of(context)!.noTasksFound,
                           style: Theme.of(context).textTheme.titleMedium,
                           textAlign: TextAlign.center,
                         ),
@@ -445,24 +446,24 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
     Color color;
 
     if (!taskWithAssignment.isAssigned) {
-      text = 'Available';
+      text = AppLocalizations.of(context)!.available;
       color = Colors.green;
     } else {
       switch (taskWithAssignment.assignmentStatus) {
         case 'pending':
-          text = 'Requested';
+          text = AppLocalizations.of(context)!.requested;
           color = Colors.orange;
           break;
         case 'in_progress':
-          text = 'In Progress';
+          text = AppLocalizations.of(context)!.inProgress;
           color = Colors.blue;
           break;
         case 'completed':
-          text = 'Completed';
+          text = AppLocalizations.of(context)!.completed;
           color = Colors.green;
           break;
         default:
-          text = 'Assigned';
+          text = AppLocalizations.of(context)!.assigned;
           color = Colors.purple;
       }
     }
@@ -518,7 +519,7 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
         child: ElevatedButton.icon(
           onPressed: () => _requestTaskAssignment(taskWithAssignment.task),
           icon: const Icon(Icons.add_task),
-          label: const Text('Request Assignment'),
+          label: Text(AppLocalizations.of(context)!.requestAssignment),
         ),
       );
     }
@@ -540,7 +541,7 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
                 Icon(Icons.hourglass_empty, color: Colors.orange[700], size: 16),
                 const SizedBox(width: 8),
                 Text(
-                  'Assignment request pending approval',
+                  AppLocalizations.of(context)!.assignmentPendingApproval,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.orange[700],
@@ -553,7 +554,7 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'You cannot start work on this task until your assignment request is approved by a manager.',
+            AppLocalizations.of(context)!.cannotStartUntilApproved,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.grey[600],
@@ -577,7 +578,7 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
             child: OutlinedButton.icon(
               onPressed: () => _openLocationViewer(taskWithAssignment.task),
               icon: const Icon(Icons.location_on),
-              label: const Text('View Location'),
+              label: Text(AppLocalizations.of(context)!.viewLocation),
             ),
           ),
           const SizedBox(width: 8),
@@ -587,7 +588,7 @@ class _AgentStandaloneTasksScreenState extends State<AgentStandaloneTasksScreen>
           child: ElevatedButton.icon(
             onPressed: () => _openTaskDetail(taskWithAssignment.task),
             icon: const Icon(Icons.upload),
-            label: const Text('Submit Evidence'),
+            label: Text(AppLocalizations.of(context)!.submitEvidence),
           ),
         ),
       ],

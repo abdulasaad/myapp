@@ -9,6 +9,7 @@ import '../../services/user_management_service.dart';
 import '../../utils/constants.dart';
 import 'create_edit_user_screen.dart';
 import 'user_detail_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 class UserManagementScreen extends StatefulWidget {
   const UserManagementScreen({super.key});
@@ -168,12 +169,12 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('${action.toUpperCase()} User'),
-        content: Text('Are you sure you want to $action ${user.fullName}?'),
+        title: Text('${action.toUpperCase()} ${AppLocalizations.of(context)!.user}'),
+        content: Text('${AppLocalizations.of(context)!.areYouSure} $action ${user.fullName}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -203,17 +204,17 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete User'),
-        content: Text('Are you sure you want to delete ${user.fullName}? This action cannot be undone.'),
+        title: Text('${AppLocalizations.of(context)!.delete} ${AppLocalizations.of(context)!.user}'),
+        content: Text('${AppLocalizations.of(context)!.areYouSure} ${AppLocalizations.of(context)!.delete} ${user.fullName}? ${AppLocalizations.of(context)!.cannotBeUndone}.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('DELETE'),
+            child: Text(AppLocalizations.of(context)!.delete.toUpperCase()),
           ),
         ],
       ),
@@ -236,7 +237,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('User Management'),
+        title: Text(AppLocalizations.of(context)!.userManagement),
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
         actions: [
@@ -260,7 +261,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _createUser,
-        label: const Text('Create User'),
+        label: Text(AppLocalizations.of(context)!.createUser),
         icon: const Icon(Icons.person_add),
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
@@ -287,7 +288,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
           TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Search by name, email, or username...',
+              hintText: AppLocalizations.of(context)!.searchByName,
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -416,14 +417,14 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No Users Found',
+            AppLocalizations.of(context)!.noUsersFound,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
           Text(
             _searchQuery.isNotEmpty || _roleFilter != null || _statusFilter != null
-                ? 'Try adjusting your search or filters'
-                : 'Get started by creating your first user',
+                ? AppLocalizations.of(context)!.tryAdjustingFilters
+                : AppLocalizations.of(context)!.createFirstUser,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Colors.grey[600],
             ),
@@ -433,7 +434,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
           ElevatedButton.icon(
             onPressed: _createUser,
             icon: const Icon(Icons.person_add),
-            label: const Text('Create User'),
+            label: Text(AppLocalizations.of(context)!.createUser),
           ),
         ],
       ),
@@ -519,23 +520,23 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                   ),
                   PopupMenuButton<String>(
                     itemBuilder: (context) => [
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'view',
                         child: Row(
                           children: [
-                            Icon(Icons.visibility, size: 18),
-                            SizedBox(width: 8),
-                            Text('View Details'),
+                            const Icon(Icons.visibility, size: 18),
+                            const SizedBox(width: 8),
+                            Text(AppLocalizations.of(context)!.viewDetails),
                           ],
                         ),
                       ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'edit',
                         child: Row(
                           children: [
-                            Icon(Icons.edit, size: 18),
-                            SizedBox(width: 8),
-                            Text('Edit'),
+                            const Icon(Icons.edit, size: 18),
+                            const SizedBox(width: 8),
+                            Text(AppLocalizations.of(context)!.edit),
                           ],
                         ),
                       ),
@@ -548,17 +549,17 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
                               size: 18,
                             ),
                             const SizedBox(width: 8),
-                            Text(user.status == 'active' ? 'Deactivate' : 'Activate'),
+                            Text(user.status == 'active' ? AppLocalizations.of(context)!.deactivate : AppLocalizations.of(context)!.activate),
                           ],
                         ),
                       ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'delete',
                         child: Row(
                           children: [
-                            Icon(Icons.delete, size: 18, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('Delete', style: TextStyle(color: Colors.red)),
+                            const Icon(Icons.delete, size: 18, color: Colors.red),
+                            const SizedBox(width: 8),
+                            Text(AppLocalizations.of(context)!.delete, style: const TextStyle(color: Colors.red)),
                           ],
                         ),
                       ),

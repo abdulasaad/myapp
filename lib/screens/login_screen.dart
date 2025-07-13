@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:logger/logger.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../l10n/app_localizations.dart';
 import '../services/profile_service.dart';
 import '../services/session_service.dart';
 import '../services/connectivity_service.dart';
-import '../services/notification_service.dart';
 import '../services/background_notification_manager.dart';
 import '../widgets/session_conflict_dialog.dart';
 import '../widgets/offline_widget.dart';
@@ -74,7 +74,7 @@ class _LoginScreenState extends State<LoginScreen> {
     // Check if user is offline
     if (!_isOnline) {
       context.showSnackBar(
-        'No internet connection. Please check your network and try again.',
+        AppLocalizations.of(context)!.noInternetMessage,
         isError: true,
       );
       return;
@@ -123,7 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (user == null) {
         if (mounted) {
           context.showSnackBar(
-            potentialErrorMessage ?? 'Invalid credentials. Please check username/email and password.',
+            potentialErrorMessage ?? AppLocalizations.of(context)!.invalidCredentials,
             isError: true,
           );
         }
@@ -167,7 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
       
       if (mounted) {
-        context.showSnackBar('Login successful!');
+        context.showSnackBar(AppLocalizations.of(context)!.loginSuccessful);
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const ModernHomeScreen()),
         );
@@ -175,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } on AuthException catch (e) {
       if (mounted) context.showSnackBar(e.message, isError: true);
     } catch (e) {
-      if (mounted) context.showSnackBar('An unexpected error occurred: $e', isError: true);
+      if (mounted) context.showSnackBar('${AppLocalizations.of(context)!.unexpectedError}: $e', isError: true);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -195,7 +195,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Could not open Facebook', isError: true);
+        context.showSnackBar(AppLocalizations.of(context)!.couldNotOpenFacebook, isError: true);
       }
     }
   }
@@ -211,7 +211,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Could not open Instagram', isError: true);
+        context.showSnackBar(AppLocalizations.of(context)!.couldNotOpenInstagram, isError: true);
       }
     }
   }
@@ -227,7 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Could not open WhatsApp', isError: true);
+        context.showSnackBar(AppLocalizations.of(context)!.couldNotOpenWhatsApp, isError: true);
       }
     }
   }
@@ -242,7 +242,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Could not open website', isError: true);
+        context.showSnackBar(AppLocalizations.of(context)!.couldNotOpenWebsite, isError: true);
       }
     }
   }
@@ -304,12 +304,12 @@ class _LoginScreenState extends State<LoginScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(12.0),
               color: Colors.orange[700],
-              child: const Row(
+              child: Row(
                 children: [
                   Icon(Icons.wifi_off, color: Colors.white, size: 20),
                   SizedBox(width: 8),
                   Text(
-                    'No internet connection',
+                    AppLocalizations.of(context)!.noInternetConnection,
                     style: TextStyle(color: Colors.white, fontSize: 16),
                   ),
                 ],
@@ -366,18 +366,18 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                             const SizedBox(height: 30),
-                            const Text(
-                              'Welcome Back',
-                              style: TextStyle(
+                            Text(
+                              AppLocalizations.of(context)!.loginTitle,
+                              style: const TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black87,
                               ),
                             ),
                             const SizedBox(height: 8),
-                            const Text(
-                              'Sign in to your Al-Tijwal account',
-                              style: TextStyle(
+                            Text(
+                              AppLocalizations.of(context)!.loginSubtitle,
+                              style: const TextStyle(
                                 fontSize: 16,
                                 color: Colors.grey,
                                 fontWeight: FontWeight.w400,
@@ -390,22 +390,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       // Login Form
                       TextFormField(
                         controller: _identifierController,
-                        decoration: const InputDecoration(
-                          labelText: 'Username or Email',
-                          prefixIcon: Icon(Icons.person_outline),
+                        decoration: InputDecoration(
+                          labelText: AppLocalizations.of(context)!.usernameOrEmail,
+                          prefixIcon: const Icon(Icons.person_outline),
                         ),
                         keyboardType: TextInputType.text,
-                        validator: (value) => (value == null || value.isEmpty) ? 'Required field' : null,
+                        validator: (value) => (value == null || value.isEmpty) ? AppLocalizations.of(context)!.requiredField : null,
                       ),
                       formSpacer,
                       TextFormField(
                         controller: _passwordController,
-                        decoration: const InputDecoration(
-                          labelText: 'Password',
-                          prefixIcon: Icon(Icons.lock_outline),
+                        decoration: InputDecoration(
+                          labelText: AppLocalizations.of(context)!.password,
+                          prefixIcon: const Icon(Icons.lock_outline),
                         ),
                         obscureText: true,
-                        validator: (value) => (value == null || value.isEmpty) ? 'Required field' : null,
+                        validator: (value) => (value == null || value.isEmpty) ? AppLocalizations.of(context)!.requiredField : null,
                       ),
                       const SizedBox(height: 32),
                       ElevatedButton(
@@ -420,9 +420,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         child: _isLoading 
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              'Login',
-                              style: TextStyle(
+                          : Text(
+                              AppLocalizations.of(context)!.login,
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                               ),

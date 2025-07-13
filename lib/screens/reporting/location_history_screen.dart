@@ -7,6 +7,8 @@ import 'dart:ui' as ui;
 import '../../models/location_history.dart';
 import '../../services/location_history_service.dart';
 import '../../utils/constants.dart';
+import '../../l10n/app_localizations.dart';
+import '../../widgets/month_day_picker.dart';
 
 class LocationHistoryScreen extends StatefulWidget {
   const LocationHistoryScreen({super.key});
@@ -118,13 +120,13 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
       String title;
       if (isStart) {
         icon = startDotIcon;
-        title = 'Start';
+        title = AppLocalizations.of(context)!.start;
       } else if (isEnd) {
         icon = endDotIcon;
-        title = 'End';
+        title = AppLocalizations.of(context)!.end;
       } else {
         icon = locationDotIcon;
-        title = 'Location ${i + 1}';
+        title = '${AppLocalizations.of(context)!.location} ${i + 1}';
       }
 
       _markers.add(Marker(
@@ -194,7 +196,7 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
     final TimeOfDay? startTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(_startDate),
-      helpText: 'Select start time',
+      helpText: AppLocalizations.of(context)!.selectStartTime,
     );
 
     if (startTime == null) return;
@@ -204,7 +206,7 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
     final TimeOfDay? endTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(_endDate),
-      helpText: 'Select end time',
+      helpText: AppLocalizations.of(context)!.selectEndTime,
     );
 
     if (endTime == null) return;
@@ -292,8 +294,8 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
                             ),
                           ],
                         ),
-                        child: const Text(
-                          'Location History',
+                        child: Text(
+                          AppLocalizations.of(context)!.locationHistory,
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -326,9 +328,9 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
                     fontWeight: FontWeight.normal,
                     fontSize: 14,
                   ),
-                  tabs: const [
-                    Tab(icon: Icon(Icons.list), text: 'History'),
-                    Tab(icon: Icon(Icons.map), text: 'Map'),
+                  tabs: [
+                    Tab(icon: Icon(Icons.list), text: AppLocalizations.of(context)!.history),
+                    Tab(icon: Icon(Icons.map), text: AppLocalizations.of(context)!.map),
                   ],
                 ),
               ),
@@ -386,8 +388,8 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
                     ? const Center(child: CircularProgressIndicator())
                     : DropdownButtonFormField<AgentInfo>(
                         value: _selectedAgent,
-                        decoration: const InputDecoration(
-                          labelText: 'Select Agent',
+                        decoration: InputDecoration(
+                          labelText: AppLocalizations.of(context)!.selectAgent,
                           border: OutlineInputBorder(),
                           contentPadding:
                               EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -436,13 +438,13 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                _buildPresetButton('Today', 0),
+                _buildPresetButton(AppLocalizations.of(context)!.today, 0),
                 const SizedBox(width: 8),
-                _buildPresetButton('7 Days', 7),
+                _buildPresetButton(AppLocalizations.of(context)!.sevenDays, 7),
                 const SizedBox(width: 8),
-                _buildPresetButton('30 Days', 30),
+                _buildPresetButton(AppLocalizations.of(context)!.thirtyDays, 30),
                 const SizedBox(width: 8),
-                _buildPresetButton('90 Days', 90),
+                _buildPresetButton(AppLocalizations.of(context)!.ninetyDays, 90),
               ],
             ),
           ),
@@ -464,13 +466,13 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
 
   Widget _buildHistoryTab() {
     if (_selectedAgent == null) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.person_search, size: 64, color: Colors.grey),
             SizedBox(height: 16),
-            Text('Please select an agent to view their location history'),
+            Text(AppLocalizations.of(context)!.pleaseSelectAgentForLocationHistory),
           ],
         ),
       );
@@ -485,13 +487,13 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
         if (_statistics != null) _buildStatistics(),
         Expanded(
           child: _locationHistory.isEmpty
-              ? const Center(
+              ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.location_off, size: 64, color: Colors.grey),
                       SizedBox(height: 16),
-                      Text('No location history found for the selected period'),
+                      Text(AppLocalizations.of(context)!.noLocationHistoryFound),
                     ],
                   ),
                 )
@@ -549,14 +551,14 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Agent Movement Track',
+                            AppLocalizations.of(context)!.agentMovementTrack,
                             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${_selectedAgent?.fullName ?? 'Agent'} • $timeSpanText',
+                            '${_selectedAgent?.fullName ?? AppLocalizations.of(context)!.agent} • $timeSpanText',
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               color: Colors.grey[600],
                             ),
@@ -586,7 +588,7 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Total Locations',
+                                  AppLocalizations.of(context)!.totalLocations,
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey[600],
@@ -607,7 +609,7 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Time Period',
+                                  AppLocalizations.of(context)!.timePeriod,
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey[600],
@@ -633,7 +635,7 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Start Time',
+                                  AppLocalizations.of(context)!.startTime,
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey[600],
@@ -654,7 +656,7 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'End Time',
+                                  AppLocalizations.of(context)!.endTime,
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey[600],
@@ -692,8 +694,8 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
                         size: 20,
                       ),
                       const SizedBox(width: 8),
-                      const Text(
-                        'Tap to View Complete Route on Map',
+                      Text(
+                        AppLocalizations.of(context)!.tapToViewCompleteRoute,
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -738,7 +740,7 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Location Statistics',
+            AppLocalizations.of(context)!.locationStatistics,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -750,9 +752,9 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Total Entries: ${stats['totalEntries']}'),
+                    Text('${AppLocalizations.of(context)!.totalEntries}: ${stats['totalEntries']}'),
                     Text(
-                        'Avg Accuracy: ±${stats['averageAccuracy'].toStringAsFixed(1)}m'),
+                        '${AppLocalizations.of(context)!.avgAccuracy}: ±${stats['averageAccuracy'].toStringAsFixed(1)}m'),
                   ],
                 ),
               ),
@@ -761,10 +763,10 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                        'Avg Speed: ${stats['averageSpeed'].toStringAsFixed(1)} km/h'),
+                        '${AppLocalizations.of(context)!.avgSpeed}: ${stats['averageSpeed'].toStringAsFixed(1)} km/h'),
                     if (stats['firstEntry'] != null)
                       Text(
-                          'Period: ${(stats['firstEntry'] as DateTime).day}/${(stats['firstEntry'] as DateTime).month} - ${(stats['lastEntry'] as DateTime).day}/${(stats['lastEntry'] as DateTime).month}'),
+                          '${AppLocalizations.of(context)!.period}: ${(stats['firstEntry'] as DateTime).day}/${(stats['firstEntry'] as DateTime).month} - ${(stats['lastEntry'] as DateTime).day}/${(stats['lastEntry'] as DateTime).month}'),
                   ],
                 ),
               ),
@@ -777,13 +779,13 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
 
   Widget _buildMapTab() {
     if (_selectedAgent == null) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.person_search, size: 64, color: Colors.grey),
             SizedBox(height: 16),
-            Text('Please select an agent to view their location history'),
+            Text(AppLocalizations.of(context)!.pleaseSelectAgentForLocationHistory),
           ],
         ),
       );
@@ -794,13 +796,13 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
     }
 
     if (_locationHistory.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.map_outlined, size: 64, color: Colors.grey),
             SizedBox(height: 16),
-            Text('No location data to display on map'),
+            Text(AppLocalizations.of(context)!.noLocationDataToDisplay),
           ],
         ),
       );

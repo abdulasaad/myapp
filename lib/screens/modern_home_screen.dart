@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../utils/constants.dart';
+import '../../l10n/app_localizations.dart';
 import '../models/app_user.dart';
 import '../services/smart_location_manager.dart';
 import '../services/location_service.dart';
@@ -11,12 +12,16 @@ import '../services/session_service.dart';
 import '../services/profile_service.dart';
 import '../services/connectivity_service.dart';
 import '../services/update_service.dart';
+import '../services/user_status_service.dart';
 import '../services/timezone_service.dart';
 import '../services/simple_notification_service.dart';
 import '../services/notification_manager.dart';
 import '../services/notification_service.dart';
 import '../services/background_notification_manager.dart';
+import '../services/persistent_service_manager.dart';
 import '../widgets/offline_widget.dart';
+import '../widgets/language_selection_dialog.dart';
+import '../widgets/service_control_widget.dart';
 import 'agent/agent_route_dashboard_screen.dart';
 import '../widgets/update_dialog.dart';
 import 'package:logger/logger.dart';
@@ -62,9 +67,22 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
     _setupSessionManagement();
     _loadNotificationCount();
     _setupNotificationManager();
+    _initializeUserStatus();
     // Clean up APKs after installation and old APKs on app start
     _updateService.cleanupAfterInstallation();
     _updateService.cleanupAllApks();
+  }
+
+  void _initializeUserStatus() async {
+    try {
+      // Initialize status service for logged-in user
+      await UserStatusService().onUserLogin();
+      
+      // Restore persistent notification if services are already running
+      await PersistentServiceManager.restoreNotificationIfNeeded();
+    } catch (e) {
+      debugPrint('Failed to initialize user status: $e');
+    }
   }
 
   @override
@@ -77,11 +95,35 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
   
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      // Clean up any APKs from installation when app resumes
-      _updateService.cleanupAfterInstallation();
-      // Check for updates when app comes back to foreground
-      _checkForUpdate();
+    super.didChangeAppLifecycleState(state);
+    
+    switch (state) {
+      case AppLifecycleState.resumed:
+        // Clean up any APKs from installation when app resumes
+        _updateService.cleanupAfterInstallation();
+        // Check for updates when app comes back to foreground
+        _checkForUpdate();
+        // Resume status service but don't change status - background service handles this
+        // Restore persistent notification if services are running
+        PersistentServiceManager.restoreNotificationIfNeeded();
+        break;
+        
+      case AppLifecycleState.paused:
+        // App is going to background - status service will continue via background service
+        debugPrint('App paused - status tracking continues in background');
+        break;
+        
+      case AppLifecycleState.inactive:
+        // App is becoming inactive (temporary)
+        break;
+        
+      case AppLifecycleState.detached:
+        // App is being detached (rare case)
+        break;
+        
+      case AppLifecycleState.hidden:
+        // App is hidden (Android 12+)
+        break;
     }
   }
   
@@ -151,7 +193,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        context.showSnackBar('Error loading profile: $e', isError: true);
+        context.showSnackBar('${AppLocalizations.of(context)!.errorLoadingProfile}: $e', isError: true);
       }
     }
   }
@@ -247,54 +289,54 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
     final isAdmin = _currentUser!.role == 'admin' || _currentUser!.role == 'manager';
     
     if (isAdmin) {
-      return const [
+      return [
         BottomNavigationBarItem(
           icon: Icon(Icons.dashboard),
-          label: 'Dashboard',
+          label: AppLocalizations.of(context)!.dashboard,
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.campaign),
-          label: 'Campaigns',
+          label: AppLocalizations.of(context)!.campaigns,
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.task),
-          label: 'Tasks',
+          label: AppLocalizations.of(context)!.tasks,
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.person),
-          label: 'Profile',
+          label: AppLocalizations.of(context)!.profile,
         ),
       ];
     } else {
-      return const [
+      return [
         BottomNavigationBarItem(
           icon: Icon(Icons.home),
-          label: 'Home',
+          label: AppLocalizations.of(context)!.home,
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.campaign),
-          label: 'Campaigns',
+          label: AppLocalizations.of(context)!.campaigns,
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.assignment),
-          label: 'My Tasks',
+          label: AppLocalizations.of(context)!.myTasks,
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.person),
-          label: 'Profile',
+          label: AppLocalizations.of(context)!.profile,
         ),
       ];
     }
   }
 
   Widget _buildLoadingScreen() {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 16),
-          Text('Loading...'),
+          const CircularProgressIndicator(),
+          const SizedBox(height: 16),
+          Text(AppLocalizations.of(context)!.loading),
         ],
       ),
     );
@@ -316,11 +358,11 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
             children: [
               const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 16),
-              const Text('Error loading user profile'),
+              Text(AppLocalizations.of(context)!.errorLoadingProfile),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _loadUserProfile,
-                child: const Text('Retry'),
+                child: Text(AppLocalizations.of(context)!.retry),
               ),
             ],
           ),
@@ -522,11 +564,11 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
           ),
           child: Row(
             children: [
-              Expanded(child: _buildEnhancedNavItem(Icons.home_filled, 'Home', 0)),
-              Expanded(child: _buildEnhancedNavItem(Icons.work_outline_rounded, 'Campaigns', 1)),
+              Expanded(child: _buildEnhancedNavItem(Icons.home_filled, AppLocalizations.of(context)!.home, 0)),
+              Expanded(child: _buildEnhancedNavItem(Icons.work_outline_rounded, AppLocalizations.of(context)!.campaigns, 1)),
               const SizedBox(width: 64), // Space for floating button
-              Expanded(child: _buildEnhancedNavItem(Icons.assignment_outlined, 'Tasks', 2)),
-              Expanded(child: _buildEnhancedNavItem(Icons.person_outline_rounded, 'Profile', 3)),
+              Expanded(child: _buildEnhancedNavItem(Icons.assignment_outlined, AppLocalizations.of(context)!.tasks, 2)),
+              Expanded(child: _buildEnhancedNavItem(Icons.person_outline_rounded, AppLocalizations.of(context)!.profile, 3)),
             ],
           ),
         ),
@@ -791,7 +833,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Create New',
+                      AppLocalizations.of(context)!.createNew,
                       style: GoogleFonts.poppins(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -800,7 +842,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Choose what you\'d like to create',
+                      AppLocalizations.of(context)!.chooseWhatToCreate,
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         color: const Color(0xFF6B7280),
@@ -820,8 +862,8 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
                   children: [
                     _buildModernCreateOption(
                       icon: Icons.campaign_rounded,
-                      title: 'Campaign',
-                      subtitle: 'Create a new campaign with tasks',
+                      title: AppLocalizations.of(context)!.campaign,
+                      subtitle: AppLocalizations.of(context)!.createCampaignDesc,
                       color: const Color(0xFF10B981),
                       onTap: () {
                         Navigator.pop(context);
@@ -831,8 +873,8 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
                     const SizedBox(height: 12),
                     _buildModernCreateOption(
                       icon: Icons.task_alt_rounded,
-                      title: 'Task',
-                      subtitle: 'Create a standalone task',
+                      title: AppLocalizations.of(context)!.task,
+                      subtitle: AppLocalizations.of(context)!.createTaskDesc,
                       color: const Color(0xFF6366F1),
                       onTap: () {
                         Navigator.pop(context);
@@ -842,8 +884,8 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
                     const SizedBox(height: 12),
                     _buildModernCreateOption(
                       icon: Icons.route_rounded,
-                      title: 'Route',
-                      subtitle: 'Create a new route',
+                      title: AppLocalizations.of(context)!.route,
+                      subtitle: AppLocalizations.of(context)!.createRouteDesc,
                       color: const Color(0xFFF59E0B),
                       onTap: () {
                         Navigator.pop(context);
@@ -1026,7 +1068,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(
-                  'Choose Task Type',
+                  AppLocalizations.of(context)!.chooseTaskType,
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -1042,8 +1084,8 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
                   children: [
                     _buildTaskTypeOption(
                       icon: Icons.ballot_rounded,
-                      title: 'Template Task',
-                      subtitle: 'Create from existing template',
+                      title: AppLocalizations.of(context)!.templateTask,
+                      subtitle: AppLocalizations.of(context)!.createTemplateDesc,
                       color: const Color(0xFF6366F1),
                       onTap: () async {
                         Navigator.pop(context);
@@ -1061,8 +1103,8 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
                     const SizedBox(height: 12),
                     _buildTaskTypeOption(
                       icon: Icons.edit_note_rounded,
-                      title: 'Custom Task',
-                      subtitle: 'Create evidence-based task',
+                      title: AppLocalizations.of(context)!.customTask,
+                      subtitle: AppLocalizations.of(context)!.createCustomDesc,
                       color: const Color(0xFF10B981),
                       onTap: () async {
                         Navigator.pop(context);
@@ -1289,7 +1331,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
         if (mounted) {
           setState(() {
             _isLocationEnabled = false;
-            _currentLocationStatus = 'Permission required';
+            _currentLocationStatus = AppLocalizations.of(context)!.permissionRequired;
           });
         }
         return;
@@ -1302,14 +1344,14 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
         if (mounted) {
           setState(() {
             _isLocationEnabled = true;
-            _currentLocationStatus = 'Active';
+            _currentLocationStatus = AppLocalizations.of(context)!.active;
           });
         }
       } else {
         if (mounted) {
           setState(() {
             _isLocationEnabled = false;
-            _currentLocationStatus = 'Disabled';
+            _currentLocationStatus = AppLocalizations.of(context)!.disabled;
           });
         }
       }
@@ -1318,7 +1360,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
       if (mounted) {
         setState(() {
           _isLocationEnabled = false;
-          _currentLocationStatus = 'Error';
+          _currentLocationStatus = AppLocalizations.of(context)!.error;
         });
       }
     }
@@ -2091,8 +2133,8 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                     // Check if it's a network error
                     if (!isOnline || ConnectivityService.isNetworkError(snapshot.error)) {
                       return OfflineWidget(
-                        title: 'You\'re Offline',
-                        subtitle: 'Please check your internet connection to load the dashboard.',
+                        title: AppLocalizations.of(context)!.youreOffline,
+                        subtitle: AppLocalizations.of(context)!.offlineMessage,
                         onRetry: isOnline ? _refreshDashboard : null,
                       );
                     }
@@ -2104,12 +2146,12 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                           Icon(Icons.error_outline, size: 64, color: Colors.red[400]),
                           const SizedBox(height: 16),
                           Text(
-                            'Error loading dashboard',
+                            AppLocalizations.of(context)!.errorLoadingDashboard,
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Please try again later',
+                            AppLocalizations.of(context)!.pleaseTryAgainLater,
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: textSecondaryColor,
                             ),
@@ -2124,7 +2166,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: const Text('Retry'),
+                            child: Text(AppLocalizations.of(context)!.retry),
                           ),
                         ],
                       ),
@@ -2150,7 +2192,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                             title: Row(
                               children: [
                                 Text(
-                                  'Agent Dashboard',
+                                  AppLocalizations.of(context)!.agentDashboard,
                                   style: GoogleFonts.poppins(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
@@ -2180,14 +2222,14 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            'Welcome back,',
+                                            AppLocalizations.of(context)!.welcomeBack,
                                             style: GoogleFonts.poppins(
                                               fontSize: 14,
                                               color: textSecondaryColor,
                                             ),
                                           ),
                                           Text(
-                                            widget.user.fullName ?? 'Agent',
+                                            widget.user.fullName ?? AppLocalizations.of(context)!.agent,
                                             style: GoogleFonts.poppins(
                                               fontSize: 24,
                                               fontWeight: FontWeight.bold,
@@ -2225,8 +2267,8 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                           padding: const EdgeInsets.all(20),
                           sliver: SliverList(
                             delegate: SliverChildListDelegate([
-                              // Location Status Card
-                              _buildLocationStatusCard(),
+                              // Background Services Control (Compact)
+                              const ServiceControlWidget(isCompact: true),
                               const SizedBox(height: 20),
                               
                               // Performance Overview
@@ -2239,7 +2281,6 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                               
                               // Quick Actions
                               _buildQuickActionsSection(context),
-                              const SizedBox(height: 24),
                               
                               const SizedBox(height: 120), // Space for floating nav
                             ]),
@@ -2271,13 +2312,13 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                           ),
                         ],
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
-                          Icon(Icons.wifi_off, color: Colors.white, size: 20),
-                          SizedBox(width: 8),
+                          const Icon(Icons.wifi_off, color: Colors.white, size: 20),
+                          const SizedBox(width: 8),
                           Text(
-                            'You\'re offline - Some features may not be available',
-                            style: TextStyle(color: Colors.white, fontSize: 14),
+                            AppLocalizations.of(context)!.offlineFeatureMessage,
+                            style: const TextStyle(color: Colors.white, fontSize: 14),
                           ),
                         ],
                       ),
@@ -2378,14 +2419,14 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Location Service',
+                  AppLocalizations.of(context)!.locationService,
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
                 Text(
-                  _currentLocationStatus ?? 'Checking...',
+                  _currentLocationStatus ?? AppLocalizations.of(context)!.checking,
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -2400,7 +2441,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
               onPressed: () async {
                 try {
                   setState(() {
-                    _currentLocationStatus = 'Requesting permission...';
+                    _currentLocationStatus = AppLocalizations.of(context)!.requestingPermission;
                   });
                   
                   final locationService = LocationService();
@@ -2410,9 +2451,9 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                     if (mounted) {
                       setState(() {
                         _isLocationEnabled = true;
-                        _currentLocationStatus = 'Starting...';
+                        _currentLocationStatus = AppLocalizations.of(context)!.starting;
                       });
-                      context.showSnackBar('Location service enabled successfully!');
+                      context.showSnackBar(AppLocalizations.of(context)!.locationEnabledSuccess);
                       // Restart location tracking with new permissions
                       _startSmartLocationTracking();
                       _refreshDashboard(); // Refresh the dashboard data
@@ -2420,10 +2461,10 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                   } else {
                     if (mounted) {
                       setState(() {
-                        _currentLocationStatus = 'Permission denied';
+                        _currentLocationStatus = AppLocalizations.of(context)!.permissionDenied;
                       });
                       context.showSnackBar(
-                        'Location permission denied. Please enable it in device settings.',
+                        AppLocalizations.of(context)!.locationPermissionDeniedMessage,
                         isError: true,
                       );
                     }
@@ -2431,10 +2472,10 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                 } catch (e) {
                   if (mounted) {
                     setState(() {
-                      _currentLocationStatus = 'Error occurred';
+                      _currentLocationStatus = AppLocalizations.of(context)!.errorOccurred;
                     });
                     context.showSnackBar(
-                      'Failed to enable location service: $e',
+                      '${AppLocalizations.of(context)!.failedToEnableLocation}: $e',
                       isError: true,
                     );
                   }
@@ -2447,7 +2488,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: const Text('Enable'),
+              child: Text(AppLocalizations.of(context)!.enable),
             ),
         ],
       ),
@@ -2476,7 +2517,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Today\'s Activity',
+                AppLocalizations.of(context)!.todaysActivity,
                 style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -2509,12 +2550,12 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
               Expanded(
                 child: _buildActivityItem(
                   icon: Icons.route,
-                  title: 'Routes',
+                  title: AppLocalizations.of(context)!.routes,
                   value: data.routeStats.activeRoutes > 0 
-                      ? '${data.routeStats.placesToVisitToday} places'
-                      : 'None assigned',
+                      ? '${data.routeStats.placesToVisitToday} ${AppLocalizations.of(context)!.places}'
+                      : AppLocalizations.of(context)!.noneAssigned,
                   subtitle: data.routeStats.activeRoutes > 0 
-                      ? 'to visit today'
+                      ? AppLocalizations.of(context)!.toVisitToday
                       : '',
                   color: secondaryColor,
                 ),
@@ -2529,12 +2570,12 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
               Expanded(
                 child: _buildActivityItem(
                   icon: Icons.assignment,
-                  title: 'Tasks',
+                  title: AppLocalizations.of(context)!.tasks,
                   value: data.taskStats.activeTasks > 0 
-                      ? '${data.taskStats.activeTasks} active'
-                      : 'None active',
+                      ? '${data.taskStats.activeTasks} ${AppLocalizations.of(context)!.active}'
+                      : AppLocalizations.of(context)!.noneActive,
                   subtitle: data.taskStats.todayCompleted > 0 
-                      ? '${data.taskStats.todayCompleted} completed today'
+                      ? '${data.taskStats.todayCompleted} ${AppLocalizations.of(context)!.completedToday}'
                       : '',
                   color: primaryColor,
                 ),
@@ -2568,7 +2609,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Campaigns',
+                        AppLocalizations.of(context)!.campaigns,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -2577,8 +2618,8 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                       ),
                       Text(
                         data.campaignStats.activeCampaigns > 0 
-                            ? '${data.campaignStats.activeCampaigns} active campaign${data.campaignStats.activeCampaigns != 1 ? 's' : ''}'
-                            : 'No active campaigns',
+                            ? '${data.campaignStats.activeCampaigns} ${AppLocalizations.of(context)!.activeCampaign}${data.campaignStats.activeCampaigns != 1 ? 's' : ''}'
+                            : AppLocalizations.of(context)!.noActiveCampaigns,
                         style: TextStyle(
                           fontSize: 12,
                           color: textSecondaryColor,
@@ -2595,7 +2636,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      '${data.campaignStats.totalCampaignTasks} tasks',
+                      '${data.campaignStats.totalCampaignTasks} ${AppLocalizations.of(context)!.tasks}',
                       style: TextStyle(
                         fontSize: 11,
                         color: Colors.purple,
@@ -2614,13 +2655,13 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
   // Get today's status based on activity
   String _getTodayStatus(AgentDashboardData data) {
     if (data.routeStats.activeRoutes > 0) {
-      return 'On Route';
+      return AppLocalizations.of(context)!.onRoute;
     } else if (data.taskStats.activeTasks > 0) {
-      return 'Working Tasks';
+      return AppLocalizations.of(context)!.workingTasks;
     } else if (data.campaignStats.activeCampaigns > 0) {
-      return 'In Campaign';
+      return AppLocalizations.of(context)!.inCampaign;
     } else {
-      return 'Available';
+      return AppLocalizations.of(context)!.available;
     }
   }
 
@@ -2682,45 +2723,45 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
   Widget _buildQuickStatsGrid(AgentDashboardData data) {
     final stats = [
       {
-        'title': 'Visit Analytics',
+        'title': AppLocalizations.of(context)!.visitAnalytics,
         'value': data.visitAnalytics.primaryMetric,
-        'subtitle': 'Visits today',
+        'subtitle': AppLocalizations.of(context)!.visitsToday,
         'icon': Icons.analytics,
         'color': Colors.green,
         'trend': data.visitAnalytics.trendIndicator,
       },
       {
-        'title': 'Active Tasks',
+        'title': AppLocalizations.of(context)!.activeTasks,
         'value': '${data.taskStats.activeTasks}',
-        'subtitle': 'Tasks in progress',
+        'subtitle': AppLocalizations.of(context)!.tasksInProgress,
         'icon': Icons.assignment,
         'color': primaryColor,
         'trend': '${data.taskStats.todayCompleted} completed today',
       },
       {
-        'title': 'Total Points',
+        'title': AppLocalizations.of(context)!.totalPoints,
         'value': '${data.taskStats.totalPoints}',
-        'subtitle': 'Points earned',
+        'subtitle': AppLocalizations.of(context)!.pointsEarned,
         'icon': Icons.star,
         'color': Colors.amber,
         'trend': '${data.taskStats.weeklyCompleted} completed this week',
       },
       {
-        'title': 'Active Campaigns',
+        'title': AppLocalizations.of(context)!.activeCampaigns,
         'value': '${data.campaignStats.activeCampaigns}',
-        'subtitle': 'Campaigns running',
+        'subtitle': AppLocalizations.of(context)!.campaignsRunning,
         'icon': Icons.campaign,
         'color': secondaryColor,
         'trend': '${data.campaignStats.totalCampaignTasks} total tasks',
       },
       {
-        'title': 'Active Routes',
+        'title': AppLocalizations.of(context)!.activeRoutes,
         'value': data.routeStats.routeNames.isNotEmpty 
             ? data.routeStats.routeNames.first 
             : '${data.routeStats.activeRoutes}',
         'subtitle': data.routeStats.routeNames.isNotEmpty 
-            ? '${data.routeStats.activeRoutes} route${data.routeStats.activeRoutes != 1 ? 's' : ''} assigned'
-            : 'Routes assigned',
+            ? '${data.routeStats.activeRoutes} ${AppLocalizations.of(context)!.routesAssignedSuffix}${data.routeStats.activeRoutes != 1 ? 's' : ''} ${AppLocalizations.of(context)!.assigned}'
+            : AppLocalizations.of(context)!.routesAssigned,
         'icon': Icons.route,
         'color': Colors.purple,
         'trend': data.routeStats.routeNames.length > 1 
@@ -2924,19 +2965,19 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
             _buildMiniStat(
               icon: Icons.location_on,
               value: analytics.placeVisitsToday.toString(),
-              label: 'Places',
+              label: AppLocalizations.of(context)!.places,
               color: Colors.blue,
             ),
             _buildMiniStat(
               icon: Icons.task_alt,
               value: analytics.taskVisitsToday.toString(),
-              label: 'Tasks',
+              label: AppLocalizations.of(context)!.tasks,
               color: Colors.orange,
             ),
             _buildMiniStat(
               icon: Icons.camera_alt,
               value: analytics.evidenceSubmissionsToday.toString(),
-              label: 'Evidence',
+              label: AppLocalizations.of(context)!.evidence,
               color: Colors.purple,
             ),
           ],
@@ -2947,7 +2988,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
           children: [
             Expanded(
               child: _buildMetricRow(
-                label: 'Completion Rate',
+                label: AppLocalizations.of(context)!.completionRate,
                 value: '${analytics.visitCompletionRate.toStringAsFixed(1)}%',
                 icon: Icons.check_circle_outline,
               ),
@@ -2955,7 +2996,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
             const SizedBox(width: 16),
             Expanded(
               child: _buildMetricRow(
-                label: 'Peak Hour',
+                label: AppLocalizations.of(context)!.peakHour,
                 value: analytics.peakVisitHour,
                 icon: Icons.schedule,
               ),
@@ -2967,7 +3008,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
           children: [
             Expanded(
               child: _buildMetricRow(
-                label: 'Avg Duration',
+                label: AppLocalizations.of(context)!.avgDuration,
                 value: '${analytics.averageVisitDuration.toStringAsFixed(0)} min',
                 icon: Icons.timer,
               ),
@@ -2975,7 +3016,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
             const SizedBox(width: 16),
             Expanded(
               child: _buildMetricRow(
-                label: 'Week Total',
+                label: AppLocalizations.of(context)!.weekTotal,
                 value: analytics.totalVisitsThisWeek.toString(),
                 icon: Icons.calendar_view_week,
               ),
@@ -2987,7 +3028,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
           children: [
             Expanded(
               child: _buildMetricRow(
-                label: 'Month Total',
+                label: AppLocalizations.of(context)!.monthTotal,
                 value: analytics.totalVisitsThisMonth.toString(),
                 icon: Icons.calendar_month,
               ),
@@ -2995,7 +3036,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
             const SizedBox(width: 16),
             Expanded(
               child: _buildMetricRow(
-                label: 'Unique Locations',
+                label: AppLocalizations.of(context)!.uniqueLocations,
                 value: analytics.uniqueLocationsVisited.toString(),
                 icon: Icons.place,
               ),
@@ -3076,7 +3117,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Quick Actions',
+          AppLocalizations.of(context)!.quickActions,
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -3094,13 +3135,13 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
           children: [
             _buildQuickActionItem(
               icon: Icons.add_location_alt,
-              label: 'Suggest',
+              label: AppLocalizations.of(context)!.suggest,
               color: Colors.indigo,
               onTap: () => _suggestNewPlace(context),
             ),
             _buildQuickActionItem(
               icon: Icons.map,
-              label: 'Map',
+              label: AppLocalizations.of(context)!.map,
               color: Colors.teal,
               onTap: () => Navigator.push(
                 context,
@@ -3194,7 +3235,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                 children: [
                   Icon(Icons.add_location, color: primaryColor),
                   const SizedBox(width: 8),
-                  const Text('Suggest New Place'),
+                  Text(AppLocalizations.of(context)!.suggestNewPlace),
                 ],
               ),
               content: SingleChildScrollView(
@@ -3207,9 +3248,9 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                       // Place Name Field
                       TextField(
                         controller: nameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Place Name *',
-                          hintText: 'Enter the name of the place',
+                        decoration: InputDecoration(
+                          labelText: '${AppLocalizations.of(context)!.placeName} *',
+                          hintText: AppLocalizations.of(context)!.enterPlaceName,
                           prefixIcon: Icon(Icons.location_on),
                           border: OutlineInputBorder(),
                         ),
@@ -3220,9 +3261,9 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                       TextField(
                         controller: descriptionController,
                         maxLines: 3,
-                        decoration: const InputDecoration(
-                          labelText: 'Description (Optional)',
-                          hintText: 'Describe this place...',
+                        decoration: InputDecoration(
+                          labelText: '${AppLocalizations.of(context)!.description} (${AppLocalizations.of(context)!.optional})',
+                          hintText: AppLocalizations.of(context)!.describePlaceHint,
                           prefixIcon: Icon(Icons.description),
                           border: OutlineInputBorder(),
                         ),
@@ -3232,9 +3273,9 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                       // Address Field
                       TextField(
                         controller: addressController,
-                        decoration: const InputDecoration(
-                          labelText: 'Address (Optional)',
-                          hintText: 'Enter the address',
+                        decoration: InputDecoration(
+                          labelText: '${AppLocalizations.of(context)!.address} (${AppLocalizations.of(context)!.optional})',
+                          hintText: AppLocalizations.of(context)!.enterAddress,
                           prefixIcon: Icon(Icons.location_city),
                           border: OutlineInputBorder(),
                         ),
@@ -3256,8 +3297,8 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                               children: [
                                 Icon(Icons.map, color: primaryColor),
                                 const SizedBox(width: 8),
-                                const Text(
-                                  'Location',
+                                Text(
+                                  AppLocalizations.of(context)!.location,
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 16,
@@ -3276,7 +3317,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                               )
                             else
                               Text(
-                                'No location selected',
+                                AppLocalizations.of(context)!.noLocationSelected,
                                 style: TextStyle(
                                   color: Colors.grey[600],
                                   fontSize: 12,
@@ -3308,7 +3349,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                                   }
                                 },
                                 icon: const Icon(Icons.map),
-                                label: Text(selectedLat != null ? 'Change Location' : 'Select Location on Map'),
+                                label: Text(selectedLat != null ? AppLocalizations.of(context)!.changeLocation : AppLocalizations.of(context)!.selectLocationOnMap),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: primaryColor,
                                   foregroundColor: Colors.white,
@@ -3336,8 +3377,8 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                                 children: [
                                   Icon(Icons.radio_button_unchecked, color: primaryColor),
                                   const SizedBox(width: 8),
-                                  const Text(
-                                    'Geofence Radius',
+                                  Text(
+                                    AppLocalizations.of(context)!.geofenceRadius,
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
@@ -3347,7 +3388,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                '${geofenceRadius.round()} meters',
+                                '${geofenceRadius.round()} ${AppLocalizations.of(context)!.meters}',
                                 style: TextStyle(
                                   color: Colors.grey[600],
                                   fontSize: 14,
@@ -3376,7 +3417,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Cancel'),
+                  child: Text(AppLocalizations.of(context)!.cancel),
                 ),
                 ElevatedButton(
                   onPressed: nameController.text.trim().isEmpty || 
@@ -3401,7 +3442,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                     backgroundColor: primaryColor,
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text('Submit Suggestion'),
+                  child: Text(AppLocalizations.of(context)!.submitSuggestion),
                 ),
               ],
             );
@@ -3423,14 +3464,14 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
   ) async {
     // Validation (matching route screen)
     if (name.trim().isEmpty) {
-      context.showSnackBar('Please fill required fields (Name)', isError: true);
+      context.showSnackBar(AppLocalizations.of(context)!.fillRequiredFields, isError: true);
       return;
     }
 
     try {
       final userId = supabase.auth.currentUser?.id;
       if (userId == null) {
-        context.showSnackBar('Authentication required', isError: true);
+        context.showSnackBar(AppLocalizations.of(context)!.authenticationRequired, isError: true);
         return;
       }
 
@@ -3467,7 +3508,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
         Navigator.of(context).pop();
         
         // Show success message (matching route screen)
-        context.showSnackBar('Place suggestion submitted! Waiting for manager approval.');
+        context.showSnackBar(AppLocalizations.of(context)!.placeSuggestionSubmitted);
       }
     } catch (e) {
       // Close loading dialog
@@ -3476,7 +3517,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
         
         // Show error message
         context.showSnackBar(
-          'Failed to submit place suggestion: $e',
+          '${AppLocalizations.of(context)!.failedToSubmitSuggestion}: $e',
           isError: true,
         );
       }
@@ -3508,11 +3549,12 @@ class _ProfileTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      body: SafeArea(
+    return Container(
+      color: backgroundColor,
+      child: SafeArea(
+        bottom: false, // Don't apply safe area to bottom since we have bottom navigation
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 100), // Add bottom padding for navigation bar
           child: Column(
             children: [
               _buildProfileHeader(),
@@ -3598,8 +3640,8 @@ class _ProfileTab extends StatelessWidget {
         if (user.role == 'admin')
           _buildOptionCard(
             icon: Icons.group,
-            title: 'Group Management',
-            subtitle: 'Manage client groups and team members',
+            title: AppLocalizations.of(context)!.groupManagement,
+            subtitle: AppLocalizations.of(context)!.manageGroupsDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -3613,8 +3655,8 @@ class _ProfileTab extends StatelessWidget {
         if (user.role == 'admin' || user.role == 'manager')
           _buildOptionCard(
             icon: Icons.settings,
-            title: 'Settings',
-            subtitle: 'App preferences and configuration',
+            title: AppLocalizations.of(context)!.settings,
+            subtitle: AppLocalizations.of(context)!.settingsDesc,
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -3633,8 +3675,8 @@ class _ProfileTab extends StatelessWidget {
             final hasToken = snapshot.data ?? false;
             return _buildOptionCard(
               icon: hasToken ? Icons.notifications_active : Icons.sync,
-              title: 'Notifications',
-              subtitle: hasToken ? 'Notifications enabled' : 'Setting up notifications...',
+              title: AppLocalizations.of(context)!.notifications,
+              subtitle: hasToken ? AppLocalizations.of(context)!.notificationsEnabled : AppLocalizations.of(context)!.settingUpNotifications,
               color: hasToken ? successColor : Colors.blue,
               onTap: null, // No user action required - fully automatic
             );
@@ -3643,28 +3685,37 @@ class _ProfileTab extends StatelessWidget {
         const SizedBox(height: 12),
         _buildOptionCard(
           icon: Icons.help_outline,
-          title: 'Help & Support',
-          subtitle: 'Get help and contact support',
+          title: AppLocalizations.of(context)!.helpSupport,
+          subtitle: AppLocalizations.of(context)!.helpSupportDesc,
           onTap: () {
             // Feature coming soon - help and support page will be implemented here
-            context.showSnackBar('Help & Support coming soon');
+            context.showSnackBar(AppLocalizations.of(context)!.helpSupportComingSoon);
+          },
+        ),
+        const SizedBox(height: 12),
+        _buildOptionCard(
+          icon: Icons.language,
+          title: AppLocalizations.of(context)!.language,
+          subtitle: AppLocalizations.of(context)!.languageDesc,
+          onTap: () {
+            showLanguageSelectionDialog(context);
           },
         ),
         const SizedBox(height: 12),
         _buildOptionCard(
           icon: Icons.info_outline,
-          title: 'About',
-          subtitle: 'App version and information',
+          title: AppLocalizations.of(context)!.about,
+          subtitle: AppLocalizations.of(context)!.aboutDesc,
           onTap: () {
             // Feature coming soon - about dialog will be implemented here
-            context.showSnackBar('About information coming soon');
+            context.showSnackBar(AppLocalizations.of(context)!.aboutComingSoon);
           },
         ),
         const SizedBox(height: 12),
         _buildOptionCard(
           icon: Icons.logout,
-          title: 'Sign Out',
-          subtitle: 'Sign out of your account',
+          title: AppLocalizations.of(context)!.signOut,
+          subtitle: AppLocalizations.of(context)!.signOutDesc,
           color: errorColor,
           onTap: () async {
             await _handleSignOut(context);
@@ -3792,17 +3843,17 @@ class _ProfileTab extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            title: const Text('Sign Out'),
-            content: const Text('Are you sure you want to sign out of your account?'),
+            title: Text(AppLocalizations.of(context)!.signOut),
+            content: Text(AppLocalizations.of(context)!.signOutConfirmation),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
+                child: Text(AppLocalizations.of(context)!.cancel),
               ),
               TextButton(
                 style: TextButton.styleFrom(foregroundColor: errorColor),
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('Sign Out'),
+                child: Text(AppLocalizations.of(context)!.signOut),
               ),
             ],
           );
@@ -3839,6 +3890,9 @@ class _ProfileTab extends StatelessWidget {
           // Update user status to offline
           await ProfileService.instance.updateUserStatus('offline');
           
+          // Stop user status service
+          await UserStatusService().onUserLogout();
+          
           // Sign out from Supabase Auth
           await supabase.auth.signOut();
           
@@ -3859,7 +3913,7 @@ class _ProfileTab extends StatelessWidget {
             
             // Show error message
             context.showSnackBar(
-              'Failed to sign out properly: $e',
+              '${AppLocalizations.of(context)!.failedToSignOut}: $e',
               isError: true,
             );
           }
@@ -3868,7 +3922,7 @@ class _ProfileTab extends StatelessWidget {
     } catch (e) {
       if (context.mounted) {
         context.showSnackBar(
-          'An error occurred: $e',
+          '${AppLocalizations.of(context)!.anErrorOccurred}: $e',
           isError: true,
         );
       }

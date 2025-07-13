@@ -7,7 +7,9 @@ import '../../utils/constants.dart';
 import './standalone_task_detail_screen.dart';
 // --- FIX: Import the new creation screen we will be navigating to ---
 import './create_evidence_task_screen.dart';
-import './template_categories_screen.dart'; 
+import './template_categories_screen.dart';
+import '../../l10n/app_localizations.dart';
+import '../../widgets/modern_notification.dart'; 
 
 class StandaloneTasksScreen extends StatefulWidget {
   const StandaloneTasksScreen({super.key});
@@ -156,9 +158,9 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text(
-                  'Create New Task',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context)!.createNewTask,
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: textPrimaryColor,
@@ -167,8 +169,8 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
                 const SizedBox(height: 20),
                 _buildCreateOption(
                   icon: Icons.category,
-                  title: 'From Template',
-                  subtitle: 'Choose from professional task templates by category',
+                  title: AppLocalizations.of(context)!.fromTemplate,
+                  subtitle: AppLocalizations.of(context)!.chooseFromProfessionalTemplates,
                   color: primaryColor,
                   onTap: () async {
                     Navigator.pop(context);
@@ -183,8 +185,8 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
                 const SizedBox(height: 12),
                 _buildCreateOption(
                   icon: Icons.file_present_rounded,
-                  title: 'Custom Task',
-                  subtitle: 'Create a custom task with specific requirements',
+                  title: AppLocalizations.of(context)!.customTask,
+                  subtitle: AppLocalizations.of(context)!.createCustomTaskDescription,
                   color: secondaryColor,
                   onTap: () async {
                     Navigator.pop(context);
@@ -280,12 +282,12 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
       body: Column(
         children: [
           SizedBox(height: MediaQuery.of(context).padding.top + 16),
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Task Management',
+                AppLocalizations.of(context)!.taskManagement,
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -311,13 +313,13 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
                   Icon(Icons.error, size: 64, color: Colors.red[400]),
                   const SizedBox(height: 16),
                   Text(
-                    'Error loading tasks',
+                    AppLocalizations.of(context)!.errorLoadingTasks,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton(
                     onPressed: () => setState(() { _tasksFuture = _fetchTasks(); }),
-                    child: const Text('Retry'),
+                    child: Text(AppLocalizations.of(context)!.retry),
                   ),
                 ],
               ),
@@ -344,7 +346,7 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'No Tasks Yet',
+                    AppLocalizations.of(context)!.noTasksYet,
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -353,7 +355,7 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Create your first task to get started with task management',
+                    AppLocalizations.of(context)!.createFirstTaskToGetStarted,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
@@ -447,7 +449,7 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
-                                        '${task.points} points',
+                                        AppLocalizations.of(context)!.pointsFormat(task.points.toString()),
                                         style: const TextStyle(
                                           fontSize: 12,
                                           color: textSecondaryColor,
@@ -478,17 +480,17 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(16),
                                       ),
-                                      title: const Text('Confirm Delete'),
-                                      content: const Text('Are you sure you want to delete this task? This action cannot be undone.'),
+                                      title: Text(AppLocalizations.of(context)!.confirmDelete),
+                                      content: Text(AppLocalizations.of(context)!.confirmDeleteTaskMessage),
                                       actions: [
                                         TextButton(
                                           onPressed: () => Navigator.of(context).pop(false),
-                                          child: const Text('Cancel'),
+                                          child: Text(AppLocalizations.of(context)!.cancel),
                                         ),
                                         TextButton(
                                           style: TextButton.styleFrom(foregroundColor: errorColor),
                                           onPressed: () => Navigator.of(context).pop(true),
-                                          child: const Text('Delete'),
+                                          child: Text(AppLocalizations.of(context)!.delete),
                                         ),
                                       ],
                                     ),
@@ -505,23 +507,23 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
                               },
                               itemBuilder: (BuildContext context) {
                                 return [
-                                  const PopupMenuItem(
+                                  PopupMenuItem(
                                     value: 'edit',
                                     child: Row(
                                       children: [
-                                        Icon(Icons.edit, size: 18),
-                                        SizedBox(width: 8),
-                                        Text('Edit Task'),
+                                        const Icon(Icons.edit, size: 18),
+                                        const SizedBox(width: 8),
+                                        Text(AppLocalizations.of(context)!.editTask),
                                       ],
                                     ),
                                   ),
-                                  const PopupMenuItem(
+                                  PopupMenuItem(
                                     value: 'delete',
                                     child: Row(
                                       children: [
-                                        Icon(Icons.delete, size: 18, color: errorColor),
-                                        SizedBox(width: 8),
-                                        Text('Delete Task', style: TextStyle(color: errorColor)),
+                                        const Icon(Icons.delete, size: 18, color: errorColor),
+                                        const SizedBox(width: 8),
+                                        Text(AppLocalizations.of(context)!.deleteTask, style: const TextStyle(color: errorColor)),
                                       ],
                                     ),
                                   ),
@@ -559,7 +561,7 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
         child: FloatingActionButton.extended(
           onPressed: _showCreateTaskMenu,
           icon: const Icon(Icons.add),
-          label: const Text('New Task'),
+          label: Text(AppLocalizations.of(context)!.newTask),
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           elevation: 4,
@@ -591,9 +593,20 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
       // Delete the task itself
       await supabase.from('tasks').delete().eq('id', task.id);
       
-      if (mounted) context.showSnackBar('Task deleted successfully.');
+      if (mounted) {
+        ModernNotification.success(
+          context,
+          message: AppLocalizations.of(context)!.taskDeletedSuccessfully,
+        );
+      }
     } catch (e) {
-      if (mounted) context.showSnackBar('Failed to delete task: $e', isError: true);
+      if (mounted) {
+        ModernNotification.error(
+          context,
+          message: AppLocalizations.of(context)!.failedToDeleteTask,
+          subtitle: e.toString(),
+        );
+      }
     }
   }
 }

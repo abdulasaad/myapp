@@ -9,6 +9,7 @@ import '../tasks/standalone_tasks_screen.dart';
 import 'user_management_screen.dart';
 import '../reporting/location_history_screen.dart';
 import 'send_notification_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -248,7 +249,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Admin Dashboard'),
+        title: Text(AppLocalizations.of(context)!.adminDashboard),
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -269,13 +270,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   Icon(Icons.error, size: 64, color: Colors.red[400]),
                   const SizedBox(height: 16),
                   Text(
-                    'Error loading dashboard',
+                    AppLocalizations.of(context)!.errorLoadingDashboard,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton(
                     onPressed: _refreshDashboard,
-                    child: const Text('Retry'),
+                    child: Text(AppLocalizations.of(context)!.retry),
                   ),
                 ],
               ),
@@ -319,15 +320,15 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     Color greetingColor;
     
     if (hour < 12) {
-      greeting = 'Good Morning';
+      greeting = AppLocalizations.of(context)!.goodMorning;
       greetingIcon = Icons.wb_sunny;
       greetingColor = orangeAccent;
     } else if (hour < 17) {
-      greeting = 'Good Afternoon';
+      greeting = AppLocalizations.of(context)!.goodAfternoon;
       greetingIcon = Icons.wb_sunny_outlined;
       greetingColor = warningColor;
     } else {
-      greeting = 'Good Evening';
+      greeting = AppLocalizations.of(context)!.goodEvening;
       greetingIcon = Icons.nightlight_round;
       greetingColor = purpleAccent;
     }
@@ -386,7 +387,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'System Administrator',
+                  AppLocalizations.of(context)!.systemAdministrator,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 16,
@@ -395,7 +396,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Monitor and manage your Al-Tijwal platform',
+                  AppLocalizations.of(context)!.monitorPlatform,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 14,
@@ -444,8 +445,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            const Text(
-              'System Overview',
+            Text(
+              AppLocalizations.of(context)!.systemOverview,
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
@@ -461,7 +462,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             children: [
               Expanded(
                 child: _buildSystemCard(
-                  title: 'Total Managers',
+                  title: AppLocalizations.of(context)!.totalManagers,
                   value: overview.totalManagers.toString(),
                   icon: Icons.admin_panel_settings,
                   color: primaryColor,
@@ -471,7 +472,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               const SizedBox(width: 16),
               Expanded(
                 child: _buildSystemCard(
-                  title: 'Total Agents',
+                  title: AppLocalizations.of(context)!.totalAgents,
                   value: overview.totalAgents.toString(),
                   icon: Icons.group,
                   color: purpleAccent,
@@ -481,7 +482,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               const SizedBox(width: 16),
               Expanded(
                 child: _buildSystemCard(
-                  title: 'Active Users',
+                  title: AppLocalizations.of(context)!.activeUsers,
                   value: overview.activeUsers.toString(),
                   icon: Icons.wifi,
                   color: successColor,
@@ -497,7 +498,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             children: [
               Expanded(
                 child: _buildSystemCard(
-                  title: 'Total Campaigns',
+                  title: AppLocalizations.of(context)!.totalCampaigns,
                   value: overview.totalCampaigns.toString(),
                   icon: Icons.campaign,
                   color: orangeAccent,
@@ -507,7 +508,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               const SizedBox(width: 16),
               Expanded(
                 child: _buildSystemCard(
-                  title: 'Total Tasks',
+                  title: AppLocalizations.of(context)!.totalTasks,
                   value: overview.totalTasks.toString(),
                   icon: Icons.assignment,
                   color: indigoAccent,
@@ -517,7 +518,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               const SizedBox(width: 16),
               Expanded(
                 child: _buildSystemCard(
-                  title: 'New This Month',
+                  title: AppLocalizations.of(context)!.newThisMonth,
                   value: overview.newUsersThisMonth.toString(),
                   icon: Icons.trending_up,
                   color: secondaryColor,
@@ -631,8 +632,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            const Text(
-              'Quick Actions',
+            Text(
+              AppLocalizations.of(context)!.quickActions,
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
@@ -648,7 +649,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             children: [
               Expanded(
                 child: _buildAdminActionCard(
-                  title: 'User Management',
+                  title: AppLocalizations.of(context)!.userManagement,
                   icon: Icons.manage_accounts,
                   color: primaryColor,
                   onTap: () {
@@ -663,7 +664,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               const SizedBox(width: 16),
               Expanded(
                 child: _buildAdminActionCard(
-                  title: 'System Tasks',
+                  title: AppLocalizations.of(context)!.systemTasks,
                   icon: Icons.list_alt,
                   color: successColor,
                   onTap: () {
@@ -678,7 +679,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               const SizedBox(width: 16),
               Expanded(
                 child: _buildAdminActionCard(
-                  title: 'Evidence Review',
+                  title: AppLocalizations.of(context)!.evidenceReview,
                   icon: Icons.rate_review,
                   color: warningColor,
                   onTap: () {
@@ -693,7 +694,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               const SizedBox(width: 16),
               Expanded(
                 child: _buildAdminActionCard(
-                  title: 'Templates',
+                  title: AppLocalizations.of(context)!.templates,
                   icon: Icons.category,
                   color: secondaryColor,
                   onTap: () {
@@ -714,7 +715,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             children: [
               Expanded(
                 child: _buildAdminActionCard(
-                  title: 'Location History',
+                  title: AppLocalizations.of(context)!.locationHistory,
                   icon: Icons.location_history,
                   color: Colors.teal,
                   onTap: () {
@@ -729,7 +730,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               const SizedBox(width: 16),
               Expanded(
                 child: _buildAdminActionCard(
-                  title: 'Send Notification',
+                  title: AppLocalizations.of(context)!.sendNotification,
                   icon: Icons.notification_add,
                   color: Colors.blue,
                   onTap: () {
@@ -844,8 +845,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Manager Performance',
+        Text(
+          AppLocalizations.of(context)!.managerPerformance,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -872,7 +873,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 children: [
                   Expanded(
                     child: _buildManagerStatCard(
-                      'Total Managers',
+                      AppLocalizations.of(context)!.totalManagers,
                       stats.totalManagers.toString(),
                       Icons.admin_panel_settings,
                       primaryColor,
@@ -881,7 +882,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildManagerStatCard(
-                      'Online Now',
+                      AppLocalizations.of(context)!.onlineNow,
                       stats.onlineManagers.toString(),
                       Icons.online_prediction,
                       successColor,
@@ -890,7 +891,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildManagerStatCard(
-                      'Top Performers',
+                      AppLocalizations.of(context)!.topPerformers,
                       stats.topPerformers.length.toString(),
                       Icons.star,
                       warningColor,
@@ -902,8 +903,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 const SizedBox(height: 16),
                 const Divider(),
                 const SizedBox(height: 12),
-                const Text(
-                  'Top Performing Managers',
+                Text(
+                  AppLocalizations.of(context)!.topPerformingManagers,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -934,7 +935,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                         ),
                       ),
                       Text(
-                        '${manager.campaignsManaged} campaigns',
+                        '${manager.campaignsManaged} ${AppLocalizations.of(context)!.campaigns}',
                         style: const TextStyle(
                           fontSize: 12,
                           color: textSecondaryColor,
@@ -987,8 +988,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'System Performance',
+        Text(
+          AppLocalizations.of(context)!.systemPerformance,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -1000,9 +1001,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           children: [
             Expanded(
               child: _buildPerformanceCard(
-                'Weekly Tasks',
+                AppLocalizations.of(context)!.weeklyTasks,
                 performance.weeklyTaskCompletions.toString(),
-                'Completed this week',
+                AppLocalizations.of(context)!.completedThisWeek,
                 Icons.assignment_turned_in,
                 primaryColor,
               ),
@@ -1010,9 +1011,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: _buildPerformanceCard(
-                'Monthly Tasks',
+                AppLocalizations.of(context)!.monthlyTasks,
                 performance.monthlyTaskCompletions.toString(),
-                'Completed this month',
+                AppLocalizations.of(context)!.completedThisMonth,
                 Icons.trending_up,
                 successColor,
               ),
@@ -1024,9 +1025,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           children: [
             Expanded(
               child: _buildPerformanceCard(
-                'Approval Rate',
+                AppLocalizations.of(context)!.approvalRate,
                 '${performance.evidenceApprovalRate.toStringAsFixed(1)}%',
-                'Evidence quality',
+                AppLocalizations.of(context)!.evidenceQuality,
                 Icons.verified,
                 warningColor,
               ),
@@ -1034,9 +1035,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: _buildPerformanceCard(
-                'System Health',
+                AppLocalizations.of(context)!.systemHealth,
                 '${performance.systemHealthScore.toStringAsFixed(0)}%',
-                'Overall status',
+                AppLocalizations.of(context)!.overallStatus,
                 Icons.health_and_safety,
                 performance.systemHealthScore > 80 ? successColor : errorColor,
               ),
@@ -1116,8 +1117,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Recent System Activity',
+        Text(
+          AppLocalizations.of(context)!.recentSystemActivity,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -1145,7 +1146,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       Icon(Icons.history, size: 48, color: Colors.grey[400]),
                       const SizedBox(height: 8),
                       Text(
-                        'No recent activity',
+                        AppLocalizations.of(context)!.noRecentActivity,
                         style: TextStyle(color: Colors.grey[600]),
                       ),
                     ],

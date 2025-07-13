@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../widgets/advanced_notification.dart';
+import '../widgets/modern_notification.dart';
 
 // --- SUPABASE CLIENT ---
 // Global access to the Supabase client
@@ -49,17 +49,34 @@ const preloader = Center(child: CircularProgressIndicator(color: primaryColor));
 // --- HELPERS ---
 extension ScaffoldMessengerHelper on BuildContext {
   void showSnackBar(String message, {bool isError = false}) {
-    // Use advanced notification system
+    // Use modern notification system
     if (isError) {
-      showErrorNotification(message);
+      ModernNotification.error(this, message: message);
     } else {
-      showSuccessNotification(message);
+      ModernNotification.success(this, message: message);
     }
   }
 }
 
-// Advanced notification helper extension
-extension AdvancedNotificationHelper on BuildContext {
+// Additional notification helper extension for modern notifications
+extension ModernNotificationHelper on BuildContext {
+  void showSuccessNotification(String message, {String? title, Duration? duration}) {
+    ModernNotification.success(this, message: message, subtitle: title, duration: duration ?? const Duration(seconds: 3));
+  }
+
+  void showErrorNotification(String message, {String? title, Duration? duration}) {
+    ModernNotification.error(this, message: message, subtitle: title, duration: duration ?? const Duration(seconds: 3));
+  }
+
+  void showWarningNotification(String message, {String? title, Duration? duration}) {
+    ModernNotification.warning(this, message: message, subtitle: title, duration: duration ?? const Duration(seconds: 3));
+  }
+
+  void showInfoNotification(String message, {String? title, Duration? duration}) {
+    ModernNotification.info(this, message: message, subtitle: title, duration: duration ?? const Duration(seconds: 3));
+  }
+
+  // Legacy method for compatibility
   void showAdvancedNotification(
     String message, {
     String? title,
@@ -70,42 +87,18 @@ extension AdvancedNotificationHelper on BuildContext {
     VoidCallback? onTap,
     IconData? customIcon,
   }) {
-    // Determine notification type
-    late NotificationType type;
     if (isError) {
-      type = NotificationType.error;
+      showErrorNotification(message, title: title, duration: duration);
     } else if (isWarning) {
-      type = NotificationType.warning;
+      showWarningNotification(message, title: title, duration: duration);
     } else if (isInfo) {
-      type = NotificationType.info;
+      showInfoNotification(message, title: title, duration: duration);
     } else {
-      type = NotificationType.success;
+      showSuccessNotification(message, title: title, duration: duration);
     }
-
-    AdvancedNotification.show(
-      this,
-      message: message,
-      type: type,
-      title: title,
-      duration: duration ?? const Duration(seconds: 4),
-      onTap: onTap,
-      customIcon: customIcon,
-    );
-  }
-
-  void showSuccessNotification(String message, {String? title, Duration? duration}) {
-    showAdvancedNotification(message, title: title, duration: duration);
-  }
-
-  void showErrorNotification(String message, {String? title, Duration? duration}) {
-    showAdvancedNotification(message, title: title, isError: true, duration: duration);
-  }
-
-  void showWarningNotification(String message, {String? title, Duration? duration}) {
-    showAdvancedNotification(message, title: title, isWarning: true, duration: duration);
-  }
-
-  void showInfoNotification(String message, {String? title, Duration? duration}) {
-    showAdvancedNotification(message, title: title, isInfo: true, duration: duration);
   }
 }
+
+// --- LOCALIZATION ---
+// Global callback for changing app locale
+void Function(Locale)? globalLocaleChangeCallback;

@@ -9,6 +9,7 @@ import '../../models/route_place.dart';
 import '../../widgets/route_evidence_upload_dialog.dart';
 import '../../widgets/modern_notification.dart';
 import '../../services/location_service.dart';
+import '../../l10n/app_localizations.dart';
 
 class AgentRouteDetailScreen extends StatefulWidget {
   final RouteAssignment routeAssignment;
@@ -375,8 +376,8 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'ACTIVE VISIT',
+                    Text(
+                      AppLocalizations.of(context)!.activeVisit,
                       style: TextStyle(
                         color: Colors.white70,
                         fontSize: 12,
@@ -386,7 +387,7 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      place?.name ?? 'Loading...',
+                      place?.name ?? AppLocalizations.of(context)!.loading,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 20,
@@ -417,7 +418,7 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
                           Icon(Icons.timer, color: Colors.white70, size: 16),
                           const SizedBox(width: 4),
                           Text(
-                            'Time Spent',
+                            AppLocalizations.of(context)!.timeSpent,
                             style: TextStyle(
                               color: Colors.white70,
                               fontSize: 12,
@@ -454,7 +455,7 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
                           Icon(Icons.camera_alt, color: Colors.white70, size: 16),
                           const SizedBox(width: 4),
                           Text(
-                            'Evidence',
+                            AppLocalizations.of(context)!.evidence,
                             style: TextStyle(
                               color: Colors.white70,
                               fontSize: 12,
@@ -683,7 +684,7 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        place?.name ?? 'Loading...',
+                        place?.name ?? AppLocalizations.of(context)!.loading,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -926,7 +927,7 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
 
   String _buildEvidenceText(RoutePlace routePlace, PlaceVisit? visit) {
     if (visit == null) {
-      return '${routePlace.requiredEvidenceCount} evidence required';
+      return AppLocalizations.of(context)!.evidenceRequiredCount(routePlace.requiredEvidenceCount.toString());
     }
     
     final currentCount = _evidenceCounts[visit.id] ?? 0;

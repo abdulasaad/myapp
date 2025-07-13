@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../utils/constants.dart';
+import '../reporting/location_history_screen.dart';
 
 // --- DATA MODELS ---
 
@@ -15,6 +16,8 @@ class AgentMapInfo {
   final LatLng? lastLocation;
   final DateTime? lastSeen;
   final String? status;
+  final String? connectionStatus;
+  final DateTime? lastHeartbeat;
 
   AgentMapInfo({
     required this.id,
@@ -22,19 +25,34 @@ class AgentMapInfo {
     this.lastLocation,
     this.lastSeen,
     this.status,
+    this.connectionStatus,
+    this.lastHeartbeat,
   });
 
   factory AgentMapInfo.fromJson(Map<String, dynamic> data) {
     LatLng? parsedLocation;
     if (data['last_location'] is String) {
       final pointString = data['last_location'] as String;
+      
+      // Try POINT(lng lat) format first
       final pointRegex = RegExp(r'POINT\(([-\d.]+) ([-\d.]+)\)');
-      final match = pointRegex.firstMatch(pointString);
-      if (match != null) {
-        final lng = double.tryParse(match.group(1)!);
-        final lat = double.tryParse(match.group(2)!);
+      final pointMatch = pointRegex.firstMatch(pointString);
+      if (pointMatch != null) {
+        final lng = double.tryParse(pointMatch.group(1)!);
+        final lat = double.tryParse(pointMatch.group(2)!);
         if (lat != null && lng != null) {
           parsedLocation = LatLng(lat, lng);
+        }
+      } else {
+        // Try PostgreSQL default format (lng,lat)
+        final postgresRegex = RegExp(r'\(([-\d.]+),([-\d.]+)\)');
+        final postgresMatch = postgresRegex.firstMatch(pointString);
+        if (postgresMatch != null) {
+          final lng = double.tryParse(postgresMatch.group(1)!);
+          final lat = double.tryParse(postgresMatch.group(2)!);
+          if (lat != null && lng != null) {
+            parsedLocation = LatLng(lat, lng);
+          }
         }
       }
     }
@@ -44,12 +62,19 @@ class AgentMapInfo {
       parsedTime = DateTime.tryParse(data['last_seen']);
     }
 
+    DateTime? parsedHeartbeat;
+    if (data['last_heartbeat'] is String) {
+      parsedHeartbeat = DateTime.tryParse(data['last_heartbeat']);
+    }
+
     return AgentMapInfo(
       id: data['id'] ?? 'unknown_id_${DateTime.now()}',
       fullName: data['full_name'] ?? 'Unknown Agent',
       lastLocation: parsedLocation,
       lastSeen: parsedTime,
       status: data['status'] as String?,
+      connectionStatus: data['connection_status'] as String?,
+      lastHeartbeat: parsedHeartbeat,
     );
   }
 }
@@ -97,6 +122,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
   BitmapDescriptor? _agentIconPurple;
   BitmapDescriptor? _agentIconBlue;
   BitmapDescriptor? _agentIconGreen;
+  BitmapDescriptor? _agentIconYellow;
 
   @override
   void initState() {
@@ -117,6 +143,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
       _agentIconPurple = await _createAgentMarker(Colors.purple);
       _agentIconBlue = await _createAgentMarker(Colors.blue);
       _agentIconGreen = await _createAgentMarker(Colors.green);
+      _agentIconYellow = await _createAgentMarker(Colors.orange);
     } catch (e) {
       // Fallback to default markers if custom icons fail
       debugPrint('Failed to create custom markers: $e');
@@ -172,7 +199,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
 
   Future<void> _initializeAndStartTimer() async {
     await _fetchMapData();
-    _periodicTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
+    _periodicTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
       if (mounted) _fetchMapData();
     });
   }
@@ -193,46 +220,55 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
       final userRole = userRoleResponse['role'] as String;
 
       if (userRole == 'admin') {
-        // Admins can see all agents
-        return await supabase.rpc('get_agents_with_last_location');
-      } else if (userRole == 'manager') {
-        // Managers can see agents in groups they're members of
-        final memberGroups = await supabase
-            .from('user_groups')
-            .select('group_id')
-            .eq('user_id', currentUser.id);
+        // Admins can see all agents (excluding managers and other admins)
+        final response = await supabase
+            .from('profiles')
+            .select('''
+              id,
+              full_name,
+              role,
+              status,
+              last_heartbeat,
+              last_location:active_agents!left(last_location, last_seen)
+            ''')
+            .eq('role', 'agent')
+            .eq('status', 'active');
         
-        final userGroupIds = memberGroups
-            .map((item) => item['group_id'] as String)
-            .toSet();
-        
-        if (userGroupIds.isEmpty) {
-          // Manager not in any groups, can't see any agents
-          return [];
-        }
-
-        // Get all agents in the same groups
-        final agentGroupsResponse = await supabase
-            .from('user_groups')
-            .select('user_id')
-            .inFilter('group_id', userGroupIds.toList());
-        
-        final agentIds = agentGroupsResponse
-            .map((item) => item['user_id'] as String)
-            .toSet();
-        
-        if (agentIds.isEmpty) {
-          return [];
-        }
-
-        // Get agent location data for filtered agents
-        final agentLocationData = await supabase.rpc('get_agents_with_last_location');
-        
-        // Filter the results to only include agents in the same groups
-        return (agentLocationData as List).where((agentData) {
-          final agentId = agentData['id'] as String?;
-          return agentId != null && agentIds.contains(agentId);
+        // Transform the response to match the expected format
+        return response.map((profile) {
+          final Map<String, dynamic> result = Map.from(profile);
+          
+          // Handle active_agents data
+          if (profile['last_location'] != null && profile['last_location'].isNotEmpty) {
+            final activeAgentData = profile['last_location'][0];
+            result['last_location'] = activeAgentData['last_location'];
+            result['last_seen'] = activeAgentData['last_seen'];
+          }
+          
+          // Calculate connection status
+          if (result['last_heartbeat'] != null) {
+            final lastHeartbeat = DateTime.parse(result['last_heartbeat']);
+            final now = DateTime.now();
+            final diff = now.difference(lastHeartbeat);
+            
+            if (diff.inSeconds < 45) {
+              result['connection_status'] = 'active';
+            } else if (diff.inMinutes < 10) {
+              result['connection_status'] = 'away';
+            } else {
+              result['connection_status'] = 'offline';
+            }
+          } else {
+            result['connection_status'] = 'offline';
+          }
+          
+          return result;
         }).toList();
+      } else if (userRole == 'manager') {
+        // Managers can see agents in their groups (including those without heartbeats)
+        return await supabase.rpc('get_agents_in_manager_groups', params: {
+          'manager_user_id': currentUser.id,
+        });
       } else {
         // Other roles (agents) typically don't access live map
         return [];
@@ -326,9 +362,9 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
   }
 
   bool _isAgentOnline(AgentMapInfo agent) {
-    // First check explicit status from database
-    if (agent.status != null) {
-      return agent.status == 'active';
+    // Use new connection status if available
+    if (agent.connectionStatus != null) {
+      return agent.connectionStatus == 'active';
     }
     
     // Fallback to checking last seen timestamp
@@ -339,6 +375,25 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
     
     // Consider online if seen within last 15 minutes
     return timeSinceLastSeen.inMinutes < 15;
+  }
+
+  String _getAgentStatus(AgentMapInfo agent) {
+    // Use new connection status if available
+    if (agent.connectionStatus != null) {
+      switch (agent.connectionStatus) {
+        case 'active':
+          return 'Active';
+        case 'away':
+          return 'Away';
+        case 'offline':
+          return 'Offline';
+        default:
+          return 'Unknown';
+      }
+    }
+    
+    // Fallback to calculated status based on location timestamp
+    return _getCalculatedStatus(agent.lastSeen);
   }
 
   void _updateMarkers() {
@@ -355,12 +410,16 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
           // Selected agent gets blue agent icon
           markerIcon = _agentIconBlue ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
         } else {
-          // Not selected - check online/offline status
-          final isOnline = _isAgentOnline(agent);
-          debugPrint('Agent ${agent.fullName}: status=${agent.status}, lastSeen=${agent.lastSeen}, isOnline=$isOnline');
-          if (isOnline) {
-            // Online agents get green icon
+          // Not selected - check connection status
+          final connectionStatus = agent.connectionStatus;
+          debugPrint('Agent ${agent.fullName}: connectionStatus=$connectionStatus, lastSeen=${agent.lastSeen}');
+          
+          if (connectionStatus == 'active') {
+            // Active agents get green icon
             markerIcon = _agentIconGreen ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
+          } else if (connectionStatus == 'away') {
+            // Away agents get yellow/orange icon
+            markerIcon = _agentIconYellow ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
           } else {
             // Offline agents get red icon
             markerIcon = _agentIconRed ?? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed);
@@ -373,7 +432,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
             position: agent.lastLocation!,
             infoWindow: InfoWindow(
               title: agent.fullName,
-              snippet: 'Last seen: ${agent.lastSeen?.toString().substring(11, 16) ?? 'Unknown'}',
+              snippet: 'Status: ${_getAgentStatus(agent)} • ${agent.lastSeen?.toString().substring(11, 16) ?? 'Unknown'}',
             ),
             icon: markerIcon,
             onTap: () => _onAgentTapped(agent),
@@ -540,167 +599,195 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
                   polylines: const <Polyline>{},
                   circles: const <Circle>{},
                 ),
-                // Back Button - Separate from label
-                Positioned(
-                  top: MediaQuery.of(context).padding.top + 28,
-                  left: 20,
-                  child: GestureDetector(
-                    onTap: () => Navigator.of(context).pop(),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.black.withValues(alpha: 0.8),
-                            Colors.black.withValues(alpha: 0.9),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.3),
-                            blurRadius: 15,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.arrow_back_ios,
-                        color: Colors.white.withValues(alpha: 0.9),
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ),
-                // Tech-Style Location Title Overlay
+                // Top Navigation Bar with Back and History buttons
                 Positioned(
                   top: MediaQuery.of(context).padding.top + 16,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.black.withValues(alpha: 0.8),
-                            Colors.black.withValues(alpha: 0.9),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(25),
-                        border: Border.all(
-                          color: Colors.green.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.3),
-                            blurRadius: 15,
-                            offset: const Offset(0, 4),
-                          ),
-                          BoxShadow(
-                            color: Colors.green.withValues(alpha: 0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 0),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // GPS Signal Icon
-                          Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(10),
+                  left: 16,
+                  right: 16,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Back Button
+                      GestureDetector(
+                        onTap: () => Navigator.of(context).pop(),
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.black.withValues(alpha: 0.8),
+                                Colors.black.withValues(alpha: 0.9),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
                             ),
-                            child: Icon(
-                              Icons.gps_fixed,
-                              color: Colors.green[300],
-                              size: 18,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              width: 1,
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          // Title with tech styling
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'LIVE TRACKING',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.green[300],
-                                  letterSpacing: 1.2,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Real-time Location',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                blurRadius: 15,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
-                          const SizedBox(width: 12),
-                          // Status indicators
-                          Row(
-                            children: [
-                              // Connection status
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: _hasConnectivityIssue 
-                                      ? Colors.orange 
-                                      : Colors.green,
-                                  borderRadius: BorderRadius.circular(4),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: (_hasConnectivityIssue 
-                                          ? Colors.orange 
-                                          : Colors.green).withValues(alpha: 0.5),
-                                      blurRadius: 4,
-                                      spreadRadius: 1,
+                          child: Icon(
+                            Icons.arrow_back_ios,
+                            color: Colors.white.withValues(alpha: 0.9),
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                      // Tech-Style Location Title - Constrained width to prevent overlap
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Center(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.black.withValues(alpha: 0.8),
+                                    Colors.black.withValues(alpha: 0.9),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(25),
+                                border: Border.all(
+                                  color: Colors.green.withValues(alpha: 0.3),
+                                  width: 1,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.3),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                  BoxShadow(
+                                    color: Colors.green.withValues(alpha: 0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 0),
+                                  ),
+                                ],
+                              ),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // GPS Signal Icon
+                                    Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: Colors.green.withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: Icon(
+                                        Icons.gps_fixed,
+                                        color: Colors.green[300],
+                                        size: 16,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    // Title with tech styling
+                                    Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'LIVE TRACKING',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.green[300],
+                                            letterSpacing: 1.0,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 1),
+                                        Text(
+                                          'Real-time',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
+                                            color: Colors.white.withValues(alpha: 0.9),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(width: 8),
+                                    // Status indicator
+                                    Container(
+                                      width: 6,
+                                      height: 6,
+                                      decoration: BoxDecoration(
+                                        color: _hasConnectivityIssue 
+                                            ? Colors.orange 
+                                            : Colors.green,
+                                        borderRadius: BorderRadius.circular(3),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: (_hasConnectivityIssue 
+                                                ? Colors.orange 
+                                                : Colors.green).withValues(alpha: 0.5),
+                                            blurRadius: 4,
+                                            spreadRadius: 1,
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ],
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              // Signal strength bars
-                              Row(
-                                children: List.generate(3, (index) {
-                                  return Container(
-                                    width: 2,
-                                    height: 4 + (index * 2.0),
-                                    margin: const EdgeInsets.only(right: 1),
-                                    decoration: BoxDecoration(
-                                      color: _hasConnectivityIssue
-                                          ? Colors.orange.withValues(alpha: 0.3)
-                                          : Colors.green.withValues(alpha: 0.7),
-                                      borderRadius: BorderRadius.circular(1),
-                                    ),
-                                  );
-                                }),
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Location History Button
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const LocationHistoryScreen(),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.black.withValues(alpha: 0.8),
+                                Colors.black.withValues(alpha: 0.9),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.3),
+                                blurRadius: 15,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
-                        ],
+                          child: Icon(
+                            Icons.history,
+                            color: Colors.white.withValues(alpha: 0.9),
+                            size: 20,
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
                 // Left Panel (Agents)

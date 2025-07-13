@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/app_user.dart';
 import '../../services/user_management_service.dart';
 import '../../utils/constants.dart';
@@ -50,41 +51,17 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
       List<Map<String, dynamic>> agentsResponse;
       
       if (isManager) {
-        // Get manager's groups
-        final managerGroups = await supabase
-            .from('user_groups')
-            .select('group_id')
-            .eq('user_id', currentUser.id);
-        
-        if (managerGroups.isEmpty) {
-          agentsResponse = [];
-        } else {
-          final groupIds = managerGroups.map((g) => g['group_id']).toList();
-          
-          // Get all agents in manager's groups with location data
-          final agentsInGroups = await supabase
-              .from('user_groups')
-              .select('user_id')
-              .inFilter('group_id', groupIds);
-          
-          if (agentsInGroups.isEmpty) {
-            agentsResponse = [];
-          } else {
-            final agentIds = agentsInGroups.map((a) => a['user_id'] as String).toList();
-            
-            // Use same database function as dashboard for consistent status
-            agentsResponse = await supabase
-                .rpc('get_agents_with_last_location')
-                .then((data) => (data as List<dynamic>)
-                    .cast<Map<String, dynamic>>()
-                    .where((agent) => agentIds.contains(agent['id']))
-                    .toList());
-          }
-        }
+        // Use new group-specific function to show all agents in manager's groups
+        agentsResponse = await supabase
+            .rpc('get_agents_in_manager_groups', params: {
+              'manager_user_id': currentUser.id,
+            })
+            .then((data) => (data as List<dynamic>)
+                .cast<Map<String, dynamic>>());
       } else {
         // Admin sees all agents
         agentsResponse = await supabase
-            .rpc('get_agents_with_last_location')
+            .rpc('get_all_agents_for_admin')
             .then((data) => (data as List<dynamic>).cast<Map<String, dynamic>>());
       }
 
@@ -99,18 +76,6 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
             .eq('agent_id', agentData['id'])
             .inFilter('status', ['assigned', 'in_progress']);
 
-        // Get agent's groups
-        final userGroupsResponse = await supabase
-            .from('user_groups')
-            .select('''
-              groups!inner(name)
-            ''')
-            .eq('user_id', agentData['id']);
-
-        final groupNames = userGroupsResponse
-            .map((item) => item['groups']['name'] as String)
-            .toList();
-
         // Create AppUser from agent data
         final user = AppUser(
           id: agentData['id'],
@@ -123,6 +88,12 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
               ? DateTime.parse(agentData['created_at'])
               : DateTime.now(),
         );
+
+        // Get group names from the database function result
+        final groupNames = <String>[];
+        if (agentData['group_name'] != null) {
+          groupNames.add(agentData['group_name']);
+        }
 
         teamMembers.add(TeamMemberInfo(
           user: user,
@@ -179,10 +150,10 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
         title: _showSearchBar 
             ? TextField(
                 controller: _searchController,
-                decoration: const InputDecoration(
-                  hintText: 'Search team members...',
+                decoration: InputDecoration(
+                  hintText: AppLocalizations.of(context)!.searchTeamMembers,
                   border: InputBorder.none,
-                  hintStyle: TextStyle(color: Colors.white70),
+                  hintStyle: const TextStyle(color: Colors.white70),
                 ),
                 style: const TextStyle(color: Colors.white),
                 onChanged: (value) {
@@ -191,7 +162,7 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                   });
                 },
               )
-            : const Text('Team Members'),
+            : Text(AppLocalizations.of(context)!.teamMembers),
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -217,9 +188,9 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
               });
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(value: 'all', child: Text('All Members')),
-              const PopupMenuItem(value: 'active', child: Text('Online (Active/Away)')),
-              const PopupMenuItem(value: 'offline', child: Text('Offline')),
+              PopupMenuItem(value: 'all', child: Text(AppLocalizations.of(context)!.allMembers)),
+              PopupMenuItem(value: 'active', child: Text(AppLocalizations.of(context)!.onlineActiveAway)),
+              PopupMenuItem(value: 'offline', child: Text(AppLocalizations.of(context)!.offline)),
             ],
           ),
         ],
@@ -352,10 +323,10 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
       String filterText;
       switch (_filterStatus) {
         case 'active':
-          filterText = 'Online';
+          filterText = AppLocalizations.of(context)!.online;
           break;
         case 'offline':
-          filterText = 'Offline';
+          filterText = AppLocalizations.of(context)!.offline;
           break;
         default:
           filterText = _filterStatus;
@@ -420,16 +391,16 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
 
   String _getEmptyMessage() {
     if (_searchQuery.isNotEmpty) {
-      return 'No members found';
+      return AppLocalizations.of(context)!.noMembersFound;
     }
     
     switch (_filterStatus) {
       case 'active':
-        return 'No online members';
+        return AppLocalizations.of(context)!.noOnlineMembers;
       case 'offline':
-        return 'No offline members';
+        return AppLocalizations.of(context)!.noOfflineMembers;
       default:
-        return 'No team members found';
+        return AppLocalizations.of(context)!.noTeamMembersFound;
     }
   }
 
@@ -442,9 +413,9 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
       case 'active':
         return 'All team members are currently offline.\nCheck back later for online members.';
       case 'offline':
-        return 'All team members are currently online.\nGreat job keeping the team active!';
+        return AppLocalizations.of(context)!.allTeamMembersOnline;
       default:
-        return 'You don\'t have any team members assigned to your groups yet.\nContact your administrator to add agents to your groups.';
+        return AppLocalizations.of(context)!.noTeamMembersAssigned;
     }
   }
 
@@ -588,33 +559,33 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                 foregroundColor: textSecondaryColor,
               ),
               itemBuilder: (context) => [
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'details',
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, size: 18),
-                      SizedBox(width: 8),
-                      Text('View Details'),
+                      const Icon(Icons.info_outline, size: 18),
+                      const SizedBox(width: 8),
+                      Text(AppLocalizations.of(context)!.viewDetails),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'edit_name',
                   child: Row(
                     children: [
-                      Icon(Icons.edit, size: 18, color: Colors.blue),
-                      SizedBox(width: 8),
-                      Text('Edit Name', style: TextStyle(color: Colors.blue)),
+                      const Icon(Icons.edit, size: 18, color: Colors.blue),
+                      const SizedBox(width: 8),
+                      Text(AppLocalizations.of(context)!.editName, style: const TextStyle(color: Colors.blue)),
                     ],
                   ),
                 ),
-                const PopupMenuItem(
+                PopupMenuItem(
                   value: 'reset_password',
                   child: Row(
                     children: [
-                      Icon(Icons.lock_reset, size: 18, color: Colors.orange),
-                      SizedBox(width: 8),
-                      Text('Reset Password', style: TextStyle(color: Colors.orange)),
+                      const Icon(Icons.lock_reset, size: 18, color: Colors.orange),
+                      const SizedBox(width: 8),
+                      Text(AppLocalizations.of(context)!.resetPassword, style: const TextStyle(color: Colors.orange)),
                     ],
                   ),
                 ),
@@ -648,7 +619,7 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
           children: [
             Icon(Icons.edit, color: Colors.blue[700]),
             const SizedBox(width: 8),
-            const Text('Edit Agent Name'),
+            Text(AppLocalizations.of(context)!.editAgentName),
           ],
         ),
         content: Form(
@@ -658,7 +629,7 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Edit name for @${member.user.username ?? 'agent'}',
+                AppLocalizations.of(context)!.editNameForAgent(member.user.username ?? 'agent'),
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
@@ -726,9 +697,9 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                 validator: (value) {
                   return UserManagementService().validateFullName(value ?? '');
                 },
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Full Name',
-                  hintText: 'Enter agent full name',
+                  hintText: AppLocalizations.of(context)!.enterAgentFullName,
                   prefixIcon: Icon(Icons.person_outline, size: 20),
                   border: OutlineInputBorder(),
                   contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -781,7 +752,7 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
               backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Update Name'),
+            child: Text(AppLocalizations.of(context)!.updateName),
           ),
         ],
       ),
@@ -828,7 +799,7 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Enter new password for ${member.user.fullName}',
+                          AppLocalizations.of(context)!.enterNewPasswordFor(member.user.fullName),
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -898,8 +869,8 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
                             return UserManagementService().validatePassword(value ?? '');
                           },
                           decoration: InputDecoration(
-                            labelText: 'New Password',
-                            hintText: 'Enter new password',
+                            labelText: AppLocalizations.of(context)!.newPassword,
+                            hintText: AppLocalizations.of(context)!.enterNewPassword,
                             prefixIcon: const Icon(Icons.lock_outline, size: 20),
                             suffixIcon: IconButton(
                               icon: Icon(
@@ -1165,7 +1136,7 @@ class _TeamMembersScreenState extends State<TeamMembersScreen> {
             actions: [
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Done'),
+                child: Text(AppLocalizations.of(context)!.ok),
               ),
             ],
           ),

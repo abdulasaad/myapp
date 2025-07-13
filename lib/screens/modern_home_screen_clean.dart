@@ -13,6 +13,7 @@ import '../services/connectivity_service.dart';
 import '../services/update_service.dart';
 import '../services/timezone_service.dart';
 import '../widgets/offline_widget.dart';
+import '../l10n/app_localizations.dart';
 import 'agent/agent_route_dashboard_screen.dart';
 import '../widgets/update_dialog.dart';
 import 'package:logger/logger.dart';
@@ -220,7 +221,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
         children: [
           CircularProgressIndicator(),
           SizedBox(height: 16),
-          Text('Loading...'),
+          Text(AppLocalizations.of(context)!.loading),
         ],
       ),
     );
@@ -242,11 +243,11 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
             children: [
               const Icon(Icons.error_outline, size: 64, color: Colors.red),
               const SizedBox(height: 16),
-              const Text('Error loading user profile'),
+              Text(AppLocalizations.of(context)!.errorLoadingUserProfile),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _loadUserProfile,
-                child: const Text('Retry'),
+                child: Text(AppLocalizations.of(context)!.retry),
               ),
             ],
           ),
@@ -805,7 +806,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                           const SizedBox(height: 8),
                           ElevatedButton(
                             onPressed: _refreshDashboard,
-                            child: const Text('Retry'),
+                            child: Text(AppLocalizations.of(context)!.retry),
                           ),
                         ],
                       ),
@@ -1144,7 +1145,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                 child: _buildMiniStat(
                   '${data.taskStats.weeklyCompleted}',
                   'Week Completed',
-                  Icons.calendar_week,
+                  Icons.date_range,
                   Colors.purple,
                 ),
               ),

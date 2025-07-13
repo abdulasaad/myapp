@@ -6,6 +6,7 @@ import '../../models/task_template.dart';
 import '../../services/template_service.dart';
 import '../../services/task_assignment_service.dart';
 import '../../utils/constants.dart';
+import '../../l10n/app_localizations.dart';
 import 'evidence_submission_screen.dart';
 import 'geofence_stay_task_screen.dart';
 import 'data_collection_task_screen.dart';
@@ -18,9 +19,11 @@ class TaskExecutionRouter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // First check if agent can access this task (not pending)
+    debugPrint('🚨 TaskExecutionRouter: Checking access for task ${task.id}');
     return FutureBuilder<bool>(
       future: TaskAssignmentService().canAgentAccessTask(task.id, supabase.auth.currentUser!.id),
       builder: (context, accessSnapshot) {
+        debugPrint('🚨 TaskExecutionRouter: Access snapshot - hasData: ${accessSnapshot.hasData}, data: ${accessSnapshot.data}, hasError: ${accessSnapshot.hasError}');
         if (accessSnapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
             appBar: AppBar(
@@ -46,19 +49,19 @@ class TaskExecutionRouter extends StatelessWidget {
                   Icon(Icons.hourglass_empty, size: 64, color: Colors.orange[300]),
                   const SizedBox(height: 16),
                   Text(
-                    'Assignment Pending',
+                    AppLocalizations.of(context)!.assignmentPending,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Your assignment to this task is pending approval.\nYou cannot access task details until it is approved.',
+                    AppLocalizations.of(context)!.assignmentPendingDescription,
                     style: Theme.of(context).textTheme.bodyMedium,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Go Back'),
+                    child: Text(AppLocalizations.of(context)!.goBack),
                   ),
                 ],
               ),
@@ -100,19 +103,19 @@ class TaskExecutionRouter extends StatelessWidget {
                   Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
                   const SizedBox(height: 16),
                   Text(
-                    'Template not found',
+                    AppLocalizations.of(context)!.templateNotFound,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'This task template could not be loaded.',
+                    AppLocalizations.of(context)!.templateNotFoundDescription,
                     style: Theme.of(context).textTheme.bodyMedium,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Go Back'),
+                    child: Text(AppLocalizations.of(context)!.goBack),
                   ),
                 ],
               ),
@@ -281,7 +284,7 @@ class EnhancedEvidenceSubmissionScreen extends StatelessWidget {
     requirements.add(
       _buildRequirementChip(
         Icons.upload_file,
-        '${template.defaultEvidenceCount} evidence required',
+        AppLocalizations.of(context)!.evidenceRequiredCount(template.defaultEvidenceCount.toString()),
         Colors.blue,
       ),
     );
@@ -291,7 +294,7 @@ class EnhancedEvidenceSubmissionScreen extends StatelessWidget {
       requirements.add(
         _buildRequirementChip(
           Icons.location_on,
-          'Location verification required',
+          AppLocalizations.of(context)!.locationVerificationRequired,
           Colors.red,
         ),
       );

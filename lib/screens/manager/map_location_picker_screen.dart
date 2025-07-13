@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../utils/constants.dart';
+import '../../l10n/app_localizations.dart';
 
 class MapLocationPickerScreen extends StatefulWidget {
   final LatLng? initialLocation;
@@ -89,7 +90,7 @@ class _MapLocationPickerScreenState extends State<MapLocationPickerScreen> {
             });
           },
           infoWindow: InfoWindow(
-            title: 'Selected Location',
+            title: AppLocalizations.of(context)!.selectedLocation,
             snippet: '${_selectedLocation!.latitude.toStringAsFixed(6)}, ${_selectedLocation!.longitude.toStringAsFixed(6)}',
           ),
         ),
@@ -130,8 +131,8 @@ class _MapLocationPickerScreenState extends State<MapLocationPickerScreen> {
       if (!hasPermission) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Location permission is required'),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.locationPermissionRequired),
               backgroundColor: Colors.red,
             ),
           );
@@ -165,7 +166,7 @@ class _MapLocationPickerScreenState extends State<MapLocationPickerScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error getting location: $e'),
+            content: Text('${AppLocalizations.of(context)!.errorGettingLocation}: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -176,8 +177,8 @@ class _MapLocationPickerScreenState extends State<MapLocationPickerScreen> {
   void _confirmSelection() {
     if (_selectedLocation == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a location on the map'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.pleaseSelectLocationOnMap),
           backgroundColor: Colors.red,
         ),
       );
@@ -195,15 +196,15 @@ class _MapLocationPickerScreenState extends State<MapLocationPickerScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Select Location'),
+        title: Text(AppLocalizations.of(context)!.selectLocation),
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
           TextButton(
             onPressed: _confirmSelection,
-            child: const Text(
-              'Confirm',
+            child: Text(
+              AppLocalizations.of(context)!.confirm,
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -280,8 +281,8 @@ class _MapLocationPickerScreenState extends State<MapLocationPickerScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Selected Coordinates:',
+                              Text(
+                                AppLocalizations.of(context)!.selectedCoordinates,
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -312,8 +313,8 @@ class _MapLocationPickerScreenState extends State<MapLocationPickerScreen> {
                       ],
                       
                       // Geofence radius
-                      const Text(
-                        'Geofence Radius',
+                      Text(
+                        AppLocalizations.of(context)!.geofenceRadius,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -369,7 +370,7 @@ class _MapLocationPickerScreenState extends State<MapLocationPickerScreen> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Tap on the map to select a location. Drag the marker to fine-tune. Adjust the geofence radius as needed.',
+                                AppLocalizations.of(context)!.mapInstructions,
                                 style: TextStyle(fontSize: 12, color: Colors.blue[700]),
                               ),
                             ),

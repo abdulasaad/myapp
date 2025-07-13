@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import '../l10n/app_localizations.dart';
 import '../models/app_version.dart';
 import '../services/update_service.dart';
 import '../utils/constants.dart';
@@ -42,7 +43,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
   Future<void> _handleUpdate() async {
     setState(() {
       _isDownloading = true;
-      _statusMessage = 'Downloading update...';
+      _statusMessage = AppLocalizations.of(context)!.downloadingUpdate;
     });
 
     try {
@@ -51,19 +52,19 @@ class _UpdateDialogState extends State<UpdateDialog> {
       
       if (apkPath != null) {
         setState(() {
-          _statusMessage = 'Download complete. Ready to install.';
+          _statusMessage = AppLocalizations.of(context)!.downloadCompleteReadyToInstall;
         });
         
         // Trigger installation
         setState(() {
-          _statusMessage = 'Installing update...';
+          _statusMessage = AppLocalizations.of(context)!.installingUpdate;
         });
         
         final installed = await _updateService.installUpdate(apkPath);
         
         if (!installed) {
           setState(() {
-            _statusMessage = 'Installation started. If you see a security scan dialog, tap "Install without scanning" to proceed quickly.';
+            _statusMessage = AppLocalizations.of(context)!.installationStartedSecurityDialog;
             _isDownloading = false;
           });
           
@@ -78,13 +79,13 @@ class _UpdateDialogState extends State<UpdateDialog> {
         if (mounted) Navigator.of(context).pop();
       } else {
         setState(() {
-          _statusMessage = 'Failed to download update. Please try again.';
+          _statusMessage = AppLocalizations.of(context)!.failedToDownloadUpdate;
           _isDownloading = false;
         });
       }
     } catch (e) {
       setState(() {
-        _statusMessage = 'Error: ${e.toString()}';
+        _statusMessage = AppLocalizations.of(context)!.updateError(e.toString());
         _isDownloading = false;
       });
     }
@@ -156,7 +157,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Update Available',
+                      AppLocalizations.of(context)!.updateAvailable,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.9),
                         fontSize: 16,
@@ -191,7 +192,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
                               Column(
                                 children: [
                                   Text(
-                                    'Current',
+                                    AppLocalizations.of(context)!.current,
                                     style: TextStyle(
                                       color: Colors.grey[600],
                                       fontSize: 12,
@@ -217,7 +218,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
                               Column(
                                 children: [
                                   Text(
-                                    'New',
+                                    AppLocalizations.of(context)!.newVersion,
                                     style: TextStyle(
                                       color: Colors.grey[600],
                                       fontSize: 12,
@@ -255,7 +256,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'What\'s New',
+                                AppLocalizations.of(context)!.whatsNew,
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.grey[800],
@@ -279,7 +280,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
                     if (widget.appVersion.fileSizeMb != null) ...[
                       const SizedBox(height: 12),
                       Text(
-                        'Download size: ${widget.appVersion.fileSizeMb!.toStringAsFixed(1)} MB',
+                        AppLocalizations.of(context)!.downloadSize(widget.appVersion.fileSizeMb!.toStringAsFixed(1)),
                         style: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 14,
@@ -334,7 +335,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
                           elevation: _isDownloading ? 0 : 2,
                         ),
                         child: Text(
-                          _isDownloading ? 'Updating...' : 'Update Now',
+                          _isDownloading ? AppLocalizations.of(context)!.updating : AppLocalizations.of(context)!.updateNow,
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:myapp/screens/agent/task_location_viewer_screen.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/campaign.dart';
 import '../../models/task.dart';
 import '../../services/location_service.dart';
@@ -14,6 +15,7 @@ import '../../services/session_service.dart';
 import '../../services/connectivity_service.dart';
 import '../../utils/constants.dart';
 import '../../widgets/offline_widget.dart';
+import '../../widgets/modern_notification.dart';
 import './create_campaign_screen.dart'; // Added for navigation to edit
 import 'campaign_detail_screen.dart';
 import '../agent/agent_task_list_screen.dart';
@@ -259,12 +261,12 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
       body: Column(
         children: [
           SizedBox(height: MediaQuery.of(context).padding.top + 16),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Campaigns',
+                AppLocalizations.of(context)!.campaigns,
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -286,8 +288,8 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
                   // Check if this is a network error
                   if (ConnectivityService.isNetworkError(snapshot.error)) {
                     return OfflineWidget(
-                      title: 'No Internet Connection',
-                      subtitle: 'Unable to load campaigns. Please check your connection and try again.',
+                      title: AppLocalizations.of(context)!.noInternetConnection,
+                      subtitle: AppLocalizations.of(context)!.unableToLoadCampaigns,
                       onRetry: () => refreshAll(),
                     );
                   }
@@ -298,13 +300,13 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
                         Icon(Icons.error, size: 64, color: Colors.red[400]),
                         const SizedBox(height: 16),
                         Text(
-                          'Error loading campaigns',
+                          AppLocalizations.of(context)!.errorLoadingCampaigns,
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: 8),
                         ElevatedButton(
                           onPressed: refreshAll,
-                          child: const Text('Retry'),
+                          child: Text(AppLocalizations.of(context)!.retry),
                         ),
                       ],
                     ),
@@ -331,7 +333,7 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'No Campaigns Yet',
+                    AppLocalizations.of(context)!.noCampaignsYet,
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -340,7 +342,7 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Create your first campaign to get started with managing tasks and agents',
+                    AppLocalizations.of(context)!.createFirstCampaign,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
@@ -409,16 +411,16 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
-                            title: const Text('Confirm Delete'),
-                            content: Text('Are you sure you want to delete "${campaign.name}"? This action cannot be undone.'),
+                            title: Text(AppLocalizations.of(context)!.confirmDelete),
+                            content: Text(AppLocalizations.of(context)!.confirmDeleteCampaign(campaign.name)),
                             actions: <Widget>[
                               TextButton(
-                                child: const Text('Cancel'),
+                                child: Text(AppLocalizations.of(context)!.cancel),
                                 onPressed: () => Navigator.of(context).pop(false),
                               ),
                               TextButton(
                                 style: TextButton.styleFrom(foregroundColor: errorColor),
-                                child: const Text('Delete'),
+                                child: Text(AppLocalizations.of(context)!.deleteCampaign),
                                 onPressed: () => Navigator.of(context).pop(true),
                               ),
                             ],
@@ -442,7 +444,7 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Campaign "${campaign.name}" deleted successfully.'),
+                                content: Text(AppLocalizations.of(context)!.campaignDeleted(campaign.name)),
                                 backgroundColor: successColor,
                               ),
                             );
@@ -456,7 +458,7 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Error deleting campaign: ${e.toString()}'),
+                                content: Text(AppLocalizations.of(context)!.errorDeletingCampaign(e.toString())),
                                 backgroundColor: errorColor,
                               ),
                             );
@@ -488,7 +490,7 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
             }
           },
           icon: const Icon(Icons.add),
-          label: const Text('Create Campaign'),
+          label: Text(AppLocalizations.of(context)!.campaign),
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           elevation: 4,
@@ -511,12 +513,12 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
       body: Column(
         children: [
           SizedBox(height: MediaQuery.of(context).padding.top + 16),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'My Campaigns',
+                AppLocalizations.of(context)!.myCampaigns,
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -538,8 +540,8 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
             // Check if this is a network error
             if (ConnectivityService.isNetworkError(snapshot.error)) {
               return OfflineWidget(
-                title: 'No Internet Connection',
-                subtitle: 'Unable to load your campaigns. Please check your connection and try again.',
+                title: AppLocalizations.of(context)!.noInternetConnection,
+                subtitle: AppLocalizations.of(context)!.unableToLoadCampaigns,
                 onRetry: () => refreshAll(),
               );
             }
@@ -550,13 +552,13 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
                   Icon(Icons.error, size: 64, color: Colors.red[400]),
                   const SizedBox(height: 16),
                   Text(
-                    'Error loading campaigns',
+                    AppLocalizations.of(context)!.errorLoadingCampaigns,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton(
                     onPressed: refreshAll,
-                    child: const Text('Retry'),
+                    child: Text(AppLocalizations.of(context)!.retry),
                   ),
                 ],
               ),
@@ -586,7 +588,7 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'No Campaigns Assigned',
+                    AppLocalizations.of(context)!.noCampaignsAssigned,
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -595,7 +597,7 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'You will see assigned campaigns here when available',
+                    AppLocalizations.of(context)!.viewAssignedCampaigns,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 16,
@@ -673,8 +675,9 @@ class CampaignCard extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget? statusWidget;
     if (isInsideGeofence != null) {
-      final String message =
-          isInsideGeofence! ? '✅ Inside Geofence' : '❌ Outside Geofence';
+      final String message = isInsideGeofence!
+          ? '✅ ${AppLocalizations.of(context)!.insideGeofence}'
+          : '❌ ${AppLocalizations.of(context)!.outsideGeofence}';
       
       final Color bgColor = isInsideGeofence!
           ? successColor.withValues(alpha: 0.1)
@@ -771,7 +774,7 @@ class CampaignCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Ends: ${DateFormat.yMMMd().format(campaign.endDate)}',
+                          '${AppLocalizations.of(context)!.ends} ${DateFormat.yMMMd().format(campaign.endDate)}',
                           style: const TextStyle(
                             color: textSecondaryColor,
                             fontSize: 13,
@@ -789,7 +792,7 @@ class CampaignCard extends StatelessWidget {
                       child: IconButton(
                         icon: const Icon(Icons.edit_outlined, size: 18),
                         color: primaryColor,
-                        tooltip: 'Edit Campaign',
+                        tooltip: AppLocalizations.of(context)!.editCampaign,
                         onPressed: onEdit,
                       ),
                     ),
@@ -802,7 +805,7 @@ class CampaignCard extends StatelessWidget {
                       child: IconButton(
                         icon: const Icon(Icons.delete_outline, size: 18),
                         color: errorColor,
-                        tooltip: 'Delete Campaign',
+                        tooltip: AppLocalizations.of(context)!.deleteCampaign,
                         onPressed: onDelete,
                       ),
                     ),
@@ -909,7 +912,7 @@ class TaskCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${task.points} Points',
+                      AppLocalizations.of(context)!.pointsFormat(task.points.toString()),
                       style: const TextStyle(
                         color: textSecondaryColor,
                         fontSize: 13,
@@ -927,7 +930,7 @@ class TaskCard extends StatelessWidget {
                   child: IconButton(
                     icon: const Icon(Icons.location_on_outlined, size: 18),
                     color: primaryColor,
-                    tooltip: 'View Task Location',
+                    tooltip: AppLocalizations.of(context)!.viewTaskLocation,
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(

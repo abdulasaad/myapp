@@ -7,6 +7,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../l10n/app_localizations.dart';
 import '../utils/constants.dart';
 import '../services/location_service.dart';
 import '../widgets/modern_notification.dart';
@@ -55,7 +56,7 @@ class _StandaloneUploadDialogState extends State<StandaloneUploadDialog> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Upload Evidence',
+                      AppLocalizations.of(context)!.uploadEvidence,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: textPrimaryColor,
@@ -74,18 +75,18 @@ class _StandaloneUploadDialogState extends State<StandaloneUploadDialog> {
               TextFormField(
                 controller: _titleController,
                 enabled: !_isUploading,
-                decoration: const InputDecoration(
-                  labelText: 'Title *',
-                  hintText: 'Enter a title for this evidence',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.title),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.titleRequired,
+                  hintText: AppLocalizations.of(context)!.enterTitleForEvidence,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.title),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Title is required';
+                    return AppLocalizations.of(context)!.titleIsRequired;
                   }
                   if (value.trim().length < 3) {
-                    return 'Title must be at least 3 characters';
+                    return AppLocalizations.of(context)!.titleMinLength;
                   }
                   return null;
                 },
@@ -97,11 +98,11 @@ class _StandaloneUploadDialogState extends State<StandaloneUploadDialog> {
               TextFormField(
                 controller: _descriptionController,
                 enabled: !_isUploading,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  hintText: 'Optional description or notes',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.description),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.description,
+                  hintText: AppLocalizations.of(context)!.optionalDescriptionOrNotes,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.description),
                 ),
                 maxLines: 3,
                 maxLength: 500,
@@ -124,7 +125,7 @@ class _StandaloneUploadDialogState extends State<StandaloneUploadDialog> {
                         const Icon(Icons.attach_file, color: primaryColor),
                         const SizedBox(width: 8),
                         Text(
-                          'Select File',
+                          AppLocalizations.of(context)!.selectFile,
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
@@ -136,7 +137,7 @@ class _StandaloneUploadDialogState extends State<StandaloneUploadDialog> {
                     if (_selectedFile == null)
                       _buildFileSelectionButton(
                         icon: Icons.attach_file,
-                        label: 'Select File',
+                        label: AppLocalizations.of(context)!.selectFile,
                         onTap: _isUploading ? null : _pickFile,
                       )
                     else
@@ -152,7 +153,7 @@ class _StandaloneUploadDialogState extends State<StandaloneUploadDialog> {
                     LinearProgressIndicator(value: _uploadProgress),
                     const SizedBox(height: 8),
                     Text(
-                      'Uploading... ${(_uploadProgress * 100).toInt()}%',
+                      AppLocalizations.of(context)!.uploadingProgress((_uploadProgress * 100).toInt()),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
@@ -167,7 +168,7 @@ class _StandaloneUploadDialogState extends State<StandaloneUploadDialog> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: _isUploading ? null : () => Navigator.of(context).pop(),
-                      child: const Text('Cancel'),
+                      child: Text(AppLocalizations.of(context)!.cancel),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -182,7 +183,7 @@ class _StandaloneUploadDialogState extends State<StandaloneUploadDialog> {
                               height: 16,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text('Upload'),
+                          : Text(AppLocalizations.of(context)!.upload),
                     ),
                   ),
                 ],
@@ -325,7 +326,7 @@ class _StandaloneUploadDialogState extends State<StandaloneUploadDialog> {
         // Check file size (limit to 50MB)
         if (file.size > 50 * 1024 * 1024) {
           if (mounted) {
-            ModernNotification.error(context, message: 'File too large. Maximum size is 50MB.');
+            ModernNotification.error(context, message: AppLocalizations.of(context)!.fileTooLargeMaxSize);
           }
           return;
         }
@@ -334,7 +335,7 @@ class _StandaloneUploadDialogState extends State<StandaloneUploadDialog> {
       }
     } catch (e) {
       if (mounted) {
-        ModernNotification.error(context, message: 'Error selecting file: $e');
+        ModernNotification.error(context, message: AppLocalizations.of(context)!.errorSelectingFile(e.toString()));
       }
     }
   }
@@ -370,7 +371,7 @@ class _StandaloneUploadDialogState extends State<StandaloneUploadDialog> {
         final bytes = await File(file.path!).readAsBytes();
         fileBytes = Uint8List.fromList(bytes);
       } else {
-        throw Exception('File has no data');
+        throw Exception(AppLocalizations.of(context)!.fileHasNoData);
       }
       
       final mimeType = lookupMimeType(file.name, headerBytes: fileBytes) ?? 'application/octet-stream';
@@ -382,7 +383,7 @@ class _StandaloneUploadDialogState extends State<StandaloneUploadDialog> {
       // Check file size (limit to 50MB)
       if (fileSize > 50 * 1024 * 1024) {
         if (mounted) {
-          ModernNotification.error(context, message: 'File too large. Maximum size is 50MB.');
+          ModernNotification.error(context, message: AppLocalizations.of(context)!.fileTooLargeMaxSize);
         }
         return;
       }
@@ -436,12 +437,12 @@ class _StandaloneUploadDialogState extends State<StandaloneUploadDialog> {
       setState(() => _uploadProgress = 1.0);
 
       if (mounted) {
-        ModernNotification.success(context, message: 'Evidence uploaded successfully!');
+        ModernNotification.success(context, message: AppLocalizations.of(context)!.evidenceUploadedSuccessfully);
         Navigator.of(context).pop(true); // Return true to indicate successful upload
       }
     } catch (e) {
       if (mounted) {
-        ModernNotification.error(context, message: 'Upload failed: $e');
+        ModernNotification.error(context, message: AppLocalizations.of(context)!.uploadFailed(e.toString()));
       }
     } finally {
       if (mounted) {

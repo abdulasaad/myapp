@@ -1,9 +1,11 @@
 // lib/screens/manager/create_route_screen.dart
 
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../utils/constants.dart';
 import '../../models/place.dart';
 import '../../models/route_place.dart';
+import '../../widgets/month_day_picker.dart';
 
 class CreateRouteScreen extends StatefulWidget {
   const CreateRouteScreen({super.key});
@@ -17,8 +19,7 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   
-  DateTime? _startDate;
-  DateTime? _endDate;
+  Set<DateTime> _selectedDays = {};
   List<Place> _availablePlaces = [];
   List<RoutePlace> _selectedPlaces = [];
   bool _isLoading = false;
@@ -109,7 +110,7 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Create Route'),
+        title: Text('${AppLocalizations.of(context)!.create} ${AppLocalizations.of(context)!.route}'),
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -125,9 +126,9 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   )
-                : const Text(
-                    'Save',
-                    style: TextStyle(
+                : Text(
+                    AppLocalizations.of(context)!.save,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
@@ -165,9 +166,9 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
               children: [
                 Icon(Icons.route, color: primaryColor),
                 const SizedBox(width: 8),
-                const Text(
-                  'Route Details',
-                  style: TextStyle(
+                Text(
+                  '${AppLocalizations.of(context)!.route} ${AppLocalizations.of(context)!.details}',
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -177,14 +178,14 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Route Name *',
-                hintText: 'Enter route name',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: '${AppLocalizations.of(context)!.routeName} *',
+                hintText: AppLocalizations.of(context)!.enterRouteName,
+                border: const OutlineInputBorder(),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Route name is required';
+                  return AppLocalizations.of(context)!.routeNameIsRequired;
                 }
                 return null;
               },
@@ -192,10 +193,10 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _descriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Description',
-                hintText: 'Brief description of the route',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.description,
+                hintText: AppLocalizations.of(context)!.briefDescriptionOfTheRoute,
+                border: const OutlineInputBorder(),
               ),
               maxLines: 3,
             ),
@@ -209,9 +210,9 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Estimated Duration',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  Text(
+                    AppLocalizations.of(context)!.estimatedDuration,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -220,10 +221,10 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: _estimatedHoursController,
-                          decoration: const InputDecoration(
-                            labelText: 'Hours',
+                          decoration: InputDecoration(
+                            labelText: AppLocalizations.of(context)!.hours,
                             hintText: '0',
-                            border: OutlineInputBorder(),
+                            border: const OutlineInputBorder(),
                           ),
                           keyboardType: TextInputType.number,
                           textAlign: TextAlign.center,
@@ -234,10 +235,10 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: _estimatedMinutesController,
-                          decoration: const InputDecoration(
-                            labelText: 'Minutes',
+                          decoration: InputDecoration(
+                            labelText: AppLocalizations.of(context)!.minutes,
                             hintText: '0',
-                            border: OutlineInputBorder(),
+                            border: const OutlineInputBorder(),
                           ),
                           keyboardType: TextInputType.number,
                           textAlign: TextAlign.center,
@@ -265,9 +266,9 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
               children: [
                 Icon(Icons.calendar_today, color: primaryColor),
                 const SizedBox(width: 8),
-                const Text(
-                  'Schedule',
-                  style: TextStyle(
+                Text(
+                  AppLocalizations.of(context)!.schedule,
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -294,20 +295,20 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'Start Date',
-                                  style: TextStyle(
+                                Text(
+                                  AppLocalizations.of(context)!.startDate,
+                                  style: const TextStyle(
                                     fontSize: 12,
                                     color: textSecondaryColor,
                                   ),
                                 ),
                                 Text(
-                                  _startDate != null
-                                      ? '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}'
-                                      : 'Select start date',
+                                  _selectedDays.isNotEmpty
+                                      ? '${_selectedDays.length} ${AppLocalizations.of(context)!.daysSelected}'
+                                      : AppLocalizations.of(context)!.selectDays,
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: _startDate != null ? textPrimaryColor : Colors.grey,
+                                    color: _selectedDays.isNotEmpty ? textPrimaryColor : Colors.grey,
                                   ),
                                 ),
                               ],
@@ -336,20 +337,20 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'End Date',
-                                  style: TextStyle(
+                                Text(
+                                  AppLocalizations.of(context)!.endDate,
+                                  style: const TextStyle(
                                     fontSize: 12,
                                     color: textSecondaryColor,
                                   ),
                                 ),
                                 Text(
-                                  _endDate != null
-                                      ? '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}'
-                                      : 'Select end date',
+                                  _selectedDays.isNotEmpty
+                                      ? '${_selectedDays.length} ${AppLocalizations.of(context)!.daysSelected}'
+                                      : AppLocalizations.of(context)!.selectDays,
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: _endDate != null ? textPrimaryColor : Colors.grey,
+                                    color: _selectedDays.isNotEmpty ? textPrimaryColor : Colors.grey,
                                   ),
                                 ),
                               ],
@@ -379,9 +380,9 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
               children: [
                 Icon(Icons.location_on, color: primaryColor),
                 const SizedBox(width: 8),
-                const Text(
-                  'Route Places',
-                  style: TextStyle(
+                Text(
+                  '${AppLocalizations.of(context)!.route} ${AppLocalizations.of(context)!.places}',
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -413,7 +414,7 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                     Icon(Icons.location_off, size: 48, color: Colors.grey[400]),
                     const SizedBox(height: 8),
                     Text(
-                      'No places added',
+                      AppLocalizations.of(context)!.noPlacesAdded,
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.grey[600],
@@ -422,7 +423,7 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Add places to create your route',
+                      AppLocalizations.of(context)!.addPlacesToCreateYourRoute,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[500],
@@ -475,7 +476,7 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
-          'Duration: ${routePlace.estimatedDurationMinutes}min • Evidence: ${routePlace.requiredEvidenceCount} • Visits: ${routePlace.visitFrequency}',
+          '${AppLocalizations.of(context)!.duration}: ${routePlace.estimatedDurationMinutes}min • ${AppLocalizations.of(context)!.evidence}: ${routePlace.requiredEvidenceCount} • ${AppLocalizations.of(context)!.visits}: ${routePlace.visitFrequency}',
           style: const TextStyle(fontSize: 12),
         ),
         trailing: Row(
@@ -497,38 +498,30 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
   }
 
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
+    // Show month/day picker for selecting multiple days
+    // For now, just show a simple date picker
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: isStartDate 
-          ? (_startDate ?? DateTime.now())
-          : (_endDate ?? _startDate ?? DateTime.now()),
+      initialDate: DateTime.now(),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     
     if (picked != null) {
       setState(() {
-        if (isStartDate) {
-          _startDate = picked;
-          // If end date is before start date, clear it
-          if (_endDate != null && _endDate!.isBefore(_startDate!)) {
-            _endDate = null;
-          }
-        } else {
-          _endDate = picked;
-        }
+        _selectedDays.add(DateTime(picked.year, picked.month, picked.day));
       });
     }
   }
 
   void _showAddPlaceDialog() {
     if (_isLoadingPlaces) {
-      context.showSnackBar('Loading places...', isError: false);
+      context.showSnackBar(AppLocalizations.of(context)!.loadingPlaces, isError: false);
       return;
     }
 
     if (_availablePlaces.isEmpty) {
-      context.showSnackBar('No approved places available. Ask agents to suggest places.', isError: true);
+      context.showSnackBar(AppLocalizations.of(context)!.noApprovedPlacesAvailableAskAgentsToSuggestPlaces, isError: true);
       return;
     }
 
@@ -544,13 +537,13 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
     }).toList();
 
     return AlertDialog(
-      title: const Text('Add Place to Route'),
+      title: Text('${AppLocalizations.of(context)!.add} ${AppLocalizations.of(context)!.place} ${AppLocalizations.of(context)!.to} ${AppLocalizations.of(context)!.route}'),
       content: SizedBox(
         width: double.maxFinite,
         height: 400,
         child: availablePlaces.isEmpty
-            ? const Center(
-                child: Text('All available places have been added to the route.'),
+            ? Center(
+                child: Text(AppLocalizations.of(context)!.allAvailablePlacesHaveBeenAddedToTheRoute),
               )
             : ListView.builder(
                 itemCount: availablePlaces.length,
@@ -573,7 +566,7 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
       ],
     );
@@ -634,7 +627,7 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Edit ${routePlace.place?.name ?? 'Place'}'),
+        title: Text('${AppLocalizations.of(context)!.edit} ${routePlace.place?.name ?? AppLocalizations.of(context)!.place}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -647,9 +640,9 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Estimated Duration',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  Text(
+                    AppLocalizations.of(context)!.estimatedDuration,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -658,10 +651,10 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: hoursController,
-                          decoration: const InputDecoration(
-                            labelText: 'Hours',
+                          decoration: InputDecoration(
+                            labelText: AppLocalizations.of(context)!.hours,
                             hintText: '0',
-                            border: OutlineInputBorder(),
+                            border: const OutlineInputBorder(),
                           ),
                           keyboardType: TextInputType.number,
                           textAlign: TextAlign.center,
@@ -672,10 +665,10 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: minutesController,
-                          decoration: const InputDecoration(
-                            labelText: 'Minutes',
+                          decoration: InputDecoration(
+                            labelText: AppLocalizations.of(context)!.minutes,
                             hintText: '0',
-                            border: OutlineInputBorder(),
+                            border: const OutlineInputBorder(),
                           ),
                           keyboardType: TextInputType.number,
                           textAlign: TextAlign.center,
@@ -692,9 +685,9 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                 Expanded(
                   child: TextField(
                     controller: evidenceController,
-                    decoration: const InputDecoration(
-                      labelText: 'Required Evidence',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.requiredEvidence,
+                      border: const OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.number,
                   ),
@@ -703,11 +696,11 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                 Expanded(
                   child: TextField(
                     controller: frequencyController,
-                    decoration: const InputDecoration(
-                      labelText: 'Visit Frequency',
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.visitFrequency,
                       hintText: '1-10',
-                      border: OutlineInputBorder(),
-                      helperText: 'Times to visit',
+                      border: const OutlineInputBorder(),
+                      helperText: AppLocalizations.of(context)!.timesToVisit,
                     ),
                     keyboardType: TextInputType.number,
                   ),
@@ -728,7 +721,7 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Agent must visit ${routePlace.visitFrequency} times with 12-hour cooldown between visits',
+                        AppLocalizations.of(context)!.agentMustVisitTimesWithCooldown(routePlace.visitFrequency, 24),
                         style: TextStyle(fontSize: 12, color: Colors.blue[700]),
                       ),
                     ),
@@ -738,9 +731,9 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
             const SizedBox(height: 16),
             TextField(
               controller: instructionsController,
-              decoration: const InputDecoration(
-                labelText: 'Instructions (Optional)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: '${AppLocalizations.of(context)!.instructions} (${AppLocalizations.of(context)!.optional})',
+                border: const OutlineInputBorder(),
               ),
               maxLines: 3,
             ),
@@ -749,7 +742,7 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -762,7 +755,7 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
               // Validate frequency
               if (frequency < 1 || frequency > 10) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Visit frequency must be between 1 and 10')),
+                  SnackBar(content: Text(AppLocalizations.of(context)!.visitFrequencyMustBeBetween1And10)),
                 );
                 return;
               }
@@ -780,7 +773,7 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
               
               Navigator.pop(context);
             },
-            child: const Text('Save'),
+            child: Text(AppLocalizations.of(context)!.save),
           ),
         ],
       ),
@@ -793,7 +786,7 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
     }
 
     if (_selectedPlaces.isEmpty) {
-      context.showSnackBar('Please add at least one place to the route', isError: true);
+      context.showSnackBar(AppLocalizations.of(context)!.pleaseAddAtLeastOnePlaceToTheRoute, isError: true);
       return;
     }
 
@@ -802,7 +795,7 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
     try {
       final currentUser = supabase.auth.currentUser;
       if (currentUser == null) {
-        context.showSnackBar('Authentication required', isError: true);
+        context.showSnackBar(AppLocalizations.of(context)!.authenticationRequired, isError: true);
         return;
       }
 
@@ -814,8 +807,8 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
             : null,
         'created_by': currentUser.id,
         'assigned_manager_id': currentUser.id,
-        'start_date': _startDate?.toIso8601String().split('T')[0],
-        'end_date': _endDate?.toIso8601String().split('T')[0],
+        'start_date': _selectedDays.isNotEmpty ? _selectedDays.first.toIso8601String().split('T')[0] : null,
+        'end_date': _selectedDays.isNotEmpty ? _selectedDays.last.toIso8601String().split('T')[0] : null,
         'estimated_duration_hours': (() {
           final hours = int.tryParse(_estimatedHoursController.text) ?? 0;
           final minutes = int.tryParse(_estimatedMinutesController.text) ?? 0;
@@ -841,13 +834,13 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
       await supabase.from('route_places').insert(routePlaces);
 
       if (mounted) {
-        context.showSnackBar('Route created successfully!');
+        context.showSnackBar(AppLocalizations.of(context)!.routeCreatedSuccessfully);
         Navigator.pop(context, true); // Return true to indicate success
       }
 
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Error creating route: $e', isError: true);
+        context.showSnackBar('${AppLocalizations.of(context)!.errorCreatingRoute}: $e', isError: true);
       }
     } finally {
       setState(() => _isLoading = false);

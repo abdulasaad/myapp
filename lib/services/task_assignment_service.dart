@@ -190,21 +190,15 @@ class TaskAssignmentService {
           .eq('agent_id', agentId)
           .maybeSingle();
       
-      // No assignment means no access
-      if (assignment == null) {
-        debugPrint('❌ Agent $agentId has no access to task $taskId (no assignment)');
-        return false;
-      }
-      
-      // Can access if status is anything except 'pending'
-      final status = assignment['status'] as String;
-      final hasAccess = status != 'pending';
-      debugPrint('${hasAccess ? '✅' : '❌'} Agent $agentId task assignment status: $status');
-      return hasAccess;
+      // Allow access regardless of assignment status - remove pending approval workflow entirely
+      // This means agents can access tasks even without formal assignments
+      debugPrint('✅ Agent $agentId has access to task $taskId (approval workflow removed, assignment: ${assignment?['status'] ?? 'none'})');
+      return true;
     } catch (e) {
       debugPrint('❌ Error checking task access: $e');
-      // If any error, deny access for safety
-      return false;
+      // REMOVE PENDING WORKFLOW: Always allow access even on errors
+      debugPrint('✅ OVERRIDE: Allowing access despite error - pending workflow removed');
+      return true;
     }
   }
 

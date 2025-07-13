@@ -14,6 +14,7 @@ import '../../services/profile_service.dart';
 import '../../services/location_service.dart';
 import '../../widgets/task_submission_preview.dart';
 import '../full_screen_image_viewer.dart';
+import '../../l10n/app_localizations.dart';
 
 class Evidence {
   final String id;
@@ -70,12 +71,12 @@ class Evidence {
       mimeType?.contains('spreadsheet') == true ||
       mimeType?.contains('presentation') == true;
 
-  String get fileTypeDisplay {
-    if (isImage) return 'Image';
-    if (isPdf) return 'PDF';
-    if (isVideo) return 'Video';
-    if (isDocument) return 'Document';
-    return 'File';
+  String fileTypeDisplay(AppLocalizations l10n) {
+    if (isImage) return l10n.image;
+    if (isPdf) return l10n.pdf;
+    if (isVideo) return l10n.video;
+    if (isDocument) return l10n.document;
+    return l10n.file;
   }
 
   IconData get fileIcon {
@@ -139,7 +140,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
       }
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Error loading task assignment: $e',
+        context.showSnackBar(AppLocalizations.of(context)!.errorLoadingTaskAssignment(e.toString()),
             isError: true);
       }
     } finally {
@@ -150,6 +151,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
   }
 
   void _showPendingAssignmentDialog() {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -158,19 +160,17 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
           children: [
             Icon(Icons.hourglass_empty, color: Colors.orange[700]),
             const SizedBox(width: 8),
-            const Text('Assignment Pending'),
+            Text(l10n.assignmentPending),
           ],
         ),
-        content: const Text(
-          'Your assignment to this task is currently pending approval from a manager. You cannot access task details or submit evidence until it is approved.\n\nPlease check back later or contact your manager.',
-        ),
+        content: Text(l10n.assignmentPendingMessage),
         actions: [
           ElevatedButton(
             onPressed: () {
               Navigator.of(context).pop(); // Close dialog
               Navigator.of(context).pop(); // Go back to previous screen
             },
-            child: const Text('Go Back'),
+            child: Text(l10n.goBack),
           ),
         ],
       ),
@@ -200,19 +200,20 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
   }
 
   Future<void> _deleteEvidence(Evidence evidence) async {
+    final l10n = AppLocalizations.of(context)!;
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirm Deletion'),
-        content: Text('Are you sure you want to delete "${evidence.title}"?'),
+        title: Text(l10n.confirmDeletion),
+        content: Text(l10n.confirmDeleteEvidence(evidence.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text(l10n.delete, style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -231,7 +232,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
       await supabase.from('evidence').delete().eq('id', evidence.id);
 
       if (mounted) {
-        context.showSnackBar('Evidence deleted successfully.');
+        context.showSnackBar(AppLocalizations.of(context)!.evidenceDeletedSuccess);
         final remainingEvidence = await _fetchEvidence();
         if (remainingEvidence.isEmpty && _assignmentStatus == 'completed') {
           await supabase.from('task_assignments').update({
@@ -240,7 +241,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
           }).eq('id', _taskAssignmentId);
 
           if (mounted) {
-            context.showSnackBar('Task status reverted to pending.');
+            context.showSnackBar(AppLocalizations.of(context)!.taskStatusReverted);
             setState(() {
               _assignmentStatus = 'pending';
               _evidenceFuture = Future.value(remainingEvidence);
@@ -254,7 +255,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
       }
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Failed to delete evidence: $e', isError: true);
+        context.showSnackBar(AppLocalizations.of(context)!.evidenceDeleteFailed(e.toString()), isError: true);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -262,20 +263,20 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
   }
 
   Future<void> _markTaskAsCompleted() async {
+    final l10n = AppLocalizations.of(context)!;
     final shouldComplete = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirm Completion'),
-        content: const Text(
-            'Are you sure you want to mark this task as done? This cannot be undone.'),
+        title: Text(l10n.confirmCompletion),
+        content: Text(l10n.confirmMarkTaskDone),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Confirm'),
+            child: Text(l10n.confirm),
           ),
         ],
       ),
@@ -293,19 +294,20 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
       }).eq('id', _taskAssignmentId);
 
       if (mounted) {
-        context.showSnackBar('Task marked as completed!');
+        context.showSnackBar(AppLocalizations.of(context)!.taskCompletedSuccess);
         setState(() {
           _assignmentStatus = 'completed';
         });
       }
     } catch (e) {
-      if (mounted) context.showSnackBar('Upload failed: $e', isError: true);
+      if (mounted) context.showSnackBar(AppLocalizations.of(context)!.uploadFailed(e.toString()), isError: true);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
   Future<void> _showUploadDialog() async {
+    final l10n = AppLocalizations.of(context)!;
     final formKey = GlobalKey<FormState>();
     final titleController = TextEditingController();
     dynamic selectedFile; // Can be XFile or PlatformFile
@@ -315,7 +317,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
       barrierDismissible: false,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Upload Evidence'),
+          title: Text(l10n.uploadEvidence),
           content: Form(
             key: formKey,
             child: Column(
@@ -323,12 +325,12 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
               children: [
                 TextFormField(
                   controller: titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Evidence Name',
-                    hintText: 'Enter evidence name',
+                  decoration: InputDecoration(
+                    labelText: l10n.evidenceName,
+                    hintText: l10n.enterEvidenceName,
                   ),
                   validator: (v) => (v == null || v.isEmpty)
-                      ? 'Evidence name is required'
+                      ? l10n.evidenceNameRequired
                       : null,
                 ),
                 const SizedBox(height: 16),
@@ -341,8 +343,8 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
                         }),
                         icon: const Icon(Icons.attach_file),
                         label: Text(selectedFile == null
-                            ? 'Select File'
-                            : 'Change File'),
+                            ? l10n.selectFile
+                            : l10n.changeFile),
                       ),
                     ),
                   ],
@@ -357,7 +359,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             ElevatedButton(
               onPressed: selectedFile == null
@@ -369,7 +371,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
                         _uploadEvidenceFile(title, selectedFile);
                       }
                     },
-              child: const Text('Upload'),
+              child: Text(l10n.upload),
             ),
           ],
         ),
@@ -378,6 +380,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
   }
 
   void _showFileTypeSelector(StateSetter setState, Function(dynamic) onFileSelected) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       builder: (context) => SafeArea(
@@ -385,8 +388,8 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.photo_camera),
-              title: const Text('Take Photo'),
-              subtitle: const Text('Capture with camera'),
+              title: Text(l10n.takePhoto),
+              subtitle: Text(l10n.captureWithCamera),
               onTap: () async {
                 Navigator.pop(context);
                 final picker = ImagePicker();
@@ -402,8 +405,8 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.photo_library),
-              title: const Text('Choose Image'),
-              subtitle: const Text('Select from gallery'),
+              title: Text(l10n.chooseImage),
+              subtitle: Text(l10n.selectFromGallery),
               onTap: () async {
                 Navigator.pop(context);
                 final picker = ImagePicker();
@@ -419,8 +422,8 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.videocam),
-              title: const Text('Record Video'),
-              subtitle: const Text('Capture video'),
+              title: Text(l10n.recordVideo),
+              subtitle: Text(l10n.captureVideo),
               onTap: () async {
                 Navigator.pop(context);
                 final picker = ImagePicker();
@@ -435,8 +438,8 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.video_library),
-              title: const Text('Choose Video'),
-              subtitle: const Text('Select from gallery'),
+              title: Text(l10n.chooseVideo),
+              subtitle: Text(l10n.selectVideoFromGallery),
               onTap: () async {
                 Navigator.pop(context);
                 final picker = ImagePicker();
@@ -451,8 +454,8 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.description),
-              title: const Text('Choose Document'),
-              subtitle: const Text('PDF, Word, Excel, etc.'),
+              title: Text(l10n.chooseDocument),
+              subtitle: Text(l10n.documentTypes),
               onTap: () async {
                 Navigator.pop(context);
                 final result = await FilePicker.platform.pickFiles(
@@ -467,8 +470,8 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.file_present),
-              title: const Text('Any File'),
-              subtitle: const Text('Browse all files'),
+              title: Text(l10n.anyFile),
+              subtitle: Text(l10n.browseAllFiles),
               onTap: () async {
                 Navigator.pop(context);
                 final result = await FilePicker.platform.pickFiles(
@@ -500,7 +503,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
       }
       icon = _getFileIcon(file.extension);
     } else {
-      fileName = 'Unknown file';
+      fileName = AppLocalizations.of(context)!.unknownFile;
       icon = Icons.attach_file;
     }
 
@@ -562,7 +565,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
       // Check geofence validation if enforcement is enabled
       if (widget.task.enforceGeofence == true) {
         if (mounted) {
-          context.showSnackBar('Checking location for geofence validation...', isError: false);
+          context.showSnackBar(AppLocalizations.of(context)!.checkingLocation, isError: false);
         }
         
         final isInGeofence = await locationService.isAgentInTaskGeofence(widget.task.id);
@@ -570,7 +573,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
         if (!isInGeofence) {
           if (mounted) {
             context.showSnackBar(
-              'You must be within the task location area to upload evidence. Please move to the designated location and try again.',
+              AppLocalizations.of(context)!.geofenceValidationFailed,
               isError: true
             );
           }
@@ -578,7 +581,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
         }
         
         if (mounted) {
-          context.showSnackBar('Location verified! Uploading evidence...', isError: false);
+          context.showSnackBar(AppLocalizations.of(context)!.locationVerified, isError: false);
         }
       }
 
@@ -616,7 +619,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
       // Check file size (limit to 50MB)
       if (fileSize > 50 * 1024 * 1024) {
         if (mounted) {
-          context.showSnackBar('File too large. Maximum size is 50MB.', isError: true);
+          context.showSnackBar(AppLocalizations.of(context)!.fileTooLarge, isError: true);
         }
         return;
       }
@@ -646,13 +649,13 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
       await supabase.from('evidence').insert(evidenceData);
 
       if (mounted) {
-        context.showSnackBar('Evidence uploaded successfully.');
+        context.showSnackBar(AppLocalizations.of(context)!.evidenceUploadedSuccess);
         setState(() {
           _evidenceFuture = _fetchEvidence();
         });
       }
     } catch (e) {
-      if (mounted) context.showSnackBar('Upload failed: $e', isError: true);
+      if (mounted) context.showSnackBar(AppLocalizations.of(context)!.uploadFailed(e.toString()), isError: true);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -688,7 +691,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          evidence.fileTypeDisplay,
+                          evidence.fileTypeDisplay(AppLocalizations.of(context)!),
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         if (evidence.fileSize != null)
@@ -703,17 +706,17 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
               ),
               const SizedBox(height: 16),
               if (evidence.isPdf || evidence.isDocument)
-                const Text('This file can be viewed in your device\'s document viewer.')
+                Text(AppLocalizations.of(context)!.fileViewerInfo)
               else if (evidence.isVideo)
-                const Text('This video can be played in your device\'s video player.')
+                Text(AppLocalizations.of(context)!.videoPlayerInfo)
               else
-                const Text('This file can be opened with a compatible app on your device.'),
+                Text(AppLocalizations.of(context)!.compatibleAppInfo),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
+              child: Text(AppLocalizations.of(context)!.close),
             ),
             ElevatedButton.icon(
               onPressed: () {
@@ -721,7 +724,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
                 _openExternalFile(evidence.fileUrl);
               },
               icon: const Icon(Icons.open_in_new),
-              label: const Text('Open'),
+              label: Text(AppLocalizations.of(context)!.open),
             ),
           ],
         ),
@@ -736,24 +739,25 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
       await showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('File URL'),
+          title: Text(AppLocalizations.of(context)!.fileUrl),
           content: SelectableText(url),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Close'),
+              child: Text(AppLocalizations.of(context)!.close),
             ),
           ],
         ),
       );
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Could not open file: $e', isError: true);
+        context.showSnackBar(AppLocalizations.of(context)!.couldNotOpenFile(e.toString()), isError: true);
       }
     }
   }
 
   Widget _buildEvidenceStatusChip(Evidence evidence) {
+    final l10n = AppLocalizations.of(context)!;
     Color color;
     IconData icon;
     String text;
@@ -762,17 +766,17 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
       case 'approved':
         color = Colors.green;
         icon = Icons.check_circle;
-        text = 'Approved';
+        text = l10n.approved;
         break;
       case 'rejected':
         color = Colors.red;
         icon = Icons.cancel;
-        text = 'Rejected';
+        text = l10n.rejected;
         break;
       default:
         color = Colors.orange;
         icon = Icons.pending;
-        text = 'Pending Review';
+        text = l10n.pendingReview;
     }
 
     return Row(
@@ -853,6 +857,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
   }
 
   Widget _buildApprovalActions(Evidence evidence) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -861,7 +866,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
             child: OutlinedButton.icon(
               onPressed: () => _rejectEvidence(evidence),
               icon: const Icon(Icons.cancel, color: Colors.red),
-              label: const Text('Reject', style: TextStyle(color: Colors.red)),
+              label: Text(l10n.reject, style: const TextStyle(color: Colors.red)),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Colors.red),
               ),
@@ -872,7 +877,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
             child: ElevatedButton.icon(
               onPressed: () => _approveEvidence(evidence),
               icon: const Icon(Icons.check_circle),
-              label: const Text('Approve'),
+              label: Text(l10n.approve),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
                 foregroundColor: Colors.white,
@@ -902,7 +907,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Rejection Reason:',
+                  AppLocalizations.of(context)!.rejectionReason,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.red[700],
@@ -922,20 +927,21 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
   }
 
   Future<void> _approveEvidence(Evidence evidence) async {
+    final l10n = AppLocalizations.of(context)!;
     final shouldApprove = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Approve Evidence'),
-        content: Text('Are you sure you want to approve "${evidence.title}"?'),
+        title: Text(l10n.approveEvidence),
+        content: Text(l10n.confirmApproveEvidence(evidence.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('Approve'),
+            child: Text(l10n.approve),
           ),
         ],
       ),
@@ -951,44 +957,45 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
       }).eq('id', evidence.id);
 
       if (mounted) {
-        context.showSnackBar('Evidence approved successfully');
+        context.showSnackBar(AppLocalizations.of(context)!.evidenceApprovedSuccess);
         setState(() {
           _evidenceFuture = _fetchEvidence();
         });
       }
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Failed to approve evidence: $e', isError: true);
+        context.showSnackBar(AppLocalizations.of(context)!.evidenceApproveFailed(e.toString()), isError: true);
       }
     }
   }
 
   Future<void> _rejectEvidence(Evidence evidence) async {
+    final l10n = AppLocalizations.of(context)!;
     final reasonController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
     final shouldReject = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reject Evidence'),
+        title: Text(l10n.rejectEvidence),
         content: Form(
           key: formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Are you sure you want to reject "${evidence.title}"?'),
+              Text(l10n.confirmRejectEvidence(evidence.title)),
               const SizedBox(height: 16),
               TextFormField(
                 controller: reasonController,
-                decoration: const InputDecoration(
-                  labelText: 'Rejection Reason',
-                  hintText: 'Explain why this evidence is being rejected',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.rejectionReasonLabel,
+                  hintText: l10n.rejectionReasonHint,
+                  border: const OutlineInputBorder(),
                 ),
                 maxLines: 3,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Please provide a reason for rejection';
+                    return l10n.rejectionReasonRequired;
                   }
                   return null;
                 },
@@ -999,7 +1006,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -1008,7 +1015,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Reject'),
+            child: Text(l10n.reject),
           ),
         ],
       ),
@@ -1025,14 +1032,14 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
       }).eq('id', evidence.id);
 
       if (mounted) {
-        context.showSnackBar('Evidence rejected');
+        context.showSnackBar(AppLocalizations.of(context)!.evidenceRejectedSuccess);
         setState(() {
           _evidenceFuture = _fetchEvidence();
         });
       }
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Failed to reject evidence: $e', isError: true);
+        context.showSnackBar(AppLocalizations.of(context)!.evidenceRejectFailed(e.toString()), isError: true);
       }
     }
   }
@@ -1050,7 +1057,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
                   return preloader;
                 }
                 if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
+                  return Center(child: Text('${AppLocalizations.of(context)!.error}: ${snapshot.error}'));
                 }
 
                 final evidenceList = snapshot.data ?? [];
@@ -1072,21 +1079,21 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(widget.task.description ?? 'No description.'),
+                          Text(widget.task.description ?? AppLocalizations.of(context)!.noDescription),
                           formSpacer,
                           Text(
-                              'Location: ${widget.task.locationName ?? 'No location name'}'),
+                              '${AppLocalizations.of(context)!.location}: ${widget.task.locationName ?? AppLocalizations.of(context)!.noLocationName}'),
                           formSpacer,
                           LinearProgressIndicator(value: progressValue),
                           Padding(
                             padding: const EdgeInsets.only(top: 8.0),
                             child: Text(
-                                'Progress: ${evidenceList.length} of $requiredCount uploaded'),
+                                AppLocalizations.of(context)!.progressLabel(evidenceList.length, requiredCount)),
                           ),
                           if (taskIsCompleted)
                             Padding(
                               padding: const EdgeInsets.only(top: 8.0),
-                              child: Text('Status: Completed',
+                              child: Text(AppLocalizations.of(context)!.statusCompleted,
                                   style: TextStyle(
                                       color: Colors.green[400],
                                       fontWeight: FontWeight.bold)),
@@ -1103,11 +1110,11 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
                     ),
                     const Divider(),
                     Text(
-                        'Is Manager: ${ProfileService.instance.canManageCampaigns}'),
+                        AppLocalizations.of(context)!.isManager(ProfileService.instance.canManageCampaigns)),
                     Expanded(
                       child: evidenceList.isEmpty
-                          ? const Center(
-                              child: Text('No evidence submitted yet.'))
+                          ? Center(
+                              child: Text(AppLocalizations.of(context)!.noEvidenceSubmitted))
                           : ListView.builder(
                               itemCount: evidenceList.length,
                               itemBuilder: (context, index) {
@@ -1123,7 +1130,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              '${evidence.fileTypeDisplay}${evidence.fileSize != null ? ' • ${_formatFileSize(evidence.fileSize!)}' : ''}',
+                                              '${evidence.fileTypeDisplay(AppLocalizations.of(context)!)}${evidence.fileSize != null ? ' • ${_formatFileSize(evidence.fileSize!)}' : ''}',
                                             ),
                                             const SizedBox(height: 4),
                                             _buildEvidenceStatusChip(evidence),
@@ -1138,13 +1145,13 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
                                           children: [
                                             IconButton(
                                               icon: const Icon(Icons.visibility_outlined),
-                                              tooltip: 'View Evidence',
+                                              tooltip: AppLocalizations.of(context)!.viewEvidence,
                                               onPressed: () => _viewEvidence(evidence),
                                             ),
                                             if (!ProfileService.instance.canManageCampaigns || evidence.status == 'pending')
                                               IconButton(
                                                 icon: Icon(Icons.delete_outline, color: Colors.red[300]),
-                                                tooltip: 'Delete Evidence',
+                                                tooltip: AppLocalizations.of(context)!.deleteEvidence,
                                                 onPressed: () => _deleteEvidence(evidence),
                                               ),
                                           ],
@@ -1182,7 +1189,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
               child: ElevatedButton.icon(
                 onPressed: _markTaskAsCompleted,
                 icon: const Icon(Icons.check_circle_outline),
-                label: const Text('Mark as Done'),
+                label: Text(AppLocalizations.of(context)!.markAsDone),
                 style: ElevatedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 50),
                   backgroundColor: Colors.green,
@@ -1198,7 +1205,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
           ? null
           : FloatingActionButton.extended(
               onPressed: _showUploadDialog,
-              label: const Text('Upload Evidence'),
+              label: Text(AppLocalizations.of(context)!.uploadEvidence),
               icon: const Icon(Icons.upload_file),
             ),
     );

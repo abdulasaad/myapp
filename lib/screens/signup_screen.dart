@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../l10n/app_localizations.dart';
 import '../utils/constants.dart';
 
 class SignUpScreen extends StatefulWidget {
@@ -39,7 +40,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         if (authResponse.user != null) {
           if (mounted) {
             context.showSnackBar(
-              'Sign up successful! Please check your email to confirm.',
+              AppLocalizations.of(context)!.signUpSuccessMessage,
             );
             // This is important: you might want to redirect to login
             // or show a message, instead of directly to home.
@@ -55,7 +56,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         }
       } catch (e) {
         if (mounted) {
-          context.showSnackBar('An unexpected error occurred.', isError: true);
+          context.showSnackBar(AppLocalizations.of(context)!.unexpectedError, isError: true);
         }
       } finally {
         if (mounted) setState(() => _isLoading = false);
@@ -66,7 +67,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign Up')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.signUp)),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
@@ -77,33 +78,33 @@ class _SignUpScreenState extends State<SignUpScreen> {
               children: [
                 TextFormField(
                   controller: _fullNameController,
-                  decoration: const InputDecoration(labelText: 'Full Name'),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.fullName),
                   validator:
                       (value) =>
                           (value == null || value.isEmpty)
-                              ? 'Required field'
+                              ? AppLocalizations.of(context)!.requiredField
                               : null,
                 ),
                 formSpacer,
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Email'),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.email),
                   keyboardType: TextInputType.emailAddress,
                   validator:
                       (value) =>
                           (value == null || value.isEmpty)
-                              ? 'Required field'
+                              ? AppLocalizations.of(context)!.requiredField
                               : null,
                 ),
                 formSpacer,
                 TextFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(labelText: 'Password'),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.password),
                   obscureText: true,
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Required field';
+                    if (value == null || value.isEmpty) return AppLocalizations.of(context)!.requiredField;
                     if (value.length < 6) {
-                      return 'Password must be at least 6 characters';
+                      return AppLocalizations.of(context)!.passwordMinLength;
                     }
                     return null;
                   },
@@ -114,7 +115,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   child:
                       _isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text('Sign Up'),
+                          : Text(AppLocalizations.of(context)!.signUp),
                 ),
               ],
             ),

@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import '../l10n/app_localizations.dart';
 import '../services/smart_location_manager.dart';
 
 class GpsStatusIndicator extends StatefulWidget {
@@ -73,9 +74,9 @@ class _GpsStatusIndicatorState extends State<GpsStatusIndicator> {
     }
   }
 
-  String _getStatusText() {
+  String _getStatusText(BuildContext context) {
     if (!_hasLocation || _currentAccuracy == null) {
-      return 'No GPS signal (1 bar)';
+      return AppLocalizations.of(context)!.noGpsSignalOnebar;
     }
     
     int bars = _getSignalBars();
@@ -83,16 +84,16 @@ class _GpsStatusIndicatorState extends State<GpsStatusIndicator> {
     
     switch (bars) {
       case 5:
-        return 'Excellent GPS (${accuracy}m) - 5 bars';
+        return AppLocalizations.of(context)!.excellentGpsFiveBars(accuracy);
       case 4:
-        return 'Good GPS (${accuracy}m) - 4 bars';
+        return AppLocalizations.of(context)!.goodGpsFourBars(accuracy);
       case 3:
-        return 'Fair GPS (${accuracy}m) - 3 bars';
+        return AppLocalizations.of(context)!.fairGpsThreeBars(accuracy);
       case 2:
-        return 'Poor GPS (${accuracy}m) - 2 bars';
+        return AppLocalizations.of(context)!.poorGpsTwoBars(accuracy);
       case 1:
       default:
-        return 'Very poor GPS (${accuracy}m) - 1 bar';
+        return AppLocalizations.of(context)!.veryPoorGpsOnebar(accuracy);
     }
   }
 
@@ -124,7 +125,7 @@ class _GpsStatusIndicatorState extends State<GpsStatusIndicator> {
         // Show GPS status details when tapped
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(_getStatusText()),
+            content: Text(_getStatusText(context)),
             duration: const Duration(seconds: 2),
           ),
         );

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../utils/constants.dart';
 import 'evidence_detail_screen.dart';
 import '../../widgets/modern_notification.dart';
+import '../../l10n/app_localizations.dart';
 
 class EvidenceListScreen extends StatefulWidget {
   const EvidenceListScreen({super.key});
@@ -293,7 +294,7 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Evidence Review'),
+        title: Text(AppLocalizations.of(context)!.evidenceReview),
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -319,13 +320,13 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
                         Icon(Icons.error, size: 64, color: Colors.red[400]),
                         const SizedBox(height: 16),
                         Text(
-                          'Error loading evidence',
+                          AppLocalizations.of(context)!.errorLoadingData,
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: 8),
                         ElevatedButton(
                           onPressed: _refreshEvidence,
-                          child: const Text('Retry'),
+                          child: Text(AppLocalizations.of(context)!.retry),
                         ),
                       ],
                     ),
@@ -346,14 +347,14 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
                             Icon(Icons.inbox, size: 64, color: Colors.grey[400]),
                             const SizedBox(height: 16),
                             Text(
-                              'No evidence found',
+                              AppLocalizations.of(context)!.noEvidenceFound,
                               style: Theme.of(context).textTheme.titleLarge,
                             ),
                             const SizedBox(height: 8),
                             Text(
                               role == 'manager' 
-                                  ? 'No evidence from members in your groups'
-                                  : 'No evidence uploaded yet',
+                                  ? AppLocalizations.of(context)!.noEvidenceFromMembers
+                                  : AppLocalizations.of(context)!.noEvidenceUploaded,
                               style: TextStyle(color: Colors.grey[600]),
                               textAlign: TextAlign.center,
                             ),
@@ -387,7 +388,7 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      'Showing evidence from all members in your groups',
+                                      AppLocalizations.of(context)!.showingEvidenceFromMembers,
                                       style: TextStyle(
                                         color: Colors.blue[700],
                                         fontSize: 13,
@@ -424,12 +425,12 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Evidence'),
+        title: Text(AppLocalizations.of(context)!.deleteEvidence),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Are you sure you want to delete this evidence?'),
+            Text(AppLocalizations.of(context)!.confirmDeleteEvidence('this evidence')),
             const SizedBox(height: 16),
             Text(
               'Title: ${evidence.title}',
@@ -447,7 +448,7 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -455,7 +456,7 @@ class _EvidenceListScreenState extends State<EvidenceListScreen> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Delete'),
+            child: Text(AppLocalizations.of(context)!.delete),
           ),
         ],
       ),

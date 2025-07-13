@@ -1,15 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:logger/logger.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:provider/provider.dart';
+import 'l10n/app_localizations.dart';
 import './screens/splash_screen.dart';
 import './services/connectivity_service.dart';
 import './services/settings_service.dart';
 import './services/timezone_service.dart';
 import './services/simple_notification_service.dart';
 import './services/notification_manager.dart';
+import './services/user_status_service.dart';
+import './services/persistent_service_manager.dart';
+import './services/language_service.dart';
+import './services/touring_task_movement_service.dart';
 import './utils/constants.dart';
 
 final logger = Logger();
@@ -215,17 +222,97 @@ Future<void> main() async {
     logger.w('NotificationManager initialization failed: $e');
   }
 
+  // Initialize UserStatusService (handle gracefully if fails)
+  try {
+    await UserStatusService().initialize();
+  } catch (e) {
+    logger.w('UserStatusService initialization failed: $e');
+  }
+
+  // Initialize PersistentServiceManager (handle gracefully if fails)
+  try {
+    await PersistentServiceManager.initialize();
+  } catch (e) {
+    logger.w('PersistentServiceManager initialization failed: $e');
+  }
+
+  // Initialize LanguageService (handle gracefully if fails)
+  try {
+    await LanguageService.instance.initialize();
+  } catch (e) {
+    logger.w('LanguageService initialization failed: $e');
+  }
+
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  Locale? _locale;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLocale();
+    // Set global locale change callback
+    globalLocaleChangeCallback = changeLocale;
+  }
+
+  void _loadLocale() {
+    final languageCode = LanguageService.instance.getCurrentLanguageCode();
+    setState(() {
+      _locale = Locale(languageCode);
+    });
+  }
+
+  void changeLocale(Locale locale) {
+    setState(() {
+      _locale = locale;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Al-Tijwal App',
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => TouringTaskMovementService()),
+      ],
+      child: MaterialApp(
+      onGenerateTitle: (BuildContext context) => AppLocalizations.of(context)!.appTitle,
       navigatorKey: navigatorKey,
+      
+      // Localization configuration
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: LanguageService.supportedLocales,
+      locale: _locale,
+      localeResolutionCallback: (locale, supportedLocales) {
+        // Use stored locale preference first
+        if (_locale != null) {
+          return _locale;
+        }
+        
+        // If device locale is supported, use it
+        if (locale != null) {
+          for (var supportedLocale in supportedLocales) {
+            if (supportedLocale.languageCode == locale.languageCode) {
+              return supportedLocale;
+            }
+          }
+        }
+        // Default to English if no supported locale found
+        return const Locale('en');
+      },
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -334,6 +421,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: const SplashScreen(),
+      ),
     );
   }
 }

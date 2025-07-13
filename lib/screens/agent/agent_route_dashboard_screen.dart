@@ -8,6 +8,7 @@ import '../../models/route_assignment.dart';
 import '../../models/place_visit.dart';
 import '../manager/map_location_picker_screen.dart';
 import 'agent_route_detail_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 class AgentRouteDashboardScreen extends StatefulWidget {
   const AgentRouteDashboardScreen({super.key});
@@ -78,7 +79,7 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        context.showSnackBar('Error loading route data: $e', isError: true);
+        context.showSnackBar('${AppLocalizations.of(context)!.errorLoadingRouteData}: $e', isError: true);
       }
     }
   }
@@ -97,7 +98,7 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add_location),
-        label: const Text('Suggest Place'),
+        label: Text(AppLocalizations.of(context)!.suggestPlace),
       ),
     );
   }
@@ -114,9 +115,9 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
             pinned: true,
             backgroundColor: primaryColor,
             flexibleSpace: FlexibleSpaceBar(
-              title: const Text(
-                'My Routes',
-                style: TextStyle(
+              title: Text(
+                AppLocalizations.of(context)!.myRoutes,
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
@@ -150,9 +151,9 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Active Routes',
-                    style: TextStyle(
+                  Text(
+                    AppLocalizations.of(context)!.activeRoutes,
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: textPrimaryColor,
@@ -215,16 +216,16 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Currently Visiting',
-                        style: TextStyle(
+                      Text(
+                        AppLocalizations.of(context)!.currentlyVisiting,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                       Text(
-                        _currentActiveVisit?.place?.name ?? 'Loading...',
+                        _currentActiveVisit?.place?.name ?? AppLocalizations.of(context)!.loadingEllipsis,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -248,7 +249,7 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
                       elevation: 0,
                     ),
                     icon: const Icon(Icons.exit_to_app),
-                    label: const Text('Check Out'),
+                    label: Text(AppLocalizations.of(context)!.checkOut),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -260,7 +261,7 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
                       side: const BorderSide(color: Colors.white),
                     ),
                     icon: const Icon(Icons.camera_alt),
-                    label: const Text('Add Evidence'),
+                    label: Text(AppLocalizations.of(context)!.addEvidence),
                   ),
                 ),
               ],
@@ -292,7 +293,7 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
           ),
         ),
         title: Text(
-          assignment.route?.name ?? 'Route ${assignment.routeId}',
+          assignment.route?.name ?? '${AppLocalizations.of(context)!.route} ${assignment.routeId}',
           style: const TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,
@@ -303,7 +304,7 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
           children: [
             const SizedBox(height: 4),
             Text(
-              'Status: ${assignment.status.toUpperCase()}',
+              '${AppLocalizations.of(context)!.status}: ${assignment.status.toUpperCase()}',
               style: TextStyle(
                 color: _getStatusColor(assignment.status),
                 fontWeight: FontWeight.w500,
@@ -311,7 +312,7 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Assigned: ${DateFormat.MMMd().format(assignment.assignedAt)}',
+              '${AppLocalizations.of(context)!.assigned}: ${DateFormat.MMMd().format(assignment.assignedAt)}',
               style: const TextStyle(color: textSecondaryColor),
             ),
           ],
@@ -346,7 +347,7 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'No Active Routes',
+              AppLocalizations.of(context)!.noActiveRoutes,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -355,7 +356,7 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Your manager will assign routes for you to visit.',
+              AppLocalizations.of(context)!.routesWillBeAssigned,
               style: TextStyle(
                 color: Colors.grey[500],
                 fontSize: 14,
@@ -396,12 +397,12 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
 
   void _checkOut() {
     // TODO: Implement check-out functionality
-    context.showSnackBar('Check-out functionality - Coming soon!');
+    context.showSnackBar(AppLocalizations.of(context)!.checkoutComingSoon);
   }
 
   void _addEvidence() {
     // TODO: Show evidence upload dialog for current place visit
-    context.showSnackBar('Evidence upload - Coming soon!');
+    context.showSnackBar(AppLocalizations.of(context)!.evidenceUploadComingSoon);
   }
 
   void _suggestNewPlace() {
@@ -425,7 +426,7 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
             children: [
               Icon(Icons.add_location, color: primaryColor),
               const SizedBox(width: 8),
-              const Text('Suggest New Place'),
+              Text(AppLocalizations.of(context)!.suggestNewPlace),
             ],
           ),
           content: SingleChildScrollView(
@@ -436,29 +437,29 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
                 children: [
                   TextField(
                     controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Place Name *',
-                      hintText: 'Enter place name',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.placeNameRequired,
+                      hintText: AppLocalizations.of(context)!.enterPlaceName,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: descriptionController,
-                    decoration: const InputDecoration(
-                      labelText: 'Description',
-                      hintText: 'Brief description of the place',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.description,
+                      hintText: AppLocalizations.of(context)!.briefDescription,
+                      border: const OutlineInputBorder(),
                     ),
                     maxLines: 2,
                   ),
                   const SizedBox(height: 16),
                   TextField(
                     controller: addressController,
-                    decoration: const InputDecoration(
-                      labelText: 'Address',
-                      hintText: 'Street address or landmark',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context)!.address,
+                      hintText: AppLocalizations.of(context)!.streetAddressOrLandmark,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -474,7 +475,7 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Location *',
+                          AppLocalizations.of(context)!.locationRequired,
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
                             color: Colors.grey[700],
@@ -483,7 +484,7 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
                         const SizedBox(height: 8),
                         if (selectedLocation != null) ...[
                           Text(
-                            'Selected Location:',
+                            AppLocalizations.of(context)!.selectedLocation,
                             style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                           ),
                           Text(
@@ -494,7 +495,7 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
                             ),
                           ),
                           Text(
-                            'Radius: ${selectedRadius.toInt()}m',
+                            '${AppLocalizations.of(context)!.radius}: ${selectedRadius.toInt()}m',
                             style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                           ),
                           const SizedBox(height: 8),
@@ -526,8 +527,8 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
                             ),
                             icon: const Icon(Icons.map),
                             label: Text(selectedLocation == null 
-                              ? 'Select Location on Map' 
-                              : 'Change Location'),
+                              ? AppLocalizations.of(context)!.selectLocationOnMap 
+                              : AppLocalizations.of(context)!.changeLocation),
                           ),
                         ),
                       ],
@@ -540,7 +541,7 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(AppLocalizations.of(context)!.cancel),
             ),
             ElevatedButton(
               onPressed: selectedLocation == null ? null : () => _submitPlaceSuggestion(
@@ -554,7 +555,7 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
                 backgroundColor: primaryColor,
                 foregroundColor: Colors.white,
               ),
-              child: const Text('Submit Suggestion'),
+              child: Text(AppLocalizations.of(context)!.submitSuggestion),
             ),
           ],
         );
@@ -564,7 +565,7 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
 
   void _submitPlaceSuggestion(String name, String description, String address, LatLng location, double radius) {
     if (name.trim().isEmpty) {
-      context.showSnackBar('Please fill required fields (Name)', isError: true);
+      context.showSnackBar(AppLocalizations.of(context)!.pleaseFillRequiredFields, isError: true);
       return;
     }
 
@@ -585,7 +586,7 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
     try {
       final currentUser = supabase.auth.currentUser;
       if (currentUser == null) {
-        context.showSnackBar('Authentication required', isError: true);
+        context.showSnackBar(AppLocalizations.of(context)!.authenticationRequired, isError: true);
         return;
       }
 
@@ -606,12 +607,12 @@ class _AgentRouteDashboardScreenState extends State<AgentRouteDashboardScreen> {
       });
 
       if (mounted) {
-        context.showSnackBar('Place suggestion submitted! Waiting for manager approval.');
+        context.showSnackBar(AppLocalizations.of(context)!.placeSuggestionSubmitted);
       }
       
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Error submitting suggestion: $e', isError: true);
+        context.showSnackBar('${AppLocalizations.of(context)!.errorSubmittingSuggestion}: $e', isError: true);
       }
     }
   }

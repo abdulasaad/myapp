@@ -3,12 +3,15 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/task.dart';
 import '../../models/template_field.dart';
 import '../../models/app_user.dart';
 import '../../services/user_management_service.dart';
 import '../../utils/constants.dart';
 import '../../widgets/custom_field_editor.dart';
+import '../../widgets/month_day_picker.dart';
+import '../../widgets/modern_notification.dart';
 import './task_geofence_editor_screen.dart';
 import './standalone_tasks_screen.dart'; // Added import for navigation
 
@@ -31,8 +34,7 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
   final _evidenceCountController = TextEditingController(text: '1');
   final _pointsController = TextEditingController(text: '10');
 
-  DateTime? _startDate;
-  DateTime? _endDate;
+  Set<DateTime> _selectedDays = {};
   bool _enablePoints = true;
   bool _enforceGeofence = false;
   
@@ -53,8 +55,16 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
       _nameController.text = widget.task!.title;
       _descriptionController.text = widget.task!.description ?? '';
       _locationNameController.text = widget.task!.locationName ?? '';
-      _startDate = widget.task!.startDate;
-      _endDate = widget.task!.endDate;
+      // Convert start/end dates to selected days for backward compatibility
+      if (widget.task!.startDate != null && widget.task!.endDate != null) {
+        final start = widget.task!.startDate!;
+        final end = widget.task!.endDate!;
+        final days = <DateTime>{};
+        for (DateTime day = start; day.isBefore(end) || day.isAtSameMomentAs(end); day = day.add(const Duration(days: 1))) {
+          days.add(DateTime(day.year, day.month, day.day));
+        }
+        _selectedDays = days;
+      }
       _enablePoints = widget.task!.points != 0;
       _pointsController.text = widget.task!.points.toString();
       _evidenceCountController.text = widget.task!.requiredEvidenceCount.toString();
@@ -81,39 +91,35 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
     super.dispose();
   }
 
-  Future<void> _selectDateTime(bool isStart) async {
+  Future<void> _selectDays() async {
     if (!mounted) return;
     
-    final initialDate = isStart ? (_startDate ?? DateTime.now()) : (_endDate ?? _startDate ?? DateTime.now());
+    final result = await showDialog<Set<DateTime>>(
+      context: context,
+      builder: (context) => MonthDayPicker(
+        initialSelectedDays: _selectedDays,
+        onDaysSelected: (days) {},
+        title: AppLocalizations.of(context)!.selectTaskDays,
+      ),
+    );
 
-    final newDate = await showDatePicker(context: context, initialDate: initialDate, firstDate: DateTime(2020), lastDate: DateTime(2030));
-    if (!mounted || newDate == null) {
-      return;
+    if (result != null) {
+      setState(() {
+        _selectedDays = result;
+      });
     }
-
-    final newTime = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(initialDate));
-    if (!mounted || newTime == null) {
-      return;
-    }
-
-    final finalDateTime = DateTime(newDate.year, newDate.month, newDate.day, newTime.hour, newTime.minute);
-
-    setState(() {
-      if (isStart) {
-        _startDate = finalDateTime;
-      } else {
-        _endDate = finalDateTime;
-      }
-    });
   }
 
   Future<void> _saveTask() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    if (_startDate == null || _endDate == null) {
+    if (_selectedDays.isEmpty) {
       if (mounted) {
-        context.showSnackBar('Please select both start and end dates.', isError: true);
+        ModernNotification.error(
+          context,
+          message: AppLocalizations.of(context)!.pleaseSelectTaskDays,
+        );
       }
       return;
     }
@@ -121,12 +127,17 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
     setState(() => _isLoading = true);
 
     try {
+      // Get earliest and latest selected days for backward compatibility
+      final sortedDays = _selectedDays.toList()..sort();
+      final startDate = sortedDays.first;
+      final endDate = sortedDays.last;
+
       final taskData = {
         'title': _nameController.text,
         'description': _descriptionController.text,
         'location_name': _locationNameController.text,
-        'start_date': _startDate!.toIso8601String(),
-        'end_date': _endDate!.toIso8601String(),
+        'start_date': startDate.toIso8601String(),
+        'end_date': endDate.toIso8601String(),
         'points': _enablePoints ? int.parse(_pointsController.text) : 0,
         'required_evidence_count': int.parse(_evidenceCountController.text),
         'enforce_geofence': _enforceGeofence,
@@ -161,17 +172,31 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
       if (mounted) {
         if (isNewTask) {
           // For a new task
-          context.showSnackBar('Task created successfully.');
+          ModernNotification.success(
+            context,
+            message: AppLocalizations.of(context)!.taskCreatedSuccessfully,
+            subtitle: _nameController.text.trim(),
+          );
           // Pop back with success result
           Navigator.of(context).pop(true);
         } else {
           // For an existing task (editing)
-          context.showSnackBar('Task details saved.');
+          ModernNotification.success(
+            context,
+            message: AppLocalizations.of(context)!.taskDetailsSaved,
+            subtitle: _nameController.text.trim(),
+          );
           Navigator.of(context).pop(true); // Return true for success
         }
       }
     } catch (e) {
-      if (mounted) context.showSnackBar('Failed to save task: $e', isError: true); // Generic error message
+      if (mounted) {
+        ModernNotification.error(
+          context,
+          message: AppLocalizations.of(context)!.failedToSaveTask,
+          subtitle: e.toString(),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -302,7 +327,11 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
     } catch (e) {
       debugPrint('Error saving custom fields: $e');
       if (mounted) {
-        context.showSnackBar('Failed to save custom fields: $e', isError: true);
+        ModernNotification.error(
+          context,
+          message: AppLocalizations.of(context)!.failedToSaveTask,
+          subtitle: e.toString(),
+        );
       }
     }
   }
@@ -325,7 +354,7 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
     final bool isEditing = widget.task != null;
 
     return Scaffold(
-      appBar: AppBar(title: Text(isEditing ? 'Edit Evidence Task' : 'New Evidence Task')),
+      appBar: AppBar(title: Text(isEditing ? AppLocalizations.of(context)!.editEvidenceTask : AppLocalizations.of(context)!.newEvidenceTask)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -333,25 +362,74 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Core Information', style: Theme.of(context).textTheme.headlineSmall),
+              Text(AppLocalizations.of(context)!.coreInformation, style: Theme.of(context).textTheme.headlineSmall),
               formSpacer,
-              TextFormField(controller: _nameController, decoration: const InputDecoration(labelText: 'Task Name'), validator: (v) => (v == null || v.isEmpty) ? 'Required' : null),
+              TextFormField(controller: _nameController, decoration: InputDecoration(labelText: AppLocalizations.of(context)!.taskName), validator: (v) => (v == null || v.isEmpty) ? AppLocalizations.of(context)!.required : null),
               formSpacer,
-              TextFormField(controller: _descriptionController, decoration: const InputDecoration(labelText: 'Description'), maxLines: 3),
+              TextFormField(controller: _descriptionController, decoration: InputDecoration(labelText: AppLocalizations.of(context)!.description), maxLines: 3),
               formSpacer,
-              TextFormField(controller: _locationNameController, decoration: const InputDecoration(labelText: 'Location Name')),
+              TextFormField(controller: _locationNameController, decoration: InputDecoration(labelText: AppLocalizations.of(context)!.locationName)),
               formSpacer,
-              Row(children: [
-                Expanded(child: _buildDateTimePicker('Start Date/Time', _startDate, () => _selectDateTime(true))),
-                formSpacerHorizontal,
-                Expanded(child: _buildDateTimePicker('End Date/Time', _endDate, () => _selectDateTime(false))),
-              ]),
+              InkWell(
+                onTap: _selectDays,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.calendar_month),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AppLocalizations.of(context)!.taskDays,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _selectedDays.isEmpty
+                                  ? AppLocalizations.of(context)!.selectDays
+                                  : AppLocalizations.of(context)!.daysSelected(_selectedDays.length),
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: _selectedDays.isEmpty ? Colors.grey : Colors.black,
+                              ),
+                            ),
+                            if (_selectedDays.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                _selectedDays.length <= 3
+                                    ? _selectedDays
+                                        .map((d) => DateFormat.MMMd().format(d))
+                                        .join(', ')
+                                    : '${DateFormat.MMMd().format(_selectedDays.first)} - ${DateFormat.MMMd().format(_selectedDays.last)}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               const Divider(height: 40),
-              Text('Rules & Completion', style: Theme.of(context).textTheme.headlineSmall),
+              Text(AppLocalizations.of(context)!.rulesCompletion, style: Theme.of(context).textTheme.headlineSmall),
               formSpacer,
-              TextFormField(controller: _evidenceCountController, decoration: const InputDecoration(labelText: 'Required Evidence Count'), keyboardType: TextInputType.number, validator: (v) => int.tryParse(v!) == null ? 'Invalid number' : null),
+              TextFormField(controller: _evidenceCountController, decoration: InputDecoration(labelText: AppLocalizations.of(context)!.requiredEvidenceCount), keyboardType: TextInputType.number, validator: (v) => int.tryParse(v!) == null ? AppLocalizations.of(context)!.invalidNumber : null),
               SwitchListTile(
-                title: const Text('Enable Task Points'),
+                title: Text(AppLocalizations.of(context)!.enableTaskPoints),
                 value: _enablePoints,
                 onChanged: (val) => setState(() => _enablePoints = val),
               ),
@@ -360,15 +438,15 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                   child: TextFormField(
                     controller: _pointsController,
-                    decoration: const InputDecoration(labelText: 'Points Awarded', hintText: 'e.g., 10, 50, 100'),
+                    decoration: InputDecoration(labelText: AppLocalizations.of(context)!.pointsAwarded, hintText: AppLocalizations.of(context)!.pointsAwardedHint),
                     keyboardType: TextInputType.number,
                     validator: (value) {
                       if (_enablePoints) {
                         if (value == null || value.isEmpty) {
-                          return 'Required';
+                          return AppLocalizations.of(context)!.required;
                         }
                         if (int.tryParse(value) == null || int.parse(value) <= 0) {
-                          return 'Must be a positive number';
+                          return AppLocalizations.of(context)!.mustBePositiveNumber;
                         }
                       }
                       return null;
@@ -376,10 +454,10 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
                   ),
                 ),
               SwitchListTile(
-                title: const Text('Enforce Geofence for Upload'),
+                title: Text(AppLocalizations.of(context)!.enforceGeofenceForUpload),
                 value: _enforceGeofence,
                 onChanged: (val) => setState(() => _enforceGeofence = val),
-                subtitle: Text(_enforceGeofence ? 'Agent must be inside the zone to upload' : 'Uploads allowed from anywhere'),
+                subtitle: Text(_enforceGeofence ? AppLocalizations.of(context)!.agentMustBeInsideZone : AppLocalizations.of(context)!.uploadsAllowedAnywhere),
               ),
               // Manager Assignment Section (Admin only)
               // Debug: Show admin status and manager loading state
@@ -400,19 +478,19 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
               ],
               if (_isAdmin && _managersLoaded) ...[
                 const Divider(height: 40),
-                Text('Manager Assignment', style: Theme.of(context).textTheme.headlineSmall),
+                Text(AppLocalizations.of(context)!.managerAssignment, style: Theme.of(context).textTheme.headlineSmall),
                 formSpacer,
                 DropdownButtonFormField<String>(
                   value: _selectedManagerId,
-                  decoration: const InputDecoration(
-                    labelText: 'Assign to Manager',
-                    hintText: 'Select a manager to oversee this task',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.assignToManager,
+                    hintText: AppLocalizations.of(context)!.selectManagerToOversee,
+                    border: const OutlineInputBorder(),
                   ),
                   items: [
-                    const DropdownMenuItem<String>(
+                    DropdownMenuItem<String>(
                       value: null,
-                      child: Text('No specific manager'),
+                      child: Text(AppLocalizations.of(context)!.noSpecificManager),
                     ),
                     ..._managers.map((manager) {
                       return DropdownMenuItem<String>(
@@ -442,7 +520,7 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'This task will be assigned to the selected manager. Only they and their agents will be able to see and work on this task.',
+                            AppLocalizations.of(context)!.taskAssignmentInfo,
                             style: TextStyle(
                               color: Colors.blue[700],
                               fontSize: 12,
@@ -455,23 +533,23 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
                 ],
               ],
               const Divider(height: 40),
-              Text('Geofencing', style: Theme.of(context).textTheme.headlineSmall),
+              Text(AppLocalizations.of(context)!.geofencing, style: Theme.of(context).textTheme.headlineSmall),
               formSpacer,
               Center(
                 child: ElevatedButton.icon(
                   onPressed: canDefineGeofence ? _openGeofenceEditor : null,
                   icon: const Icon(Icons.map),
-                  label: const Text('Define Geofence Zone'),
+                  label: Text(AppLocalizations.of(context)!.defineGeofenceZone),
                   style: ElevatedButton.styleFrom(
                     disabledBackgroundColor: Colors.grey.withAlpha(80),
                   ),
                 ),
               ),
               if (_enforceGeofence && _createdTask == null)
-                const Center(
+                Center(
                     child: Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text('You must save the task before defining a geofence.', style: TextStyle(color: Colors.grey)),
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(AppLocalizations.of(context)!.mustSaveTaskBeforeGeofence, style: const TextStyle(color: Colors.grey)),
                 )),
               // Custom Fields Section (only show if task is saved or being edited)
               if (_createdTask != null && _customFieldsLoaded) ...[
@@ -494,7 +572,7 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
         padding: const EdgeInsets.all(16.0),
         child: ElevatedButton.icon(
           onPressed: _isLoading ? null : _saveTask,
-          label: Text(isEditing ? 'Save Changes' : 'Save & Continue'),
+          label: Text(isEditing ? AppLocalizations.of(context)!.saveChanges : AppLocalizations.of(context)!.saveContinue),
           icon: _isLoading ? const CircularProgressIndicator(color: Colors.white) : Icon(isEditing ? Icons.save_as : Icons.save),
           style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
         ),
@@ -503,7 +581,7 @@ class _CreateEvidenceTaskScreenState extends State<CreateEvidenceTaskScreen> {
   }
 
   Widget _buildDateTimePicker(String label, DateTime? date, VoidCallback? onTap) {
-    final text = date == null ? 'Select...' : DateFormat.yMd().add_jm().format(date);
+    final text = date == null ? AppLocalizations.of(context)!.selectDate : DateFormat.yMd().add_jm().format(date);
     return InkWell(
       onTap: onTap,
       child: InputDecorator(

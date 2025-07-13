@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../utils/constants.dart';
+import '../../l10n/app_localizations.dart';
 
 class SubmissionHistoryItem {
   final String id;
@@ -173,9 +174,9 @@ class _AgentSubmissionHistoryScreenState extends State<AgentSubmissionHistoryScr
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text(
-          'My Submissions',
-          style: TextStyle(
+        title: Text(
+          AppLocalizations.of(context)!.mySubmissions,
+          style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
@@ -202,14 +203,14 @@ class _AgentSubmissionHistoryScreenState extends State<AgentSubmissionHistoryScr
                 // Type Filter
                 Row(
                   children: [
-                    const Text('Type: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                    Text('${AppLocalizations.of(context)!.type}: ', style: const TextStyle(fontWeight: FontWeight.w600)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: SegmentedButton<String>(
-                        segments: const [
-                          ButtonSegment(value: 'all', label: Text('All')),
-                          ButtonSegment(value: 'forms', label: Text('Forms')),
-                          ButtonSegment(value: 'evidence', label: Text('Evidence')),
+                        segments: [
+                          ButtonSegment(value: 'all', label: Text(AppLocalizations.of(context)!.all)),
+                          ButtonSegment(value: 'forms', label: Text(AppLocalizations.of(context)!.forms)),
+                          ButtonSegment(value: 'evidence', label: Text(AppLocalizations.of(context)!.evidence)),
                         ],
                         selected: {_selectedFilter},
                         onSelectionChanged: (Set<String> selection) {
@@ -226,15 +227,15 @@ class _AgentSubmissionHistoryScreenState extends State<AgentSubmissionHistoryScr
                 // Status Filter
                 Row(
                   children: [
-                    const Text('Status: ', style: TextStyle(fontWeight: FontWeight.w600)),
+                    Text('${AppLocalizations.of(context)!.status}: ', style: const TextStyle(fontWeight: FontWeight.w600)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: SegmentedButton<String>(
-                        segments: const [
-                          ButtonSegment(value: 'all', label: Text('All')),
-                          ButtonSegment(value: 'pending', label: Text('Pending')),
-                          ButtonSegment(value: 'approved', label: Text('Approved')),
-                          ButtonSegment(value: 'rejected', label: Text('Rejected')),
+                        segments: [
+                          ButtonSegment(value: 'all', label: Text(AppLocalizations.of(context)!.all)),
+                          ButtonSegment(value: 'pending', label: Text(AppLocalizations.of(context)!.pending)),
+                          ButtonSegment(value: 'approved', label: Text(AppLocalizations.of(context)!.approved)),
+                          ButtonSegment(value: 'rejected', label: Text(AppLocalizations.of(context)!.rejected)),
                         ],
                         selected: {_selectedStatus},
                         onSelectionChanged: (Set<String> selection) {
@@ -257,13 +258,13 @@ class _AgentSubmissionHistoryScreenState extends State<AgentSubmissionHistoryScr
               future: _submissionsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
+                  return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 16),
-                        Text('Loading submissions...'),
+                        const CircularProgressIndicator(),
+                        const SizedBox(height: 16),
+                        Text(AppLocalizations.of(context)!.loadingSubmissions),
                       ],
                     ),
                   );
@@ -276,11 +277,11 @@ class _AgentSubmissionHistoryScreenState extends State<AgentSubmissionHistoryScr
                       children: [
                         Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
                         const SizedBox(height: 16),
-                        Text('Error: ${snapshot.error}'),
+                        Text('${AppLocalizations.of(context)!.error}: ${snapshot.error}'),
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: _refreshSubmissions,
-                          child: const Text('Try Again'),
+                          child: Text(AppLocalizations.of(context)!.tryAgain),
                         ),
                       ],
                     ),
@@ -389,9 +390,9 @@ class _AgentSubmissionHistoryScreenState extends State<AgentSubmissionHistoryScr
               
               // Content Preview
               if (isForm && submission.customFields.isNotEmpty) ...[
-                const Text(
-                  'Form Data:',
-                  style: TextStyle(
+                Text(
+                  '${AppLocalizations.of(context)!.formData}:',
+                  style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: Colors.black54,
@@ -422,7 +423,7 @@ class _AgentSubmissionHistoryScreenState extends State<AgentSubmissionHistoryScr
                 if (submission.customFields.length > 3) ...[
                   const SizedBox(height: 4),
                   Text(
-                    '+${submission.customFields.length - 3} more fields',
+                    '+${submission.customFields.length - 3} ${AppLocalizations.of(context)!.moreFields}',
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.grey[600],
@@ -433,7 +434,7 @@ class _AgentSubmissionHistoryScreenState extends State<AgentSubmissionHistoryScr
               ] else if (!isForm) ...[
                 if (submission.evidenceTitle != null) ...[
                   Text(
-                    'Evidence: ${submission.evidenceTitle}',
+                    '${AppLocalizations.of(context)!.evidence}: ${submission.evidenceTitle}',
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -455,7 +456,7 @@ class _AgentSubmissionHistoryScreenState extends State<AgentSubmissionHistoryScr
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'File uploaded',
+                            AppLocalizations.of(context)!.fileUploaded,
                             style: TextStyle(fontSize: 12, color: Colors.grey[700]),
                           ),
                         ),
@@ -479,7 +480,7 @@ class _AgentSubmissionHistoryScreenState extends State<AgentSubmissionHistoryScr
                     ),
                   ),
                   Text(
-                    isForm ? 'FORM' : 'EVIDENCE',
+                    isForm ? AppLocalizations.of(context)!.form.toUpperCase() : AppLocalizations.of(context)!.evidence.toUpperCase(),
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
@@ -517,7 +518,7 @@ class _AgentSubmissionHistoryScreenState extends State<AgentSubmissionHistoryScr
             ),
             const SizedBox(height: 24),
             Text(
-              'No Submissions Yet',
+              AppLocalizations.of(context)!.noSubmissionsYet,
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -526,7 +527,7 @@ class _AgentSubmissionHistoryScreenState extends State<AgentSubmissionHistoryScr
             ),
             const SizedBox(height: 8),
             Text(
-              'Your form submissions and evidence uploads will appear here.',
+              AppLocalizations.of(context)!.submissionsWillAppearHere,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,

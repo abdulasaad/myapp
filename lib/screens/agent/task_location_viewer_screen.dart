@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:myapp/models/task.dart';
 import 'package:myapp/utils/constants.dart';
+import '../../l10n/app_localizations.dart';
 
 class GeofenceInfo {
   final String id;
@@ -263,7 +264,7 @@ class _TaskLocationViewerScreenState extends State<TaskLocationViewerScreen> {
                           ],
                         ),
                         child: Text(
-                          '${widget.task.title} - Location',
+                          '${widget.task.title} - ${AppLocalizations.of(context)!.location}',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -296,7 +297,7 @@ class _TaskLocationViewerScreenState extends State<TaskLocationViewerScreen> {
                                   ),
                                   const SizedBox(height: 24),
                                   Text(
-                                    'No Location Set',
+                                    AppLocalizations.of(context)!.noLocationSet,
                                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                       color: Colors.grey[600],
                                       fontWeight: FontWeight.bold,
@@ -306,8 +307,8 @@ class _TaskLocationViewerScreenState extends State<TaskLocationViewerScreen> {
                                   const SizedBox(height: 12),
                                   Text(
                                     widget.task.locationName != null && widget.task.locationName!.isNotEmpty
-                                        ? 'This task has a location name but no geofence area defined. You can submit evidence from any location.'
-                                        : 'The manager has not set a specific location or geofence for this task. You can submit evidence from any location.',
+                                        ? AppLocalizations.of(context)!.taskHasLocationNameNoGeofence
+                                        : AppLocalizations.of(context)!.noLocationSetDescription,
                                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                       color: Colors.grey[500],
                                     ),
@@ -385,7 +386,7 @@ class _TaskLocationViewerScreenState extends State<TaskLocationViewerScreen> {
                         ),
                         const SizedBox(width: 10),
                         Text(
-                          'Geofence Areas',
+                          AppLocalizations.of(context)!.geofenceAreas,
                           style: Theme.of(context).textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w600,
                             color: Colors.grey[800],
@@ -400,7 +401,7 @@ class _TaskLocationViewerScreenState extends State<TaskLocationViewerScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        '${_currentZoneIndex + 1} of ${_geofenceInfos.length}',
+                        AppLocalizations.of(context)!.zoneCountFormat((_currentZoneIndex + 1).toString(), _geofenceInfos.length.toString()),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Colors.grey[600],
                           fontWeight: FontWeight.w500,
@@ -528,7 +529,7 @@ class _TaskLocationViewerScreenState extends State<TaskLocationViewerScreen> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${zone.points.length} points',
+                        AppLocalizations.of(context)!.pointsCount(zone.points.length.toString()),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Colors.grey[600],
                           fontSize: 11,

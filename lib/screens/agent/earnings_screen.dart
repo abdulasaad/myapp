@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../../utils/constants.dart';
+import '../../l10n/app_localizations.dart';
 
 // --- DATA MODELS ---
 
@@ -147,7 +148,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('My Earnings')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.myEarnings)),
       body: FutureBuilder<EarningsSummary>(
         future: _earningsFuture,
         builder: (context, snapshot) {
@@ -155,12 +156,12 @@ class _EarningsScreenState extends State<EarningsScreen> {
             return preloader;
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Error fetching earnings: ${snapshot.error}'));
+            return Center(child: Text(AppLocalizations.of(context)!.errorFetchingEarnings(snapshot.error.toString())));
           }
           
           final summary = snapshot.data;
           if (summary == null || (summary.campaignEarnings.isEmpty && summary.standaloneTaskEarnings.isEmpty)) {
-            return const Center(child: Text('No earnings data found.'));
+            return Center(child: Text(AppLocalizations.of(context)!.noEarningsDataFound));
           }
 
           // Calculate overall totals from both lists
@@ -182,9 +183,9 @@ class _EarningsScreenState extends State<EarningsScreen> {
                   padding: const EdgeInsets.all(16.0),
                   child: Row(
                     children: [
-                      _buildSummaryCard(context, 'Total Earned', overallTotal.toString(), Colors.blue),
+                      _buildSummaryCard(context, AppLocalizations.of(context)!.totalEarned, overallTotal.toString(), Colors.blue),
                       formSpacerHorizontal,
-                      _buildSummaryCard(context, 'Outstanding Balance', overallOutstanding.toString(), Colors.green),
+                      _buildSummaryCard(context, AppLocalizations.of(context)!.outstandingBalance, overallOutstanding.toString(), Colors.green),
                     ],
                   ),
                 ),
@@ -227,10 +228,10 @@ class _EarningsScreenState extends State<EarningsScreen> {
           children: [
             Text(earning.campaignName, style: Theme.of(context).textTheme.headlineSmall),
             const SizedBox(height: 12),
-            _buildEarningRow('Total for Campaign:', earning.totalEarned.toString()),
-            _buildEarningRow('Already Paid:', earning.totalPaid.toString()),
+            _buildEarningRow(AppLocalizations.of(context)!.totalForCampaign, earning.totalEarned.toString()),
+            _buildEarningRow(AppLocalizations.of(context)!.alreadyPaid, earning.totalPaid.toString()),
             const Divider(height: 20),
-            _buildEarningRow('Balance for Campaign:', earning.outstandingBalance.toString(), isBold: true),
+            _buildEarningRow(AppLocalizations.of(context)!.balanceForCampaign, earning.outstandingBalance.toString(), isBold: true),
           ],
         ),
       ),
@@ -250,10 +251,10 @@ class _EarningsScreenState extends State<EarningsScreen> {
           children: [
             Text(earning.taskName, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 12),
-            _buildEarningRow('Points Earned:', earning.pointsEarned.toString()),
-            _buildEarningRow('Points Paid:', earning.pointsPaid.toString()),
+            _buildEarningRow(AppLocalizations.of(context)!.pointsEarned, earning.pointsEarned.toString()),
+            _buildEarningRow(AppLocalizations.of(context)!.pointsPaid, earning.pointsPaid.toString()),
              const Divider(height: 20),
-            _buildEarningRow('Outstanding Balance:', earning.outstandingBalance.toString(), isBold: true),
+            _buildEarningRow(AppLocalizations.of(context)!.outstandingBalance, earning.outstandingBalance.toString(), isBold: true),
           ],
         ),
       ),

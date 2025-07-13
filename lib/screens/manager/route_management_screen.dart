@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../l10n/app_localizations.dart';
 import '../../utils/constants.dart';
 import '../../models/route.dart' as route_model;
 import 'create_route_screen.dart';
@@ -100,7 +101,7 @@ class _RouteManagementScreenState extends State<RouteManagementScreen> with Tick
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Route Management'),
+        title: Text('${AppLocalizations.of(context)!.routes} Management'),
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -114,7 +115,7 @@ class _RouteManagementScreenState extends State<RouteManagementScreen> with Tick
               );
             },
             icon: const Icon(Icons.location_on),
-            tooltip: 'Manage Places',
+            tooltip: AppLocalizations.of(context)!.managePlaces,
           ),
         ],
         bottom: TabBar(
@@ -131,7 +132,7 @@ class _RouteManagementScreenState extends State<RouteManagementScreen> with Tick
                 children: [
                   const Icon(Icons.route, size: 16),
                   const SizedBox(width: 4),
-                  Text('Active (${_activeRoutes.length})', 
+                  Text('${AppLocalizations.of(context)!.active} (${_activeRoutes.length})', 
                     style: const TextStyle(fontSize: 12)),
                 ],
               ),
@@ -142,7 +143,7 @@ class _RouteManagementScreenState extends State<RouteManagementScreen> with Tick
                 children: [
                   const Icon(Icons.archive, size: 16),
                   const SizedBox(width: 4),
-                  Text('Completed (${_completedRoutes.length})', 
+                  Text('${AppLocalizations.of(context)!.completed} (${_completedRoutes.length})', 
                     style: const TextStyle(fontSize: 12)),
                 ],
               ),
@@ -164,7 +165,7 @@ class _RouteManagementScreenState extends State<RouteManagementScreen> with Tick
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.add),
-        label: const Text('Create Route'),
+        label: Text('${AppLocalizations.of(context)!.createNew} ${AppLocalizations.of(context)!.route}'),
       ),
     );
   }
@@ -182,7 +183,7 @@ class _RouteManagementScreenState extends State<RouteManagementScreen> with Tick
             ),
             const SizedBox(height: 16),
             Text(
-              isDraft ? 'No draft routes' : 'No routes found',
+              isDraft ? AppLocalizations.of(context)!.noDraftRoutes : AppLocalizations.of(context)!.noRoutesFound,
               style: TextStyle(
                 fontSize: 18,
                 color: Colors.grey[600],
@@ -191,7 +192,7 @@ class _RouteManagementScreenState extends State<RouteManagementScreen> with Tick
             ),
             const SizedBox(height: 8),
             Text(
-              'Create your first route to get started',
+              AppLocalizations.of(context)!.createFirstRoute,
               style: TextStyle(
                 color: Colors.grey[500],
                 fontSize: 14,
@@ -295,7 +296,7 @@ class _RouteManagementScreenState extends State<RouteManagementScreen> with Tick
                 children: [
                   _buildStatChip(
                     icon: Icons.location_on,
-                    label: '$placesCount Places',
+                    label: '$placesCount ${AppLocalizations.of(context)!.places}',
                     color: Colors.blue,
                   ),
                   const SizedBox(width: 8),
@@ -320,8 +321,8 @@ class _RouteManagementScreenState extends State<RouteManagementScreen> with Tick
               
               // Places Preview
               if (placesCount > 0) ...[
-                const Text(
-                  'Route Order:',
+                Text(
+                  AppLocalizations.of(context)!.routeOrder,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -347,7 +348,7 @@ class _RouteManagementScreenState extends State<RouteManagementScreen> with Tick
                   Icon(Icons.person, size: 16, color: Colors.grey[600]),
                   const SizedBox(width: 4),
                   Text(
-                    'Created by: ${route.createdByUser?.fullName ?? 'Unknown'}',
+                    AppLocalizations.of(context)!.createdByFormat(route.createdByUser?.fullName ?? AppLocalizations.of(context)!.unknown),
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                   const Spacer(),
@@ -395,14 +396,14 @@ class _RouteManagementScreenState extends State<RouteManagementScreen> with Tick
 
   String _getPlacesPreview(route_model.Route route) {
     if (route.routePlaces == null || route.routePlaces!.isEmpty) {
-      return 'No places added';
+      return AppLocalizations.of(context)!.noPlacesAdded;
     }
     
     final sortedPlaces = route.routePlaces!..sort((a, b) => a.visitOrder.compareTo(b.visitOrder));
     final placeNames = sortedPlaces.take(3).map((rp) => rp.place?.name ?? 'Unknown').toList();
     
     if (sortedPlaces.length > 3) {
-      placeNames.add('... (+${sortedPlaces.length - 3} more)');
+      placeNames.add(AppLocalizations.of(context)!.morePlacesFormat(sortedPlaces.length - 3));
     }
     
     return placeNames.join(' → ');

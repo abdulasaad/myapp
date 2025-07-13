@@ -29,11 +29,12 @@ class LocationHistoryService {
       final userRole = userRoleResponse['role'] as String;
 
       if (userRole == 'admin') {
-        // Admins can see all agents and managers
+        // Admins can see all agents (excluding managers and other admins)
         final response = await supabase
             .from('profiles')
             .select('id, full_name, role')
-            .inFilter('role', ['agent', 'manager'])
+            .eq('role', 'agent')
+            .eq('status', 'active')
             .order('full_name');
 
         return response
@@ -74,12 +75,13 @@ class LocationHistoryService {
           return [];
         }
 
-        // Get profiles for these group members
+        // Get profiles for these group members (only agents)
         final response = await supabase
             .from('profiles')
             .select('id, full_name, role')
             .inFilter('id', memberIds)
-            .inFilter('role', ['agent', 'manager'])
+            .eq('role', 'agent')
+            .eq('status', 'active')
             .order('full_name');
 
         final result = response

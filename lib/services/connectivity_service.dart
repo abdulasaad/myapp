@@ -28,6 +28,9 @@ class ConnectivityService {
       final connectivityResults = await _connectivity.checkConnectivity();
       _isOnline = _isConnected(connectivityResults);
       
+      // Notify initial state
+      _connectivityController.add(_isOnline);
+      
       // Listen to connectivity changes
       _connectivitySubscription = _connectivity.onConnectivityChanged.listen(
         (List<ConnectivityResult> results) {

@@ -13,6 +13,7 @@ import '../../models/template_field.dart';
 import '../../services/template_service.dart';
 import '../../utils/constants.dart';
 import '../../widgets/task_submission_preview.dart';
+import '../../l10n/app_localizations.dart';
 
 class DataCollectionTaskScreen extends StatefulWidget {
   final Task task;
@@ -136,13 +137,13 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
                 children: [
                   Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
                   const SizedBox(height: 16),
-                  Text('Error loading form: ${snapshot.error}'),
+                  Text('${AppLocalizations.of(context)!.errorLoadingForm}: ${snapshot.error}'),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => setState(() {
                       _fieldsFuture = TemplateService().getTemplateFields(widget.template.id);
                     }),
-                    child: const Text('Retry'),
+                    child: Text(AppLocalizations.of(context)!.retry),
                   ),
                 ],
               ),
@@ -168,12 +169,12 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
           Icon(Icons.assignment, size: 64, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
-            'No Form Fields',
+            AppLocalizations.of(context)!.noFormFields,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
           Text(
-            'This template has no custom fields configured.',
+            AppLocalizations.of(context)!.noCustomFieldsConfigured,
             style: Theme.of(context).textTheme.bodyMedium,
             textAlign: TextAlign.center,
           ),
@@ -297,7 +298,7 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        'Required',
+                        AppLocalizations.of(context)!.required,
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -384,7 +385,7 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
     return TextFormField(
       controller: _controllers[field.fieldName],
       decoration: InputDecoration(
-        hintText: field.placeholderText ?? 'Enter email address',
+        hintText: field.placeholderText ?? AppLocalizations.of(context)!.enterEmailAddress,
         border: const OutlineInputBorder(),
         prefixIcon: const Icon(Icons.email),
       ),
@@ -398,7 +399,7 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
     return TextFormField(
       controller: _controllers[field.fieldName],
       decoration: InputDecoration(
-        hintText: field.placeholderText ?? 'Enter phone number',
+        hintText: field.placeholderText ?? AppLocalizations.of(context)!.enterPhoneNumber,
         border: const OutlineInputBorder(),
         prefixIcon: const Icon(Icons.phone),
       ),
@@ -429,7 +430,7 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
       decoration: const InputDecoration(
         border: OutlineInputBorder(),
       ),
-      hint: Text(field.placeholderText ?? 'Select an option'),
+      hint: Text(field.placeholderText ?? AppLocalizations.of(context)!.selectAnOption),
       items: options.map((option) => DropdownMenuItem(
         value: option,
         child: Text(option),
@@ -488,7 +489,7 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
     return TextFormField(
       controller: _controllers[field.fieldName],
       decoration: InputDecoration(
-        hintText: field.placeholderText ?? 'Select date',
+        hintText: field.placeholderText ?? AppLocalizations.of(context)!.selectDate,
         border: const OutlineInputBorder(),
         suffixIcon: const Icon(Icons.calendar_today),
       ),
@@ -514,7 +515,7 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
     return TextFormField(
       controller: _controllers[field.fieldName],
       decoration: InputDecoration(
-        hintText: field.placeholderText ?? 'Select time',
+        hintText: field.placeholderText ?? AppLocalizations.of(context)!.selectTime,
         border: const OutlineInputBorder(),
         suffixIcon: const Icon(Icons.access_time),
       ),
@@ -545,7 +546,7 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    'Signature',
+                    AppLocalizations.of(context)!.signature,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -558,7 +559,7 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    'Required',
+                    AppLocalizations.of(context)!.required,
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
@@ -570,7 +571,7 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Please sign below to confirm completion',
+              AppLocalizations.of(context)!.pleaseSignToConfirm,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.grey[600],
               ),
@@ -592,7 +593,7 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
             TextButton.icon(
               onPressed: () => _signatureController!.clear(),
               icon: const Icon(Icons.clear),
-              label: const Text('Clear Signature'),
+              label: Text(AppLocalizations.of(context)!.clearSignature),
             ),
           ],
         ),
@@ -624,7 +625,7 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.send),
-          label: Text(_isSubmitting ? 'Submitting...' : 'Submit Form'),
+          label: Text(_isSubmitting ? AppLocalizations.of(context)!.submitting : AppLocalizations.of(context)!.submitForm),
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).primaryColor,
             foregroundColor: Colors.white,
@@ -637,24 +638,24 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
 
   String? _validateField(TemplateField field, String? value) {
     if (field.isRequired && (value == null || value.trim().isEmpty)) {
-      return '${field.fieldLabel} is required';
+      return '${field.fieldLabel} ${AppLocalizations.of(context)!.isRequired}';
     }
 
     if (value != null && value.isNotEmpty) {
       switch (field.fieldType) {
         case TemplateFieldType.email:
           if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-            return 'Please enter a valid email address';
+            return AppLocalizations.of(context)!.pleaseEnterValidEmail;
           }
           break;
         case TemplateFieldType.phone:
           if (!RegExp(r'^\+?[\d\s\-\(\)]{10,}$').hasMatch(value)) {
-            return 'Please enter a valid phone number';
+            return AppLocalizations.of(context)!.pleaseEnterValidPhone;
           }
           break;
         case TemplateFieldType.number:
           if (double.tryParse(value) == null) {
-            return 'Please enter a valid number';
+            return AppLocalizations.of(context)!.pleaseEnterValidNumber;
           }
           break;
         default:
@@ -664,10 +665,10 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
       // Check validation rules
       final rules = field.validationRules;
       if (rules['minLength'] != null && value.length < rules['minLength']) {
-        return '${field.fieldLabel} must be at least ${rules['minLength']} characters';
+        return '${field.fieldLabel} ${AppLocalizations.of(context)!.mustBeAtLeast} ${rules['minLength']} ${AppLocalizations.of(context)!.characters}';
       }
       if (rules['maxLength'] != null && value.length > rules['maxLength']) {
-        return '${field.fieldLabel} must be no more than ${rules['maxLength']} characters';
+        return '${field.fieldLabel} ${AppLocalizations.of(context)!.mustBeNoMoreThan} ${rules['maxLength']} ${AppLocalizations.of(context)!.characters}';
       }
     }
 
@@ -676,14 +677,14 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) {
-      context.showSnackBar('Please fix the errors in the form', isError: true);
+      context.showSnackBar(AppLocalizations.of(context)!.pleaseFillRequiredFields, isError: true);
       return;
     }
 
     // Check signature if required
     if (widget.template.requiresSignature) {
       if (_signatureController!.isEmpty) {
-        context.showSnackBar('Signature is required', isError: true);
+        context.showSnackBar(AppLocalizations.of(context)!.signatureRequired, isError: true);
         return;
       }
     }
@@ -703,12 +704,12 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
       await _submitFormData();
       
       if (mounted) {
-        context.showSnackBar('Form submitted successfully!');
+        context.showSnackBar(AppLocalizations.of(context)!.formSubmittedSuccessfully);
         Navigator.of(context).pop(true); // Return success
       }
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Failed to submit form: $e', isError: true);
+        context.showSnackBar('${AppLocalizations.of(context)!.failedToSubmitForm}: $e', isError: true);
       }
     } finally {
       if (mounted) {
@@ -738,7 +739,7 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
     await supabase.from('evidence').insert({
       'task_assignment_id': await _getTaskAssignmentId(),
       'uploader_id': supabase.auth.currentUser!.id,
-      'title': 'Form Data: ${widget.task.title}',
+      'title': '${AppLocalizations.of(context)!.formData}: ${widget.task.title}',
       'file_url': 'data:application/json;base64,${base64Encode(utf8.encode(jsonEncode(_formData)))}',
       'mime_type': 'application/json',
       'status': 'approved', // Auto-approve form submissions
@@ -773,7 +774,7 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Evidence Upload',
+                  AppLocalizations.of(context)!.evidenceUpload,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -784,7 +785,7 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Upload supporting evidence for this task (optional)',
+              AppLocalizations.of(context)!.uploadSupportingEvidence,
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 14,
@@ -796,7 +797,7 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
               child: ElevatedButton.icon(
                 onPressed: _uploadEvidence,
                 icon: const Icon(Icons.cloud_upload),
-                label: const Text('Upload Evidence'),
+                label: Text(AppLocalizations.of(context)!.uploadEvidence),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
@@ -823,7 +824,7 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
       barrierDismissible: false,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Upload Evidence'),
+          title: Text(AppLocalizations.of(context)!.uploadEvidence),
           content: Form(
             key: formKey,
             child: Column(
@@ -831,12 +832,12 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
               children: [
                 TextFormField(
                   controller: titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Evidence Name',
-                    hintText: 'Enter evidence name',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.evidenceName,
+                    hintText: AppLocalizations.of(context)!.enterEvidenceName,
                   ),
                   validator: (v) => (v == null || v.isEmpty)
-                      ? 'Evidence name is required'
+                      ? AppLocalizations.of(context)!.evidenceNameRequired
                       : null,
                 ),
                 const SizedBox(height: 16),
@@ -858,8 +859,8 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
                         },
                         icon: const Icon(Icons.attach_file),
                         label: Text(selectedFile == null
-                            ? 'Select File'
-                            : 'Change File'),
+                            ? AppLocalizations.of(context)!.selectFile
+                            : AppLocalizations.of(context)!.changeFile),
                       ),
                     ),
                   ],
@@ -893,7 +894,7 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(AppLocalizations.of(context)!.cancel),
             ),
             ElevatedButton(
               onPressed: selectedFile == null
@@ -905,7 +906,7 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
                         _performEvidenceUpload(title, selectedFile!);
                       }
                     },
-              child: const Text('Upload'),
+              child: Text(AppLocalizations.of(context)!.upload),
             ),
           ],
         ),
@@ -939,12 +940,12 @@ class _DataCollectionTaskScreenState extends State<DataCollectionTaskScreen> {
       });
       
       if(mounted) {
-        context.showSnackBar('Evidence "$title" uploaded successfully!');
+        context.showSnackBar('${AppLocalizations.of(context)!.evidenceUploadedSuccessfully}: "$title"');
         // Refresh the submission preview
         setState(() {});
       }
     } catch (e) {
-      if(mounted) context.showSnackBar('Failed to upload evidence: $e', isError: true);
+      if(mounted) context.showSnackBar('${AppLocalizations.of(context)!.failedToUploadEvidence}: $e', isError: true);
     }
   }
 }

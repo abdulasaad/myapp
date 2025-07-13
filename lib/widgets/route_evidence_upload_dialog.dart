@@ -7,6 +7,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../l10n/app_localizations.dart';
 import '../utils/constants.dart';
 import '../services/location_service.dart';
 import '../models/place_visit.dart';
@@ -81,14 +82,14 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Upload Evidence',
+                          AppLocalizations.of(context)!.uploadEvidence,
                           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: textPrimaryColor,
                           ),
                         ),
                         Text(
-                          '${widget.routePlace.place?.name ?? 'Unknown Place'}',
+                          '${widget.routePlace.place?.name ?? AppLocalizations.of(context)!.unknownPlace}',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: textSecondaryColor,
                           ),
@@ -123,8 +124,8 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
                     Expanded(
                       child: Text(
                         remainingEvidence > 0 
-                            ? 'Evidence Required: $remainingEvidence more needed (${widget.currentEvidenceCount}/${widget.requiredEvidenceCount})'
-                            : 'Evidence Complete: ${widget.currentEvidenceCount}/${widget.requiredEvidenceCount} submitted',
+                            ? AppLocalizations.of(context)!.evidenceRequiredProgress(remainingEvidence.toString(), widget.currentEvidenceCount.toString(), widget.requiredEvidenceCount.toString())
+                            : AppLocalizations.of(context)!.evidenceComplete(widget.currentEvidenceCount.toString(), widget.requiredEvidenceCount.toString()),
                         style: TextStyle(
                           fontSize: 12,
                           color: remainingEvidence > 0 ? Colors.orange[700] : Colors.green[700],
@@ -141,18 +142,18 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
               TextFormField(
                 controller: _titleController,
                 enabled: !_isUploading,
-                decoration: const InputDecoration(
-                  labelText: 'Evidence Title *',
-                  hintText: 'Enter a title for this evidence',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.title),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.evidenceTitleRequired,
+                  hintText: AppLocalizations.of(context)!.enterTitleForEvidence,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.title),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Title is required';
+                    return AppLocalizations.of(context)!.titleIsRequired;
                   }
                   if (value.trim().length < 3) {
-                    return 'Title must be at least 3 characters';
+                    return AppLocalizations.of(context)!.titleMinLength;
                   }
                   return null;
                 },
@@ -164,11 +165,11 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
               TextFormField(
                 controller: _descriptionController,
                 enabled: !_isUploading,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  hintText: 'Optional notes about this evidence',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.description),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.description,
+                  hintText: AppLocalizations.of(context)!.optionalNotesAboutEvidence,
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.description),
                 ),
                 maxLines: 2,
                 maxLength: 300,
@@ -194,7 +195,7 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Instructions:',
+                              AppLocalizations.of(context)!.instructions,
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
@@ -234,7 +235,7 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
                         const Icon(Icons.attach_file, color: primaryColor),
                         const SizedBox(width: 8),
                         Text(
-                          'Select Evidence File',
+                          AppLocalizations.of(context)!.selectEvidenceFile,
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
@@ -248,7 +249,7 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
                         children: [
                           _buildFileSelectionButton(
                             icon: Icons.camera_alt,
-                            label: 'Take Photo/Video',
+                            label: AppLocalizations.of(context)!.takePhotoVideo,
                             onTap: _isUploading ? null : _pickFile,
                           ),
                           const SizedBox(height: 8),
@@ -258,7 +259,7 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 16),
                                 child: Text(
-                                  'OR',
+                                  AppLocalizations.of(context)!.or,
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,
@@ -272,7 +273,7 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
                           const SizedBox(height: 8),
                           _buildFileSelectionButton(
                             icon: Icons.file_upload,
-                            label: 'Upload File',
+                            label: AppLocalizations.of(context)!.uploadFile,
                             onTap: _isUploading ? null : _pickFile,
                           ),
                         ],
@@ -290,7 +291,7 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
                     LinearProgressIndicator(value: _uploadProgress),
                     const SizedBox(height: 8),
                     Text(
-                      'Uploading evidence... ${(_uploadProgress * 100).toInt()}%',
+                      AppLocalizations.of(context)!.uploadingEvidenceProgress((_uploadProgress * 100).toInt()),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
@@ -305,7 +306,7 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: _isUploading ? null : () => Navigator.of(context).pop(),
-                      child: const Text('Cancel'),
+                      child: Text(AppLocalizations.of(context)!.cancel),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -327,7 +328,7 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
                                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             )
-                          : const Text('Upload Evidence'),
+                          : Text(AppLocalizations.of(context)!.uploadEvidence),
                     ),
                   ),
                 ],
@@ -479,7 +480,7 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
         // Check file size (limit to 50MB)
         if (file.size > 50 * 1024 * 1024) {
           if (mounted) {
-            ModernNotification.error(context, message: 'File too large. Maximum size is 50MB.');
+            ModernNotification.error(context, message: AppLocalizations.of(context)!.fileTooLargeMaxSize);
           }
           return;
         }
@@ -488,7 +489,7 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
       }
     } catch (e) {
       if (mounted) {
-        ModernNotification.error(context, message: 'Error selecting file: $e');
+        ModernNotification.error(context, message: AppLocalizations.of(context)!.errorSelectingFile(e.toString()));
       }
     }
   }
@@ -524,7 +525,7 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
         final bytes = await File(file.path!).readAsBytes();
         fileBytes = Uint8List.fromList(bytes);
       } else {
-        throw Exception('File has no data');
+        throw Exception(AppLocalizations.of(context)!.fileHasNoData);
       }
       
       final mimeType = lookupMimeType(file.name, headerBytes: fileBytes) ?? 'application/octet-stream';
@@ -591,12 +592,12 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
       setState(() => _uploadProgress = 1.0);
 
       if (mounted) {
-        ModernNotification.success(context, message: 'Evidence uploaded successfully!');
+        ModernNotification.success(context, message: AppLocalizations.of(context)!.evidenceUploadedSuccessfully);
         Navigator.of(context).pop(true); // Return true to indicate successful upload
       }
     } catch (e) {
       if (mounted) {
-        ModernNotification.error(context, message: 'Upload failed: $e');
+        ModernNotification.error(context, message: AppLocalizations.of(context)!.uploadFailed(e.toString()));
       }
     } finally {
       if (mounted) {

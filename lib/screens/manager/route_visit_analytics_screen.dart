@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../l10n/app_localizations.dart';
 import '../../utils/constants.dart';
 import '../../models/place_visit.dart';
 import '../../models/route_assignment.dart';
@@ -129,7 +130,7 @@ class _RouteVisitAnalyticsScreenState extends State<RouteVisitAnalyticsScreen>
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Route Visit Analytics'),
+        title: Text('${AppLocalizations.of(context)!.routes} ${AppLocalizations.of(context)!.visitAnalytics}'),
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -138,10 +139,10 @@ class _RouteVisitAnalyticsScreenState extends State<RouteVisitAnalyticsScreen>
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
           indicatorColor: Colors.white,
-          tabs: const [
-            Tab(text: 'Overview'),
-            Tab(text: 'Recent Visits'),
-            Tab(text: 'Active Routes'),
+          tabs: [
+            Tab(text: AppLocalizations.of(context)!.overview),
+            Tab(text: AppLocalizations.of(context)!.recentVisits),
+            Tab(text: AppLocalizations.of(context)!.activeRoutes),
           ],
         ),
       ),
@@ -166,9 +167,9 @@ class _RouteVisitAnalyticsScreenState extends State<RouteVisitAnalyticsScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Analytics Overview',
-              style: TextStyle(
+            Text(
+              '${AppLocalizations.of(context)!.visitAnalytics} ${AppLocalizations.of(context)!.overview}',
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: textPrimaryColor,
@@ -186,25 +187,25 @@ class _RouteVisitAnalyticsScreenState extends State<RouteVisitAnalyticsScreen>
               childAspectRatio: 1.4,
               children: [
                 _buildAnalyticsCard(
-                  'Total Visits',
+                  AppLocalizations.of(context)!.totalVisits,
                   _analytics['totalVisits']?.toString() ?? '0',
                   Icons.location_on,
                   Colors.blue,
                 ),
                 _buildAnalyticsCard(
-                  'Completed',
+                  AppLocalizations.of(context)!.completed,
                   _analytics['completedVisits']?.toString() ?? '0',
                   Icons.check_circle,
                   Colors.green,
                 ),
                 _buildAnalyticsCard(
-                  'Active Now',
+                  AppLocalizations.of(context)!.activeNow,
                   _analytics['activeVisits']?.toString() ?? '0',
                   Icons.access_time,
                   Colors.orange,
                 ),
                 _buildAnalyticsCard(
-                  'Total Hours',
+                  AppLocalizations.of(context)!.totalHours,
                   _analytics['totalDurationHours']?.toString() ?? '0',
                   Icons.schedule,
                   Colors.purple,
@@ -231,8 +232,8 @@ class _RouteVisitAnalyticsScreenState extends State<RouteVisitAnalyticsScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Quick Stats',
+                  Text(
+                    AppLocalizations.of(context)!.quickStats,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -245,7 +246,7 @@ class _RouteVisitAnalyticsScreenState extends State<RouteVisitAnalyticsScreen>
                       Icon(Icons.timeline, color: primaryColor, size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        'Average visit duration: ${_analytics['avgVisitDuration']} minutes',
+                        AppLocalizations.of(context)!.averageVisitDuration(_analytics['avgVisitDuration']),
                         style: const TextStyle(color: textSecondaryColor),
                       ),
                     ],
@@ -256,7 +257,7 @@ class _RouteVisitAnalyticsScreenState extends State<RouteVisitAnalyticsScreen>
                       Icon(Icons.route, color: primaryColor, size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        'Active route assignments: ${_activeAssignments.length}',
+                        AppLocalizations.of(context)!.activeRouteAssignments(_activeAssignments.length),
                         style: const TextStyle(color: textSecondaryColor),
                       ),
                     ],
@@ -324,10 +325,10 @@ class _RouteVisitAnalyticsScreenState extends State<RouteVisitAnalyticsScreen>
     return RefreshIndicator(
       onRefresh: _loadAnalyticsData,
       child: _recentVisits.isEmpty
-          ? const Center(
+          ? Center(
               child: Text(
-                'No recent visits found',
-                style: TextStyle(color: textSecondaryColor),
+                AppLocalizations.of(context)!.noRecentVisitsFound,
+                style: const TextStyle(color: textSecondaryColor),
               ),
             )
           : ListView.builder(
@@ -349,17 +350,17 @@ class _RouteVisitAnalyticsScreenState extends State<RouteVisitAnalyticsScreen>
     switch (visit.status) {
       case 'completed':
         statusColor = Colors.green;
-        statusText = 'Completed';
+        statusText = AppLocalizations.of(context)!.completed;
         statusIcon = Icons.check_circle;
         break;
       case 'checked_in':
         statusColor = Colors.blue;
-        statusText = 'Checked In';
+        statusText = AppLocalizations.of(context)!.checkedIn;
         statusIcon = Icons.access_time;
         break;
       case 'pending':
         statusColor = Colors.orange;
-        statusText = 'Pending';
+        statusText = AppLocalizations.of(context)!.pending;
         statusIcon = Icons.schedule;
         break;
       default:
@@ -393,7 +394,7 @@ class _RouteVisitAnalyticsScreenState extends State<RouteVisitAnalyticsScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        visit.place?.name ?? 'Unknown Place',
+                        visit.place?.name ?? AppLocalizations.of(context)!.unknownPlace,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -453,7 +454,7 @@ class _RouteVisitAnalyticsScreenState extends State<RouteVisitAnalyticsScreen>
                 Icon(Icons.person, size: 16, color: textSecondaryColor),
                 const SizedBox(width: 4),
                 Text(
-                  'Agent: ${visit.routeAssignment?.agent?.fullName ?? 'Unknown'}',
+                  '${AppLocalizations.of(context)!.agent}: ${visit.routeAssignment?.agent?.fullName ?? AppLocalizations.of(context)!.unknown}',
                   style: const TextStyle(
                     color: textSecondaryColor,
                     fontSize: 12,
@@ -505,10 +506,10 @@ class _RouteVisitAnalyticsScreenState extends State<RouteVisitAnalyticsScreen>
     return RefreshIndicator(
       onRefresh: _loadAnalyticsData,
       child: _activeAssignments.isEmpty
-          ? const Center(
+          ? Center(
               child: Text(
-                'No active route assignments',
-                style: TextStyle(color: textSecondaryColor),
+                AppLocalizations.of(context)!.noActiveRouteAssignments,
+                style: const TextStyle(color: textSecondaryColor),
               ),
             )
           : ListView.builder(
@@ -558,7 +559,7 @@ class _RouteVisitAnalyticsScreenState extends State<RouteVisitAnalyticsScreen>
           children: [
             const SizedBox(height: 4),
             Text(
-              'Agent: ${assignment.agent?.fullName ?? 'Unknown'}',
+              '${AppLocalizations.of(context)!.agent}: ${assignment.agent?.fullName ?? AppLocalizations.of(context)!.unknown}',
               style: const TextStyle(color: textSecondaryColor),
             ),
             const SizedBox(height: 4),
@@ -603,6 +604,6 @@ class _RouteVisitAnalyticsScreenState extends State<RouteVisitAnalyticsScreen>
 
   void _viewAssignmentDetails(RouteAssignment assignment) {
     // TODO: Navigate to detailed assignment view
-    context.showSnackBar('Assignment details - Coming soon!');
+    context.showSnackBar(AppLocalizations.of(context)!.assignmentDetails);
   }
 }

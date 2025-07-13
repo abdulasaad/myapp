@@ -2,10 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/campaign.dart'; // Import Campaign model
 import '../../models/app_user.dart';
 import '../../services/user_management_service.dart';
 import '../../utils/constants.dart';
+import '../../widgets/month_day_picker.dart';
+import '../../widgets/modern_notification.dart';
 
 class CreateCampaignScreen extends StatefulWidget {
   final Campaign? campaignToEdit; // Optional campaign for editing
@@ -22,8 +25,7 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
 
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
-  DateTime? _startDate;
-  DateTime? _endDate;
+  Set<DateTime> _selectedDays = {};
   
   // Manager assignment (for admin only)
   String? _selectedManagerId;
@@ -40,8 +42,16 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
       final campaign = widget.campaignToEdit!;
       _nameController.text = campaign.name;
       _descriptionController.text = campaign.description ?? '';
-      _startDate = campaign.startDate;
-      _endDate = campaign.endDate;
+      // Convert start/end dates to selected days for backward compatibility
+      if (campaign.startDate != null && campaign.endDate != null) {
+        final start = campaign.startDate!;
+        final end = campaign.endDate!;
+        final days = <DateTime>{};
+        for (DateTime day = start; day.isBefore(end) || day.isAtSameMomentAs(end); day = day.add(const Duration(days: 1))) {
+          days.add(DateTime(day.year, day.month, day.day));
+        }
+        _selectedDays = days;
+      }
     }
     
     // Check if current user is admin and load managers
@@ -91,50 +101,45 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
     }
   }
 
-  Future<void> _selectDate(BuildContext context, bool isStartDate) async {
-    final initialDate = DateTime.now();
-    final newDate = await showDatePicker(
+  Future<void> _selectDays(BuildContext context) async {
+    final result = await showDialog<Set<DateTime>>(
       context: context,
-      initialDate: initialDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
+      builder: (context) => MonthDayPicker(
+        initialSelectedDays: _selectedDays,
+        onDaysSelected: (days) {},
+        title: AppLocalizations.of(context)!.selectCampaignDays,
+      ),
     );
 
-    if (newDate != null) {
+    if (result != null) {
       setState(() {
-        if (isStartDate) {
-          _startDate = newDate;
-        } else {
-          _endDate = newDate;
-        }
+        _selectedDays = result;
       });
     }
   }
 
   Future<void> _saveCampaign() async {
     if (_formKey.currentState!.validate()) {
-      if (_startDate == null || _endDate == null) {
-        context.showSnackBar(
-          'Please select both start and end dates.',
-          isError: true,
-        );
-        return;
-      }
-      if (_endDate!.isBefore(_startDate!)) {
-        context.showSnackBar(
-          'End date cannot be before the start date.',
-          isError: true,
+      if (_selectedDays.isEmpty) {
+        ModernNotification.error(
+          context,
+          message: AppLocalizations.of(context)!.pleaseSelectCampaignDays,
         );
         return;
       }
 
       setState(() => _isLoading = true);
       try {
+        // Get earliest and latest selected days for backward compatibility
+        final sortedDays = _selectedDays.toList()..sort();
+        final startDate = sortedDays.first;
+        final endDate = sortedDays.last;
+
         final campaignData = {
           'name': _nameController.text.trim(),
           'description': _descriptionController.text.trim(),
-          'start_date': _startDate!.toIso8601String(),
-          'end_date': _endDate!.toIso8601String(),
+          'start_date': startDate.toIso8601String(),
+          'end_date': endDate.toIso8601String(),
         };
 
         // Add assigned manager if admin selected one
@@ -148,7 +153,11 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
               .update(campaignData)
               .eq('id', widget.campaignToEdit!.id);
           if (mounted) {
-            context.showSnackBar('Campaign updated successfully!');
+            ModernNotification.success(
+              context,
+              message: AppLocalizations.of(context)!.campaignUpdatedSuccessfully,
+              subtitle: _nameController.text.trim(),
+            );
             Navigator.of(context).pop(true); // Return true to indicate success
           }
         } else {
@@ -156,15 +165,20 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
           campaignData['created_by'] = userId; // Add created_by only for new campaigns
           await supabase.from('campaigns').insert(campaignData);
           if (mounted) {
-            context.showSnackBar('Campaign created successfully!');
+            ModernNotification.success(
+              context,
+              message: AppLocalizations.of(context)!.campaignCreatedSuccessfully,
+              subtitle: _nameController.text.trim(),
+            );
             Navigator.of(context).pop(true); // Return true to indicate success
           }
         }
       } catch (e) {
         if (mounted) {
-          context.showSnackBar(
-            'Failed to create campaign. Please try again.',
-            isError: true,
+          ModernNotification.error(
+            context,
+            message: AppLocalizations.of(context)!.failedToCreateCampaign,
+            subtitle: e.toString(),
           );
         }
       } finally {
@@ -178,7 +192,7 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Campaign' : 'Create Campaign'),
+        title: Text(_isEditing ? AppLocalizations.of(context)!.editCampaign : AppLocalizations.of(context)!.createCampaign),
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -226,7 +240,7 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _isEditing ? 'Edit Campaign' : 'New Campaign',
+                              _isEditing ? AppLocalizations.of(context)!.editCampaign : AppLocalizations.of(context)!.newCampaign,
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -235,8 +249,8 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
                             ),
                             Text(
                               _isEditing 
-                                  ? 'Update campaign details'
-                                  : 'Create a new campaign for your team',
+                                  ? AppLocalizations.of(context)!.updateCampaignDetails
+                                  : AppLocalizations.of(context)!.createNewCampaignForTeam,
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: textSecondaryColor,
@@ -256,7 +270,7 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
                         TextFormField(
                           controller: _nameController,
                           decoration: InputDecoration(
-                            labelText: 'Campaign Name',
+                            labelText: AppLocalizations.of(context)!.campaignName,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -264,14 +278,14 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
                             fillColor: backgroundColor,
                           ),
                           validator: (value) => (value == null || value.isEmpty)
-                              ? 'Campaign name is required'
+                              ? AppLocalizations.of(context)!.campaignNameRequired
                               : null,
                         ),
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _descriptionController,
                           decoration: InputDecoration(
-                            labelText: 'Description',
+                            labelText: AppLocalizations.of(context)!.description,
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -286,8 +300,8 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
                           DropdownButtonFormField<String>(
                             value: _selectedManagerId,
                             decoration: InputDecoration(
-                              labelText: 'Assign to Manager',
-                              hintText: 'Select a manager to oversee this campaign',
+                              labelText: AppLocalizations.of(context)!.assignToManager,
+                              hintText: AppLocalizations.of(context)!.selectManagerToOversee,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -295,9 +309,9 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
                               fillColor: backgroundColor,
                             ),
                             items: [
-                              const DropdownMenuItem<String>(
+                              DropdownMenuItem<String>(
                                 value: null,
-                                child: Text('No specific manager'),
+                                child: Text(AppLocalizations.of(context)!.noSpecificManager),
                               ),
                               ..._managers.map((manager) {
                                 return DropdownMenuItem<String>(
@@ -327,7 +341,7 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      'This campaign will be assigned to the selected manager. Only they and their agents will be able to see and work on this campaign.',
+                                      AppLocalizations.of(context)!.campaignAssignmentInfo,
                                       style: TextStyle(
                                         color: Colors.blue[700],
                                         fontSize: 12,
@@ -340,110 +354,69 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
                           ],
                         ],
                         const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: InkWell(
-                                onTap: () => _selectDate(context, true),
-                                borderRadius: BorderRadius.circular(12),
-                                child: Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: backgroundColor,
-                                    border: Border.all(
-                                      color: Colors.grey.withValues(alpha: 0.3),
-                                    ),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        'Start Date',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: textSecondaryColor,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.calendar_today,
-                                            size: 16,
-                                            color: primaryColor,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            _startDate == null
-                                                ? 'Select date'
-                                                : DateFormat.yMMMd().format(_startDate!),
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: _startDate == null 
-                                                  ? textSecondaryColor 
-                                                  : textPrimaryColor,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                        InkWell(
+                          onTap: () => _selectDays(context),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: backgroundColor,
+                              border: Border.all(
+                                color: Colors.grey.withValues(alpha: 0.3),
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  AppLocalizations.of(context)!.campaignDays,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: textSecondaryColor,
                                   ),
                                 ),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: InkWell(
-                                onTap: () => _selectDate(context, false),
-                                borderRadius: BorderRadius.circular(12),
-                                child: Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: backgroundColor,
-                                    border: Border.all(
-                                      color: Colors.grey.withValues(alpha: 0.3),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.calendar_month,
+                                      size: 16,
+                                      color: primaryColor,
                                     ),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        'End Date',
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        _selectedDays.isEmpty
+                                            ? AppLocalizations.of(context)!.selectDays
+                                            : AppLocalizations.of(context)!.daysSelected(_selectedDays.length),
                                         style: TextStyle(
-                                          fontSize: 12,
-                                          color: textSecondaryColor,
+                                          fontSize: 14,
+                                          color: _selectedDays.isEmpty 
+                                              ? textSecondaryColor 
+                                              : textPrimaryColor,
                                         ),
                                       ),
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.calendar_today,
-                                            size: 16,
-                                            color: primaryColor,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            _endDate == null
-                                                ? 'Select date'
-                                                : DateFormat.yMMMd().format(_endDate!),
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: _endDate == null 
-                                                  ? textSecondaryColor 
-                                                  : textPrimaryColor,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
-                              ),
+                                if (_selectedDays.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _selectedDays.length <= 5
+                                        ? _selectedDays
+                                            .map((d) => DateFormat.MMMd().format(d))
+                                            .join(', ')
+                                        : '${DateFormat.MMMd().format(_selectedDays.first)} - ${DateFormat.MMMd().format(_selectedDays.last)}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: textSecondaryColor,
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                         const SizedBox(height: 32),
                         ElevatedButton(
@@ -467,7 +440,7 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
                                   ),
                                 )
                               : Text(
-                                  _isEditing ? 'Update Campaign' : 'Create Campaign',
+                                  _isEditing ? AppLocalizations.of(context)!.updateCampaign : AppLocalizations.of(context)!.createCampaign,
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,

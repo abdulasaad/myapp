@@ -1,6 +1,7 @@
 // lib/screens/reporting/campaign_report_screen.dart
 
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
 import '../../utils/constants.dart';
 
 class CampaignReport {
@@ -56,7 +57,7 @@ class _CampaignReportScreenState extends State<CampaignReportScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Campaign Report')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.campaignReport)),
       body: FutureBuilder<CampaignReport>(
         future: _reportFuture,
         builder: (context, snapshot) {
@@ -64,10 +65,10 @@ class _CampaignReportScreenState extends State<CampaignReportScreen> {
             return preloader;
           }
           if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(child: Text('${AppLocalizations.of(context)!.error}: ${snapshot.error}'));
           }
           if (!snapshot.hasData) {
-            return const Center(child: Text('No report data available.'));
+            return Center(child: Text(AppLocalizations.of(context)!.noReportDataAvailable));
           }
 
           final report = snapshot.data!;
@@ -82,7 +83,7 @@ class _CampaignReportScreenState extends State<CampaignReportScreen> {
                     padding: const EdgeInsets.all(20.0),
                     child: Column(
                       children: [
-                        Text('Campaign Progress', style: Theme.of(context).textTheme.headlineSmall),
+                        Text(AppLocalizations.of(context)!.campaignProgress, style: Theme.of(context).textTheme.headlineSmall),
                         const SizedBox(height: 20),
                         LinearProgressIndicator(
                           value: report.completionPercentage,
@@ -92,7 +93,7 @@ class _CampaignReportScreenState extends State<CampaignReportScreen> {
                           valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
                         ),
                         const SizedBox(height: 12),
-                        Text('${report.completedTasks} / ${report.totalTasks} Tasks Completed', style: Theme.of(context).textTheme.titleLarge),
+                        Text('${report.completedTasks} / ${report.totalTasks} ${AppLocalizations.of(context)!.tasksCompleted}', style: Theme.of(context).textTheme.titleLarge),
                         Text('(${(report.completionPercentage * 100).toStringAsFixed(0)}%)', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey[400])),
                       ],
                     ),
@@ -106,8 +107,8 @@ class _CampaignReportScreenState extends State<CampaignReportScreen> {
                   mainAxisSpacing: 16,
                   childAspectRatio: 1.5,
                   children: [
-                    _buildMetricCard(icon: Icons.assignment_turned_in_outlined, label: 'Total Points Earned', value: report.totalPointsEarned.toString(), color: Colors.blue),
-                    _buildMetricCard(icon: Icons.people_alt_outlined, label: 'Assigned Agents', value: report.assignedAgents.toString(), color: Colors.teal),
+                    _buildMetricCard(icon: Icons.assignment_turned_in_outlined, label: AppLocalizations.of(context)!.totalPointsEarned, value: report.totalPointsEarned.toString(), color: Colors.blue),
+                    _buildMetricCard(icon: Icons.people_alt_outlined, label: AppLocalizations.of(context)!.assignedAgents, value: report.assignedAgents.toString(), color: Colors.teal),
                   ],
                 ),
               ],

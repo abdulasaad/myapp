@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../l10n/app_localizations.dart';
 import '../../utils/constants.dart';
 import '../../models/route.dart' as route_model;
 import '../../models/route_place.dart';
@@ -49,7 +50,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ModernNotification.error(context, message: 'Error loading route details', subtitle: e.toString());
+        ModernNotification.error(context, message: AppLocalizations.of(context)!.errorLoadingRouteDetails, subtitle: e.toString());
       }
     }
   }
@@ -245,7 +246,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                     foregroundColor: Colors.white,
                     heroTag: "assign_agents",
                     icon: const Icon(Icons.person_add),
-                    label: const Text('Assign to Agents'),
+                    label: Text('${AppLocalizations.of(context)!.assignTo} ${AppLocalizations.of(context)!.agents}'),
                   ),
               ],
             )
@@ -267,7 +268,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
       if (managerGroups.isEmpty) {
         if (mounted) {
-          ModernNotification.error(context, message: 'No groups found for this manager');
+          ModernNotification.error(context, message: AppLocalizations.of(context)!.noGroupsFoundForThisManager);
         }
         return;
       }
@@ -306,7 +307,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
       if (availablePlaces.isEmpty) {
         if (mounted) {
-          ModernNotification.info(context, message: 'No available places to add to this route');
+          ModernNotification.info(context, message: AppLocalizations.of(context)!.noAvailablePlacesToAddToThisRoute);
         }
         return;
       }
@@ -318,7 +319,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ModernNotification.error(context, message: 'Error loading available places', subtitle: e.toString());
+        ModernNotification.error(context, message: AppLocalizations.of(context)!.errorLoadingAvailablePlaces, subtitle: e.toString());
       }
     }
   }
@@ -327,7 +328,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
     return await showDialog<Place>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Add Place to Route'),
+        title: Text('${AppLocalizations.of(context)!.add} ${AppLocalizations.of(context)!.place} ${AppLocalizations.of(context)!.to} ${AppLocalizations.of(context)!.route}'),
         content: SizedBox(
           width: double.maxFinite,
           height: 400,
@@ -349,7 +350,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
         ],
       ),
@@ -372,13 +373,13 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
       });
 
       if (mounted) {
-        ModernNotification.success(context, message: 'Place added to route successfully!');
+        ModernNotification.success(context, message: AppLocalizations.of(context)!.placeAddedToRouteSuccessfully);
         // Reload route details to show the new place
         _loadRouteDetails();
       }
     } catch (e) {
       if (mounted) {
-        ModernNotification.error(context, message: 'Error adding place to route', subtitle: e.toString());
+        ModernNotification.error(context, message: AppLocalizations.of(context)!.errorAddingPlaceToRoute, subtitle: e.toString());
       }
     }
   }
@@ -454,12 +455,12 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                 Icon(Icons.person, size: 16, color: Colors.grey[600]),
                 const SizedBox(width: 4),
                 Text(
-                  'Created by: ${_route.createdByUser?.fullName ?? 'Unknown'}',
+                  '${AppLocalizations.of(context)!.createdBy}: ${_route.createdByUser?.fullName ?? AppLocalizations.of(context)!.unknown}',
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
                 const Spacer(),
                 Text(
-                  'Created: ${DateFormat.MMMd().add_jm().format(_route.createdAt)}',
+                  '${AppLocalizations.of(context)!.created}: ${DateFormat.MMMd().add_jm().format(_route.createdAt)}',
                   style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                 ),
               ],
@@ -482,9 +483,9 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Route Statistics',
-              style: TextStyle(
+            Text(
+              '${AppLocalizations.of(context)!.route} ${AppLocalizations.of(context)!.statistics}',
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: textPrimaryColor,
@@ -495,20 +496,20 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
               children: [
                 _buildStatItem(
                   icon: Icons.location_on,
-                  label: 'Places',
+                  label: AppLocalizations.of(context)!.places,
                   value: placesCount.toString(),
                   color: Colors.blue,
                 ),
                 _buildStatItem(
                   icon: Icons.access_time,
-                  label: 'Est. Duration',
+                  label: AppLocalizations.of(context)!.estimatedDuration,
                   value: '${(totalDuration / 60).ceil()}h',
                   color: Colors.orange,
                 ),
                 if (_route.estimatedDurationHours != null)
                   _buildStatItem(
                     icon: Icons.schedule,
-                    label: 'Total Hours',
+                    label: AppLocalizations.of(context)!.totalHours,
                     value: '${_route.estimatedDurationHours}h',
                     color: Colors.green,
                   ),
@@ -523,14 +524,14 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                   if (_route.startDate != null)
                     _buildStatItem(
                       icon: Icons.play_arrow,
-                      label: 'Start Date',
+                      label: AppLocalizations.of(context)!.startDate,
                       value: DateFormat.MMMd().format(_route.startDate!),
                       color: Colors.green,
                     ),
                   if (_route.endDate != null)
                     _buildStatItem(
                       icon: Icons.stop,
-                      label: 'End Date',
+                      label: AppLocalizations.of(context)!.endDate,
                       value: DateFormat.MMMd().format(_route.endDate!),
                       color: Colors.red,
                     ),
@@ -594,7 +595,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                 Icon(Icons.people, color: primaryColor),
                 const SizedBox(width: 8),
                 Text(
-                  'Assigned Agents (${_assignedAgents.length})',
+                  '${AppLocalizations.of(context)!.assignedAgents} (${_assignedAgents.length})',
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -616,7 +617,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'No agents assigned yet',
+                        AppLocalizations.of(context)!.noAgentsAssignedYet,
                         style: TextStyle(
                           fontSize: 16,
                           color: Colors.grey[600],
@@ -624,7 +625,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Tap "Assign to Agents" to get started',
+                        AppLocalizations.of(context)!.tapAssignToAgentsToGetStarted,
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[500],
@@ -706,7 +707,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
           children: [
             const SizedBox(height: 4),
             Text(
-              'Status: ${assignmentStatus.toUpperCase()}',
+              '${AppLocalizations.of(context)!.status}: ${assignmentStatus.toUpperCase()}',
               style: TextStyle(
                 color: statusColor,
                 fontWeight: FontWeight.w500,
@@ -740,7 +741,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                 Icon(Icons.location_on, size: 14, color: Colors.grey[600]),
                 const SizedBox(width: 4),
                 Text(
-                  '$completedVisits/$totalPlaces places',
+                  '$completedVisits/$totalPlaces ${AppLocalizations.of(context)!.places}',
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
                 const SizedBox(width: 16),
@@ -818,7 +819,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                             ),
                           ),
                           Text(
-                            'Progress Details',
+                            AppLocalizations.of(context)!.progressDetails,
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey[600],
@@ -838,23 +839,23 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
               // Content
               Expanded(
                 child: visits.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.assignment, size: 64, color: Colors.grey),
-                            SizedBox(height: 16),
+                            const Icon(Icons.assignment, size: 64, color: Colors.grey),
+                            const SizedBox(height: 16),
                             Text(
-                              'No visits yet',
-                              style: TextStyle(
+                              AppLocalizations.of(context)!.noVisitsYet,
+                              style: const TextStyle(
                                 fontSize: 16,
                                 color: Colors.grey,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                             Text(
-                              'Agent hasn\'t started visiting places',
-                              style: TextStyle(
+                              AppLocalizations.of(context)!.agentHasntStartedVisitingPlaces,
+                              style: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey,
                               ),
@@ -971,7 +972,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                   Icon(Icons.login, size: 14, color: Colors.grey[600]),
                   const SizedBox(width: 4),
                   Text(
-                    'Check-in: ${DateFormat.MMMd().add_jm().format(checkedInAt)}',
+                    '${AppLocalizations.of(context)!.checkIn}: ${DateFormat.MMMd().add_jm().format(checkedInAt)}',
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                 ],
@@ -984,7 +985,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                   Icon(Icons.logout, size: 14, color: Colors.grey[600]),
                   const SizedBox(width: 4),
                   Text(
-                    'Check-out: ${DateFormat.MMMd().add_jm().format(checkedOutAt)}',
+                    '${AppLocalizations.of(context)!.checkOut}: ${DateFormat.MMMd().add_jm().format(checkedOutAt)}',
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                 ],
@@ -1000,7 +1001,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                   Icon(Icons.attachment, size: 14, color: Colors.grey[600]),
                   const SizedBox(width: 4),
                   Text(
-                    'Evidence Files (${(visit['evidence_files'] as List).length}):',
+                    '${AppLocalizations.of(context)!.evidenceFiles} (${(visit['evidence_files'] as List).length}):',
                     style: TextStyle(
                       fontSize: 12, 
                       color: Colors.grey[600],
@@ -1069,7 +1070,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      'Notes: ${visit['visit_notes']}',
+                      '${AppLocalizations.of(context)!.notes}: ${visit['visit_notes']}',
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                   ),
@@ -1094,7 +1095,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
               Icon(Icons.location_off, size: 48, color: Colors.grey[400]),
               const SizedBox(height: 8),
               Text(
-                'No places in this route',
+                AppLocalizations.of(context)!.noPlacesInThisRoute,
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.grey[600],
@@ -1115,9 +1116,9 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Route Places',
-              style: TextStyle(
+            Text(
+              '${AppLocalizations.of(context)!.route} ${AppLocalizations.of(context)!.places}',
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: textPrimaryColor,
@@ -1208,7 +1209,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                                 Icon(Icons.camera_alt, size: 14, color: Colors.grey[600]),
                                 const SizedBox(width: 4),
                                 Text(
-                                  '${routePlace.requiredEvidenceCount} evidence',
+                                  '${routePlace.requiredEvidenceCount} ${AppLocalizations.of(context)!.evidence}',
                                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                                 ),
                               ],
@@ -1253,7 +1254,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                     ),
                                     icon: const Icon(Icons.remove, size: 14),
-                                    label: const Text('Remove', style: TextStyle(fontSize: 12)),
+                                    label: Text(AppLocalizations.of(context)!.remove, style: const TextStyle(fontSize: 12)),
                                   ),
                                 ],
                               ),
@@ -1306,12 +1307,12 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Activate Route'),
-        content: Text('Are you sure you want to activate "${_route.name}"? Once activated, it will be available for agent assignment.'),
+        title: Text('${AppLocalizations.of(context)!.activate} ${AppLocalizations.of(context)!.route}'),
+        content: Text('${AppLocalizations.of(context)!.areYouSureYouWantToActivate} "${_route.name}"? ${AppLocalizations.of(context)!.onceActivatedItWillBeAvailableForAgentAssignment}.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -1319,7 +1320,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Activate'),
+            child: Text(AppLocalizations.of(context)!.activate),
           ),
         ],
       ),
@@ -1339,13 +1340,13 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         });
 
         if (mounted) {
-          ModernNotification.success(context, message: 'Route activated successfully!');
+          ModernNotification.success(context, message: AppLocalizations.of(context)!.routeActivatedSuccessfully);
         }
 
       } catch (e) {
         setState(() => _isLoading = false);
         if (mounted) {
-          ModernNotification.error(context, message: 'Error activating route', subtitle: e.toString());
+          ModernNotification.error(context, message: AppLocalizations.of(context)!.errorActivatingRoute, subtitle: e.toString());
         }
       }
     }
@@ -1368,12 +1369,12 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Route'),
+        title: Text('${AppLocalizations.of(context)!.delete} ${AppLocalizations.of(context)!.route}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Are you sure you want to permanently delete "${_route.name}"?'),
+            Text('${AppLocalizations.of(context)!.areYouSureYouWantToPermanentlyDelete} "${_route.name}"?'),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
@@ -1388,7 +1389,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'This route has no assignments or visit history and can be safely deleted.',
+                      AppLocalizations.of(context)!.thisRouteHasNoAssignmentsOrVisitHistoryAndCanBeSafelyDeleted,
                       style: TextStyle(fontSize: 12, color: Colors.green[700]),
                     ),
                   ),
@@ -1409,7 +1410,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'This action cannot be undone. The route and all its places will be permanently deleted.',
+                      AppLocalizations.of(context)!.thisActionCannotBeUndoneTheRouteAndAllItsPlacesWillBePermanentlyDeleted,
                       style: TextStyle(fontSize: 12, color: Colors.red[700]),
                     ),
                   ),
@@ -1421,7 +1422,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -1429,7 +1430,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Delete Permanently'),
+            child: Text(AppLocalizations.of(context)!.deletePermanently),
           ),
         ],
       ),
@@ -1457,7 +1458,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
       if (managerGroups.isEmpty) {
         if (mounted) {
-          ModernNotification.error(context, message: 'No groups found');
+          ModernNotification.error(context, message: AppLocalizations.of(context)!.noGroupsFound);
         }
         return;
       }
@@ -1472,7 +1473,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
       if (agentsInGroups.isEmpty) {
         if (mounted) {
-          ModernNotification.info(context, message: 'No agents found in your groups');
+          ModernNotification.info(context, message: AppLocalizations.of(context)!.noAgentsFoundInYourGroups);
         }
         return;
       }
@@ -1488,7 +1489,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
       if (agentsResponse.isEmpty) {
         if (mounted) {
-          ModernNotification.info(context, message: 'No agents available for assignment');
+          ModernNotification.info(context, message: AppLocalizations.of(context)!.noAgentsAvailableForAssignment);
         }
         return;
       }
@@ -1505,7 +1506,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
     } catch (e) {
       if (mounted) {
-        ModernNotification.error(context, message: 'Error loading agents', subtitle: e.toString());
+        ModernNotification.error(context, message: AppLocalizations.of(context)!.errorLoadingAgents, subtitle: e.toString());
       }
     }
   }
@@ -1519,7 +1520,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
     return StatefulBuilder(
       builder: (context, setState) {
         return AlertDialog(
-          title: Text('Assign "${_route.name}" to Agents'),
+          title: Text('${AppLocalizations.of(context)!.assign} "${_route.name}" ${AppLocalizations.of(context)!.to} ${AppLocalizations.of(context)!.agents}'),
           content: SizedBox(
             width: double.maxFinite,
             height: 400,
@@ -1529,7 +1530,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                 // Show currently assigned agents
                 if (_assignedAgents.isNotEmpty) ...[
                   Text(
-                    'Currently Assigned (${_assignedAgents.length}):',
+                    '${AppLocalizations.of(context)!.currentlyAssigned} (${_assignedAgents.length}):',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
@@ -1584,9 +1585,9 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    'Add More Agents:',
-                    style: TextStyle(
+                  Text(
+                    '${AppLocalizations.of(context)!.add} ${AppLocalizations.of(context)!.moreAgents}:',
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
@@ -1614,7 +1615,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              'All agents are already assigned',
+                              AppLocalizations.of(context)!.allAgentsAreAlreadyAssigned,
                               style: TextStyle(
                                 fontSize: 16,
                                 color: Colors.grey[600],
@@ -1622,7 +1623,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'No additional agents available',
+                              AppLocalizations.of(context)!.noAdditionalAgentsAvailable,
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey[500],
@@ -1664,13 +1665,13 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(AppLocalizations.of(context)!.cancel),
             ),
             ElevatedButton(
               onPressed: selectedAgents.isEmpty
                   ? null
                   : () => Navigator.pop(context, selectedAgents),
-              child: Text('Assign to ${selectedAgents.length} agents'),
+              child: Text('${AppLocalizations.of(context)!.assignTo} ${selectedAgents.length} ${AppLocalizations.of(context)!.agents}'),
             ),
           ],
         );
@@ -1702,7 +1703,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
       if (newAgentIds.isEmpty) {
         if (mounted) {
           ModernNotification.warning(context, 
-            message: 'All selected agents are already assigned to this route'
+            message: AppLocalizations.of(context)!.allSelectedAgentsAreAlreadyAssignedToThisRoute
           );
         }
         return;
@@ -1723,8 +1724,8 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         try {
           await supabase.from('notifications').insert({
             'recipient_id': agentId,
-            'title': 'New Route Assigned',
-            'message': 'You have been assigned to route: ${_route.name}',
+            'title': AppLocalizations.of(context)!.newRouteAssigned,
+            'message': '${AppLocalizations.of(context)!.youHaveBeenAssignedToRoute}: ${_route.name}',
             'type': 'route_assignment',
             'data': {
               'route_id': _route.id,
@@ -1741,12 +1742,12 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
       if (mounted) {
         if (alreadyAssignedIds.isNotEmpty) {
           ModernNotification.success(context, 
-            message: 'Assigned ${newAgentIds.length} new agents', 
-            subtitle: '${alreadyAssignedIds.length} were already assigned'
+            message: '${AppLocalizations.of(context)!.assigned} ${newAgentIds.length} ${AppLocalizations.of(context)!.newAgents}', 
+            subtitle: '${alreadyAssignedIds.length} ${AppLocalizations.of(context)!.wereAlreadyAssigned}'
           );
         } else {
           ModernNotification.success(context, 
-            message: 'Route assigned to ${newAgentIds.length} agents successfully!'
+            message: AppLocalizations.of(context)!.routeAssignedToAgentsSuccessfully(newAgentIds.length.toString())
           );
         }
         
@@ -1756,7 +1757,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
 
     } catch (e) {
       if (mounted) {
-        ModernNotification.error(context, message: 'Error assigning route', subtitle: e.toString());
+        ModernNotification.error(context, message: AppLocalizations.of(context)!.errorAssigningRoute, subtitle: e.toString());
       }
     }
   }
@@ -1786,12 +1787,12 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Remove Place from Route'),
+        title: Text('${AppLocalizations.of(context)!.remove} ${AppLocalizations.of(context)!.place} ${AppLocalizations.of(context)!.from} ${AppLocalizations.of(context)!.route}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Are you sure you want to remove "${routePlace.place?.name ?? 'Unknown Place'}" from this route?'),
+            Text('${AppLocalizations.of(context)!.areYouSureYouWantToRemove} "${routePlace.place?.name ?? AppLocalizations.of(context)!.unknownPlace}" ${AppLocalizations.of(context)!.fromThisRoute}?'),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
@@ -1825,7 +1826,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -1833,7 +1834,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Remove'),
+            child: Text(AppLocalizations.of(context)!.remove),
           ),
         ],
       ),
@@ -1853,13 +1854,13 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         await _updateVisitOrders();
 
         if (mounted) {
-          ModernNotification.success(context, message: 'Place removed from route successfully.');
+          ModernNotification.success(context, message: AppLocalizations.of(context)!.placeRemovedFromRouteSuccessfully);
           _loadRouteDetails(); // Refresh the route details
         }
 
       } catch (e) {
         if (mounted) {
-          ModernNotification.error(context, message: 'Error removing place from route', subtitle: e.toString());
+          ModernNotification.error(context, message: AppLocalizations.of(context)!.errorRemovingPlaceFromRoute, subtitle: e.toString());
         }
       }
     }
@@ -1950,14 +1951,14 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Cannot Delete Route'),
+        title: Text(AppLocalizations.of(context)!.cannotDeleteRoute),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'The route "${_route.name}" cannot be deleted because it has historical data or active assignments:',
+                AppLocalizations.of(context)!.theRouteCannotBeDeletedBecauseItHasHistoricalDataOrActiveAssignments(_route.name),
               ),
               const SizedBox(height: 16),
               
@@ -1978,7 +1979,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                           Icon(Icons.assignment_ind, color: Colors.orange[700], size: 16),
                           const SizedBox(width: 8),
                           Text(
-                            'Assigned to ${usageDetails['assignmentCount']} agent(s):',
+                            AppLocalizations.of(context)!.assignedToAgents(usageDetails['assignmentCount'].toString()),
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -2018,7 +2019,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Has ${usageDetails['visitCount']} visit record(s). This historical data cannot be deleted to maintain audit trail.',
+                          AppLocalizations.of(context)!.hasVisitRecordsThisHistoricalDataCannotBeDeletedToMaintainAuditTrail(usageDetails['visitCount'].toString()),
                           style: TextStyle(fontSize: 12, color: Colors.red[700]),
                         ),
                       ),
@@ -2044,7 +2045,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                         Icon(Icons.info_outline, color: Colors.blue[700], size: 16),
                         const SizedBox(width: 8),
                         Text(
-                          'What you can do:',
+                          AppLocalizations.of(context)!.whatYouCanDo,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -2056,12 +2057,12 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                     const SizedBox(height: 8),
                     if (usageDetails['hasAssignments'] as bool)
                       Text(
-                        '• Remove agent assignments first',
+                        '• ${AppLocalizations.of(context)!.removeAgentAssignmentsFirst}',
                         style: TextStyle(fontSize: 11, color: Colors.blue[700]),
                       ),
                     if (usageDetails['hasVisits'] as bool)
                       Text(
-                        '• Archive the route instead of deleting to preserve historical data',
+                        '• ${AppLocalizations.of(context)!.archiveTheRouteInsteadOfDeletingToPreserveHistoricalData}',
                         style: TextStyle(fontSize: 11, color: Colors.blue[700]),
                       ),
                   ],
@@ -2073,7 +2074,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           if (_route.status != 'archived')
             ElevatedButton(
@@ -2085,7 +2086,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                 backgroundColor: Colors.grey[600],
                 foregroundColor: Colors.white,
               ),
-              child: const Text('Archive Route'),
+              child: Text('${AppLocalizations.of(context)!.archive} ${AppLocalizations.of(context)!.route}'),
             ),
         ],
       ),
@@ -2109,14 +2110,14 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
           .eq('id', _route.id);
 
       if (mounted) {
-        ModernNotification.success(context, message: 'Route deleted successfully.');
+        ModernNotification.success(context, message: AppLocalizations.of(context)!.routeDeletedSuccessfully);
         Navigator.pop(context, true); // Return to previous screen
       }
 
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ModernNotification.error(context, message: 'Error deleting route', subtitle: e.toString());
+        ModernNotification.error(context, message: AppLocalizations.of(context)!.errorDeletingRoute, subtitle: e.toString());
       }
     }
   }
@@ -2125,12 +2126,12 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Archive Route'),
+        title: Text('${AppLocalizations.of(context)!.archive} ${AppLocalizations.of(context)!.route}'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Are you sure you want to archive "${_route.name}"?'),
+            Text('${AppLocalizations.of(context)!.areYouSureYouWantToArchive} "${_route.name}"?'),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
@@ -2145,7 +2146,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'The route will be moved to archived status. All historical data will be preserved and it will no longer be available for new assignments.',
+                      AppLocalizations.of(context)!.theRouteWillBeMovedToArchivedStatusAllHistoricalDataWillBePreservedAndItWillNoLongerBeAvailableForNewAssignments,
                       style: TextStyle(fontSize: 12, color: Colors.blue[700]),
                     ),
                   ),
@@ -2157,7 +2158,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -2165,7 +2166,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
               backgroundColor: Colors.grey[600],
               foregroundColor: Colors.white,
             ),
-            child: const Text('Archive'),
+            child: Text(AppLocalizations.of(context)!.archive),
           ),
         ],
       ),
@@ -2182,11 +2183,11 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         });
 
         if (mounted) {
-          ModernNotification.success(context, message: 'Route archived successfully.');
+          ModernNotification.success(context, message: AppLocalizations.of(context)!.routeArchivedSuccessfully);
         }
       } catch (e) {
         if (mounted) {
-          ModernNotification.error(context, message: 'Error archiving route', subtitle: e.toString());
+          ModernNotification.error(context, message: AppLocalizations.of(context)!.errorArchivingRoute, subtitle: e.toString());
         }
       }
     }
@@ -2198,7 +2199,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
     final evidenceId = evidence['id'] as String;
     
     if (fileUrl == null) {
-      ModernNotification.error(context, message: 'File URL not available');
+      ModernNotification.error(context, message: AppLocalizations.of(context)!.fileUrlNotAvailable);
       return;
     }
 

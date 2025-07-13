@@ -13,8 +13,8 @@ final logger = Logger();
 
 @pragma('vm:entry-point')
 class BackgroundLocationService {
-  static const String _channelId = 'al_tijwal_location_service';
-  static const String _channelName = 'Al-Tijwal Location Service';
+  static const String _channelId = 'al_tijwal_persistent_service'; // Use same channel as PersistentServiceManager
+  static const String _channelName = 'Al-Tijwal Service';
 
   @pragma('vm:entry-point')
   static Future<void> initialize() async {
@@ -24,11 +24,7 @@ class BackgroundLocationService {
       androidConfiguration: AndroidConfiguration(
         onStart: onStart,
         autoStart: false,
-        isForegroundMode: true,  // Enable foreground service for background protection
-        notificationChannelId: _channelId,
-        initialNotificationTitle: 'Al-Tijwal Location',
-        initialNotificationContent: 'Tracking location for active tasks',
-        foregroundServiceNotificationId: 888,
+        isForegroundMode: false,  // Disable foreground mode to prevent notification
         autoStartOnBoot: false,
       ),
       iosConfiguration: IosConfiguration(
@@ -83,75 +79,17 @@ class BackgroundLocationService {
     service.invoke('setActiveCampaign', {'campaignId': campaignId});
   }
 
-  // Create custom notification with GPS icon
-  @pragma('vm:entry-point')
-  static Future<void> _createCustomLocationNotification(ServiceInstance service) async {
-    try {
-      final localNotifications = FlutterLocalNotificationsPlugin();
-      
-      // Initialize local notifications
-      const androidInitSettings = AndroidInitializationSettings('ic_gps_location');
-      await localNotifications.initialize(const InitializationSettings(
-        android: androidInitSettings,
-      ));
-      
-      // Create notification channel
-      const androidChannel = AndroidNotificationChannel(
-        'al_tijwal_location_service',
-        'Al-Tijwal Location Service',
-        description: 'Location tracking for active tasks',
-        importance: Importance.low,
-        playSound: false,
-        enableVibration: false,
-        showBadge: false,
-      );
-      
-      await localNotifications
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-          ?.createNotificationChannel(androidChannel);
-      
-      // Show persistent notification with GPS icon
-      await localNotifications.show(
-        888, // Same ID as foreground service
-        'Al-Tijwal Location',
-        'Tracking location for active tasks',
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            'al_tijwal_location_service',
-            'Al-Tijwal Location Service',
-            channelDescription: 'Location tracking for active tasks',
-            importance: Importance.low,
-            priority: Priority.low,
-            icon: 'ic_gps_location',
-            ongoing: true,
-            autoCancel: false,
-            playSound: false,
-            enableVibration: false,
-            showWhen: true,
-          ),
-        ),
-      );
-      
-      debugPrint('✅ Custom GPS notification created');
-    } catch (e) {
-      debugPrint('❌ Error creating custom GPS notification: $e');
-    }
-  }
 
   @pragma('vm:entry-point')
   static void onStart(ServiceInstance service) async {
     DartPluginRegistrant.ensureInitialized();
     
-    if (service is AndroidServiceInstance) {
-      // Keep as foreground service for background protection
-      service.setAsForegroundService();
-      
-      // Create custom notification with GPS icon
-      await _createCustomLocationNotification(service);
-    }
+    // Background service without foreground notification
+    // Persistent notification is handled by PersistentServiceManager
 
     String? activeCampaignId;
     Timer? locationTimer;
+    Timer? heartbeatTimer;
 
     // Use existing Supabase instance or initialize if needed
     late SupabaseClient supabase;
@@ -234,19 +172,15 @@ class BackgroundLocationService {
         // Get current user ID from stored session
         final currentUser = supabase.auth.currentUser;
         if (currentUser == null) {
-          // No authenticated user - stop the service
-          locationTimer?.cancel();
-          service.stopSelf();
+          // No authenticated user - just skip location update but keep heartbeat running
           return;
         }
 
-        // Send location to database
-        final locationString = 'POINT(${position.longitude} ${position.latitude})';
-        
-        // Use server-side timestamp to avoid clock sync issues
-        await supabase.rpc('insert_location_update', params: {
+        // Send location to database using coordinates directly
+        await supabase.rpc('insert_location_coordinates', params: {
           'p_user_id': currentUser.id,
-          'p_location': locationString,
+          'p_longitude': position.longitude,
+          'p_latitude': position.latitude,
           'p_accuracy': position.accuracy,
           'p_speed': position.speed,
         });
@@ -272,6 +206,38 @@ class BackgroundLocationService {
       }
     }
 
+    // Send heartbeat for status tracking
+    Future<void> sendHeartbeat() async {
+      try {
+        final currentUser = supabase.auth.currentUser;
+        if (currentUser == null) {
+          // Try to restore session from stored refresh token
+          try {
+            final session = await supabase.auth.refreshSession();
+            if (session?.user == null) {
+              logger.w('💓 No user session for heartbeat');
+              return;
+            }
+          } catch (e) {
+            logger.w('💓 Failed to restore session: $e');
+            return;
+          }
+        }
+
+        // Get current user again after potential refresh
+        final userId = supabase.auth.currentUser?.id;
+        if (userId == null) return;
+
+        await supabase.rpc('update_user_heartbeat', params: {
+          'p_user_id': userId,
+        });
+        
+        logger.d('💓 Background service heartbeat sent');
+      } catch (e) {
+        // Silent fail for heartbeat
+        logger.w('💓 Background heartbeat failed: $e');
+      }
+    }
 
     // Start location tracking timer
     void startLocationTracking() async {
@@ -282,13 +248,26 @@ class BackgroundLocationService {
       });
     }
 
+    // Start heartbeat timer
+    void startHeartbeat() {
+      heartbeatTimer?.cancel();
+      // Send heartbeat every 30 seconds
+      heartbeatTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+        sendHeartbeat();
+      });
+      // Send initial heartbeat
+      sendHeartbeat();
+    }
+
     // Listen for service commands
     service.on('start').listen((event) {
       startLocationTracking();
+      startHeartbeat();
     });
 
     service.on('stop').listen((event) {
       locationTimer?.cancel();
+      heartbeatTimer?.cancel();
       service.stopSelf();
       logger.i('Background location tracking stopped');
     });
@@ -310,8 +289,9 @@ class BackgroundLocationService {
       }
     });
 
-    // Auto-start location tracking
+    // Auto-start location tracking and heartbeat
     startLocationTracking();
+    startHeartbeat();
   }
 
   @pragma('vm:entry-point')

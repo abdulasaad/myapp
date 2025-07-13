@@ -5,6 +5,7 @@ import '../../models/template_category.dart';
 import '../../models/task_template.dart';
 import '../../services/template_service.dart';
 import '../../utils/constants.dart';
+import '../../l10n/app_localizations.dart';
 
 class SimpleTemplateBuilderScreen extends StatefulWidget {
   const SimpleTemplateBuilderScreen({super.key});
@@ -68,7 +69,7 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
       }
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Error loading categories: $e', isError: true);
+        context.showSnackBar(AppLocalizations.of(context)!.errorLoadingCategories, isError: true);
       }
     }
   }
@@ -134,12 +135,12 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
       );
       
       if (mounted) {
-        context.showSnackBar('Template created successfully!');
+        context.showSnackBar(AppLocalizations.of(context)!.templateCreatedSuccessfully);
         Navigator.of(context).pop(true); // Return true to indicate success
       }
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Error creating template: $e', isError: true);
+        context.showSnackBar(AppLocalizations.of(context)!.errorCreatingTemplate, isError: true);
       }
     } finally {
       if (mounted) {
@@ -153,7 +154,7 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text('Create New Template'),
+        title: Text(AppLocalizations.of(context)!.createNewTemplate),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black87,
         elevation: 0,
@@ -228,7 +229,7 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Step ${_currentStep + 1} of ${_stepTitles.length}',
+                      AppLocalizations.of(context)!.stepXOfY(_currentStep + 1, _stepTitles.length),
                       style: TextStyle(
                         color: Colors.grey[600],
                         fontSize: 14,
@@ -285,7 +286,7 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
                   Expanded(
                     child: OutlinedButton(
                       onPressed: _previousStep,
-                      child: const Text('Back'),
+                      child: Text(AppLocalizations.of(context)!.back),
                     ),
                   ),
                 if (_currentStep > 0) const SizedBox(width: 16),
@@ -304,8 +305,8 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
                             child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                           )
                         : Text(_currentStep == _stepTitles.length - 1 
-                            ? 'Create Template' 
-                            : 'Next'),
+                            ? AppLocalizations.of(context)!.createTemplate 
+                            : AppLocalizations.of(context)!.next),
                   ),
                 ),
               ],
@@ -323,8 +324,8 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildStepHeader(
-            'Basic Information',
-            'Tell us about your template',
+            AppLocalizations.of(context)!.basicInformation,
+            AppLocalizations.of(context)!.tellUsAboutTemplate,
             Icons.info_outline,
           ),
           const SizedBox(height: 24),
@@ -333,8 +334,8 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Template Name *',
+                Text(
+                  AppLocalizations.of(context)!.templateNameRequired,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -342,17 +343,17 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
-                  decoration: const InputDecoration(
-                    hintText: 'e.g., Hospital Equipment Check',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    hintText: AppLocalizations.of(context)!.templateNameHint,
+                    border: const OutlineInputBorder(),
                   ),
                   onChanged: (value) => setState(() => _templateName = value),
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: 16),
                 
-                const Text(
-                  'Description *',
+                Text(
+                  AppLocalizations.of(context)!.descriptionRequired,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -360,17 +361,17 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
-                  decoration: const InputDecoration(
-                    hintText: 'Describe what agents need to do...',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    hintText: AppLocalizations.of(context)!.describeAgentTask,
+                    border: const OutlineInputBorder(),
                   ),
                   maxLines: 3,
                   onChanged: (value) => setState(() => _templateDescription = value),
                 ),
                 const SizedBox(height: 16),
                 
-                const Text(
-                  'Category *',
+                Text(
+                  AppLocalizations.of(context)!.categoryRequired,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -386,9 +387,9 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
                     child: DropdownButton<String>(
                       value: _selectedCategoryId,
                       isExpanded: true,
-                      hint: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
-                        child: Text('Select a category'),
+                      hint: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(AppLocalizations.of(context)!.selectCategory),
                       ),
                       items: _categories.map((category) {
                         return DropdownMenuItem<String>(
@@ -424,8 +425,8 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildStepHeader(
-            'Task Requirements',
-            'Configure what agents need to provide',
+            AppLocalizations.of(context)!.taskRequirements,
+            AppLocalizations.of(context)!.configureAgentRequirements,
             Icons.assignment_outlined,
           ),
           const SizedBox(height: 24),
@@ -434,8 +435,8 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Difficulty Level',
+                Text(
+                  AppLocalizations.of(context)!.difficultyLevel,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -492,8 +493,8 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Evidence Required',
+                Text(
+                  AppLocalizations.of(context)!.evidenceRequired,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -537,8 +538,8 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Estimated Duration (minutes)',
+                          Text(
+                            AppLocalizations.of(context)!.estimatedDurationMinutes,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -547,9 +548,9 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
                           const SizedBox(height: 8),
                           TextFormField(
                             initialValue: _estimatedDuration.toString(),
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              suffixText: 'min',
+                            decoration: InputDecoration(
+                              border: const OutlineInputBorder(),
+                              suffixText: AppLocalizations.of(context)!.minutesShort,
                             ),
                             keyboardType: TextInputType.number,
                             onChanged: (value) {
@@ -565,8 +566,8 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Reward Points',
+                          Text(
+                            AppLocalizations.of(context)!.rewardPoints,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -575,9 +576,9 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
                           const SizedBox(height: 8),
                           TextFormField(
                             initialValue: _rewardPoints.toString(),
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              suffixText: 'pts',
+                            decoration: InputDecoration(
+                              border: const OutlineInputBorder(),
+                              suffixText: AppLocalizations.of(context)!.pointsShort,
                             ),
                             keyboardType: TextInputType.number,
                             onChanged: (value) {
@@ -593,8 +594,8 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
                 const SizedBox(height: 16),
                 
                 SwitchListTile(
-                  title: const Text('Requires Geofence'),
-                  subtitle: const Text('Task must be completed at specific location'),
+                  title: Text(AppLocalizations.of(context)!.requiresGeofence),
+                  subtitle: Text(AppLocalizations.of(context)!.taskMustBeCompletedAtLocation),
                   value: _requiresGeofence,
                   onChanged: (value) => setState(() => _requiresGeofence = value),
                   contentPadding: EdgeInsets.zero,
@@ -602,8 +603,8 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
                 
                 const SizedBox(height: 16),
                 
-                const Text(
-                  'Custom Instructions (Optional)',
+                Text(
+                  AppLocalizations.of(context)!.customInstructionsOptional,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -611,9 +612,9 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
-                  decoration: const InputDecoration(
-                    hintText: 'Additional instructions for agents...',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    hintText: AppLocalizations.of(context)!.additionalInstructionsForAgents,
+                    border: const OutlineInputBorder(),
                   ),
                   maxLines: 3,
                   onChanged: (value) => setState(() => _customInstructions = value),
@@ -633,8 +634,8 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildStepHeader(
-            'Review & Create',
-            'Verify your template before creating',
+            AppLocalizations.of(context)!.reviewAndCreate,
+            AppLocalizations.of(context)!.verifyTemplateBeforeCreating,
             Icons.check_circle_outline,
           ),
           const SizedBox(height: 24),
@@ -664,14 +665,14 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            _templateName.isNotEmpty ? _templateName : 'Template Name',
+                            _templateName.isNotEmpty ? _templateName : AppLocalizations.of(context)!.templateName,
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                           Text(
-                            _templateDescription.isNotEmpty ? _templateDescription : 'Description',
+                            _templateDescription.isNotEmpty ? _templateDescription : AppLocalizations.of(context)!.description,
                             style: TextStyle(color: Colors.grey[600]),
                           ),
                         ],
@@ -681,23 +682,23 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
                 ),
                 const SizedBox(height: 20),
                 
-                _buildReviewSection('Category', _selectedCategoryId != null 
+                _buildReviewSection(AppLocalizations.of(context)!.category, _selectedCategoryId != null 
                     ? _categories.firstWhere((c) => c.id == _selectedCategoryId).name
-                    : 'Not selected'),
+                    : AppLocalizations.of(context)!.notSelected),
                 
-                _buildReviewSection('Difficulty', _difficultyLevel.name.toUpperCase()),
+                _buildReviewSection(AppLocalizations.of(context)!.difficulty, _difficultyLevel.name.toUpperCase()),
                 
-                _buildReviewSection('Evidence Required', 
+                _buildReviewSection(AppLocalizations.of(context)!.evidenceRequired, 
                     _evidenceTypes.map((type) => _getEvidenceTypeLabel(type)).join(', ')),
                 
-                _buildReviewSection('Duration', '$_estimatedDuration minutes'),
+                _buildReviewSection(AppLocalizations.of(context)!.duration, AppLocalizations.of(context)!.minutesFormat(_estimatedDuration.toString())),
                 
-                _buildReviewSection('Reward', '$_rewardPoints points'),
+                _buildReviewSection(AppLocalizations.of(context)!.reward, AppLocalizations.of(context)!.pointsFormat(_rewardPoints.toString())),
                 
-                _buildReviewSection('Geofence Required', _requiresGeofence ? 'Yes' : 'No'),
+                _buildReviewSection(AppLocalizations.of(context)!.geofenceRequired, _requiresGeofence ? AppLocalizations.of(context)!.yes : AppLocalizations.of(context)!.no),
                 
                 if (_customInstructions.isNotEmpty)
-                  _buildReviewSection('Instructions', _customInstructions),
+                  _buildReviewSection(AppLocalizations.of(context)!.instructions, _customInstructions),
               ],
             ),
           ),
@@ -832,11 +833,20 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
 
   String _getEvidenceTypeLabel(EvidenceType type) {
     switch (type) {
-      case EvidenceType.image: return 'Photo';
-      case EvidenceType.video: return 'Video';
-      case EvidenceType.document: return 'Document';
-      case EvidenceType.pdf: return 'PDF';
-      case EvidenceType.audio: return 'Audio';
+      case EvidenceType.image: return AppLocalizations.of(context)!.photo;
+      case EvidenceType.video: return AppLocalizations.of(context)!.video;
+      case EvidenceType.document: return AppLocalizations.of(context)!.document;
+      case EvidenceType.pdf: return AppLocalizations.of(context)!.pdf;
+      case EvidenceType.audio: return AppLocalizations.of(context)!.audio;
+    }
+  }
+
+  String _getLocalizedStepTitle(String title) {
+    switch (title) {
+      case 'Basic Info': return AppLocalizations.of(context)!.basicInfo;
+      case 'Requirements': return AppLocalizations.of(context)!.requirements;
+      case 'Review & Create': return AppLocalizations.of(context)!.reviewAndCreate;
+      default: return title;
     }
   }
 

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import '../../l10n/app_localizations.dart';
 import '../../utils/constants.dart';
 import 'evidence_list_screen.dart';
 import '../tasks/standalone_tasks_screen.dart';
@@ -208,41 +209,17 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
     List<Map<String, dynamic>> agentsResponse;
     
     if (isManager) {
-      // Get groups where manager is a member (via user_groups)
-      final memberGroups = await supabase
-          .from('user_groups')
-          .select('group_id')
-          .eq('user_id', currentUser.id);
-      
-      if (memberGroups.isEmpty) {
-        agentsResponse = [];
-      } else {
-        final groupIds = memberGroups.map((g) => g['group_id'] as String).toList();
-        
-        // Get all agents in manager's groups
-        final agentsInGroups = await supabase
-            .from('user_groups')
-            .select('user_id')
-            .inFilter('group_id', groupIds);
-        
-        if (agentsInGroups.isEmpty) {
-          agentsResponse = [];
-        } else {
-          final agentIds = agentsInGroups.map((a) => a['user_id'] as String).toList();
-          
-          // Use the same database function as live map for consistent online status
-          agentsResponse = await supabase
-              .rpc('get_agents_with_last_location')
-              .then((data) => (data as List<dynamic>)
-                  .cast<Map<String, dynamic>>()
-                  .where((agent) => agentIds.contains(agent['id']))
-                  .toList());
-        }
-      }
-    } else {
-      // Admin sees all agents - use same function as live map
+      // Use new group-specific function to show all agents in manager's groups
       agentsResponse = await supabase
-          .rpc('get_agents_with_last_location')
+          .rpc('get_agents_in_manager_groups', params: {
+            'manager_user_id': currentUser.id,
+          })
+          .then((data) => (data as List<dynamic>)
+              .cast<Map<String, dynamic>>());
+    } else {
+      // Admin sees all agents - use new function to show all agents
+      agentsResponse = await supabase
+          .rpc('get_all_agents_for_admin')
           .then((data) => (data as List<dynamic>).cast<Map<String, dynamic>>());
     }
     
@@ -289,8 +266,15 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
     );
   }
 
-  // Same online status logic as live map
+  // Updated online status logic using new connection status
   bool _isAgentOnline(Map<String, dynamic> agent) {
+    // Use new connection status if available
+    final connectionStatus = agent['connection_status'] as String?;
+    if (connectionStatus != null) {
+      return connectionStatus == 'active';
+    }
+    
+    // Fallback to calculated status based on last seen
     final lastSeenStr = agent['last_seen'] as String?;
     if (lastSeenStr == null) return false;
     
@@ -305,7 +289,36 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
     }
   }
 
-  // Same calculated status logic as live map
+  // Get agent status using new connection status system
+  String _getAgentStatus(Map<String, dynamic> agent) {
+    // Use new connection status if available
+    final connectionStatus = agent['connection_status'] as String?;
+    if (connectionStatus != null) {
+      switch (connectionStatus) {
+        case 'active':
+          return 'Active';
+        case 'away':
+          return 'Away';
+        case 'offline':
+          return 'Offline';
+        default:
+          return 'Unknown';
+      }
+    }
+    
+    // Fallback to calculated status based on location timestamp
+    final lastSeenStr = agent['last_seen'] as String?;
+    if (lastSeenStr == null) return 'Offline';
+    
+    try {
+      final lastSeen = DateTime.parse(lastSeenStr);
+      return _getCalculatedStatus(lastSeen);
+    } catch (e) {
+      return 'Offline';
+    }
+  }
+
+  // Fallback calculated status logic
   String _getCalculatedStatus(DateTime? lastSeen) {
     if (lastSeen == null) return 'Offline';
     final difference = DateTime.now().difference(lastSeen);
@@ -505,20 +518,20 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
                   Icon(Icons.error, size: 64, color: Colors.red[400]),
                   const SizedBox(height: 16),
                   Text(
-                    'Error loading dashboard',
+                    AppLocalizations.of(context)!.errorLoadingDashboard,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton(
                     onPressed: _refreshDashboard,
-                    child: const Text('Retry'),
+                    child: Text(AppLocalizations.of(context)!.retry),
                   ),
                 ],
               ),
             )
           : _dashboardData != null
               ? _buildDashboardContent(_dashboardData!)
-              : const Center(child: Text('Loading dashboard...')),
+              : Center(child: Text(AppLocalizations.of(context)!.loadingDashboard)),
       ),
     );
   }
@@ -531,8 +544,8 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
           width: double.infinity,
           color: backgroundColor,
           padding: const EdgeInsets.fromLTRB(16, 40, 16, 24),
-          child: const Text(
-            'Dashboard',
+          child: Text(
+            AppLocalizations.of(context)!.dashboard,
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,
@@ -636,7 +649,7 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
                       Row(
                         children: [
                           Text(
-                            'Welcome ',
+                            '${AppLocalizations.of(context)!.welcome} ',
                             style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 20,
@@ -674,22 +687,22 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
                     ],
                   );
                 } else {
-                  return const Column(
+                  return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Manager Dashboard',
-                        style: TextStyle(
+                        AppLocalizations.of(context)!.managerDashboard,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Text(
-                        'Loading...',
-                        style: TextStyle(
+                        AppLocalizations.of(context)!.loading,
+                        style: const TextStyle(
                           color: Colors.white70,
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
@@ -711,8 +724,8 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Management Overview',
+        Text(
+          AppLocalizations.of(context)!.managementOverview,
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -721,9 +734,9 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
         ),
         const SizedBox(height: 12),
         _buildOverviewLine(
-          title: 'Team Members',
+          title: AppLocalizations.of(context)!.teamMembers,
           value: data.agentStats.totalAgents.toString(),
-          subtitle: '${data.agentStats.onlineAgents} online',
+          subtitle: '${data.agentStats.onlineAgents} ${AppLocalizations.of(context)!.online}',
           icon: Icons.group,
           color: primaryColor,
           onTap: () {
@@ -736,9 +749,9 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
         ),
         const SizedBox(height: 12),
         _buildOverviewLine(
-          title: 'Route Management',
+          title: AppLocalizations.of(context)!.routeManagement,
           value: '',
-          subtitle: 'Create & manage routes',
+          subtitle: AppLocalizations.of(context)!.createManageRoutes,
           icon: Icons.route,
           color: Colors.purple,
           onTap: () {
@@ -751,9 +764,9 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
         ),
         const SizedBox(height: 12),
         _buildOverviewLine(
-          title: 'Place Management',
+          title: AppLocalizations.of(context)!.placeManagement,
           value: '',
-          subtitle: 'Approve agent suggestions',
+          subtitle: AppLocalizations.of(context)!.approveAgentSuggestions,
           icon: Icons.location_on,
           color: Colors.green,
           onTap: () {
@@ -766,9 +779,9 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
         ),
         const SizedBox(height: 12),
         _buildOverviewLine(
-          title: 'Live Map',
+          title: AppLocalizations.of(context)!.liveMap,
           value: '${data.agentStats.onlineAgents}',
-          subtitle: 'Track agents in real-time',
+          subtitle: AppLocalizations.of(context)!.trackAgentsRealTime,
           icon: Icons.map,
           color: Colors.orange,
           onTap: () {
@@ -876,8 +889,8 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
       children: [
         Row(
           children: [
-            const Text(
-              'Quick Actions',
+            Text(
+              AppLocalizations.of(context)!.quickActions,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -901,7 +914,7 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
             children: [
               Expanded(
                 child: _buildActionCard(
-                  title: 'Manage Tasks',
+                  title: AppLocalizations.of(context)!.manageTasks,
                   subtitle: '',
                   icon: Icons.list_alt,
                   color: successColor,
@@ -917,7 +930,7 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
               const SizedBox(width: 12),
               Expanded(
                 child: _buildActionCard(
-                  title: 'Review Evidence',
+                  title: AppLocalizations.of(context)!.reviewEvidence,
                   subtitle: '',
                   icon: Icons.rate_review,
                   color: warningColor,
@@ -933,7 +946,7 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
               const SizedBox(width: 12),
               Expanded(
                 child: _buildActionCard(
-                  title: 'Routes & Places',
+                  title: AppLocalizations.of(context)!.routesPlaces,
                   subtitle: '',
                   icon: Icons.route,
                   color: Colors.purple,
@@ -956,7 +969,7 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
             children: [
               Expanded(
                 child: _buildActionCard(
-                  title: 'Calendar',
+                  title: AppLocalizations.of(context)!.calendar,
                   subtitle: '',
                   icon: Icons.calendar_today,
                   color: secondaryColor,
@@ -972,7 +985,7 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
               const SizedBox(width: 12),
               Expanded(
                 child: _buildActionCard(
-                  title: 'Visit Analytics',
+                  title: AppLocalizations.of(context)!.visitAnalytics,
                   subtitle: '',
                   icon: Icons.analytics,
                   color: Colors.teal,
@@ -988,7 +1001,7 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
               const SizedBox(width: 12),
               Expanded(
                 child: _buildActionCard(
-                  title: 'Location History',
+                  title: AppLocalizations.of(context)!.locationHistory,
                   subtitle: '',
                   icon: Icons.location_history,
                   color: primaryColor,
@@ -1023,8 +1036,8 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
                 children: [
                   Expanded(
                     child: _buildActionCard(
-                      title: 'Send Notification',
-                      subtitle: 'Message users',
+                      title: AppLocalizations.of(context)!.sendNotification,
+                      subtitle: AppLocalizations.of(context)!.messageUsers,
                       icon: Icons.notification_add,
                       color: Colors.blue,
                       onTap: () {

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/simple_notification_service.dart';
 import '../../utils/constants.dart';
 
@@ -61,7 +62,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       _loadNotifications();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Marked $count notifications as read')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.markedNotificationsRead(count))),
         );
       }
     }
@@ -72,9 +73,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text(
-          'Notifications',
-          style: TextStyle(
+        title: Text(
+          AppLocalizations.of(context)!.notifications,
+          style: const TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,
             letterSpacing: -0.5,
@@ -93,13 +94,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'mark_all_read',
                 child: Row(
                   children: [
-                    Icon(Icons.mark_email_read),
-                    SizedBox(width: 8),
-                    Text('Mark All Read'),
+                    const Icon(Icons.mark_email_read),
+                    const SizedBox(width: 8),
+                    Text(AppLocalizations.of(context)!.markAllRead),
                   ],
                 ),
               ),
@@ -114,11 +115,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                _buildFilterChip('All', 'all'),
+                _buildFilterChip(AppLocalizations.of(context)!.all, 'all'),
                 const SizedBox(width: 8),
-                _buildFilterChip('Unread', 'unread'),
+                _buildFilterChip(AppLocalizations.of(context)!.unread, 'unread'),
                 const SizedBox(width: 8),
-                _buildFilterChip('Read', 'read'),
+                _buildFilterChip(AppLocalizations.of(context)!.read, 'read'),
               ],
             ),
           ),
@@ -140,13 +141,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
                         const SizedBox(height: 16),
                         Text(
-                          'Error loading notifications',
+                          AppLocalizations.of(context)!.errorLoadingNotifications,
                           style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                         ),
                         const SizedBox(height: 8),
                         ElevatedButton(
                           onPressed: _loadNotifications,
-                          child: const Text('Retry'),
+                          child: Text(AppLocalizations.of(context)!.retry),
                         ),
                       ],
                     ),
@@ -163,12 +164,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         Icon(Icons.notifications_none, size: 64, color: Colors.grey[400]),
                         const SizedBox(height: 16),
                         Text(
-                          _filter == 'all' ? 'No notifications yet' : 'No $_filter notifications',
+                          _filter == 'all' 
+                            ? AppLocalizations.of(context)!.noNotificationsYet 
+                            : AppLocalizations.of(context)!.noFilterNotifications(_filter),
                           style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'You\'ll see notifications here when there are updates',
+                          AppLocalizations.of(context)!.notificationsUpdatesMessage,
                           style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                           textAlign: TextAlign.center,
                         ),
@@ -339,13 +342,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final difference = now.difference(dateTime);
 
     if (difference.inMinutes < 1) {
-      return 'Just now';
+      return AppLocalizations.of(context)!.justNow;
     } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
+      return AppLocalizations.of(context)!.minutesAgo(difference.inMinutes);
     } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
+      return AppLocalizations.of(context)!.hoursAgo(difference.inHours);
     } else if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
+      return AppLocalizations.of(context)!.daysAgo(difference.inDays);
     } else {
       return DateFormat('MMM d').format(dateTime);
     }
@@ -354,19 +357,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   String _getTypeDisplayName(String type) {
     switch (type) {
       case 'campaign_assignment':
-        return 'Campaign';
+        return AppLocalizations.of(context)!.campaignType;
       case 'task_assignment':
-        return 'Task';
+        return AppLocalizations.of(context)!.taskType;
       case 'route_assignment':
-        return 'Route';
+        return AppLocalizations.of(context)!.routeType;
       case 'place_approval':
-        return 'Place';
+        return AppLocalizations.of(context)!.placeType;
       case 'task_completion':
-        return 'Completion';
+        return AppLocalizations.of(context)!.completionType;
       case 'evidence_review':
-        return 'Evidence';
+        return AppLocalizations.of(context)!.evidenceType;
       default:
-        return 'General';
+        return AppLocalizations.of(context)!.generalType;
     }
   }
 }

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../models/template_field.dart';
 import '../utils/constants.dart';
+import '../l10n/app_localizations.dart';
 
 class CustomFieldEditor extends StatefulWidget {
   final String taskId;
@@ -63,12 +64,12 @@ class _CustomFieldEditorState extends State<CustomFieldEditor> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Field'),
-        content: Text('Are you sure you want to delete "${_fields[index].fieldLabel}"?'),
+        title: Text(AppLocalizations.of(context)!.deleteField),
+        content: Text(AppLocalizations.of(context)!.confirmDeleteField(_fields[index].fieldLabel)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () {
@@ -79,7 +80,7 @@ class _CustomFieldEditorState extends State<CustomFieldEditor> {
               Navigator.of(context).pop();
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(AppLocalizations.of(context)!.delete),
           ),
         ],
       ),
@@ -101,7 +102,7 @@ class _CustomFieldEditorState extends State<CustomFieldEditor> {
             ElevatedButton.icon(
               onPressed: _addNewField,
               icon: const Icon(Icons.add),
-              label: const Text('Add Field'),
+              label: Text(AppLocalizations.of(context)!.addField),
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
                 foregroundColor: Colors.white,
@@ -533,7 +534,7 @@ class _FieldEditDialogState extends State<_FieldEditDialog> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancel'),
+                    child: Text(AppLocalizations.of(context)!.cancel),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
@@ -542,7 +543,7 @@ class _FieldEditDialogState extends State<_FieldEditDialog> {
                       backgroundColor: primaryColor,
                       foregroundColor: Colors.white,
                     ),
-                    child: Text(_isEditing ? 'Update' : 'Add Field'),
+                    child: Text(_isEditing ? AppLocalizations.of(context)!.update : AppLocalizations.of(context)!.addField),
                   ),
                 ],
               ),

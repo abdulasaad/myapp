@@ -7,6 +7,7 @@ import '../../utils/constants.dart';
 import '../../services/location_service.dart';
 import 'task_location_viewer_screen.dart';
 import 'evidence_submission_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 enum TaskStep {
   overview,
@@ -110,11 +111,11 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
           children: [
             Icon(Icons.hourglass_empty, color: Colors.orange[700]),
             const SizedBox(width: 8),
-            const Text('Assignment Pending'),
+            Text(AppLocalizations.of(context)!.assignmentPendingTitle),
           ],
         ),
-        content: const Text(
-          'Your assignment to this task is currently pending approval from a manager. You cannot start the guided task flow until it is approved.\n\nPlease check back later or contact your manager.',
+        content: Text(
+          AppLocalizations.of(context)!.assignmentPendingDesc,
         ),
         actions: [
           ElevatedButton(
@@ -122,7 +123,7 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
               Navigator.of(context).pop(); // Close dialog
               Navigator.of(context).pop(); // Go back to previous screen
             },
-            child: const Text('Go Back'),
+            child: Text(AppLocalizations.of(context)!.goBack),
           ),
         ],
       ),
@@ -149,7 +150,7 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
           if (!isInGeofence) {
             if (mounted) {
               context.showSnackBar(
-                'You are not within the task location area. Please move closer to continue.',
+                AppLocalizations.of(context)!.notWithinTaskLocation,
                 isError: true
               );
             }
@@ -160,7 +161,7 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
       }
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Error checking location: $e', isError: true);
+        context.showSnackBar(AppLocalizations.of(context)!.errorCheckingLocation(e.toString()), isError: true);
       }
     } finally {
       setState(() => _isCheckingLocation = false);
@@ -247,10 +248,10 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
 
   Widget _buildProgressIndicator() {
     final steps = [
-      'Overview',
-      if (widget.task.enforceGeofence ?? false) 'Location',
-      'Evidence',
-      'Complete',
+      AppLocalizations.of(context)!.overview,
+      if (widget.task.enforceGeofence ?? false) AppLocalizations.of(context)!.locationVerification,
+      AppLocalizations.of(context)!.evidenceUpload,
+      AppLocalizations.of(context)!.complete,
     ];
     
     final currentIndex = _getCurrentStepIndex();
@@ -373,7 +374,7 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
           ),
           const SizedBox(height: 24),
           Text(
-            'Task Overview',
+            AppLocalizations.of(context)!.taskOverview,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -390,7 +391,7 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
                       Icon(Icons.stars, color: Colors.orange[600], size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        '${widget.task.points} Points',
+                        '${widget.task.points} ${AppLocalizations.of(context)!.points}',
                         style: TextStyle(
                           color: Colors.orange[600],
                           fontWeight: FontWeight.bold,
@@ -402,7 +403,7 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
                   if (widget.task.description?.isNotEmpty ?? false) ...[
                     const SizedBox(height: 16),
                     Text(
-                      'Description:',
+                      '${AppLocalizations.of(context)!.description}:',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -417,14 +418,14 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
                   if (widget.task.enforceGeofence ?? false)
                     _buildRequirement(
                       Icons.location_on,
-                      'Location Check Required',
-                      'You must be within the specified area',
+                      AppLocalizations.of(context)!.locationCheckRequired,
+                      AppLocalizations.of(context)!.mustBeWithinArea,
                       Colors.orange,
                     ),
                   _buildRequirement(
                     Icons.photo_camera,
-                    'Evidence Required',
-                    'Upload photos or files as proof of completion',
+                    AppLocalizations.of(context)!.evidenceRequired,
+                    AppLocalizations.of(context)!.uploadPhotosOrFiles,
                     Colors.blue,
                   ),
                 ],
@@ -444,9 +445,9 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'Start Task',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              child: Text(
+                AppLocalizations.of(context)!.startTask,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -468,7 +469,7 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
           ),
           const SizedBox(height: 24),
           Text(
-            'Location Verification',
+            AppLocalizations.of(context)!.locationVerification,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -485,10 +486,10 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
                       children: [
                         Icon(Icons.check_circle, color: Colors.green, size: 24),
                         const SizedBox(width: 12),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            'Location Verified!',
-                            style: TextStyle(
+                            AppLocalizations.of(context)!.locationVerified,
+                            style: const TextStyle(
                               color: Colors.green,
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -498,18 +499,18 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
                       ],
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      'You are within the required task area. You can now proceed to upload evidence.',
+                    Text(
+                      AppLocalizations.of(context)!.withinRequiredArea,
                     ),
                   ] else ...[
                     Row(
                       children: [
                         Icon(Icons.warning, color: Colors.orange, size: 24),
                         const SizedBox(width: 12),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            'Location Check Required',
-                            style: TextStyle(
+                            AppLocalizations.of(context)!.locationCheckRequired,
+                            style: const TextStyle(
                               color: Colors.orange,
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -519,8 +520,8 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
                       ],
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      'This task requires you to be at a specific location. Please move to the designated area and verify your location.',
+                    Text(
+                      AppLocalizations.of(context)!.moveToDesignatedArea,
                     ),
                   ],
                   const SizedBox(height: 20),
@@ -537,7 +538,7 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
                             );
                           },
                           icon: const Icon(Icons.map, size: 18),
-                          label: const Text('View Map'),
+                          label: Text(AppLocalizations.of(context)!.viewMap),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -551,7 +552,7 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
                                   child: CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : const Icon(Icons.location_searching, size: 18),
-                          label: Text(_isCheckingLocation ? 'Checking...' : 'Check Location'),
+                          label: Text(_isCheckingLocation ? AppLocalizations.of(context)!.checking : AppLocalizations.of(context)!.checkLocation),
                         ),
                       ),
                     ],
@@ -574,7 +575,7 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
                 ),
               ),
               child: Text(
-                _locationVerified ? 'Continue to Evidence' : 'Verify Location First',
+                _locationVerified ? AppLocalizations.of(context)!.continueToEvidence : AppLocalizations.of(context)!.verifyLocationFirst,
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
@@ -597,7 +598,7 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
           ),
           const SizedBox(height: 24),
           Text(
-            'Evidence Upload',
+            AppLocalizations.of(context)!.evidenceUpload,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -614,10 +615,10 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
                       children: [
                         Icon(Icons.check_circle, color: Colors.green, size: 24),
                         const SizedBox(width: 12),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            'Evidence Uploaded!',
-                            style: TextStyle(
+                            AppLocalizations.of(context)!.evidenceUploaded,
+                            style: const TextStyle(
                               color: Colors.green,
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -627,18 +628,18 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
                       ],
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      'You have successfully uploaded evidence for this task. You can add more evidence or proceed to complete the task.',
+                    Text(
+                      AppLocalizations.of(context)!.successfullyUploadedEvidence,
                     ),
                   ] else ...[
                     Row(
                       children: [
                         Icon(Icons.cloud_upload, color: Colors.blue, size: 24),
                         const SizedBox(width: 12),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            'Upload Evidence',
-                            style: TextStyle(
+                            AppLocalizations.of(context)!.uploadEvidence,
+                            style: const TextStyle(
                               color: Colors.blue,
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -648,8 +649,8 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
                       ],
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      'Upload photos, documents, or other files as evidence that you have completed this task.',
+                    Text(
+                      AppLocalizations.of(context)!.uploadEvidenceDesc,
                     ),
                   ],
                   const SizedBox(height: 20),
@@ -669,7 +670,7 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
                         }
                       },
                       icon: const Icon(Icons.add_a_photo, size: 18),
-                      label: Text(_evidenceUploaded ? 'Add More Evidence' : 'Upload Evidence'),
+                      label: Text(_evidenceUploaded ? AppLocalizations.of(context)!.addMoreEvidence : AppLocalizations.of(context)!.uploadEvidence),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         backgroundColor: Colors.blue,
@@ -695,7 +696,7 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
                 ),
               ),
               child: Text(
-                _evidenceUploaded ? 'Complete Task' : 'Upload Evidence First',
+                _evidenceUploaded ? AppLocalizations.of(context)!.complete : AppLocalizations.of(context)!.uploadEvidenceFirst,
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
@@ -727,7 +728,7 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
           ),
           const SizedBox(height: 32),
           Text(
-            'Task Completed!',
+            AppLocalizations.of(context)!.taskCompleted,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
               color: Colors.green,
@@ -735,7 +736,7 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
           ),
           const SizedBox(height: 16),
           Text(
-            'Congratulations! You have successfully completed "${widget.task.title}". Your evidence has been submitted for review.',
+            AppLocalizations.of(context)!.congratulationsCompleted(widget.task.title),
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyLarge,
           ),
@@ -752,14 +753,14 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Points Earned',
+                          AppLocalizations.of(context)!.pointsEarned,
                           style: TextStyle(
                             color: Colors.grey[600],
                             fontSize: 14,
                           ),
                         ),
                         Text(
-                          '${widget.task.points} Points',
+                          '${widget.task.points} ${AppLocalizations.of(context)!.points}',
                           style: TextStyle(
                             color: Colors.orange[600],
                             fontWeight: FontWeight.bold,
@@ -786,9 +787,9 @@ class _GuidedTaskScreenState extends State<GuidedTaskScreen> with TickerProvider
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'Return to Tasks',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              child: Text(
+                AppLocalizations.of(context)!.returnToTasks,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),
           ),

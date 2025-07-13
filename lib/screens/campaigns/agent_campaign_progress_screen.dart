@@ -2,9 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:async';
+import '../../l10n/app_localizations.dart';
 import '../../models/app_user.dart';
 import '../../models/campaign.dart';
 import '../../models/agent_campaign_progress.dart';
+import '../../models/touring_task.dart';
+import '../../models/touring_task_session.dart';
+import '../../services/touring_task_service.dart';
 import '../../utils/constants.dart';
 import '../full_screen_image_viewer.dart';
 
@@ -26,6 +31,11 @@ class AgentCampaignProgressScreen extends StatefulWidget {
 class _AgentCampaignProgressScreenState
     extends State<AgentCampaignProgressScreen> {
   late Future<AgentCampaignDetails> _detailsFuture;
+  final TouringTaskService _touringTaskService = TouringTaskService();
+  Timer? _refreshTimer;
+  List<Map<String, dynamic>> _touringTaskProgress = [];
+  Map<String, TouringTaskSession?> _activeSessions = {};
+  bool _hasRegularTasks = false;
 
   bool _isImageUrl(String url) {
     final lowerUrl = url.toLowerCase();
@@ -39,6 +49,17 @@ class _AgentCampaignProgressScreenState
   void initState() {
     super.initState();
     _detailsFuture = _fetchDetails();
+    _loadTouringTaskProgress();
+    // Set up timer to refresh touring task progress every 5 seconds
+    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      _loadTouringTaskProgress();
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
   }
 
   Future<AgentCampaignDetails> _fetchDetails() async {
@@ -92,6 +113,62 @@ class _AgentCampaignProgressScreenState
     );
   }
 
+  Future<void> _loadTouringTaskProgress() async {
+    try {
+      // Fetch touring task assignments for this agent in this campaign
+      final assignments = await supabase
+          .from('touring_task_assignments')
+          .select('''
+            *,
+            touring_tasks (
+              *,
+              campaign_geofences (
+                id,
+                name,
+                area_text,
+                color
+              )
+            )
+          ''')
+          .eq('agent_id', widget.agent.id)
+          .eq('touring_tasks.campaign_id', widget.campaign.id);
+
+      List<Map<String, dynamic>> progressList = [];
+      Map<String, TouringTaskSession?> sessions = {};
+
+      for (var assignment in assignments) {
+        final taskData = assignment['touring_tasks'];
+        if (taskData != null) {
+          final task = TouringTask.fromJson(taskData);
+          
+          // Get active session if any
+          final session = await _touringTaskService.getActiveSession(
+            task.id,
+            widget.agent.id,
+          );
+          
+          sessions[task.id] = session;
+          
+          progressList.add({
+            'assignment': assignment,
+            'task': task,
+            'geofence': taskData['campaign_geofences'],
+            'session': session,
+          });
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _touringTaskProgress = progressList;
+          _activeSessions = sessions;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading touring task progress: $e');
+    }
+  }
+
   Future<void> _downloadFile(EvidenceFile file) async {
     // ... (This function is unchanged from the previous correct version)
   }
@@ -122,15 +199,29 @@ class _AgentCampaignProgressScreenState
               children: [
                 _buildHeaderCard(details),
                 formSpacer,
-                Text('Task Progress',
-                    style: Theme.of(context).textTheme.headlineSmall),
-                const SizedBox(height: 8),
-                _buildTasksList(details.tasks),
-                formSpacer,
-                Text('Uploaded Files',
-                    style: Theme.of(context).textTheme.headlineSmall),
-                const SizedBox(height: 8),
-                _buildFilesList(details.files),
+                // Regular Tasks Section
+                if (details.tasks.isNotEmpty) ...[
+                  Text(AppLocalizations.of(context)!.taskProgress,
+                      style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 8),
+                  _buildTasksList(details.tasks),
+                  formSpacer,
+                ],
+                // Touring Tasks Section
+                if (_touringTaskProgress.isNotEmpty) ...[
+                  Text('Touring Tasks Progress',
+                      style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 8),
+                  _buildTouringTasksList(),
+                  formSpacer,
+                ],
+                // Only show uploaded files if there are regular tasks that require evidence
+                if (details.tasks.isNotEmpty && details.files.isNotEmpty) ...[
+                  Text(AppLocalizations.of(context)!.uploadedFiles,
+                      style: Theme.of(context).textTheme.headlineSmall),
+                  const SizedBox(height: 8),
+                  _buildFilesList(details.files),
+                ],
               ],
             ),
           );
@@ -159,10 +250,10 @@ class _AgentCampaignProgressScreenState
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildMetric('Total Points', details.totalPoints.toString()),
-                _buildMetric('Points Paid', details.pointsPaid.toString()),
+                _buildMetric(AppLocalizations.of(context)!.totalPoints, details.totalPoints.toString()),
+                _buildMetric(AppLocalizations.of(context)!.pointsPaid, details.pointsPaid.toString()),
                 _buildMetric(
-                    'Outstanding', details.outstandingBalance.toString()),
+                    AppLocalizations.of(context)!.outstanding, details.outstandingBalance.toString()),
               ],
             ),
           ],
@@ -263,7 +354,7 @@ class _AgentCampaignProgressScreenState
             leading: Icon(isImage
                 ? Icons.image_outlined
                 : Icons.insert_drive_file_outlined),
-            title: Text(file.title.isNotEmpty ? file.title : 'Untitled Evidence',
+            title: Text(file.title.isNotEmpty ? file.title : AppLocalizations.of(context)!.untitledEvidence,
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text(
                 'For: ${file.taskTitle}\nOn: ${DateFormat.yMMMd().add_jm().format(file.createdAt)}'),
@@ -280,17 +371,17 @@ class _AgentCampaignProgressScreenState
               itemBuilder: (BuildContext context) {
                 final menuItems = <PopupMenuEntry<String>>[];
                 if (isImage) {
-                  menuItems.add(const PopupMenuItem<String>(
+                  menuItems.add(PopupMenuItem<String>(
                       value: 'view',
                       child: ListTile(
                           leading: Icon(Icons.visibility_outlined),
-                          title: Text('View'))));
+                          title: Text(AppLocalizations.of(context)!.view))));
                 }
-                menuItems.add(const PopupMenuItem<String>(
+                menuItems.add(PopupMenuItem<String>(
                     value: 'download',
                     child: ListTile(
                         leading: Icon(Icons.download_outlined),
-                        title: Text('Download'))));
+                        title: Text(AppLocalizations.of(context)!.download))));
                 return menuItems;
               },
             ),
@@ -320,5 +411,270 @@ class _AgentCampaignProgressScreenState
       default:
         return Colors.orange[800]!;
     }
+  }
+
+  Widget _buildTouringTasksList() {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _touringTaskProgress.length,
+      itemBuilder: (context, index) {
+        final item = _touringTaskProgress[index];
+        final task = item['task'] as TouringTask;
+        final geofence = item['geofence'] as Map<String, dynamic>;
+        final session = item['session'] as TouringTaskSession?;
+        final assignment = item['assignment'] as Map<String, dynamic>;
+        
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          elevation: 2,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Task Header
+                Row(
+                  children: [
+                    Icon(Icons.tour, color: primaryColor, size: 24),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            task.title,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Work Zone: ${geofence['name']}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    _getStatusIcon(assignment['status']),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                
+                // Progress Information
+                if (session != null && session.isActive) ...[
+                  // Live Progress Bar
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Progress: ${_formatDuration(session.elapsedSeconds)} / ${task.formattedDuration}',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          Text(
+                            '${_calculateProgressPercentage(session.elapsedSeconds, task.requiredTimeMinutes).toStringAsFixed(1)}%',
+                            style: TextStyle(
+                              color: primaryColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      LinearProgressIndicator(
+                        value: _calculateProgressPercentage(session.elapsedSeconds, task.requiredTimeMinutes) / 100,
+                        backgroundColor: Colors.grey[300],
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          session.isPaused ? Colors.orange : primaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  
+                  // Status Indicators
+                  Row(
+                    children: [
+                      _buildStatusChip(
+                        icon: Icons.location_on,
+                        label: session.lastLatitude != null 
+                            ? 'Location Active' 
+                            : 'Location Unknown',
+                        color: session.lastLatitude != null 
+                            ? Colors.green 
+                            : Colors.grey,
+                      ),
+                      const SizedBox(width: 8),
+                      _buildStatusChip(
+                        icon: Icons.directions_walk,
+                        label: session.isPaused ? 'Not Moving' : 'Moving',
+                        color: session.isPaused ? Colors.orange : Colors.green,
+                      ),
+                    ],
+                  ),
+                  
+                  // Pause Reason if applicable
+                  if (session.isPaused && session.pauseReason != null) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline, size: 16, color: Colors.orange[700]),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Timer Paused: ${session.pauseReason}',
+                            style: TextStyle(
+                              color: Colors.orange[700],
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ] else if (assignment['status'] == 'completed') ...[
+                  // Completed Task
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.green[700]),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Task Completed',
+                          style: TextStyle(
+                            color: Colors.green[700],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ] else ...[
+                  // Not Started
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.schedule, color: Colors.grey[700]),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Not Started',
+                          style: TextStyle(
+                            color: Colors.grey[700],
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                
+                // Task Details
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildDetailItem('Required Time', task.formattedDuration),
+                    _buildDetailItem('Points', '${task.points}'),
+                    _buildDetailItem('Movement Timeout', task.movementTimeoutText),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStatusChip({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailItem(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[600],
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatDuration(int seconds) {
+    final hours = seconds ~/ 3600;
+    final minutes = (seconds % 3600) ~/ 60;
+    final secs = seconds % 60;
+    
+    if (hours > 0) {
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+    } else {
+      return '$minutes:${secs.toString().padLeft(2, '0')}';
+    }
+  }
+
+  double _calculateProgressPercentage(int elapsedSeconds, int requiredMinutes) {
+    final requiredSeconds = requiredMinutes * 60;
+    final percentage = (elapsedSeconds / requiredSeconds) * 100;
+    return percentage.clamp(0, 100);
   }
 }

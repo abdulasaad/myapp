@@ -278,9 +278,10 @@ class OfflineLocationQueue {
       }
       
       // Use server-side timestamp to avoid clock sync issues
-      await supabase.rpc('insert_location_update', params: {
+      await supabase.rpc('insert_location_coordinates', params: {
         'p_user_id': update.userId,
-        'p_location': 'POINT(${update.longitude} ${update.latitude})',
+        'p_longitude': update.longitude,
+        'p_latitude': update.latitude,
         'p_accuracy': update.accuracy,
         'p_speed': update.speed,
       });

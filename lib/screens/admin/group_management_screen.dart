@@ -6,6 +6,7 @@ import '../../services/group_service.dart';
 import '../../utils/constants.dart';
 import 'create_edit_group_screen.dart';
 import 'group_detail_screen.dart';
+import '../../l10n/app_localizations.dart';
 
 class GroupManagementScreen extends StatefulWidget {
   const GroupManagementScreen({super.key});
@@ -49,7 +50,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen> {
       await _groupsFuture;
     } catch (e) {
       if (mounted) {
-        context.showSnackBar('Failed to refresh groups: $e', isError: true);
+        context.showSnackBar('${AppLocalizations.of(context)!.failedToRefreshGroups}: $e', isError: true);
       }
     } finally {
       setState(() => _isLoading = false);
@@ -60,17 +61,17 @@ class _GroupManagementScreenState extends State<GroupManagementScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Group'),
-        content: Text('Are you sure you want to delete "${group.name}"? This action cannot be undone.'),
+        title: Text(AppLocalizations.of(context)!.deleteGroup),
+        content: Text(AppLocalizations.of(context)!.confirmDeleteGroup(group.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(AppLocalizations.of(context)!.delete),
           ),
         ],
       ),
@@ -82,11 +83,11 @@ class _GroupManagementScreenState extends State<GroupManagementScreen> {
         await _groupService.deleteGroup(group.id);
         await _refreshGroups();
         if (mounted) {
-          context.showSnackBar('Group "${group.name}" deleted successfully');
+          context.showSnackBar(AppLocalizations.of(context)!.groupDeleted(group.name));
         }
       } catch (e) {
         if (mounted) {
-          context.showSnackBar('Failed to delete group: $e', isError: true);
+          context.showSnackBar('${AppLocalizations.of(context)!.failedToDeleteGroup}: $e', isError: true);
         }
       } finally {
         setState(() => _isLoading = false);
@@ -135,7 +136,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Group Management'),
+        title: Text(AppLocalizations.of(context)!.groupManagement),
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -173,7 +174,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search groups...',
+                hintText: AppLocalizations.of(context)!.searchGroups,
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
@@ -210,7 +211,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen> {
                         Icon(Icons.error, size: 64, color: Colors.red[400]),
                         const SizedBox(height: 16),
                         Text(
-                          'Error loading groups',
+                          AppLocalizations.of(context)!.errorLoadingGroups,
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: 8),
@@ -222,7 +223,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen> {
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: _refreshGroups,
-                          child: const Text('Retry'),
+                          child: Text(AppLocalizations.of(context)!.retry),
                         ),
                       ],
                     ),
@@ -251,15 +252,15 @@ class _GroupManagementScreenState extends State<GroupManagementScreen> {
                         const SizedBox(height: 16),
                         Text(
                           _searchController.text.isEmpty 
-                              ? 'No groups found'
-                              : 'No groups match your search',
+                              ? AppLocalizations.of(context)!.noGroupsFound
+                              : AppLocalizations.of(context)!.noGroupsMatch,
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         const SizedBox(height: 8),
                         Text(
                           _searchController.text.isEmpty
-                              ? 'Create your first group to get started'
-                              : 'Try a different search term',
+                              ? AppLocalizations.of(context)!.createFirstGroup
+                              : AppLocalizations.of(context)!.tryAdjustingFilters,
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                         if (_searchController.text.isEmpty) ...[
@@ -267,7 +268,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen> {
                           ElevatedButton.icon(
                             onPressed: _navigateToCreateGroup,
                             icon: const Icon(Icons.add),
-                            label: const Text('Create Group'),
+                            label: Text(AppLocalizations.of(context)!.createGroup),
                           ),
                         ],
                       ],
@@ -344,7 +345,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Created ${_formatDate(group.createdAt)}',
+                          AppLocalizations.of(context)!.createdDate(_formatDate(context, group.createdAt)),
                           style: const TextStyle(
                             fontSize: 12,
                             color: textSecondaryColor,
@@ -365,19 +366,19 @@ class _GroupManagementScreenState extends State<GroupManagementScreen> {
                       }
                     },
                     itemBuilder: (context) => [
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'edit',
                         child: ListTile(
-                          leading: Icon(Icons.edit),
-                          title: Text('Edit'),
+                          leading: const Icon(Icons.edit),
+                          title: Text(AppLocalizations.of(context)!.edit),
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'delete',
                         child: ListTile(
-                          leading: Icon(Icons.delete, color: Colors.red),
-                          title: Text('Delete', style: TextStyle(color: Colors.red)),
+                          leading: const Icon(Icons.delete, color: Colors.red),
+                          title: Text(AppLocalizations.of(context)!.delete, style: const TextStyle(color: Colors.red)),
                           contentPadding: EdgeInsets.zero,
                         ),
                       ),
@@ -398,7 +399,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen> {
                     child: Text(
                       (group.description ?? '').isNotEmpty 
                           ? group.description ?? ''
-                          : 'No description provided',
+                          : AppLocalizations.of(context)!.noDescriptionProvided,
                       style: TextStyle(
                         fontSize: 14,
                         color: (group.description ?? '').isNotEmpty 
@@ -424,7 +425,7 @@ class _GroupManagementScreenState extends State<GroupManagementScreen> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Tap to view members',
+                    AppLocalizations.of(context)!.tapToViewMembers,
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[600],
@@ -445,16 +446,16 @@ class _GroupManagementScreenState extends State<GroupManagementScreen> {
     );
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(BuildContext context, DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
 
     if (difference.inDays == 0) {
-      return 'today';
+      return AppLocalizations.of(context)!.today;
     } else if (difference.inDays == 1) {
-      return 'yesterday';
+      return AppLocalizations.of(context)!.yesterday;
     } else if (difference.inDays < 7) {
-      return '${difference.inDays} days ago';
+      return AppLocalizations.of(context)!.daysAgoCount(difference.inDays);
     } else {
       return '${date.day}/${date.month}/${date.year}';
     }

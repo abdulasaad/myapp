@@ -1,0 +1,6989 @@
+{
+  "@@locale": "en",
+  "appName": "Al-Tijwal",
+  "@appName": {
+    "description": "The application name"
+  },
+
+  "loginTitle": "Welcome Back",
+  "@loginTitle": {
+    "description": "Title on the login screen"
+  },
+
+  "loginSubtitle": "Sign in to your Al-Tijwal account",
+  "@loginSubtitle": {
+    "description": "Subtitle on the login screen"
+  },
+
+  "signUp": "Sign Up",
+  "@signUp": {
+    "description": "Sign up button text"
+  },
+
+  "fullName": "Full Name",
+  "@fullName": {
+    "description": "Full name input field label"
+  },
+
+  "email": "Email",
+  "@email": {
+    "description": "Email input field label"
+  },
+
+  "usernameOrEmail": "Username or Email",
+  "@usernameOrEmail": {
+    "description": "Username or email input field label"
+  },
+
+  "password": "Password",
+  "@password": {
+    "description": "Password input field label"
+  },
+
+  "login": "Login",
+  "@login": {
+    "description": "Login button text"
+  },
+
+  "requiredField": "Required field",
+  "@requiredField": {
+    "description": "Validation message for required fields"
+  },
+
+  "passwordMinLength": "Password must be at least 6 characters",
+  "@passwordMinLength": {
+    "description": "Password validation message"
+  },
+
+  "noInternetConnection": "No internet connection",
+  "@noInternetConnection": {
+    "description": "Offline banner text"
+  },
+
+  "noInternetMessage": "No internet connection. Please check your network and try again.",
+  "@noInternetMessage": {
+    "description": "Detailed offline error message"
+  },
+
+  "invalidCredentials": "Invalid credentials. Please check username/email and password.",
+  "@invalidCredentials": {
+    "description": "Login error message for invalid credentials"
+  },
+
+  "loginSuccessful": "Login successful!",
+  "@loginSuccessful": {
+    "description": "Login success message"
+  },
+
+  "unexpectedError": "An unexpected error occurred.",
+  "@unexpectedError": {
+    "description": "Generic error message"
+  },
+
+  "signUpSuccessful": "Sign up successful! Please check your email to confirm.",
+  "@signUpSuccessful": {
+    "description": "Sign up success message"
+  },
+
+  "couldNotOpenFacebook": "Could not open Facebook",
+  "@couldNotOpenFacebook": {
+    "description": "Facebook link error message"
+  },
+
+  "couldNotOpenInstagram": "Could not open Instagram",
+  "@couldNotOpenInstagram": {
+    "description": "Instagram link error message"
+  },
+
+  "couldNotOpenWhatsApp": "Could not open WhatsApp",
+  "@couldNotOpenWhatsApp": {
+    "description": "WhatsApp link error message"
+  },
+
+  "couldNotOpenWebsite": "Could not open website",
+  "@couldNotOpenWebsite": {
+    "description": "Website link error message"
+  },
+
+  "loading": "Loading...",
+  "@loading": {
+    "description": "Generic loading text"
+  },
+
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry button text"
+  },
+
+  "errorLoadingProfile": "Error loading user profile",
+  "@errorLoadingProfile": {
+    "description": "Profile loading error message"
+  },
+
+  "dashboard": "Dashboard",
+  "@dashboard": {
+    "description": "Dashboard navigation label"
+  },
+
+  "campaigns": "Campaigns",
+  "@campaigns": {
+    "description": "Campaigns navigation label"
+  },
+
+  "tasks": "Tasks",
+  "@tasks": {
+    "description": "Tasks navigation label"
+  },
+
+  "profile": "Profile",
+  "@profile": {
+    "description": "Profile navigation label"
+  },
+
+  "home": "Home",
+  "@home": {
+    "description": "Home navigation label"
+  },
+
+  "myTasks": "My Tasks",
+  "@myTasks": {
+    "description": "My tasks navigation label"
+  },
+
+  "youreOffline": "You're Offline",
+  "@youreOffline": {
+    "description": "Offline status message"
+  },
+
+  "offlineMessage": "Please check your internet connection to load the dashboard.",
+  "@offlineMessage": {
+    "description": "Offline status detailed message"
+  },
+
+  "errorLoadingDashboard": "Error loading dashboard",
+  "@errorLoadingDashboard": {
+    "description": "Dashboard loading error"
+  },
+
+  "pleaseTryAgainLater": "Please try again later",
+  "@pleaseTryAgainLater": {
+    "description": "Generic retry message"
+  },
+
+  "createNew": "Create New",
+  "@createNew": {
+    "description": "Create new button text"
+  },
+
+  "chooseTaskType": "Choose Task Type",
+  "@chooseTaskType": {
+    "description": "Create task type selection title"
+  },
+
+  "campaign": "Campaign",
+  "@campaign": {
+    "description": "Campaign label"
+  },
+
+  "createCampaignDesc": "Create a new campaign with tasks",
+  "@createCampaignDesc": {
+    "description": "Create campaign description"
+  },
+
+  "task": "Task",
+  "@task": {
+    "description": "Task label"
+  },
+
+  "createTaskDesc": "Create a standalone task",
+  "@createTaskDesc": {
+    "description": "Create task description"
+  },
+
+  "route": "Route",
+  "@route": {
+    "description": "Route label"
+  },
+
+  "createRouteDesc": "Create a new route",
+  "@createRouteDesc": {
+    "description": "Create route description"
+  },
+
+  "templateTask": "Template Task",
+  "@templateTask": {
+    "description": "Template task label"
+  },
+
+  "createTemplateDesc": "Create from existing template",
+  "@createTemplateDesc": {
+    "description": "Create template task description"
+  },
+
+  "customTask": "Custom Task",
+  "@customTask": {
+    "description": "Custom task label"
+  },
+
+  "createCustomDesc": "Create evidence-based task",
+  "@createCustomDesc": {
+    "description": "Create custom task description"
+  },
+
+  "permissionRequired": "Permission required",
+  "@permissionRequired": {
+    "description": "Permission required status"
+  },
+
+  "active": "Active",
+  "@active": {
+    "description": "Active status"
+  },
+
+  "disabled": "Disabled",
+  "@disabled": {
+    "description": "Disabled status"
+  },
+
+  "error": "Error",
+  "@error": {
+    "description": "Error status"
+  },
+
+  "permissionDenied": "Permission denied",
+  "@permissionDenied": {
+    "description": "Permission denied status"
+  },
+
+  "errorOccurred": "Error occurred",
+  "@errorOccurred": {
+    "description": "Error occurred status"
+  },
+
+  "onRoute": "On Route",
+  "@onRoute": {
+    "description": "On route status"
+  },
+
+  "workingTasks": "Working Tasks",
+  "@workingTasks": {
+    "description": "Working tasks status"
+  },
+
+  "inCampaign": "In Campaign",
+  "@inCampaign": {
+    "description": "In campaign status"
+  },
+
+  "available": "Available",
+  "@available": {
+    "description": "Available status"
+  },
+
+  "agentDashboard": "Agent Dashboard",
+  "@agentDashboard": {
+    "description": "Agent dashboard title"
+  },
+
+  "locationService": "Location Service",
+  "@locationService": {
+    "description": "Location service label"
+  },
+
+  "routes": "Routes",
+  "@routes": {
+    "description": "Routes label"
+  },
+
+  "noneAssigned": "None assigned",
+  "@noneAssigned": {
+    "description": "None assigned status"
+  },
+
+  "noneActive": "None active",
+  "@noneActive": {
+    "description": "None active status"
+  },
+
+  "noActiveCampaigns": "No active campaigns",
+  "@noActiveCampaigns": {
+    "description": "No active campaigns status"
+  },
+
+  "places": "places",
+  "@places": {
+    "description": "Places label (lowercase for inline use)"
+  },
+
+  "evidence": "Evidence",
+  "@evidence": {
+    "description": "Evidence label"
+  },
+
+  "completionRate": "Completion Rate",
+  "@completionRate": {
+    "description": "Completion rate label"
+  },
+
+  "peakHour": "Peak Hour",
+  "@peakHour": {
+    "description": "Peak hour label"
+  },
+
+  "avgDuration": "Avg Duration",
+  "@avgDuration": {
+    "description": "Average duration label"
+  },
+
+  "weekTotal": "Week Total",
+  "@weekTotal": {
+    "description": "Week total label"
+  },
+
+  "monthTotal": "Month Total",
+  "@monthTotal": {
+    "description": "Month total label"
+  },
+
+  "uniqueLocations": "Unique Locations",
+  "@uniqueLocations": {
+    "description": "Unique locations label"
+  },
+
+  "visitAnalytics": "Visit Analytics",
+  "@visitAnalytics": {
+    "description": "Visit analytics label"
+  },
+
+  "visitsToday": "Visits today",
+  "@visitsToday": {
+    "description": "Visits today label"
+  },
+
+  "activeTasks": "Active Tasks",
+  "@activeTasks": {
+    "description": "Active tasks label"
+  },
+
+  "tasksInProgress": "Tasks in progress",
+  "@tasksInProgress": {
+    "description": "Tasks in progress label"
+  },
+
+  "totalPoints": "Total Points",
+  "@totalPoints": {
+    "description": "Total points label"
+  },
+
+  "pointsEarned": "Points earned",
+  "@pointsEarned": {
+    "description": "Points earned label"
+  },
+
+  "activeCampaigns": "Active Campaigns",
+  "@activeCampaigns": {
+    "description": "Active campaigns label"
+  },
+
+  "campaignsRunning": "Campaigns running",
+  "@campaignsRunning": {
+    "description": "Campaigns running label"
+  },
+
+  "activeRoutes": "Active Routes",
+  "@activeRoutes": {
+    "description": "Active routes label"
+  },
+
+  "routesAssigned": "Routes assigned",
+  "@routesAssigned": {
+    "description": "Routes assigned label"
+  },
+
+  "quickActions": "Quick Actions",
+  "@quickActions": {
+    "description": "Quick actions label"
+  },
+
+  "suggest": "Suggest",
+  "@suggest": {
+    "description": "Suggest button label"
+  },
+
+  "map": "Map",
+  "@map": {
+    "description": "Map button label"
+  },
+
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button label"
+  },
+
+  "enable": "Enable",
+  "@enable": {
+    "description": "Enable button label"
+  },
+
+  "signOut": "Sign Out",
+  "@signOut": {
+    "description": "Sign out button label"
+  },
+
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings label"
+  },
+
+  "notifications": "Notifications",
+  "@notifications": {
+    "description": "Notifications label"
+  },
+
+  "helpSupport": "Help & Support",
+  "@helpSupport": {
+    "description": "Help and support label"
+  },
+
+  "about": "About",
+  "@about": {
+    "description": "About label"
+  },
+
+  "chooseWhatToCreate": "Choose what you'd like to create",
+  "@chooseWhatToCreate": {
+    "description": "Create options description"
+  },
+
+  "welcomeBack": "Welcome back",
+  "@welcomeBack": {
+    "description": "Welcome back greeting"
+  },
+
+  "agent": "Agent",
+  "@agent": {
+    "description": "Agent role label"
+  },
+
+  "offlineFeatureMessage": "You're offline - Some features may not be available",
+  "@offlineFeatureMessage": {
+    "description": "Offline feature limitation message"
+  },
+
+  "checking": "Checking...",
+  "@checking": {
+    "description": "Status checking text"
+  },
+
+  "requestingPermission": "Requesting permission...",
+  "@requestingPermission": {
+    "description": "Permission request status"
+  },
+
+  "starting": "Starting...",
+  "@starting": {
+    "description": "Service starting status"
+  },
+
+  "locationEnabledSuccess": "Location service enabled successfully!",
+  "@locationEnabledSuccess": {
+    "description": "Location enabled success message"
+  },
+
+  "locationPermissionDeniedMessage": "Location permission denied. Please enable it in device settings.",
+  "@locationPermissionDeniedMessage": {
+    "description": "Location permission denied message"
+  },
+
+  "failedToEnableLocation": "Failed to enable location service",
+  "@failedToEnableLocation": {
+    "description": "Failed to enable location error"
+  },
+
+  "todaysActivity": "Today's Activity",
+  "@todaysActivity": {
+    "description": "Today's activity section title"
+  },
+
+  "toVisitToday": "to visit today",
+  "@toVisitToday": {
+    "description": "Places to visit today suffix"
+  },
+
+  "completedToday": "completed today",
+  "@completedToday": {
+    "description": "Completed today suffix"
+  },
+
+  "activeCampaign": "active campaign",
+  "@activeCampaign": {
+    "description": "Active campaign label"
+  },
+
+  "routesAssignedSuffix": "route",
+  "@routesAssignedSuffix": {
+    "description": "Route assignment suffix"
+  },
+
+  "assigned": "assigned",
+  "@assigned": {
+    "description": "Assigned status"
+  },
+
+  "description": "Description",
+  "@description": {
+    "description": "Description label"
+  },
+
+  "optional": "Optional",
+  "@optional": {
+    "description": "Optional field indicator"
+  },
+
+  "address": "Address",
+  "@address": {
+    "description": "Address label"
+  },
+
+  "location": "Location",
+  "@location": {
+    "description": "Location label"
+  },
+
+  "placeName": "Place Name",
+  "@placeName": {
+    "description": "Place name field label"
+  },
+
+  "enterPlaceName": "Enter the name of the place",
+  "@enterPlaceName": {
+    "description": "Place name field hint"
+  },
+
+  "describePlaceHint": "Describe this place...",
+  "@describePlaceHint": {
+    "description": "Place description hint"
+  },
+
+  "enterAddress": "Enter the address",
+  "@enterAddress": {
+    "description": "Address field hint"
+  },
+
+  "noLocationSelected": "No location selected",
+  "@noLocationSelected": {
+    "description": "No location selected message"
+  },
+
+  "changeLocation": "Change Location",
+  "@changeLocation": {
+    "description": "Change location button"
+  },
+
+  "selectLocationOnMap": "Select Location on Map",
+  "@selectLocationOnMap": {
+    "description": "Select location button"
+  },
+
+  "geofenceRadius": "Geofence Radius",
+  "@geofenceRadius": {
+    "description": "Geofence radius label"
+  },
+
+  "meters": "meters",
+  "@meters": {
+    "description": "Meters unit"
+  },
+
+  "submitSuggestion": "Submit Suggestion",
+  "@submitSuggestion": {
+    "description": "Submit suggestion button"
+  },
+
+  "suggestNewPlace": "Suggest New Place",
+  "@suggestNewPlace": {
+    "description": "Suggest new place dialog title"
+  },
+
+  "fillRequiredFields": "Please fill required fields (Name)",
+  "@fillRequiredFields": {
+    "description": "Required fields validation message"
+  },
+
+  "authenticationRequired": "Authentication required",
+  "@authenticationRequired": {
+    "description": "Authentication required error"
+  },
+
+  "placeSuggestionSubmitted": "Place suggestion submitted! Waiting for manager approval.",
+  "@placeSuggestionSubmitted": {
+    "description": "Place suggestion success message"
+  },
+
+  "failedToSubmitSuggestion": "Failed to submit place suggestion",
+  "@failedToSubmitSuggestion": {
+    "description": "Failed to submit suggestion error"
+  },
+
+  "groupManagement": "Group Management",
+  "@groupManagement": {
+    "description": "Group management label"
+  },
+
+  "manageGroupsDesc": "Manage client groups and team members",
+  "@manageGroupsDesc": {
+    "description": "Group management description"
+  },
+
+  "settingsDesc": "App preferences and configuration",
+  "@settingsDesc": {
+    "description": "Settings description"
+  },
+
+  "notificationsEnabled": "Notifications enabled",
+  "@notificationsEnabled": {
+    "description": "Notifications enabled status"
+  },
+
+  "settingUpNotifications": "Setting up notifications...",
+  "@settingUpNotifications": {
+    "description": "Setting up notifications status"
+  },
+
+  "helpSupportDesc": "Get help and contact support",
+  "@helpSupportDesc": {
+    "description": "Help and support description"
+  },
+
+  "helpSupportComingSoon": "Help & Support coming soon",
+  "@helpSupportComingSoon": {
+    "description": "Help support coming soon message"
+  },
+
+  "aboutDesc": "App version and information",
+  "@aboutDesc": {
+    "description": "About description"
+  },
+
+  "aboutComingSoon": "About information coming soon",
+  "@aboutComingSoon": {
+    "description": "About coming soon message"
+  },
+
+  "signOutDesc": "Sign out of your account",
+  "@signOutDesc": {
+    "description": "Sign out description"
+  },
+
+  "signOutConfirmation": "Are you sure you want to sign out of your account?",
+  "@signOutConfirmation": {
+    "description": "Sign out confirmation message"
+  },
+
+  "failedToSignOut": "Failed to sign out properly",
+  "@failedToSignOut": {
+    "description": "Failed sign out error"
+  },
+
+  "anErrorOccurred": "An error occurred",
+  "@anErrorOccurred": {
+    "description": "Generic error message"
+  },
+
+  "language": "Language",
+  "@language": {
+    "description": "Language label"
+  },
+
+  "selectLanguage": "Select Language",
+  "@selectLanguage": {
+    "description": "Select language title"
+  },
+
+  "english": "English",
+  "@english": {
+    "description": "English language option"
+  },
+
+  "arabic": "العربية",
+  "@arabic": {
+    "description": "Arabic language option"
+  },
+
+  "languageChanged": "Language changed successfully",
+  "@languageChanged": {
+    "description": "Language change success message"
+  },
+
+  "restartRequired": "Please restart the app to apply language changes",
+  "@restartRequired": {
+    "description": "Restart required message for language change"
+  },
+
+  "languageDesc": "Choose your preferred language",
+  "@languageDesc": {
+    "description": "Language option description"
+  },
+
+  "confirmDelete": "Confirm Delete",
+  "@confirmDelete": {
+    "description": "Delete confirmation dialog title"
+  },
+
+  "confirmDeleteCampaign": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+  "@confirmDeleteCampaign": {
+    "description": "Delete campaign confirmation message",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "description": "Campaign name"
+      }
+    }
+  },
+
+  "campaignDeleted": "Campaign \"{name}\" deleted successfully.",
+  "@campaignDeleted": {
+    "description": "Campaign deletion success message",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "description": "Campaign name"
+      }
+    }
+  },
+
+  "errorDeletingCampaign": "Error deleting campaign: {error}",
+  "@errorDeletingCampaign": {
+    "description": "Campaign deletion error message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "Error details"
+      }
+    }
+  },
+
+  "noCampaignsYet": "No Campaigns Yet",
+  "@noCampaignsYet": {
+    "description": "Empty state title for managers with no campaigns"
+  },
+
+  "createFirstCampaign": "Create your first campaign to get started with managing tasks and agents",
+  "@createFirstCampaign": {
+    "description": "Empty state description for managers with no campaigns"
+  },
+
+  "noCampaignsAssigned": "No Campaigns Assigned",
+  "@noCampaignsAssigned": {
+    "description": "Empty state title for agents with no assigned campaigns"
+  },
+
+  "viewAssignedCampaigns": "You will see assigned campaigns here when available",
+  "@viewAssignedCampaigns": {
+    "description": "Empty state description for agents with no assigned campaigns"
+  },
+
+  "editCampaign": "Edit Campaign",
+  "@editCampaign": {
+    "description": "Edit campaign tooltip"
+  },
+
+  "deleteCampaign": "Delete Campaign",
+  "@deleteCampaign": {
+    "description": "Delete campaign tooltip"
+  },
+
+  "insideGeofence": "Inside Geofence",
+  "@insideGeofence": {
+    "description": "Geofence status when inside"
+  },
+
+  "outsideGeofence": "Outside Geofence",
+  "@outsideGeofence": {
+    "description": "Geofence status when outside"
+  },
+
+  "viewTaskLocation": "View Task Location",
+  "@viewTaskLocation": {
+    "description": "View task location tooltip"
+  },
+
+  "ends": "Ends:",
+  "@ends": {
+    "description": "Campaign end date prefix"
+  },
+
+  "myCampaigns": "My Campaigns",
+  "@myCampaigns": {
+    "description": "Agent campaigns screen title"
+  },
+
+  "unableToLoadCampaigns": "Unable to load campaigns. Please check your connection and try again.",
+  "@unableToLoadCampaigns": {
+    "description": "Network error message for campaigns loading"
+  },
+
+  "errorLoadingCampaigns": "Error loading campaigns",
+  "@errorLoadingCampaigns": {
+    "description": "Generic error message for campaigns loading"
+  },
+
+  "addNewTask": "Add New Task",
+  "@addNewTask": {
+    "description": "Add new task dialog title"
+  },
+
+  "taskTitle": "Task Title",
+  "@taskTitle": {
+    "description": "Task title input label"
+  },
+
+  "assignAnAgent": "Assign an Agent",
+  "@assignAnAgent": {
+    "description": "Assign agent dialog title"
+  },
+
+  "assignedAgents": "Assigned Agents",
+  "@assignedAgents": {
+    "description": "Assigned agents section header"
+  },
+
+  "assignAgent": "Assign Agent",
+  "@assignAgent": {
+    "description": "Assign agent button label"
+  },
+
+  "noTasksCreated": "No tasks created yet.",
+  "@noTasksCreated": {
+    "description": "Empty state message when no tasks exist"
+  },
+
+  "noAgentsAssigned": "No agents assigned yet.",
+  "@noAgentsAssigned": {
+    "description": "Empty state message when no agents are assigned"
+  },
+
+  "editTask": "Edit Task",
+  "@editTask": {
+    "description": "Edit task dialog title"
+  },
+
+  "deleteTask": "Delete Task",
+  "@deleteTask": {
+    "description": "Delete task dialog title"
+  },
+
+  "manageGeofences": "Manage Geofences",
+  "@manageGeofences": {
+    "description": "Manage geofences button label"
+  },
+
+  "confirmRemoval": "Confirm Removal",
+  "@confirmRemoval": {
+    "description": "Agent removal confirmation dialog title"
+  },
+
+  "removeAgentConfirmation": "Are you sure you want to remove {name} from this campaign?",
+  "@removeAgentConfirmation": {
+    "description": "Agent removal confirmation message",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "description": "Agent name"
+      }
+    }
+  },
+
+  "payAgent": "Pay {name}",
+  "@payAgent": {
+    "description": "Pay agent dialog title",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "description": "Agent name"
+      }
+    }
+  },
+
+  "amountPaid": "Amount Paid",
+  "@amountPaid": {
+    "description": "Payment amount input label"
+  },
+
+  "outstandingBalance": "Outstanding Balance: {amount} points",
+  "@outstandingBalance": {
+    "description": "Outstanding balance display",
+    "placeholders": {
+      "amount": {
+        "type": "String",
+        "description": "Balance amount"
+      }
+    }
+  },
+
+  "loadingEarnings": "Loading earnings...",
+  "@loadingEarnings": {
+    "description": "Loading earnings status message"
+  },
+
+  "taskAddedSuccess": "Task added and assigned to all campaign agents!",
+  "@taskAddedSuccess": {
+    "description": "Task addition success message"
+  },
+
+  "taskAddFailed": "Failed to add task: {error}",
+  "@taskAddFailed": {
+    "description": "Task addition failure message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "Error details"
+      }
+    }
+  },
+
+  "agentAssignedSuccess": "Agent assigned to campaign. All tasks have been assigned.",
+  "@agentAssignedSuccess": {
+    "description": "Agent assignment success message"
+  },
+
+  "agentAssignFailed": "Failed to assign agent: {error}",
+  "@agentAssignFailed": {
+    "description": "Agent assignment failure message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "Error details"
+      }
+    }
+  },
+
+  "taskUpdatedSuccess": "Task updated successfully!",
+  "@taskUpdatedSuccess": {
+    "description": "Task update success message"
+  },
+
+  "taskUpdateFailed": "Failed to update task: {error}",
+  "@taskUpdateFailed": {
+    "description": "Task update failure message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "Error details"
+      }
+    }
+  },
+
+  "taskDeletedSuccess": "Task deleted successfully!",
+  "@taskDeletedSuccess": {
+    "description": "Task deletion success message"
+  },
+
+  "taskDeleteFailed": "Failed to delete task: {error}",
+  "@taskDeleteFailed": {
+    "description": "Task deletion failure message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "Error details"
+      }
+    }
+  },
+
+  "agentRemovedSuccess": "Agent removed successfully.",
+  "@agentRemovedSuccess": {
+    "description": "Agent removal success message"
+  },
+
+  "agentRemoveFailed": "Failed to remove agent: {error}",
+  "@agentRemoveFailed": {
+    "description": "Agent removal failure message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "Error details"
+      }
+    }
+  },
+
+  "paymentRecordedSuccess": "Payment recorded successfully!",
+  "@paymentRecordedSuccess": {
+    "description": "Payment recording success message"
+  },
+
+  "paymentRecordFailed": "Failed to record payment: {error}",
+  "@paymentRecordFailed": {
+    "description": "Payment recording failure message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "Error details"
+      }
+    }
+  },
+
+  "pay": "PAY",
+  "@pay": {
+    "description": "Pay button label"
+  },
+
+  "mustBeNumber": "Must be a number",
+  "@mustBeNumber": {
+    "description": "Number validation error message"
+  },
+
+  "uploadEvidence": "Upload Evidence",
+  "@uploadEvidence": {
+    "description": "Upload evidence dialog title"
+  },
+
+  "evidenceName": "Evidence Name",
+  "@evidenceName": {
+    "description": "Evidence name input label"
+  },
+
+  "enterEvidenceName": "Enter evidence name",
+  "@enterEvidenceName": {
+    "description": "Evidence name input hint"
+  },
+
+  "evidenceNameRequired": "Evidence name is required",
+  "@evidenceNameRequired": {
+    "description": "Evidence name validation message"
+  },
+
+  "selectFile": "Select File",
+  "@selectFile": {
+    "description": "Select file button text"
+  },
+
+  "changeFile": "Change File",
+  "@changeFile": {
+    "description": "Change file button text"
+  },
+
+  "upload": "Upload",
+  "@upload": {
+    "description": "Upload button text"
+  },
+
+  "takePhoto": "Take Photo",
+  "@takePhoto": {
+    "description": "Take photo option"
+  },
+
+  "captureWithCamera": "Capture with camera",
+  "@captureWithCamera": {
+    "description": "Take photo description"
+  },
+
+  "chooseImage": "Choose Image",
+  "@chooseImage": {
+    "description": "Choose image option"
+  },
+
+  "selectFromGallery": "Select from gallery",
+  "@selectFromGallery": {
+    "description": "Choose image description"
+  },
+
+  "recordVideo": "Record Video",
+  "@recordVideo": {
+    "description": "Record video option"
+  },
+
+  "captureVideo": "Capture video",
+  "@captureVideo": {
+    "description": "Record video description"
+  },
+
+  "chooseVideo": "Choose Video",
+  "@chooseVideo": {
+    "description": "Choose video option"
+  },
+
+  "selectVideoFromGallery": "Select from gallery",
+  "@selectVideoFromGallery": {
+    "description": "Choose video description"
+  },
+
+  "chooseDocument": "Choose Document",
+  "@chooseDocument": {
+    "description": "Choose document option"
+  },
+
+  "documentTypes": "PDF, Word, Excel, etc.",
+  "@documentTypes": {
+    "description": "Document types description"
+  },
+
+  "anyFile": "Any File",
+  "@anyFile": {
+    "description": "Any file option"
+  },
+
+  "browseAllFiles": "Browse all files",
+  "@browseAllFiles": {
+    "description": "Any file description"
+  },
+
+  "image": "Image",
+  "@image": {
+    "description": "Image file type display"
+  },
+
+  "pdf": "PDF",
+  "@pdf": {
+    "description": "PDF file type display"
+  },
+
+  "video": "Video",
+  "@video": {
+    "description": "Video file type display"
+  },
+
+  "document": "Document",
+  "@document": {
+    "description": "Document file type display"
+  },
+
+  "file": "File",
+  "@file": {
+    "description": "Generic file type display"
+  },
+
+  "approved": "Approved",
+  "@approved": {
+    "description": "Approved status"
+  },
+
+  "rejected": "Rejected",
+  "@rejected": {
+    "description": "Rejected status"
+  },
+
+  "pendingReview": "Pending Review",
+  "@pendingReview": {
+    "description": "Pending review status"
+  },
+
+  "confirmDeletion": "Confirm Deletion",
+  "@confirmDeletion": {
+    "description": "Delete confirmation dialog title"
+  },
+
+  "confirmDeleteEvidence": "Are you sure you want to delete \"{title}\"?",
+  "@confirmDeleteEvidence": {
+    "description": "Delete evidence confirmation message",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "description": "Evidence title"
+      }
+    }
+  },
+
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete button text"
+  },
+
+  "evidenceDeletedSuccess": "Evidence deleted successfully.",
+  "@evidenceDeletedSuccess": {
+    "description": "Evidence deletion success message"
+  },
+
+  "evidenceDeleteFailed": "Failed to delete evidence: {error}",
+  "@evidenceDeleteFailed": {
+    "description": "Evidence deletion failure message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "Error details"
+      }
+    }
+  },
+
+  "taskStatusReverted": "Task status reverted to pending.",
+  "@taskStatusReverted": {
+    "description": "Task status reverted message"
+  },
+
+  "confirmCompletion": "Confirm Completion",
+  "@confirmCompletion": {
+    "description": "Task completion confirmation dialog title"
+  },
+
+  "confirmMarkTaskDone": "Are you sure you want to mark this task as done? This cannot be undone.",
+  "@confirmMarkTaskDone": {
+    "description": "Task completion confirmation message"
+  },
+
+  "confirm": "Confirm",
+  "@confirm": {
+    "description": "Confirm button text"
+  },
+
+  "taskCompletedSuccess": "Task marked as completed!",
+  "@taskCompletedSuccess": {
+    "description": "Task completion success message"
+  },
+
+  "uploadFailed": "Upload failed: {error}",
+  "@uploadFailed": {
+    "description": "Upload failure message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "Error details"
+      }
+    }
+  },
+
+  "checkingLocation": "Checking location for geofence validation...",
+  "@checkingLocation": {
+    "description": "Location checking status message"
+  },
+
+  "geofenceValidationFailed": "You must be within the task location area to upload evidence. Please move to the designated location and try again.",
+  "@geofenceValidationFailed": {
+    "description": "Geofence validation failure message"
+  },
+
+  "locationVerified": "Location verified! Uploading evidence...",
+  "@locationVerified": {
+    "description": "Location verification success message"
+  },
+
+  "fileTooLarge": "File too large. Maximum size is 50MB.",
+  "@fileTooLarge": {
+    "description": "File size limit error message"
+  },
+
+  "evidenceUploadedSuccess": "Evidence uploaded successfully.",
+  "@evidenceUploadedSuccess": {
+    "description": "Evidence upload success message"
+  },
+
+  "fileUrl": "File URL",
+  "@fileUrl": {
+    "description": "File URL dialog title"
+  },
+
+  "close": "Close",
+  "@close": {
+    "description": "Close button text"
+  },
+
+  "open": "Open",
+  "@open": {
+    "description": "Open button text"
+  },
+
+  "couldNotOpenFile": "Could not open file: {error}",
+  "@couldNotOpenFile": {
+    "description": "File open error message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "Error details"
+      }
+    }
+  },
+
+  "fileViewerInfo": "This file can be viewed in your device's document viewer.",
+  "@fileViewerInfo": {
+    "description": "Document file viewer info"
+  },
+
+  "videoPlayerInfo": "This video can be played in your device's video player.",
+  "@videoPlayerInfo": {
+    "description": "Video file player info"
+  },
+
+  "compatibleAppInfo": "This file can be opened with a compatible app on your device.",
+  "@compatibleAppInfo": {
+    "description": "Generic file app info"
+  },
+
+  "rejectionReason": "Rejection Reason:",
+  "@rejectionReason": {
+    "description": "Rejection reason label"
+  },
+
+  "approveEvidence": "Approve Evidence",
+  "@approveEvidence": {
+    "description": "Approve evidence dialog title"
+  },
+
+  "confirmApproveEvidence": "Are you sure you want to approve \"{title}\"?",
+  "@confirmApproveEvidence": {
+    "description": "Approve evidence confirmation message",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "description": "Evidence title"
+      }
+    }
+  },
+
+  "approve": "Approve",
+  "@approve": {
+    "description": "Approve button text"
+  },
+
+  "evidenceApprovedSuccess": "Evidence approved successfully",
+  "@evidenceApprovedSuccess": {
+    "description": "Evidence approval success message"
+  },
+
+  "evidenceApproveFailed": "Failed to approve evidence: {error}",
+  "@evidenceApproveFailed": {
+    "description": "Evidence approval failure message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "Error details"
+      }
+    }
+  },
+
+  "rejectEvidence": "Reject Evidence",
+  "@rejectEvidence": {
+    "description": "Reject evidence dialog title"
+  },
+
+  "confirmRejectEvidence": "Are you sure you want to reject \"{title}\"?",
+  "@confirmRejectEvidence": {
+    "description": "Reject evidence confirmation message",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "description": "Evidence title"
+      }
+    }
+  },
+
+  "rejectionReasonLabel": "Rejection Reason",
+  "@rejectionReasonLabel": {
+    "description": "Rejection reason input label"
+  },
+
+  "rejectionReasonHint": "Explain why this evidence is being rejected",
+  "@rejectionReasonHint": {
+    "description": "Rejection reason input hint"
+  },
+
+  "rejectionReasonRequired": "Please provide a reason for rejection",
+  "@rejectionReasonRequired": {
+    "description": "Rejection reason validation message"
+  },
+
+  "reject": "Reject",
+  "@reject": {
+    "description": "Reject button text"
+  },
+
+  "evidenceRejectedSuccess": "Evidence rejected",
+  "@evidenceRejectedSuccess": {
+    "description": "Evidence rejection success message"
+  },
+
+  "evidenceRejectFailed": "Failed to reject evidence: {error}",
+  "@evidenceRejectFailed": {
+    "description": "Evidence rejection failure message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "Error details"
+      }
+    }
+  },
+
+  "noEvidenceSubmitted": "No evidence submitted yet.",
+  "@noEvidenceSubmitted": {
+    "description": "Empty state message when no evidence exists"
+  },
+
+  "progressLabel": "Progress: {current} of {total} uploaded",
+  "@progressLabel": {
+    "description": "Evidence progress label",
+    "placeholders": {
+      "current": {
+        "type": "int",
+        "description": "Current evidence count"
+      },
+      "total": {
+        "type": "int",
+        "description": "Total required evidence count"
+      }
+    }
+  },
+
+  "statusCompleted": "Status: Completed",
+  "@statusCompleted": {
+    "description": "Completed status label"
+  },
+
+  "isManager": "Is Manager: {isManager}",
+  "@isManager": {
+    "description": "Manager status debug label",
+    "placeholders": {
+      "isManager": {
+        "type": "bool",
+        "description": "Whether user is manager"
+      }
+    }
+  },
+
+  "viewEvidence": "View Evidence",
+  "@viewEvidence": {
+    "description": "View evidence tooltip"
+  },
+
+  "deleteEvidence": "Delete Evidence",
+  "@deleteEvidence": {
+    "description": "Delete evidence tooltip"
+  },
+
+  "markAsDone": "Mark as Done",
+  "@markAsDone": {
+    "description": "Mark task as done button text"
+  },
+
+  "assignmentPending": "Assignment Pending",
+  "@assignmentPending": {
+    "description": "Assignment pending dialog title"
+  },
+
+  "assignmentPendingMessage": "Your assignment to this task is currently pending approval from a manager. You cannot access task details or submit evidence until it is approved.\n\nPlease check back later or contact your manager.",
+  "@assignmentPendingMessage": {
+    "description": "Assignment pending dialog message"
+  },
+
+  "goBack": "Go Back",
+  "@goBack": {
+    "description": "Go back button text"
+  },
+
+  "errorLoadingTaskAssignment": "Error loading task assignment: {error}",
+  "@errorLoadingTaskAssignment": {
+    "description": "Task assignment loading error message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "Error details"
+      }
+    }
+  },
+
+  "noDescription": "No description.",
+  "@noDescription": {
+    "description": "No description available message"
+  },
+
+  "noLocationName": "No location name",
+  "@noLocationName": {
+    "description": "No location name available message"
+  },
+
+  "myTasks": "My Tasks",
+  "@myTasks": {
+    "description": "My tasks screen title"
+  },
+
+  "currentCampaign": "Current Campaign",
+  "@currentCampaign": {
+    "description": "Current campaign section"
+  },
+
+  "startGuidedTask": "Start Guided Task",
+  "@startGuidedTask": {
+    "description": "Start guided task button"
+  },
+
+  "quickUpload": "Quick Upload",
+  "@quickUpload": {
+    "description": "Quick upload button"
+  },
+
+  "markDone": "Mark Done",
+  "@markDone": {
+    "description": "Mark done button"
+  },
+
+  "inProgress": "IN PROGRESS",
+  "@inProgress": {
+    "description": "In progress status"
+  },
+
+  "awaitingManagerApproval": "Awaiting Manager Approval",
+  "@awaitingManagerApproval": {
+    "description": "Awaiting manager approval status"
+  },
+
+  "confirmCompletion": "Confirm Completion",
+  "@confirmCompletion": {
+    "description": "Confirm completion dialog title"
+  },
+
+  "evidenceRequiredMessage": "This task requires {required} evidence file(s) but only {uploaded} uploaded.\n\nPlease upload the required evidence before marking the task as complete.",
+  "@evidenceRequiredMessage": {
+    "description": "Evidence required message",
+    "placeholders": {
+      "required": {
+        "type": "int"
+      },
+      "uploaded": {
+        "type": "int"
+      }
+    }
+  },
+
+  "confirmCompletionMessage": "You have uploaded {uploaded}/{required} required evidence files.\n\nAre you sure you want to mark this task as complete?",
+  "@confirmCompletionMessage": {
+    "description": "Confirm completion message",
+    "placeholders": {
+      "uploaded": {
+        "type": "int"
+      },
+      "required": {
+        "type": "int"
+      }
+    }
+  },
+
+  "taskAssignmentPending": "This task assignment is pending approval from your manager. You cannot start work until it is approved.",
+  "@taskAssignmentPending": {
+    "description": "Task assignment pending message"
+  },
+
+  "checkingLocationGeofence": "Checking location for geofence validation...",
+  "@checkingLocationGeofence": {
+    "description": "Checking location for geofence"
+  },
+
+  "geofenceValidationFailed": "You must be within the task location area to upload evidence. Please move to the designated location and try again.",
+  "@geofenceValidationFailed": {
+    "description": "Geofence validation failed message"
+  },
+
+  "locationVerifiedUploading": "Location verified! Uploading evidence...",
+  "@locationVerifiedUploading": {
+    "description": "Location verified uploading message"
+  },
+
+  "uploadMoreEvidence": "Upload {count} more evidence file(s) to complete this task",
+  "@uploadMoreEvidence": {
+    "description": "Upload more evidence message",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "taskMarkedCompleted": "Task marked as completed!",
+  "@taskMarkedCompleted": {
+    "description": "Task marked completed message"
+  },
+
+  "failedToUpdateTask": "Failed to update task: {error}",
+  "@failedToUpdateTask": {
+    "description": "Failed to update task message",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "noTasksAvailable": "No Tasks Available",
+  "@noTasksAvailable": {
+    "description": "No tasks available title"
+  },
+
+  "noTasksAssignedMessage": "There are no tasks assigned to you in this campaign yet. Check back later or contact your manager.",
+  "@noTasksAssignedMessage": {
+    "description": "No tasks assigned message"
+  },
+
+  "loadingTasks": "Loading tasks...",
+  "@loadingTasks": {
+    "description": "Loading tasks message"
+  },
+
+  "tryAgain": "Try Again",
+  "@tryAgain": {
+    "description": "Try again button"
+  },
+
+  "unableToLoadTasks": "Unable to load tasks",
+  "@unableToLoadTasks": {
+    "description": "Unable to load tasks message"
+  },
+
+  "pleaseCheckConnection": "Please check your connection and try again",
+  "@pleaseCheckConnection": {
+    "description": "Please check connection message"
+  },
+
+  "accountNotAssignedToGroup": "Account Not Assigned to Group",
+  "@accountNotAssignedToGroup": {
+    "description": "Account not assigned to group title"
+  },
+
+  "accountNotAssignedMessage": "This account has not been set to a group. Contact the system administrator.",
+  "@accountNotAssignedMessage": {
+    "description": "Account not assigned message"
+  },
+
+  "tasksWillAppear": "Tasks will appear once you are assigned to a group",
+  "@tasksWillAppear": {
+    "description": "Tasks will appear message"
+  },
+
+  "noTasksFound": "No tasks found.\nStandalone tasks will appear here when created.",
+  "@noTasksFound": {
+    "description": "No tasks found message"
+  },
+
+  "requestAssignment": "Request Assignment",
+  "@requestAssignment": {
+    "description": "Request assignment button"
+  },
+
+  "viewLocation": "View Location",
+  "@viewLocation": {
+    "description": "View location button"
+  },
+
+  "submitEvidence": "Submit Evidence",
+  "@submitEvidence": {
+    "description": "Submit evidence button"
+  },
+
+  "requestTaskAssignment": "Request Task Assignment",
+  "@requestTaskAssignment": {
+    "description": "Request task assignment dialog title"
+  },
+
+  "requestAssignmentMessage": "Do you want to request assignment to \"{title}\"? This will notify the manager.",
+  "@requestAssignmentMessage": {
+    "description": "Request assignment message",
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+
+  "request": "Request",
+  "@request": {
+    "description": "Request button"
+  },
+
+  "taskAssignmentRequested": "Task assignment requested successfully!",
+  "@taskAssignmentRequested": {
+    "description": "Task assignment requested message"
+  },
+
+  "failedToRequestAssignment": "Failed to request assignment: {error}",
+  "@failedToRequestAssignment": {
+    "description": "Failed to request assignment message",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "assignmentRequestPending": "Your assignment request for this task is currently pending approval from a manager. You cannot start work until it is approved.\n\nPlease check back later or contact your manager for more information.",
+  "@assignmentRequestPending": {
+    "description": "Assignment request pending message"
+  },
+
+  "assignmentPendingApproval": "Assignment request pending approval",
+  "@assignmentPendingApproval": {
+    "description": "Assignment pending approval title"
+  },
+
+  "cannotStartUntilApproved": "You cannot start work on this task until your assignment request is approved by a manager.",
+  "@cannotStartUntilApproved": {
+    "description": "Cannot start until approved message"
+  },
+
+  "overview": "Overview",
+  "@overview": {
+    "description": "Overview step label"
+  },
+
+  "locationVerification": "Location Verification",
+  "@locationVerification": {
+    "description": "Location verification step label"
+  },
+
+  "evidenceUpload": "Evidence Upload",
+  "@evidenceUpload": {
+    "description": "Evidence upload step label"
+  },
+
+  "complete": "Complete",
+  "@complete": {
+    "description": "Complete step label"
+  },
+
+  "taskOverview": "Task Overview",
+  "@taskOverview": {
+    "description": "Task overview section title"
+  },
+
+  "points": "Points",
+  "@points": {
+    "description": "Points label"
+  },
+
+  "locationCheckRequired": "Location Check Required",
+  "@locationCheckRequired": {
+    "description": "Location check required label"
+  },
+
+  "mustBeWithinArea": "You must be within the specified area",
+  "@mustBeWithinArea": {
+    "description": "Must be within area description"
+  },
+
+  "evidenceRequired": "Evidence Required",
+  "@evidenceRequired": {
+    "description": "Evidence required label"
+  },
+
+  "uploadPhotosOrFiles": "Upload photos or files as proof of completion",
+  "@uploadPhotosOrFiles": {
+    "description": "Upload photos or files description"
+  },
+
+  "startTask": "Start Task",
+  "@startTask": {
+    "description": "Start task button"
+  },
+
+  "locationVerified": "Location Verified!",
+  "@locationVerified": {
+    "description": "Location verified success message"
+  },
+
+  "withinRequiredArea": "You are within the required task area. You can now proceed to upload evidence.",
+  "@withinRequiredArea": {
+    "description": "Within required area message"
+  },
+
+  "moveToDesignatedArea": "This task requires you to be at a specific location. Please move to the designated area and verify your location.",
+  "@moveToDesignatedArea": {
+    "description": "Move to designated area message"
+  },
+
+  "viewMap": "View Map",
+  "@viewMap": {
+    "description": "View map button"
+  },
+
+  "checkLocation": "Check Location",
+  "@checkLocation": {
+    "description": "Check location button"
+  },
+
+  "continueToEvidence": "Continue to Evidence",
+  "@continueToEvidence": {
+    "description": "Continue to evidence button"
+  },
+
+  "verifyLocationFirst": "Verify Location First",
+  "@verifyLocationFirst": {
+    "description": "Verify location first button"
+  },
+
+  "evidenceUploaded": "Evidence Uploaded!",
+  "@evidenceUploaded": {
+    "description": "Evidence uploaded success message"
+  },
+
+  "successfullyUploadedEvidence": "You have successfully uploaded evidence for this task. You can add more evidence or proceed to complete the task.",
+  "@successfullyUploadedEvidence": {
+    "description": "Successfully uploaded evidence message"
+  },
+
+  "uploadEvidenceDesc": "Upload photos, documents, or other files as evidence that you have completed this task.",
+  "@uploadEvidenceDesc": {
+    "description": "Upload evidence description"
+  },
+
+  "addMoreEvidence": "Add More Evidence",
+  "@addMoreEvidence": {
+    "description": "Add more evidence button"
+  },
+
+  "uploadEvidenceFirst": "Upload Evidence First",
+  "@uploadEvidenceFirst": {
+    "description": "Upload evidence first button"
+  },
+
+  "taskCompleted": "Task Completed!",
+  "@taskCompleted": {
+    "description": "Task completed title"
+  },
+
+  "congratulationsCompleted": "Congratulations! You have successfully completed \"{title}\". Your evidence has been submitted for review.",
+  "@congratulationsCompleted": {
+    "description": "Congratulations completed message",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "description": "Task title"
+      }
+    }
+  },
+
+  "returnToTasks": "Return to Tasks",
+  "@returnToTasks": {
+    "description": "Return to tasks button"
+  },
+
+  "visitNotStartedYet": "Visit has not started yet",
+  "@visitNotStartedYet": {
+    "description": "Visit status - not started"
+  },
+
+  "currentlyAtLocation": "Currently at the location", 
+  "@currentlyAtLocation": {
+    "description": "Visit status - checked in"
+  },
+
+  "visitCompletedSuccessfully": "Visit completed successfully",
+  "@visitCompletedSuccessfully": {
+    "description": "Visit status - completed"
+  },
+
+  "visitWasSkipped": "Visit was skipped",
+  "@visitWasSkipped": {
+    "description": "Visit status - skipped"
+  },
+
+  "unknownStatus": "Unknown status",
+  "@unknownStatus": {
+    "description": "Unknown status fallback"
+  },
+
+  "checkIn": "Check-in:",
+  "@checkIn": {
+    "description": "Check-in timing label"
+  },
+
+  "checkOut": "Check-out:",
+  "@checkOut": {
+    "description": "Check-out timing label"
+  },
+
+  "duration": "Duration",
+  "@duration": {
+    "description": "Duration label"
+  },
+
+  "coordinates": "Coordinates",
+  "@coordinates": {
+    "description": "Coordinates label"
+  },
+
+  "assigned": "Assigned",
+  "@assigned": {
+    "description": "Assigned label"
+  },
+
+  "errorGettingLocation": "Error getting location",
+  "@errorGettingLocation": {
+    "description": "Error getting location message"
+  },
+
+  "selectedCoordinates": "Selected Coordinates:",
+  "@selectedCoordinates": {
+    "description": "Selected coordinates label"
+  },
+
+  "mapInstructions": "Tap on the map to select a location. Drag the marker to fine-tune. Adjust the geofence radius as needed.",
+  "@mapInstructions": {
+    "description": "Map interaction instructions"
+  },
+
+  "start": "Start",
+  "@start": {
+    "description": "Start marker title"
+  },
+
+  "end": "End",
+  "@end": {
+    "description": "End marker title"
+  },
+
+  "location": "Location",
+  "@location": {
+    "description": "Location marker title"
+  },
+
+  "sevenDays": "7 Days",
+  "@sevenDays": {
+    "description": "Seven days preset button"
+  },
+
+  "thirtyDays": "30 Days",
+  "@thirtyDays": {
+    "description": "Thirty days preset button"
+  },
+
+  "ninetyDays": "90 Days",
+  "@ninetyDays": {
+    "description": "Ninety days preset button"
+  },
+
+  "map": "Map",
+  "@map": {
+    "description": "Map tab title"
+  },
+
+  "totalEntries": "Total Entries",
+  "@totalEntries": {
+    "description": "Total entries statistics label"
+  },
+
+  "avgAccuracy": "Avg Accuracy",
+  "@avgAccuracy": {
+    "description": "Average accuracy statistics label"
+  },
+
+  "avgSpeed": "Avg Speed",
+  "@avgSpeed": {
+    "description": "Average speed statistics label"
+  },
+
+  "period": "Period",
+  "@period": {
+    "description": "Period statistics label"
+  },
+
+  "daysSelected": "days selected",
+  "@daysSelected": {
+    "description": "Days selected label"
+  },
+
+  "selectDays": "Select Days",
+  "@selectDays": {
+    "description": "Select days label"
+  },
+
+  "selectStartTime": "Select Start Time",
+  "@selectStartTime": {
+    "description": "Select start time label"
+  },
+
+  "selectEndTime": "Select End Time",
+  "@selectEndTime": {
+    "description": "Select end time label"
+  },
+
+  "history": "History",
+  "@history": {
+    "description": "History tab title"
+  },
+
+  "selectAgent": "Select Agent",
+  "@selectAgent": {
+    "description": "Select agent dropdown label"
+  },
+
+  "pleaseSelectAgentForLocationHistory": "Please select an agent to view location history",
+  "@pleaseSelectAgentForLocationHistory": {
+    "description": "Please select agent message"
+  },
+
+  "noLocationHistoryFound": "No location history found for the selected period",
+  "@noLocationHistoryFound": {
+    "description": "No location history found message"
+  },
+
+  "agentMovementTrack": "Agent Movement Track",
+  "@agentMovementTrack": {
+    "description": "Agent movement track title"
+  },
+
+  "totalLocations": "Total Locations",
+  "@totalLocations": {
+    "description": "Total locations label"
+  },
+
+  "timePeriod": "Time Period",
+  "@timePeriod": {
+    "description": "Time period label"
+  },
+
+  "startTime": "Start Time",
+  "@startTime": {
+    "description": "Start time label"
+  },
+
+  "endTime": "End Time",
+  "@endTime": {
+    "description": "End time label"
+  },
+
+  "tapToViewCompleteRoute": "Tap to view complete route on map",
+  "@tapToViewCompleteRoute": {
+    "description": "Tap to view complete route message"
+  },
+
+  "locationStatistics": "Location Statistics",
+  "@locationStatistics": {
+    "description": "Location statistics title"
+  },
+
+  "noLocationDataToDisplay": "No location data to display on map",
+  "@noLocationDataToDisplay": {
+    "description": "No location data to display message"
+  },
+
+  "placeVisitDetails": "Place Visit Details",
+  "@placeVisitDetails": {
+    "description": "Place visit details title"
+  },
+
+  "placeInformation": "Place Information",
+  "@placeInformation": {
+    "description": "Place information section title"
+  },
+
+  "visitStatus": "Visit Status",
+  "@visitStatus": {
+    "description": "Visit status section title"
+  },
+
+  "visitTiming": "Visit Timing",
+  "@visitTiming": {
+    "description": "Visit timing section title"
+  },
+
+  "notYet": "Not yet",
+  "@notYet": {
+    "description": "Not yet placeholder"
+  },
+
+  "routeInformation": "Route Information",
+  "@routeInformation": {
+    "description": "Route information section title"
+  },
+
+  "unknownRoute": "Unknown Route",
+  "@unknownRoute": {
+    "description": "Unknown route placeholder"
+  },
+
+  "visitNotes": "Visit Notes",
+  "@visitNotes": {
+    "description": "Visit notes section title"
+  },
+
+  "tapToMoveLocation": "Tap to move location",
+  "@tapToMoveLocation": {
+    "description": "Tap to move location instruction"
+  },
+
+  "locationPermissionRequired": "Location permission is required",
+  "@locationPermissionRequired": {
+    "description": "Location permission required message"
+  },
+
+  "pleaseSelectLocationOnMap": "Please select a location on the map",
+  "@pleaseSelectLocationOnMap": {
+    "description": "Please select location on map message"
+  },
+
+  "selectLocation": "Select Location",
+  "@selectLocation": {
+    "description": "Select location title"
+  },
+
+  "assignmentPendingTitle": "Assignment Pending",
+  "@assignmentPendingTitle": {
+    "description": "Assignment pending dialog title"
+  },
+
+  "assignmentPendingDesc": "Your assignment to this task is currently pending approval from a manager. You cannot start work until it is approved.\n\nPlease check back later or contact your manager.",
+  "@assignmentPendingDesc": {
+    "description": "Assignment pending dialog description"
+  },
+
+  "notWithinTaskLocation": "You are not within the task location area. Please move closer to continue.",
+  "@notWithinTaskLocation": {
+    "description": "Not within task location error message"
+  },
+
+  "errorCheckingLocation": "Error checking location: {error}",
+  "@errorCheckingLocation": {
+    "description": "Error checking location message",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "Error details"
+      }
+    }
+  },
+
+  "completed": "Completed",
+  "@completed": {
+    "description": "Completed status"
+  },
+
+  "requested": "Requested",
+  "@requested": {
+    "description": "Requested status"
+  },
+
+  "ok": "OK",
+  "@ok": {
+    "description": "OK button text"
+  },
+
+  "markAllRead": "Mark All Read",
+  "@markAllRead": {
+    "description": "Mark all notifications as read button text"
+  },
+
+  "all": "All",
+  "@all": {
+    "description": "All filter option for notifications"
+  },
+
+  "unread": "Unread", 
+  "@unread": {
+    "description": "Unread filter option for notifications"
+  },
+
+  "read": "Read",
+  "@read": {
+    "description": "Read filter option for notifications"
+  },
+
+  "justNow": "Just now",
+  "@justNow": {
+    "description": "Time display for notifications posted just now"
+  },
+
+  "minutesAgo": "{minutes}m ago",
+  "@minutesAgo": {
+    "description": "Time display for notifications posted minutes ago",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "description": "Number of minutes"
+      }
+    }
+  },
+
+  "hoursAgo": "{hours}h ago", 
+  "@hoursAgo": {
+    "description": "Time display for notifications posted hours ago",
+    "placeholders": {
+      "hours": {
+        "type": "int",
+        "description": "Number of hours"
+      }
+    }
+  },
+
+  "daysAgo": "{days}d ago",
+  "@daysAgo": {
+    "description": "Time display for notifications posted days ago",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "description": "Number of days"
+      }
+    }
+  },
+
+  "campaignType": "Campaign",
+  "@campaignType": {
+    "description": "Campaign notification type display name"
+  },
+
+  "taskType": "Task",
+  "@taskType": {
+    "description": "Task notification type display name"
+  },
+
+  "routeType": "Route",
+  "@routeType": {
+    "description": "Route notification type display name"
+  },
+
+  "placeType": "Place",
+  "@placeType": {
+    "description": "Place notification type display name"
+  },
+
+  "completionType": "Completion",
+  "@completionType": {
+    "description": "Completion notification type display name"
+  },
+
+  "evidenceType": "Evidence",
+  "@evidenceType": {
+    "description": "Evidence notification type display name"
+  },
+
+  "generalType": "General",
+  "@generalType": {
+    "description": "General notification type display name"
+  },
+
+  "errorLoadingNotifications": "Error loading notifications",
+  "@errorLoadingNotifications": {
+    "description": "Error message when notifications fail to load"
+  },
+
+  "noNotificationsYet": "No notifications yet",
+  "@noNotificationsYet": {
+    "description": "Empty state message when no notifications exist"
+  },
+
+  "noFilterNotifications": "No {filter} notifications",
+  "@noFilterNotifications": {
+    "description": "Empty state message for filtered notifications",
+    "placeholders": {
+      "filter": {
+        "type": "String",
+        "description": "Filter type (unread, read, etc.)"
+      }
+    }
+  },
+
+  "notificationsUpdatesMessage": "You'll see notifications here when there are updates",
+  "@notificationsUpdatesMessage": {
+    "description": "Empty state description for notifications"
+  },
+
+  "markedNotificationsRead": "Marked {count} notifications as read",
+  "@markedNotificationsRead": {
+    "description": "Success message when marking notifications as read",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "description": "Number of notifications marked as read"
+      }
+    }
+  },
+
+  "suggestPlace": "Suggest Place",
+  "@suggestPlace": {
+    "description": "Button text for suggesting a new place"
+  },
+
+  "myRoutes": "My Routes",
+  "@myRoutes": {
+    "description": "Title for agent routes dashboard"
+  },
+
+  "activeRoutes": "Active Routes",
+  "@activeRoutes": {
+    "description": "Section title for active routes"
+  },
+
+  "currentlyVisiting": "Currently Visiting",
+  "@currentlyVisiting": {
+    "description": "Label for current active visit"
+  },
+
+  "checkOut": "Check Out",
+  "@checkOut": {
+    "description": "Check out button text"
+  },
+
+  "addEvidence": "Add Evidence",
+  "@addEvidence": {
+    "description": "Add evidence button text"
+  },
+
+  "status": "Status",
+  "@status": {
+    "description": "Status label"
+  },
+
+  "assigned": "Assigned",
+  "@assigned": {
+    "description": "Assigned label"
+  },
+
+  "noActiveRoutes": "No Active Routes",
+  "@noActiveRoutes": {
+    "description": "Empty state title for no active routes"
+  },
+
+  "routesWillBeAssigned": "Your manager will assign routes for you to visit.",
+  "@routesWillBeAssigned": {
+    "description": "Empty state message for routes"
+  },
+
+  "checkoutComingSoon": "Check-out functionality - Coming soon!",
+  "@checkoutComingSoon": {
+    "description": "Coming soon message for checkout"
+  },
+
+  "evidenceUploadComingSoon": "Evidence upload - Coming soon!",
+  "@evidenceUploadComingSoon": {
+    "description": "Coming soon message for evidence upload"
+  },
+
+  "suggestNewPlace": "Suggest New Place",
+  "@suggestNewPlace": {
+    "description": "Dialog title for suggesting new place"
+  },
+
+  "placeNameRequired": "Place Name *",
+  "@placeNameRequired": {
+    "description": "Required place name field label"
+  },
+
+  "enterPlaceName": "Enter place name",
+  "@enterPlaceName": {
+    "description": "Placeholder for place name input"
+  },
+
+  "description": "Description",
+  "@description": {
+    "description": "Description label"
+  },
+
+  "briefDescription": "Brief description of the place",
+  "@briefDescription": {
+    "description": "Placeholder for description input"
+  },
+
+  "address": "Address",
+  "@address": {
+    "description": "Address label"
+  },
+
+  "streetAddressOrLandmark": "Street address or landmark",
+  "@streetAddressOrLandmark": {
+    "description": "Placeholder for address input"
+  },
+
+  "locationRequired": "Location *",
+  "@locationRequired": {
+    "description": "Required location field label"
+  },
+
+  "selectedLocation": "Selected Location:",
+  "@selectedLocation": {
+    "description": "Label for selected location"
+  },
+
+  "radius": "Radius",
+  "@radius": {
+    "description": "Radius label"
+  },
+
+  "selectLocationOnMap": "Select Location on Map",
+  "@selectLocationOnMap": {
+    "description": "Button text to select location"
+  },
+
+  "changeLocation": "Change Location",
+  "@changeLocation": {
+    "description": "Button text to change location"
+  },
+
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel button text"
+  },
+
+  "submitSuggestion": "Submit Suggestion",
+  "@submitSuggestion": {
+    "description": "Submit suggestion button text"
+  },
+
+  "pleaseFillRequiredFields": "Please fill required fields",
+  "@pleaseFillRequiredFields": {
+    "description": "Validation message for required fields"
+  },
+
+  "authenticationRequired": "Authentication required",
+  "@authenticationRequired": {
+    "description": "Authentication error message"
+  },
+
+  "placeSuggestionSubmitted": "Place suggestion submitted! Waiting for manager approval.",
+  "@placeSuggestionSubmitted": {
+    "description": "Success message for place suggestion"
+  },
+
+  "errorSubmittingSuggestion": "Error submitting suggestion",
+  "@errorSubmittingSuggestion": {
+    "description": "Error message for suggestion submission"
+  },
+
+  "errorLoadingForm": "Error loading form",
+  "@errorLoadingForm": {
+    "description": "Error message when form fails to load"
+  },
+
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry button text"
+  },
+
+  "noFormFields": "No Form Fields",
+  "@noFormFields": {
+    "description": "Empty state title for no form fields"
+  },
+
+  "noCustomFieldsConfigured": "This template has no custom fields configured.",
+  "@noCustomFieldsConfigured": {
+    "description": "Empty state message for no custom fields"
+  },
+
+  "required": "Required",
+  "@required": {
+    "description": "Required field indicator"
+  },
+
+  "enterEmailAddress": "Enter email address",
+  "@enterEmailAddress": {
+    "description": "Placeholder for email input"
+  },
+
+  "enterPhoneNumber": "Enter phone number",
+  "@enterPhoneNumber": {
+    "description": "Placeholder for phone input"
+  },
+
+  "selectAnOption": "Select an option",
+  "@selectAnOption": {
+    "description": "Placeholder for dropdown selection"
+  },
+
+  "selectDate": "Select date",
+  "@selectDate": {
+    "description": "Placeholder for date picker"
+  },
+
+  "selectTime": "Select time",
+  "@selectTime": {
+    "description": "Placeholder for time picker"
+  },
+
+  "signature": "Signature",
+  "@signature": {
+    "description": "Signature field label"
+  },
+
+  "pleaseSignToConfirm": "Please sign below to confirm completion",
+  "@pleaseSignToConfirm": {
+    "description": "Instruction for signature field"
+  },
+
+  "clearSignature": "Clear Signature",
+  "@clearSignature": {
+    "description": "Clear signature button text"
+  },
+
+  "submitting": "Submitting...",
+  "@submitting": {
+    "description": "Loading text while submitting"
+  },
+
+  "submitForm": "Submit Form",
+  "@submitForm": {
+    "description": "Submit form button text"
+  },
+
+  "isRequired": "is required",
+  "@isRequired": {
+    "description": "Field validation suffix"
+  },
+
+  "pleaseEnterValidEmail": "Please enter a valid email address",
+  "@pleaseEnterValidEmail": {
+    "description": "Email validation message"
+  },
+
+  "pleaseEnterValidPhone": "Please enter a valid phone number",
+  "@pleaseEnterValidPhone": {
+    "description": "Phone validation message"
+  },
+
+  "pleaseEnterValidNumber": "Please enter a valid number",
+  "@pleaseEnterValidNumber": {
+    "description": "Number validation message"
+  },
+
+  "mustBeAtLeast": "must be at least",
+  "@mustBeAtLeast": {
+    "description": "Minimum length validation prefix"
+  },
+
+  "characters": "characters",
+  "@characters": {
+    "description": "Character count unit"
+  },
+
+  "mustBeNoMoreThan": "must be no more than",
+  "@mustBeNoMoreThan": {
+    "description": "Maximum length validation prefix"
+  },
+
+  "signatureRequired": "Signature is required",
+  "@signatureRequired": {
+    "description": "Signature validation message"
+  },
+
+  "formSubmittedSuccessfully": "Form submitted successfully!",
+  "@formSubmittedSuccessfully": {
+    "description": "Form submission success message"
+  },
+
+  "failedToSubmitForm": "Failed to submit form",
+  "@failedToSubmitForm": {
+    "description": "Form submission error message"
+  },
+
+  "formData": "Form Data",
+  "@formData": {
+    "description": "Form data label"
+  },
+
+  "evidenceUpload": "Evidence Upload",
+  "@evidenceUpload": {
+    "description": "Evidence upload section title"
+  },
+
+  "uploadSupportingEvidence": "Upload supporting evidence for this task (optional)",
+  "@uploadSupportingEvidence": {
+    "description": "Evidence upload description"
+  },
+
+  "uploadEvidence": "Upload Evidence",
+  "@uploadEvidence": {
+    "description": "Upload evidence button text"
+  },
+
+  "evidenceName": "Evidence Name",
+  "@evidenceName": {
+    "description": "Evidence name field label"
+  },
+
+  "enterEvidenceName": "Enter evidence name",
+  "@enterEvidenceName": {
+    "description": "Evidence name input placeholder"
+  },
+
+  "evidenceNameRequired": "Evidence name is required",
+  "@evidenceNameRequired": {
+    "description": "Evidence name validation message"
+  },
+
+  "selectFile": "Select File",
+  "@selectFile": {
+    "description": "Select file button text"
+  },
+
+  "changeFile": "Change File",
+  "@changeFile": {
+    "description": "Change file button text"
+  },
+
+  "fileUploaded": "File uploaded",
+  "@fileUploaded": {
+    "description": "File upload status text"
+  },
+
+  "upload": "Upload",
+  "@upload": {
+    "description": "Upload button text"
+  },
+
+  "evidenceUploadedSuccessfully": "Evidence uploaded successfully",
+  "@evidenceUploadedSuccessfully": {
+    "description": "Evidence upload success message"
+  },
+
+  "failedToUploadEvidence": "Failed to upload evidence",
+  "@failedToUploadEvidence": {
+    "description": "Evidence upload error message"
+  },
+
+  "mySubmissions": "My Submissions",
+  "@mySubmissions": {
+    "description": "Title for submission history screen"
+  },
+
+  "type": "Type",
+  "@type": {
+    "description": "Type filter label"
+  },
+
+  "all": "All",
+  "@all": {
+    "description": "All filter option"
+  },
+
+  "forms": "Forms",
+  "@forms": {
+    "description": "Forms filter option"
+  },
+
+  "evidence": "Evidence",
+  "@evidence": {
+    "description": "Evidence filter option"
+  },
+
+  "pending": "Pending",
+  "@pending": {
+    "description": "Pending status"
+  },
+
+  "approved": "Approved",
+  "@approved": {
+    "description": "Approved status"
+  },
+
+  "rejected": "Rejected",
+  "@rejected": {
+    "description": "Rejected status"
+  },
+
+  "loadingSubmissions": "Loading submissions...",
+  "@loadingSubmissions": {
+    "description": "Loading text for submissions"
+  },
+
+  "error": "Error",
+  "@error": {
+    "description": "Error prefix"
+  },
+
+  "tryAgain": "Try Again",
+  "@tryAgain": {
+    "description": "Try again button text"
+  },
+
+  "moreFields": "more fields",
+  "@moreFields": {
+    "description": "Additional fields indicator"
+  },
+
+  "form": "Form",
+  "@form": {
+    "description": "Form type label"
+  },
+
+  "noSubmissionsYet": "No Submissions Yet",
+  "@noSubmissionsYet": {
+    "description": "Empty state title for no submissions"
+  },
+
+  "submissionsWillAppearHere": "Your form submissions and evidence uploads will appear here.",
+  "@submissionsWillAppearHere": {
+    "description": "Empty state message for submissions"
+  },
+
+  "userManagement": "User Management",
+  "@userManagement": {
+    "description": "User management screen title"
+  },
+
+  "evidenceReview": "Evidence Review",
+  "@evidenceReview": {
+    "description": "Evidence review screen title"
+  },
+
+  "adminDashboard": "Admin Dashboard",
+  "@adminDashboard": {
+    "description": "Admin dashboard screen title"
+  },
+
+  "searchByName": "Search by name, email, or username...",
+  "@searchByName": {
+    "description": "Search placeholder for user management"
+  },
+
+  "allUsers": "All Users",
+  "@allUsers": {
+    "description": "All users filter option"
+  },
+
+  "managersOnly": "Managers Only",
+  "@managersOnly": {
+    "description": "Managers only filter option"
+  },
+
+  "agentsOnly": "Agents Only",
+  "@agentsOnly": {
+    "description": "Agents only filter option"
+  },
+
+  "noUsersFound": "No Users Found",
+  "@noUsersFound": {
+    "description": "Empty state title when no users found"
+  },
+
+  "tryAdjustingFilters": "Try adjusting your search or filters",
+  "@tryAdjustingFilters": {
+    "description": "Empty state message when no users match filters"
+  },
+
+  "createFirstUser": "Get started by creating your first user",
+  "@createFirstUser": {
+    "description": "Empty state message when no users exist"
+  },
+
+  "createUser": "Create User",
+  "@createUser": {
+    "description": "Create user button text"
+  },
+
+  "viewDetails": "View Details",
+  "@viewDetails": {
+    "description": "View details menu option"
+  },
+
+  "activate": "Activate",
+  "@activate": {
+    "description": "Activate user action"
+  },
+
+  "deactivate": "Deactivate",
+  "@deactivate": {
+    "description": "Deactivate user action"
+  },
+
+  "searchGroups": "Search groups...",
+  "@searchGroups": {
+    "description": "Search placeholder for groups"
+  },
+
+  "noGroupsFound": "No groups found",
+  "@noGroupsFound": {
+    "description": "Empty state when no groups exist"
+  },
+
+  "noGroupsMatch": "No groups match your search",
+  "@noGroupsMatch": {
+    "description": "Empty state when no groups match search"
+  },
+
+  "createFirstGroup": "Create your first group to get started",
+  "@createFirstGroup": {
+    "description": "Empty state message for first group"
+  },
+
+  "createGroup": "Create Group",
+  "@createGroup": {
+    "description": "Create group button text"
+  },
+
+  "deleteGroup": "Delete Group",
+  "@deleteGroup": {
+    "description": "Delete group action"
+  },
+
+  "confirmDeleteGroup": "Are you sure you want to delete \"{name}\"? This action cannot be undone.",
+  "@confirmDeleteGroup": {
+    "description": "Group deletion confirmation message",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "description": "Group name"
+      }
+    }
+  },
+
+  "groupDeleted": "Group \"{name}\" deleted successfully",
+  "@groupDeleted": {
+    "description": "Group deletion success message",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "description": "Group name"
+      }
+    }
+  },
+
+  "failedToDeleteGroup": "Failed to delete group",
+  "@failedToDeleteGroup": {
+    "description": "Group deletion error message"
+  },
+
+  "goodMorning": "Good Morning",
+  "@goodMorning": {
+    "description": "Morning greeting"
+  },
+
+  "goodAfternoon": "Good Afternoon",
+  "@goodAfternoon": {
+    "description": "Afternoon greeting"
+  },
+
+  "goodEvening": "Good Evening",
+  "@goodEvening": {
+    "description": "Evening greeting"
+  },
+
+  "systemAdministrator": "System Administrator",
+  "@systemAdministrator": {
+    "description": "System administrator role title"
+  },
+
+  "monitorPlatform": "Monitor and manage your Al-Tijwal platform",
+  "@monitorPlatform": {
+    "description": "Admin dashboard description"
+  },
+
+  "systemOverview": "System Overview",
+  "@systemOverview": {
+    "description": "System overview section title"
+  },
+
+  "totalManagers": "Total Managers",
+  "@totalManagers": {
+    "description": "Total managers metric"
+  },
+
+  "totalAgents": "Total Agents",
+  "@totalAgents": {
+    "description": "Total agents metric"
+  },
+
+  "activeUsers": "Active Users",
+  "@activeUsers": {
+    "description": "Active users metric"
+  },
+
+  "totalCampaigns": "Total Campaigns",
+  "@totalCampaigns": {
+    "description": "Total campaigns metric"
+  },
+
+  "totalTasks": "Total Tasks",
+  "@totalTasks": {
+    "description": "Total tasks metric"
+  },
+
+  "newThisMonth": "New This Month",
+  "@newThisMonth": {
+    "description": "New users this month metric"
+  },
+
+  "edit": "Edit",
+  "@edit": {
+    "description": "Edit action button"
+  },
+
+  "user": "User",
+  "@user": {
+    "description": "User label"
+  },
+
+  "areYouSure": "Are you sure you want to",
+  "@areYouSure": {
+    "description": "Confirmation question prefix"
+  },
+
+  "cannotBeUndone": "This action cannot be undone",
+  "@cannotBeUndone": {
+    "description": "Warning about irreversible action"
+  },
+
+  "errorLoadingData": "Error loading data",
+  "@errorLoadingData": {
+    "description": "Generic error loading data message"
+  },
+
+  "noEvidenceFound": "No evidence found",
+  "@noEvidenceFound": {
+    "description": "Empty state when no evidence exists"
+  },
+
+  "noEvidenceFromMembers": "No evidence from members in your groups",
+  "@noEvidenceFromMembers": {
+    "description": "Empty state for managers with no evidence from group members"
+  },
+
+  "noEvidenceUploaded": "No evidence uploaded yet",
+  "@noEvidenceUploaded": {
+    "description": "Empty state when no evidence has been uploaded"
+  },
+
+  "showingEvidenceFromMembers": "Showing evidence from all members in your groups",
+  "@showingEvidenceFromMembers": {
+    "description": "Info message for managers about evidence filtering"
+  },
+
+  "failedToRefreshGroups": "Failed to refresh groups",
+  "@failedToRefreshGroups": {
+    "description": "Error message when refreshing groups fails"
+  },
+
+  "errorLoadingGroups": "Error loading groups",
+  "@errorLoadingGroups": {
+    "description": "Error message when groups fail to load"
+  },
+
+  "createdDate": "Created {date}",
+  "@createdDate": {
+    "description": "Created date prefix for groups",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "description": "Formatted date"
+      }
+    }
+  },
+
+  "noDescriptionProvided": "No description provided",
+  "@noDescriptionProvided": {
+    "description": "Placeholder when no description is provided"
+  },
+
+  "tapToViewMembers": "Tap to view members",
+  "@tapToViewMembers": {
+    "description": "Instruction text for viewing group members"
+  },
+
+  "today": "today",
+  "@today": {
+    "description": "Today date indicator"
+  },
+
+  "yesterday": "yesterday",
+  "@yesterday": {
+    "description": "Yesterday date indicator"
+  },
+
+  "daysAgoCount": "{count} days ago",
+  "@daysAgoCount": {
+    "description": "Days ago date indicator",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "description": "Number of days"
+      }
+    }
+  },
+
+  "teamMembers": "Team Members",
+  "@teamMembers": {
+    "description": "Team members screen title"
+  },
+
+  "searchTeamMembers": "Search team members...",
+  "@searchTeamMembers": {
+    "description": "Search placeholder for team members"
+  },
+
+  "allMembers": "All Members",
+  "@allMembers": {
+    "description": "Filter option for all members"
+  },
+
+  "onlineActiveAway": "Online (Active/Away)",
+  "@onlineActiveAway": {
+    "description": "Filter option for online members"
+  },
+
+  "offline": "Offline",
+  "@offline": {
+    "description": "Offline status"
+  },
+
+  "unableToLoadTeamMembers": "Unable to load team members",
+  "@unableToLoadTeamMembers": {
+    "description": "Error message when team members fail to load"
+  },
+
+  "noMembersFound": "No members found",
+  "@noMembersFound": {
+    "description": "Empty state when no members found"
+  },
+
+  "noOnlineMembers": "No online members",
+  "@noOnlineMembers": {
+    "description": "Empty state when no online members"
+  },
+
+  "noOfflineMembers": "No offline members",
+  "@noOfflineMembers": {
+    "description": "Empty state when no offline members"
+  },
+
+  "noTeamMembersFound": "No team members found",
+  "@noTeamMembersFound": {
+    "description": "Empty state when no team members found"
+  },
+
+  "searchResults": "Search: \"{query}\"",
+  "@searchResults": {
+    "description": "Search results indicator",
+    "placeholders": {
+      "query": {
+        "type": "String",
+        "description": "Search query"
+      }
+    }
+  },
+
+  "clearAll": "Clear All",
+  "@clearAll": {
+    "description": "Clear all filters button"
+  },
+
+  "online": "Online",
+  "@online": {
+    "description": "Online status filter"
+  },
+
+  "viewDetails": "View Details",
+  "@viewDetails": {
+    "description": "View details menu option"
+  },
+
+  "editName": "Edit Name",
+  "@editName": {
+    "description": "Edit name menu option"
+  },
+
+  "resetPassword": "Reset Password",
+  "@resetPassword": {
+    "description": "Reset password menu option"
+  },
+
+  "editAgentName": "Edit Agent Name",
+  "@editAgentName": {
+    "description": "Edit agent name dialog title"
+  },
+
+  "active": "Active",
+  "@active": {
+    "description": "Active status"
+  },
+
+  "away": "Away",
+  "@away": {
+    "description": "Away status"
+  },
+
+  "myEarnings": "My Earnings",
+  "@myEarnings": {
+    "description": "Earnings screen title"
+  },
+
+  "errorFetchingEarnings": "Error fetching earnings: {error}",
+  "@errorFetchingEarnings": {
+    "description": "Error message when earnings fail to load",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "Error details"
+      }
+    }
+  },
+
+  "noEarningsDataFound": "No earnings data found.",
+  "@noEarningsDataFound": {
+    "description": "Empty state for earnings"
+  },
+
+  "totalEarned": "Total Earned",
+  "@totalEarned": {
+    "description": "Total earnings label"
+  },
+
+  "outstandingBalance": "Outstanding Balance",
+  "@outstandingBalance": {
+    "description": "Outstanding balance label"
+  },
+
+  "totalForCampaign": "Total for Campaign:",
+  "@totalForCampaign": {
+    "description": "Total earnings for campaign"
+  },
+
+  "alreadyPaid": "Already Paid:",
+  "@alreadyPaid": {
+    "description": "Amount already paid"
+  },
+
+  "balanceForCampaign": "Balance for Campaign:",
+  "@balanceForCampaign": {
+    "description": "Outstanding balance for campaign"
+  },
+
+  "pointsEarned": "Points Earned:",
+  "@pointsEarned": {
+    "description": "Points earned label"
+  },
+
+  "pointsPaid": "Points Paid:",
+  "@pointsPaid": {
+    "description": "Points paid label"
+  },
+
+  "notStarted": "Not Started",
+  "@notStarted": {
+    "description": "Task not started status"
+  },
+
+  "inAreaReadyToStart": "In Area - Ready to Start",
+  "@inAreaReadyToStart": {
+    "description": "Ready to start geofence task"
+  },
+
+  "outsideArea": "Outside Area",
+  "@outsideArea": {
+    "description": "Outside geofence area"
+  },
+
+  "locationCheckFailed": "Location Check Failed",
+  "@locationCheckFailed": {
+    "description": "Failed to check location"
+  },
+
+  "taskActive": "Task Active",
+  "@taskActive": {
+    "description": "Task is currently active"
+  },
+
+  "taskStartedStayInArea": "Task started! Stay in the area for {minutes} minutes.",
+  "@taskStartedStayInArea": {
+    "description": "Task started message for geofence stay",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "description": "Required minutes"
+      }
+    }
+  },
+
+  "youLeftDesignatedArea": "You left the designated area. Task paused.",
+  "@youLeftDesignatedArea": {
+    "description": "Left geofence area warning"
+  },
+
+  "welcomeBackTaskResumed": "Welcome back! Task resumed.",
+  "@welcomeBackTaskResumed": {
+    "description": "Returned to geofence area"
+  },
+
+  "pausedOutsideArea": "Paused - Outside Area",
+  "@pausedOutsideArea": {
+    "description": "Task paused status"
+  },
+
+  "earlyCompletion": "Early Completion",
+  "@earlyCompletion": {
+    "description": "Early completion dialog title"
+  },
+
+  "earlyCompletionConfirm": "Are you sure you want to complete this task early?",
+  "@earlyCompletionConfirm": {
+    "description": "Early completion confirmation"
+  },
+
+  "geofenceStayTask": "Geofence Stay Task",
+  "@geofenceStayTask": {
+    "description": "Geofence stay task title"
+  },
+
+  "stayInDesignatedArea": "Stay in the designated area for the required duration.",
+  "@stayInDesignatedArea": {
+    "description": "Geofence stay task instruction"
+  },
+
+  "requiredStay": "Required Stay: {minutes} minutes",
+  "@requiredStay": {
+    "description": "Required stay duration",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "description": "Minutes required"
+      }
+    }
+  },
+
+  "locationStatus": "Location Status",
+  "@locationStatus": {
+    "description": "Location status section title"
+  },
+
+  "insideDesignatedArea": "Inside designated area",
+  "@insideDesignatedArea": {
+    "description": "Inside geofence status"
+  },
+
+  "outsideDesignatedArea": "Outside designated area",
+  "@outsideDesignatedArea": {
+    "description": "Outside geofence status"
+  },
+
+  "timeProgress": "Time Progress",
+  "@timeProgress": {
+    "description": "Time progress section title"
+  },
+
+  "started": "Started: {time}",
+  "@started": {
+    "description": "Task start time",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "description": "Start time"
+      }
+    }
+  },
+
+  "expectedCompletion": "Expected completion: {time}",
+  "@expectedCompletion": {
+    "description": "Expected completion time",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "description": "Completion time"
+      }
+    }
+  },
+
+  "progress": "Progress",
+  "@progress": {
+    "description": "Progress label"
+  },
+
+  "completeEarly": "Complete Early",
+  "@completeEarly": {
+    "description": "Complete early button"
+  },
+
+  "moveToDesignatedArea": "Move to Designated Area",
+  "@moveToDesignatedArea": {
+    "description": "Move to area instruction"
+  },
+
+  "routeDetails": "Route Details",
+  "@routeDetails": {
+    "description": "Route details screen title"
+  },
+
+  "selectStartDate": "Select Start Date",
+  "@selectStartDate": {
+    "description": "Select start date button text"
+  },
+
+  "selectEndDate": "Select End Date",
+  "@selectEndDate": {
+    "description": "Select end date button text"
+  },
+
+  "noPlacesAdded": "No places added",
+  "@noPlacesAdded": {
+    "description": "No places added message"
+  },
+
+  "addPlacesToCreateYourRoute": "Add places to create your route",
+  "@addPlacesToCreateYourRoute": {
+    "description": "Add places to create route message"
+  },
+
+  "duration": "Duration",
+  "@duration": {
+    "description": "Duration label"
+  },
+
+  "visits": "visits",
+  "@visits": {
+    "description": "Visits label"
+  },
+
+  "loadingPlaces": "Loading places...",
+  "@loadingPlaces": {
+    "description": "Loading places message"
+  },
+
+  "noApprovedPlacesAvailableAskAgentsToSuggestPlaces": "No approved places available. Ask agents to suggest places.",
+  "@noApprovedPlacesAvailableAskAgentsToSuggestPlaces": {
+    "description": "No approved places available message"
+  },
+
+  "timesToVisit": "times to visit",
+  "@timesToVisit": {
+    "description": "Times to visit label"
+  },
+
+  "agentMustVisitTimesWithCooldown": "Agent must visit {times} times with a {cooldown}-hour cooldown",
+  "@agentMustVisitTimesWithCooldown": {
+    "description": "Agent visit requirement message",
+    "placeholders": {
+      "times": {
+        "type": "int"
+      },
+      "cooldown": {
+        "type": "int"
+      }
+    }
+  },
+
+  "visitFrequencyMustBeBetween1And10": "Visit frequency must be between 1 and 10",
+  "@visitFrequencyMustBeBetween1And10": {
+    "description": "Visit frequency validation message"
+  },
+
+  "pleaseAddAtLeastOnePlaceToTheRoute": "Please add at least one place to the route",
+  "@pleaseAddAtLeastOnePlaceToTheRoute": {
+    "description": "Route place validation message"
+  },
+
+  "routeCreatedSuccessfully": "Route created successfully",
+  "@routeCreatedSuccessfully": {
+    "description": "Route creation success message"
+  },
+
+  "errorCreatingRoute": "Error creating route",
+  "@errorCreatingRoute": {
+    "description": "Route creation error message"
+  },
+
+  "inactive": "Inactive",
+  "@inactive": {
+    "description": "Inactive status label"
+  },
+
+  "noPendingSuggestions": "No pending suggestions",
+  "@noPendingSuggestions": {
+    "description": "No pending suggestions message"
+  },
+
+  "agentSuggestionsWillAppearHere": "Agent suggestions will appear here",
+  "@agentSuggestionsWillAppearHere": {
+    "description": "Agent suggestions empty state message"
+  },
+
+  "noInactivePlaces": "No inactive places",
+  "@noInactivePlaces": {
+    "description": "No inactive places message"
+  },
+
+  "deactivatedPlacesWillAppearHere": "Deactivated places will appear here",
+  "@deactivatedPlacesWillAppearHere": {
+    "description": "Deactivated places empty state message"
+  },
+
+  "placesWillAppearHereOnceAdded": "Places will appear here once added",
+  "@placesWillAppearHereOnceAdded": {
+    "description": "Places empty state message"
+  },
+
+  "suggestedBy": "Suggested by",
+  "@suggestedBy": {
+    "description": "Suggested by label"
+  },
+
+  "thisPlaceIsInactiveAndHiddenFromNewRoutes": "This place is inactive and hidden from new routes",
+  "@thisPlaceIsInactiveAndHiddenFromNewRoutes": {
+    "description": "Inactive place warning message"
+  },
+
+  "reactivate": "Reactivate",
+  "@reactivate": {
+    "description": "Reactivate button text"
+  },
+
+  "suggestion": "Suggestion",
+  "@suggestion": {
+    "description": "Suggestion label"
+  },
+
+  "areYouSureYouWantToReject": "Are you sure you want to reject",
+  "@areYouSureYouWantToReject": {
+    "description": "Reject confirmation message"
+  },
+
+  "explainWhyThisPlaceWasRejected": "Explain why this place was rejected",
+  "@explainWhyThisPlaceWasRejected": {
+    "description": "Rejection reason hint"
+  },
+
+  "newPlace": "New Place",
+  "@newPlace": {
+    "description": "New place title"
+  },
+
+  "placeNameIsRequired": "Place name is required",
+  "@placeNameIsRequired": {
+    "description": "Place name validation message"
+  },
+
+  "briefDescriptionOfThePlace": "Brief description of the place",
+  "@briefDescriptionOfThePlace": {
+    "description": "Place description hint"
+  },
+
+  "physicalAddress": "Physical address",
+  "@physicalAddress": {
+    "description": "Physical address label"
+  },
+
+  "locationSelected": "Location selected",
+  "@locationSelected": {
+    "description": "Location selected message"
+  },
+
+  "managerCreatedPlacesAreAutomaticallyApprovedAndReadyForUse": "Manager-created places are automatically approved and ready for use",
+  "@managerCreatedPlacesAreAutomaticallyApprovedAndReadyForUse": {
+    "description": "Manager place approval info"
+  },
+
+  "cannotRemovePlace": "Cannot remove place",
+  "@cannotRemovePlace": {
+    "description": "Cannot remove place title"
+  },
+
+  "thePlaceCannotBeDeletedBecauseItHasHistoricalDataOrIsCurrentlyInUse": "The place cannot be deleted because it has historical data or is currently in use",
+  "@thePlaceCannotBeDeletedBecauseItHasHistoricalDataOrIsCurrentlyInUse": {
+    "description": "Cannot delete place message"
+  },
+
+  "usedInRoutes": "Used in routes",
+  "@usedInRoutes": {
+    "description": "Used in routes label"
+  },
+
+  "hasHistoricalVisitRecords": "Has historical visit records",
+  "@hasHistoricalVisitRecords": {
+    "description": "Has historical records label"
+  },
+
+  "removeThisPlaceFromAllRoutesFirst": "Remove this place from all routes first",
+  "@removeThisPlaceFromAllRoutesFirst": {
+    "description": "Remove from routes instruction"
+  },
+
+  "markThePlaceAsInactiveToHideItFromNewRoutesWhilePreservingHistory": "Mark the place as inactive to hide it from new routes while preserving history",
+  "@markThePlaceAsInactiveToHideItFromNewRoutesWhilePreservingHistory": {
+    "description": "Mark inactive suggestion"
+  },
+
+  "goTo": "Go to",
+  "@goTo": {
+    "description": "Go to button text"
+  },
+
+  "areYouSureYouWantToPermanentlyRemove": "Are you sure you want to permanently remove",
+  "@areYouSureYouWantToPermanentlyRemove": {
+    "description": "Permanent remove confirmation"
+  },
+
+  "thisPlaceIsNotUsedInAnyRoutesOrVisitsAndCanBeSafelyDeleted": "This place is not used in any routes or visits and can be safely deleted",
+  "@thisPlaceIsNotUsedInAnyRoutesOrVisitsAndCanBeSafelyDeleted": {
+    "description": "Safe delete message"
+  },
+
+  "thisActionCannotBeUndoneThePlaceWillBePermanentlyDeletedFromTheSystem": "This action cannot be undone. The place will be permanently deleted from the system",
+  "@thisActionCannotBeUndoneThePlaceWillBePermanentlyDeletedFromTheSystem": {
+    "description": "Permanent delete warning"
+  },
+
+  "areYouSureYouWantToDeactivate": "Are you sure you want to deactivate",
+  "@areYouSureYouWantToDeactivate": {
+    "description": "Deactivate confirmation"
+  },
+
+  "thePlaceWillBeHiddenFromNewRoutesButAllHistoricalDataWillBePreservedYouCanReactivateItLater": "The place will be hidden from new routes but all historical data will be preserved. You can reactivate it later",
+  "@thePlaceWillBeHiddenFromNewRoutesButAllHistoricalDataWillBePreservedYouCanReactivateItLater": {
+    "description": "Deactivate explanation"
+  },
+
+  "editLocation": "Edit Location",
+  "@editLocation": {
+    "description": "Edit location button text"
+  },
+
+  "noGroupsFoundForThisManager": "No groups found for this manager",
+  "@noGroupsFoundForThisManager": {
+    "description": "No groups found message"
+  },
+
+  "noAvailablePlacesToAddToThisRoute": "No available places to add to this route",
+  "@noAvailablePlacesToAddToThisRoute": {
+    "description": "No available places message"
+  },
+
+  "errorLoadingAvailablePlaces": "Error loading available places",
+  "@errorLoadingAvailablePlaces": {
+    "description": "Error loading places message"
+  },
+
+  "placeAddedToRouteSuccessfully": "Place added to route successfully",
+  "@placeAddedToRouteSuccessfully": {
+    "description": "Place added success message"
+  },
+
+  "errorAddingPlaceToRoute": "Error adding place to route",
+  "@errorAddingPlaceToRoute": {
+    "description": "Error adding place message"
+  },
+
+  "createdBy": "Created by",
+  "@createdBy": {
+    "description": "Created by label"
+  },
+
+  "evidenceRequiredFormat": "{current}/{required} evidence required",
+  "@evidenceRequiredFormat": {
+    "description": "Evidence required format",
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "required": {
+        "type": "String"
+      }
+    }
+  },
+
+  "evidenceFilesFormat": "{count} evidence file(s)",
+  "@evidenceFilesFormat": {
+    "description": "Evidence files format",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+
+  "evidenceRequiredCount": "{count} evidence required",
+  "@evidenceRequiredCount": {
+    "description": "Evidence required count format",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+
+  "noPlacesFound": "No places found in this route",
+  "@noPlacesFound": {
+    "description": "Empty state for route places"
+  },
+
+  "placesToVisit": "Places to Visit",
+  "@placesToVisit": {
+    "description": "Places to visit section"
+  },
+
+  "timeSpent": "Time Spent",
+  "@timeSpent": {
+    "description": "Time spent label"
+  },
+
+  "checkOut": "Check Out",
+  "@checkOut": {
+    "description": "Check out button"
+  },
+
+  "routeProgress": "Route Progress",
+  "@routeProgress": {
+    "description": "Route progress section"
+  },
+
+  "checkIn": "Check In",
+  "@checkIn": {
+    "description": "Check in button"
+  },
+
+  "cooldownActive": "Cooldown active",
+  "@cooldownActive": {
+    "description": "Cooldown period active"
+  },
+
+  "nextVisitAvailable": "Next visit available in {hours} hours",
+  "@nextVisitAvailable": {
+    "description": "Next visit availability",
+    "placeholders": {
+      "hours": {
+        "type": "int",
+        "description": "Hours until available"
+      }
+    }
+  },
+
+  "currentlyActiveSeeTop": "Currently Active - See top card for actions",
+  "@currentlyActiveSeeTop": {
+    "description": "Currently active visit message"
+  },
+
+  "allVisitsCompleted": "All {count} visits completed",
+  "@allVisitsCompleted": {
+    "description": "All visits completed message",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "description": "Number of visits"
+      }
+    }
+  },
+
+  "completePreviousPlacesFirst": "Complete previous places first",
+  "@completePreviousPlacesFirst": {
+    "description": "Complete previous places instruction"
+  },
+
+  "waiting": "Waiting...",
+  "@waiting": {
+    "description": "Waiting status"
+  },
+
+  "visitCount": "Visit {current}/{total}",
+  "@visitCount": {
+    "description": "Visit count display",
+    "placeholders": {
+      "current": {
+        "type": "int",
+        "description": "Current visit number"
+      },
+      "total": {
+        "type": "int",
+        "description": "Total visits required"
+      }
+    }
+  },
+
+  "notVisited": "Not visited",
+  "@notVisited": {
+    "description": "Not visited status"
+  },
+
+  "errorLoadingRouteDetails": "Error loading route details",
+  "@errorLoadingRouteDetails": {
+    "description": "Error loading route details"
+  },
+
+  "notAuthenticated": "Not authenticated",
+  "@notAuthenticated": {
+    "description": "Not authenticated status"
+  },
+
+  "alreadyCheckedIn": "Already checked in",
+  "@alreadyCheckedIn": {
+    "description": "Already checked in status"
+  },
+
+  "allVisitsCompletedStatus": "All visits completed",
+  "@allVisitsCompletedStatus": {
+    "description": "All visits completed status"
+  },
+
+  "errorCheckingAvailability": "Error checking availability",
+  "@errorCheckingAvailability": {
+    "description": "Error checking availability"
+  },
+
+  "notes": "Notes: {notes}",
+  "@notes": {
+    "description": "Notes label with content",
+    "placeholders": {
+      "notes": {
+        "type": "String",
+        "description": "Notes content"
+      }
+    }
+  },
+
+  "zone": "Zone {number}",
+  "@zone": {
+    "description": "Zone label with number",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "description": "Zone number"
+      }
+    }
+  },
+
+  "noLocationSet": "No Location Set",
+  "@noLocationSet": {
+    "description": "No location set for task"
+  },
+
+  "taskHasLocationNameButNoGeofence": "This task has a location name but no geofence area defined. You can submit evidence from any location.",
+  "@taskHasLocationNameButNoGeofence": {
+    "description": "Task has location name but no geofence"
+  },
+
+  "managerNotSetLocation": "The manager has not set a specific location or geofence for this task. You can submit evidence from any location.",
+  "@managerNotSetLocation": {
+    "description": "Manager has not set location"
+  },
+
+  "geofenceAreas": "Geofence Areas",
+  "@geofenceAreas": {
+    "description": "Geofence areas section title"
+  },
+
+  "unnamedCampaign": "Unnamed Campaign",
+  "@unnamedCampaign": {
+    "description": "Default name for unnamed campaign"
+  },
+
+  "unnamedTask": "Unnamed Task",
+  "@unnamedTask": {
+    "description": "Default name for unnamed task"
+  },
+
+  "workAreas": "Work Areas",
+  "@workAreas": {
+    "description": "Work areas title"
+  },
+
+  "noZonesAvailable": "No Zones Available",
+  "@noZonesAvailable": {
+    "description": "No zones available title"
+  },
+
+  "notAssignedToZones": "You are not assigned to any campaigns or tasks with geofenced zones.",
+  "@notAssignedToZones": {
+    "description": "Not assigned to zones message"
+  },
+
+  "taskZone": "Task Zone",
+  "@taskZone": {
+    "description": "Task zone label"
+  },
+
+  "campaignZone": "Campaign Zone",
+  "@campaignZone": {
+    "description": "Campaign zone label"
+  },
+
+  "backgroundServices": "Background Services",
+  "@backgroundServices": {
+    "description": "Background services label"
+  },
+
+  "locationTrackingActive": "Location tracking and status active",
+  "@locationTrackingActive": {
+    "description": "Location tracking active status"
+  },
+
+  "servicesAreStopped": "Services are stopped",
+  "@servicesAreStopped": {
+    "description": "Services stopped status"
+  },
+
+  "sameAsYesterday": "Same as yesterday",
+  "@sameAsYesterday": {
+    "description": "Same as yesterday label"
+  },
+
+  "createCampaign": "Create Campaign",
+  "@createCampaign": {
+    "description": "Create campaign button and title"
+  },
+
+  "editCampaign": "Edit Campaign",
+  "@editCampaign": {
+    "description": "Edit campaign title"
+  },
+
+  "newCampaign": "New Campaign",
+  "@newCampaign": {
+    "description": "New campaign title"
+  },
+
+  "updateCampaignDetails": "Update campaign details",
+  "@updateCampaignDetails": {
+    "description": "Edit campaign subtitle"
+  },
+
+  "createNewCampaignForTeam": "Create a new campaign for your team",
+  "@createNewCampaignForTeam": {
+    "description": "Create campaign subtitle"
+  },
+
+  "campaignName": "Campaign Name",
+  "@campaignName": {
+    "description": "Campaign name field label"
+  },
+
+  "campaignNameRequired": "Campaign name is required",
+  "@campaignNameRequired": {
+    "description": "Campaign name validation message"
+  },
+
+  "assignToManager": "Assign to Manager",
+  "@assignToManager": {
+    "description": "Manager assignment field label"
+  },
+
+  "selectManagerToOversee": "Select a manager to oversee this campaign",
+  "@selectManagerToOversee": {
+    "description": "Manager assignment field hint"
+  },
+
+  "noSpecificManager": "No specific manager",
+  "@noSpecificManager": {
+    "description": "No manager option"
+  },
+
+  "campaignAssignmentInfo": "This campaign will be assigned to the selected manager. Only they and their agents will be able to see and work on this campaign.",
+  "@campaignAssignmentInfo": {
+    "description": "Manager assignment information"
+  },
+
+  "startDate": "Start Date",
+  "@startDate": {
+    "description": "Start date field label"
+  },
+
+  "endDate": "End Date",
+  "@endDate": {
+    "description": "End date field label"
+  },
+
+  "selectDate": "Select date",
+  "@selectDate": {
+    "description": "Date picker placeholder"
+  },
+
+  "updateCampaign": "Update Campaign",
+  "@updateCampaign": {
+    "description": "Update campaign button text"
+  },
+
+  "pleaseSelectBothStartEndDates": "Please select both start and end dates.",
+  "@pleaseSelectBothStartEndDates": {
+    "description": "Date validation message"
+  },
+
+  "endDateCannotBeforeStartDate": "End date cannot be before the start date.",
+  "@endDateCannotBeforeStartDate": {
+    "description": "Date range validation message"
+  },
+
+  "campaignUpdatedSuccessfully": "Campaign updated successfully!",
+  "@campaignUpdatedSuccessfully": {
+    "description": "Campaign update success message"
+  },
+
+  "campaignCreatedSuccessfully": "Campaign created successfully!",
+  "@campaignCreatedSuccessfully": {
+    "description": "Campaign creation success message"
+  },
+
+  "failedToCreateCampaign": "Failed to create campaign. Please try again.",
+  "@failedToCreateCampaign": {
+    "description": "Campaign creation error message"
+  },
+
+  "newEvidenceTask": "New Evidence Task",
+  "@newEvidenceTask": {
+    "description": "New evidence task title"
+  },
+
+  "editEvidenceTask": "Edit Evidence Task",
+  "@editEvidenceTask": {
+    "description": "Edit evidence task title"
+  },
+
+  "coreInformation": "Core Information",
+  "@coreInformation": {
+    "description": "Core information section title"
+  },
+
+  "taskName": "Task Name",
+  "@taskName": {
+    "description": "Task name field label"
+  },
+
+  "required": "Required",
+  "@required": {
+    "description": "Required field validation message"
+  },
+
+  "locationName": "Location Name",
+  "@locationName": {
+    "description": "Location name field label"
+  },
+
+  "startDateTime": "Start Date/Time",
+  "@startDateTime": {
+    "description": "Start date and time field label"
+  },
+
+  "endDateTime": "End Date/Time",
+  "@endDateTime": {
+    "description": "End date and time field label"
+  },
+
+  "rulesCompletion": "Rules & Completion",
+  "@rulesCompletion": {
+    "description": "Rules and completion section title"
+  },
+
+  "requiredEvidenceCount": "Required Evidence Count",
+  "@requiredEvidenceCount": {
+    "description": "Evidence count field label"
+  },
+
+  "invalidNumber": "Invalid number",
+  "@invalidNumber": {
+    "description": "Number validation message"
+  },
+
+  "enableTaskPoints": "Enable Task Points",
+  "@enableTaskPoints": {
+    "description": "Task points toggle label"
+  },
+
+  "pointsAwarded": "Points Awarded",
+  "@pointsAwarded": {
+    "description": "Points field label"
+  },
+
+  "pointsAwardedHint": "e.g., 10, 50, 100",
+  "@pointsAwardedHint": {
+    "description": "Points field hint"
+  },
+
+  "mustBePositiveNumber": "Must be a positive number",
+  "@mustBePositiveNumber": {
+    "description": "Positive number validation message"
+  },
+
+  "enforceGeofenceForUpload": "Enforce Geofence for Upload",
+  "@enforceGeofenceForUpload": {
+    "description": "Geofence enforcement toggle label"
+  },
+
+  "agentMustBeInsideZone": "Agent must be inside the zone to upload",
+  "@agentMustBeInsideZone": {
+    "description": "Geofence enforcement description active"
+  },
+
+  "uploadsAllowedAnywhere": "Uploads allowed from anywhere",
+  "@uploadsAllowedAnywhere": {
+    "description": "Geofence enforcement description inactive"
+  },
+
+  "managerAssignment": "Manager Assignment",
+  "@managerAssignment": {
+    "description": "Manager assignment section title"
+  },
+
+  "taskAssignmentInfo": "This task will be assigned to the selected manager. Only they and their agents will be able to see and work on this task.",
+  "@taskAssignmentInfo": {
+    "description": "Task manager assignment information"
+  },
+
+  "geofencing": "Geofencing",
+  "@geofencing": {
+    "description": "Geofencing section title"
+  },
+
+  "defineGeofenceZone": "Define Geofence Zone",
+  "@defineGeofenceZone": {
+    "description": "Geofence editor button text"
+  },
+
+  "mustSaveTaskBeforeGeofence": "You must save the task before defining a geofence.",
+  "@mustSaveTaskBeforeGeofence": {
+    "description": "Geofence save requirement message"
+  },
+
+  "saveChanges": "Save Changes",
+  "@saveChanges": {
+    "description": "Save changes button text"
+  },
+
+  "saveContinue": "Save & Continue",
+  "@saveContinue": {
+    "description": "Save and continue button text"
+  },
+
+  "taskCreatedSuccessfully": "Task created successfully.",
+  "@taskCreatedSuccessfully": {
+    "description": "Task creation success message"
+  },
+
+  "taskDetailsSaved": "Task details saved.",
+  "@taskDetailsSaved": {
+    "description": "Task edit success message"
+  },
+
+  "failedToSaveTask": "Failed to save task",
+  "@failedToSaveTask": {
+    "description": "Task save error message prefix"
+  },
+
+  "createFromTemplate": "Create from {templateName}",
+  "@createFromTemplate": {
+    "description": "Create from template title",
+    "placeholders": {
+      "templateName": {
+        "type": "String",
+        "description": "Template name"
+      }
+    }
+  },
+
+  "errorLoadingTemplateDetails": "Error loading template details",
+  "@errorLoadingTemplateDetails": {
+    "description": "Template loading error message"
+  },
+
+  "taskDetails": "Task Details",
+  "@taskDetails": {
+    "description": "Task details section title"
+  },
+
+  "taskTitleRequired": "Task Title *",
+  "@taskTitleRequired": {
+    "description": "Task title field label with required indicator"
+  },
+
+  "enterDescriptiveTitle": "Enter a descriptive title for this task",
+  "@enterDescriptiveTitle": {
+    "description": "Task title field hint"
+  },
+
+  "taskTitleIsRequired": "Task title is required",
+  "@taskTitleIsRequired": {
+    "description": "Task title validation message"
+  },
+
+  "addMoreDetailsOptional": "Optional: Add more details about this task",
+  "@addMoreDetailsOptional": {
+    "description": "Task description field hint"
+  },
+
+  "locationNameOptional": "Optional: Name of the location (e.g., Main Hospital)",
+  "@locationNameOptional": {
+    "description": "Location name field hint"
+  },
+
+  "configuration": "Configuration",
+  "@configuration": {
+    "description": "Configuration section title"
+  },
+
+  "pointsRequired": "Points required",
+  "@pointsRequired": {
+    "description": "Points validation message"
+  },
+
+  "mustBePositive": "Must be positive",
+  "@mustBePositive": {
+    "description": "Positive validation message"
+  },
+
+  "evidenceFiles": "Evidence Files",
+  "@evidenceFiles": {
+    "description": "Evidence files field label"
+  },
+
+  "evidenceCountRequired": "Evidence count required",
+  "@evidenceCountRequired": {
+    "description": "Evidence count validation message"
+  },
+
+  "mustBeAtLeastOne": "Must be at least 1",
+  "@mustBeAtLeastOne": {
+    "description": "Minimum value validation message"
+  },
+
+  "requireLocationVerification": "Require Location Verification",
+  "@requireLocationVerification": {
+    "description": "Location verification toggle label"
+  },
+
+  "agentMustBeAtCorrectLocation": "Agent must be at the correct location to submit evidence",
+  "@agentMustBeAtCorrectLocation": {
+    "description": "Location verification description"
+  },
+
+  "geofenceConfigured": "Geofence configured ({pointCount} points)",
+  "@geofenceConfigured": {
+    "description": "Geofence configured status",
+    "placeholders": {
+      "pointCount": {
+        "type": "int",
+        "description": "Number of geofence points"
+      }
+    }
+  },
+
+  "geofenceNotSet": "Geofence not set",
+  "@geofenceNotSet": {
+    "description": "Geofence not configured status"
+  },
+
+  "setGeofence": "Set Geofence",
+  "@setGeofence": {
+    "description": "Set geofence button text"
+  },
+
+  "defineAreaForAgents": "Define the area where agents must be located to complete this task.",
+  "@defineAreaForAgents": {
+    "description": "Geofence area description"
+  },
+
+  "additionalInformation": "Additional Information",
+  "@additionalInformation": {
+    "description": "Additional information section title"
+  },
+
+  "templateRequiresAdditionalInfo": "This template requires additional information to be collected from agents.",
+  "@templateRequiresAdditionalInfo": {
+    "description": "Template additional info description"
+  },
+
+  "customFormFields": "Custom Form Fields",
+  "@customFormFields": {
+    "description": "Custom form fields section title"
+  },
+
+  "addField": "Add Field",
+  "@addField": {
+    "description": "Add field button text"
+  },
+
+  "createCustomFieldsInfo": "Create custom fields that agents will fill out when completing this task",
+  "@createCustomFieldsInfo": {
+    "description": "Custom fields creation info"
+  },
+
+  "noCustomFieldsYet": "No custom fields yet",
+  "@noCustomFieldsYet": {
+    "description": "No custom fields empty state"
+  },
+
+  "clickAddFieldToCreate": "Click \"Add Field\" to create form fields",
+  "@clickAddFieldToCreate": {
+    "description": "Add field instruction"
+  },
+
+  "editField": "Edit Field",
+  "@editField": {
+    "description": "Edit field dialog title"
+  },
+
+  "addCustomField": "Add Custom Field",
+  "@addCustomField": {
+    "description": "Add custom field dialog title"
+  },
+
+  "fieldLabelRequired": "Field Label*",
+  "@fieldLabelRequired": {
+    "description": "Field label input label"
+  },
+
+  "fieldLabelHint": "e.g., Customer Name, Satisfaction Level",
+  "@fieldLabelHint": {
+    "description": "Field label input hint"
+  },
+
+  "fieldType": "Field Type",
+  "@fieldType": {
+    "description": "Field type dropdown label"
+  },
+
+  "placeholderTextOptional": "Placeholder Text (Optional)",
+  "@placeholderTextOptional": {
+    "description": "Placeholder text input label"
+  },
+
+  "hintTextShownInField": "Hint text shown in the field",
+  "@hintTextShownInField": {
+    "description": "Placeholder text input hint"
+  },
+
+  "optionsCommaSeparated": "Options (comma separated)*",
+  "@optionsCommaSeparated": {
+    "description": "Field options input label"
+  },
+
+  "optionsHint": "Option 1, Option 2, Option 3",
+  "@optionsHint": {
+    "description": "Field options input hint"
+  },
+
+  "requiredField": "Required Field",
+  "@requiredField": {
+    "description": "Required field checkbox label"
+  },
+
+  "agentMustFillField": "Agent must fill this field",
+  "@agentMustFillField": {
+    "description": "Required field checkbox description"
+  },
+
+  "fieldLabelIsRequired": "Field label is required",
+  "@fieldLabelIsRequired": {
+    "description": "Field label validation message"
+  },
+
+  "optionsRequiredForFieldType": "Options are required for this field type",
+  "@optionsRequiredForFieldType": {
+    "description": "Field options validation message"
+  },
+
+  "update": "Update",
+  "@update": {
+    "description": "Update button text"
+  },
+
+  "add": "Add",
+  "@add": {
+    "description": "Add button text"
+  },
+
+  "creatingTask": "Creating Task...",
+  "@creatingTask": {
+    "description": "Creating task loading text"
+  },
+
+  "createTask": "Create Task",
+  "@createTask": {
+    "description": "Create task button text"
+  },
+
+  "validationErrors": "Validation Errors",
+  "@validationErrors": {
+    "description": "Validation errors dialog title"
+  },
+
+  "setUpGeofence": "Set Up Geofence",
+  "@setUpGeofence": {
+    "description": "Set up geofence dialog title"
+  },
+
+  "taskRequiresLocationBoundary": "This task requires a location boundary. Would you like to set up the geofence now?",
+  "@taskRequiresLocationBoundary": {
+    "description": "Geofence setup dialog message"
+  },
+
+  "skip": "Skip",
+  "@skip": {
+    "description": "Skip button text"
+  },
+
+  "setUpNow": "Set Up Now",
+  "@setUpNow": {
+    "description": "Set up now button text"
+  },
+
+  "setGeofenceTaskTitle": "Set Geofence - {taskTitle}",
+  "@setGeofenceTaskTitle": {
+    "description": "Set geofence screen title",
+    "placeholders": {
+      "taskTitle": {
+        "type": "String",
+        "description": "Task title"
+      }
+    }
+  },
+
+  "clearAllPoints": "Clear all points",
+  "@clearAllPoints": {
+    "description": "Clear points tooltip"
+  },
+
+  "tapMapToAddPoints": "Tap on the map to add points. You need at least 3 points to create a geofence.",
+  "@tapMapToAddPoints": {
+    "description": "Map interaction instruction"
+  },
+
+  "pointsAdded": "{pointCount} points added",
+  "@pointsAdded": {
+    "description": "Points added status",
+    "placeholders": {
+      "pointCount": {
+        "type": "int",
+        "description": "Number of points"
+      }
+    }
+  },
+
+  "readyToSave": "(Ready to save)",
+  "@readyToSave": {
+    "description": "Ready to save status"
+  },
+
+  "saveGeofence": "Save Geofence",
+  "@saveGeofence": {
+    "description": "Save geofence button text"
+  },
+
+  "addAtLeastThreePoints": "Please add at least 3 points to create a geofence",
+  "@addAtLeastThreePoints": {
+    "description": "Minimum points validation message"
+  },
+
+  "campaignReport": "Campaign Report",
+  "@campaignReport": {
+    "description": "Campaign report screen title"
+  },
+
+  "campaignProgress": "Campaign Progress",
+  "@campaignProgress": {
+    "description": "Campaign progress section title"
+  },
+
+  "tasksCompleted": "Tasks Completed",
+  "@tasksCompleted": {
+    "description": "Tasks completed label"
+  },
+
+  "totalPointsEarned": "Total Points Earned",
+  "@totalPointsEarned": {
+    "description": "Total points earned metric"
+  },
+
+  "assignedAgents": "Assigned Agents",
+  "@assignedAgents": {
+    "description": "Assigned agents metric"
+  },
+
+  "noReportDataAvailable": "No report data available.",
+  "@noReportDataAvailable": {
+    "description": "No report data message"
+  },
+
+  "recentVisits": "Recent Visits",
+  "@recentVisits": {
+    "description": "Recent visits tab title"
+  },
+
+  "totalVisits": "Total Visits",
+  "@totalVisits": {
+    "description": "Total visits metric"
+  },
+
+  "completed": "Completed",
+  "@completed": {
+    "description": "Completed status"
+  },
+
+  "activeNow": "Active Now",
+  "@activeNow": {
+    "description": "Active now status"
+  },
+
+  "totalHours": "Total Hours",
+  "@totalHours": {
+    "description": "Total hours metric"
+  },
+
+  "quickStats": "Quick Stats",
+  "@quickStats": {
+    "description": "Quick stats section title"
+  },
+
+  "averageVisitDuration": "Average visit duration: {duration} minutes",
+  "@averageVisitDuration": {
+    "description": "Average visit duration text",
+    "placeholders": {
+      "duration": {
+        "type": "int",
+        "description": "Duration in minutes"
+      }
+    }
+  },
+
+  "activeRouteAssignments": "Active route assignments: {count}",
+  "@activeRouteAssignments": {
+    "description": "Active route assignments text",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "description": "Number of assignments"
+      }
+    }
+  },
+
+  "noRecentVisitsFound": "No recent visits found",
+  "@noRecentVisitsFound": {
+    "description": "No recent visits message"
+  },
+
+  "checkedIn": "Checked In",
+  "@checkedIn": {
+    "description": "Checked in status"
+  },
+
+  "pending": "Pending",
+  "@pending": {
+    "description": "Pending status"
+  },
+
+  "unknownPlace": "Unknown Place",
+  "@unknownPlace": {
+    "description": "Unknown place label"
+  },
+
+  "agent": "Agent",
+  "@agent": {
+    "description": "Agent label"
+  },
+
+  "unknown": "Unknown",
+  "@unknown": {
+    "description": "Unknown label"
+  },
+
+  "noActiveRouteAssignments": "No active route assignments",
+  "@noActiveRouteAssignments": {
+    "description": "No active route assignments message"
+  },
+
+  "assignmentDetails": "Assignment details - Coming soon!",
+  "@assignmentDetails": {
+    "description": "Assignment details coming soon message"
+  },
+
+  "managementOverview": "Management Overview",
+  "@managementOverview": {
+    "description": "Management overview section title"
+  },
+
+  "teamMembers": "Team Members",
+  "@teamMembers": {
+    "description": "Team members label"
+  },
+
+  "online": "online",
+  "@online": {
+    "description": "Online status suffix"
+  },
+
+  "routeManagement": "Route Management",
+  "@routeManagement": {
+    "description": "Route management section title"
+  },
+
+  "createManageRoutes": "Create & manage routes",
+  "@createManageRoutes": {
+    "description": "Create and manage routes description"
+  },
+
+  "placeManagement": "Place Management",
+  "@placeManagement": {
+    "description": "Place management section title"
+  },
+
+  "approveAgentSuggestions": "Approve agent suggestions",
+  "@approveAgentSuggestions": {
+    "description": "Approve agent suggestions description"
+  },
+
+  "liveMap": "Live Map",
+  "@liveMap": {
+    "description": "Live map section title"
+  },
+
+  "trackAgentsRealTime": "Track agents in real-time",
+  "@trackAgentsRealTime": {
+    "description": "Track agents in real-time description"
+  },
+
+  "manageTasks": "Manage Tasks",
+  "@manageTasks": {
+    "description": "Manage tasks action"
+  },
+
+  "reviewEvidence": "Review Evidence",
+  "@reviewEvidence": {
+    "description": "Review evidence action"
+  },
+
+  "routesPlaces": "Routes & Places",
+  "@routesPlaces": {
+    "description": "Routes and places action"
+  },
+
+  "calendar": "Calendar",
+  "@calendar": {
+    "description": "Calendar action"
+  },
+
+  "visitAnalytics": "Visit Analytics",
+  "@visitAnalytics": {
+    "description": "Visit analytics action"
+  },
+
+  "locationHistory": "Location History",
+  "@locationHistory": {
+    "description": "Location history action"
+  },
+
+  "sendNotification": "Send Notification",
+  "@sendNotification": {
+    "description": "Send notification action"
+  },
+
+  "messageUsers": "Message users",
+  "@messageUsers": {
+    "description": "Message users description"
+  },
+
+  "errorLoadingDashboard": "Error loading dashboard",
+  "@errorLoadingDashboard": {
+    "description": "Error loading dashboard message"
+  },
+
+  "loadingDashboard": "Loading dashboard...",
+  "@loadingDashboard": {
+    "description": "Loading dashboard message"
+  },
+
+  "welcome": "Welcome",
+  "@welcome": {
+    "description": "Welcome text"
+  },
+
+  "managerDashboard": "Manager Dashboard",
+  "@managerDashboard": {
+    "description": "Manager dashboard title"
+  },
+
+  "loading": "Loading...",
+  "@loading": {
+    "description": "Loading text"
+  },
+
+  "justNow": "Just now",
+  "@justNow": {
+    "description": "Just now time text"
+  },
+
+  "minutesAgo": "{minutes}m ago",
+  "@minutesAgo": {
+    "description": "Minutes ago text",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "description": "Number of minutes"
+      }
+    }
+  },
+
+  "hoursAgo": "{hours}h ago",
+  "@hoursAgo": {
+    "description": "Hours ago text",
+    "placeholders": {
+      "hours": {
+        "type": "int",
+        "description": "Number of hours"
+      }
+    }
+  },
+
+  "daysAgo": "{days}d ago",
+  "@daysAgo": {
+    "description": "Days ago text",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "description": "Number of days"
+      }
+    }
+  },
+
+  "goodMorning": "Good Morning",
+  "@goodMorning": {
+    "description": "Good morning greeting"
+  },
+
+  "goodAfternoon": "Good Afternoon",
+  "@goodAfternoon": {
+    "description": "Good afternoon greeting"
+  },
+
+  "goodEvening": "Good Evening",
+  "@goodEvening": {
+    "description": "Good evening greeting"
+  },
+
+  "systemAdministrator": "System Administrator",
+  "@systemAdministrator": {
+    "description": "System administrator role"
+  },
+
+  "monitorPlatform": "Monitor and manage the platform",
+  "@monitorPlatform": {
+    "description": "Monitor platform description"
+  },
+
+  "systemOverview": "System Overview",
+  "@systemOverview": {
+    "description": "System overview section title"
+  },
+
+  "totalManagers": "Total Managers",
+  "@totalManagers": {
+    "description": "Total managers metric"
+  },
+
+  "totalAgents": "Total Agents",
+  "@totalAgents": {
+    "description": "Total agents metric"
+  },
+
+  "activeUsers": "Active Users",
+  "@activeUsers": {
+    "description": "Active users metric"
+  },
+
+  "totalCampaigns": "Total Campaigns",
+  "@totalCampaigns": {
+    "description": "Total campaigns metric"
+  },
+
+  "totalTasks": "Total Tasks",
+  "@totalTasks": {
+    "description": "Total tasks metric"
+  },
+
+  "newThisMonth": "New This Month",
+  "@newThisMonth": {
+    "description": "New this month metric"
+  },
+
+  "userManagement": "User Management",
+  "@userManagement": {
+    "description": "User management action"
+  },
+
+  "systemTasks": "System Tasks",
+  "@systemTasks": {
+    "description": "System tasks action"
+  },
+
+  "evidenceReview": "Evidence Review",
+  "@evidenceReview": {
+    "description": "Evidence review action"
+  },
+
+  "templates": "Templates",
+  "@templates": {
+    "description": "Templates action"
+  },
+
+  "managerPerformance": "Manager Performance",
+  "@managerPerformance": {
+    "description": "Manager performance section title"
+  },
+
+  "onlineNow": "Online Now",
+  "@onlineNow": {
+    "description": "Online now metric"
+  },
+
+  "topPerformers": "Top Performers",
+  "@topPerformers": {
+    "description": "Top performers metric"
+  },
+
+  "topPerformingManagers": "Top Performing Managers",
+  "@topPerformingManagers": {
+    "description": "Top performing managers section title"
+  },
+
+  "campaigns": "campaigns",
+  "@campaigns": {
+    "description": "Campaigns suffix"
+  },
+
+  "systemPerformance": "System Performance",
+  "@systemPerformance": {
+    "description": "System performance section title"
+  },
+
+  "weeklyTasks": "Weekly Tasks",
+  "@weeklyTasks": {
+    "description": "Weekly tasks metric"
+  },
+
+  "completedThisWeek": "Completed this week",
+  "@completedThisWeek": {
+    "description": "Completed this week description"
+  },
+
+  "monthlyTasks": "Monthly Tasks",
+  "@monthlyTasks": {
+    "description": "Monthly tasks metric"
+  },
+
+  "completedThisMonth": "Completed this month",
+  "@completedThisMonth": {
+    "description": "Completed this month description"
+  },
+
+  "approvalRate": "Approval Rate",
+  "@approvalRate": {
+    "description": "Approval rate metric"
+  },
+
+  "evidenceQuality": "Evidence quality",
+  "@evidenceQuality": {
+    "description": "Evidence quality description"
+  },
+
+  "systemHealth": "System Health",
+  "@systemHealth": {
+    "description": "System health metric"
+  },
+
+  "overallStatus": "Overall status",
+  "@overallStatus": {
+    "description": "Overall status description"
+  },
+
+  "recentSystemActivity": "Recent System Activity",
+  "@recentSystemActivity": {
+    "description": "Recent system activity section title"
+  },
+
+  "noRecentActivity": "No recent activity",
+  "@noRecentActivity": {
+    "description": "No recent activity message"
+  },
+
+  "loadingEllipsis": "Loading...",
+  "@loadingEllipsis": {
+    "description": "Loading with ellipsis"
+  },
+
+  "route": "Route",
+  "@route": {
+    "description": "Route label"
+  },
+
+  "errorLoadingRouteData": "Error loading route data",
+  "@errorLoadingRouteData": {
+    "description": "Error loading route data message"
+  },
+
+  "anotherDeviceActive": "Another Device Active",
+  "@anotherDeviceActive": {
+    "description": "Dialog title when user's account is active on another device"
+  },
+
+  "accountLoggedInElsewhere": "Your account is currently logged in on another device.",
+  "@accountLoggedInElsewhere": {
+    "description": "Message explaining account is logged in on another device"
+  },
+
+  "logoutOtherDeviceInstruction": "To continue logging in on this device, you need to logout from the other device first.",
+  "@logoutOtherDeviceInstruction": {
+    "description": "Instruction for logging out from other device"
+  },
+
+  "logoutOtherDevice": "Logout Other Device",
+  "@logoutOtherDevice": {
+    "description": "Button text to logout from other device"
+  },
+
+  "noGpsSignalOnebar": "No GPS signal (1 bar)",
+  "@noGpsSignalOnebar": {
+    "description": "GPS status message for no signal"
+  },
+
+  "excellentGpsFiveBars": "Excellent GPS ({accuracy}m) - 5 bars",
+  "@excellentGpsFiveBars": {
+    "description": "GPS status message for excellent signal",
+    "placeholders": {
+      "accuracy": {
+        "type": "String"
+      }
+    }
+  },
+
+  "goodGpsFourBars": "Good GPS ({accuracy}m) - 4 bars",
+  "@goodGpsFourBars": {
+    "description": "GPS status message for good signal",
+    "placeholders": {
+      "accuracy": {
+        "type": "String"
+      }
+    }
+  },
+
+  "fairGpsThreeBars": "Fair GPS ({accuracy}m) - 3 bars",
+  "@fairGpsThreeBars": {
+    "description": "GPS status message for fair signal",
+    "placeholders": {
+      "accuracy": {
+        "type": "String"
+      }
+    }
+  },
+
+  "poorGpsTwoBars": "Poor GPS ({accuracy}m) - 2 bars",
+  "@poorGpsTwoBars": {
+    "description": "GPS status message for poor signal",
+    "placeholders": {
+      "accuracy": {
+        "type": "String"
+      }
+    }
+  },
+
+  "veryPoorGpsOnebar": "Very poor GPS ({accuracy}m) - 1 bar",
+  "@veryPoorGpsOnebar": {
+    "description": "GPS status message for very poor signal",
+    "placeholders": {
+      "accuracy": {
+        "type": "String"
+      }
+    }
+  },
+
+  "downloadingUpdate": "Downloading update...",
+  "@downloadingUpdate": {
+    "description": "Status message when downloading app update"
+  },
+
+  "downloadCompleteReadyToInstall": "Download complete. Ready to install.",
+  "@downloadCompleteReadyToInstall": {
+    "description": "Status message when download is complete"
+  },
+
+  "installingUpdate": "Installing update...",
+  "@installingUpdate": {
+    "description": "Status message when installing update"
+  },
+
+  "installationStartedSecurityDialog": "Installation started. If you see a security scan dialog, tap \"Install without scanning\" to proceed quickly.",
+  "@installationStartedSecurityDialog": {
+    "description": "Installation guidance message"
+  },
+
+  "failedToDownloadUpdate": "Failed to download update. Please try again.",
+  "@failedToDownloadUpdate": {
+    "description": "Error message when update download fails"
+  },
+
+  "updateError": "Error: {error}",
+  "@updateError": {
+    "description": "Generic update error message",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "updateAvailable": "Update Available",
+  "@updateAvailable": {
+    "description": "Update dialog title"
+  },
+
+  "current": "Current",
+  "@current": {
+    "description": "Label for current version"
+  },
+
+  "newVersion": "New",
+  "@newVersion": {
+    "description": "Label for new version"
+  },
+
+  "whatsNew": "What's New",
+  "@whatsNew": {
+    "description": "Section title for release notes"
+  },
+
+  "downloadSize": "Download size: {size} MB",
+  "@downloadSize": {
+    "description": "Download size information",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+
+  "updating": "Updating...",
+  "@updating": {
+    "description": "Button text when update is in progress"
+  },
+
+  "updateNow": "Update Now",
+  "@updateNow": {
+    "description": "Button text to start update"
+  },
+
+  "uploadEvidence": "Upload Evidence",
+  "@uploadEvidence": {
+    "description": "Upload evidence dialog title and button text"
+  },
+
+  "titleRequired": "Title *",
+  "@titleRequired": {
+    "description": "Label for required title field"
+  },
+
+  "enterTitleForEvidence": "Enter a title for this evidence",
+  "@enterTitleForEvidence": {
+    "description": "Hint text for evidence title field"
+  },
+
+  "titleIsRequired": "Title is required",
+  "@titleIsRequired": {
+    "description": "Validation message for required title"
+  },
+
+  "titleMinLength": "Title must be at least 3 characters",
+  "@titleMinLength": {
+    "description": "Validation message for minimum title length"
+  },
+
+  "optionalDescriptionOrNotes": "Optional description or notes",
+  "@optionalDescriptionOrNotes": {
+    "description": "Hint text for optional description field"
+  },
+
+  "selectFile": "Select File",
+  "@selectFile": {
+    "description": "Button text to select a file"
+  },
+
+  "uploadingProgress": "Uploading... {progress}%",
+  "@uploadingProgress": {
+    "description": "Upload progress message",
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+
+  "fileTooLargeMaxSize": "File too large. Maximum size is 50MB.",
+  "@fileTooLargeMaxSize": {
+    "description": "Error message for oversized files"
+  },
+
+  "errorSelectingFile": "Error selecting file: {error}",
+  "@errorSelectingFile": {
+    "description": "Error message when file selection fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "fileHasNoData": "File has no data",
+  "@fileHasNoData": {
+    "description": "Error message when file has no data"
+  },
+
+  "evidenceUploadedSuccessfully": "Evidence uploaded successfully!",
+  "@evidenceUploadedSuccessfully": {
+    "description": "Success message when evidence is uploaded"
+  },
+
+  "uploadFailed": "Upload failed: {error}",
+  "@uploadFailed": {
+    "description": "Error message when upload fails",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "place": "Place",
+  "@place": {
+    "description": "Generic place label"
+  },
+
+  "evidenceNumber": "Evidence {number}",
+  "@evidenceNumber": {
+    "description": "Evidence number label",
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+
+  "unknownPlace": "Unknown Place",
+  "@unknownPlace": {
+    "description": "Label for unknown place"
+  },
+
+  "evidenceRequiredProgress": "Evidence Required: {remaining} more needed ({current}/{total})",
+  "@evidenceRequiredProgress": {
+    "description": "Message showing evidence requirements",
+    "placeholders": {
+      "remaining": {
+        "type": "String"
+      },
+      "current": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+
+  "evidenceComplete": "Evidence Complete: {current}/{total} submitted",
+  "@evidenceComplete": {
+    "description": "Message showing evidence completion",
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+
+  "evidenceTitleRequired": "Evidence Title *",
+  "@evidenceTitleRequired": {
+    "description": "Label for required evidence title field"
+  },
+
+  "optionalNotesAboutEvidence": "Optional notes about this evidence",
+  "@optionalNotesAboutEvidence": {
+    "description": "Hint text for evidence notes field"
+  },
+
+  "instructions": "Instructions:",
+  "@instructions": {
+    "description": "Instructions section label"
+  },
+
+  "selectEvidenceFile": "Select Evidence File",
+  "@selectEvidenceFile": {
+    "description": "Button text to select evidence file"
+  },
+
+  "takePhotoVideo": "Take Photo/Video",
+  "@takePhotoVideo": {
+    "description": "Button text to take photo or video"
+  },
+
+  "or": "OR",
+  "@or": {
+    "description": "OR separator text"
+  },
+
+  "uploadFile": "Upload File",
+  "@uploadFile": {
+    "description": "Button text to upload file"
+  },
+
+  "uploadingEvidence": "Uploading evidence... {progress}%",
+  "@uploadingEvidence": {
+    "description": "Evidence upload progress message",
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+
+  "formSubmitted": "Form submitted",
+  "@formSubmitted": {
+    "description": "Status message for submitted form"
+  },
+
+  "formDataAvailable": "Form data available",
+  "@formDataAvailable": {
+    "description": "Status message for available form data"
+  },
+
+  "formSubmission": "Form Submission",
+  "@formSubmission": {
+    "description": "Default title for form submissions"
+  },
+
+  "evidenceFile": "Evidence File",
+  "@evidenceFile": {
+    "description": "Default title for evidence files"
+  },
+
+  "fileUploaded": "File uploaded",
+  "@fileUploaded": {
+    "description": "Status message for uploaded file"
+  },
+
+  "noData": "No data",
+  "@noData": {
+    "description": "Message when no data is available"
+  },
+
+  "previousSubmissionsCount": "Previous Submissions ({count})",
+  "@previousSubmissionsCount": {
+    "description": "Title for previous submissions section with count",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "viewAllSubmissions": "View All Submissions",
+  "@viewAllSubmissions": {
+    "description": "Link text to view all submissions"
+  },
+
+  "formSubmissionUppercase": "FORM SUBMISSION",
+  "@formSubmissionUppercase": {
+    "description": "Uppercase label for form submission"
+  },
+
+  "evidenceUploadUppercase": "EVIDENCE UPLOAD",
+  "@evidenceUploadUppercase": {
+    "description": "Uppercase label for evidence upload"
+  },
+
+  "remove": "Remove",
+  "@remove": {
+    "description": "Remove button text"
+  },
+
+  "place": "Place",
+  "@place": {
+    "description": "Place noun"
+  },
+
+  "from": "from",
+  "@from": {
+    "description": "From preposition"
+  },
+
+  "route": "Route",
+  "@route": {
+    "description": "Route noun"
+  },
+
+  "areYouSureYouWantToRemove": "Are you sure you want to remove",
+  "@areYouSureYouWantToRemove": {
+    "description": "Confirmation message for removal"
+  },
+
+  "fromThisRoute": "from this route",
+  "@fromThisRoute": {
+    "description": "From this route phrase"
+  },
+
+  "unknownPlace": "Unknown Place",
+  "@unknownPlace": {
+    "description": "Unknown place fallback text"
+  },
+
+  "placeRemovedFromRouteSuccessfully": "Place removed from route successfully",
+  "@placeRemovedFromRouteSuccessfully": {
+    "description": "Success message for place removal"
+  },
+
+  "errorRemovingPlaceFromRoute": "Error removing place from route",
+  "@errorRemovingPlaceFromRoute": {
+    "description": "Error message for place removal"
+  },
+
+  "cannotDeleteRoute": "Cannot Delete Route",
+  "@cannotDeleteRoute": {
+    "description": "Cannot delete route dialog title"
+  },
+
+  "theRouteCannotBeDeletedBecauseItHasHistoricalDataOrActiveAssignments": "The route \"{routeName}\" cannot be deleted because it has historical data or active assignments",
+  "@theRouteCannotBeDeletedBecauseItHasHistoricalDataOrActiveAssignments": {
+    "description": "Cannot delete route explanation",
+    "placeholders": {
+      "routeName": {
+        "type": "String",
+        "description": "Route name"
+      }
+    }
+  },
+
+  "assignedToAgents": "Assigned to {count} agents",
+  "@assignedToAgents": {
+    "description": "Assigned to agents count",
+    "placeholders": {
+      "count": {
+        "type": "String",
+        "description": "Number of agents"
+      }
+    }
+  },
+
+  "hasVisitRecordsThisHistoricalDataCannotBeDeletedToMaintainAuditTrail": "Has {count} visit records. This historical data cannot be deleted to maintain audit trail",
+  "@hasVisitRecordsThisHistoricalDataCannotBeDeletedToMaintainAuditTrail": {
+    "description": "Visit records explanation",
+    "placeholders": {
+      "count": {
+        "type": "String",
+        "description": "Number of visit records"
+      }
+    }
+  },
+
+  "whatYouCanDo": "What you can do:",
+  "@whatYouCanDo": {
+    "description": "What you can do section header"
+  },
+
+  "removeAgentAssignmentsFirst": "Remove agent assignments first",
+  "@removeAgentAssignmentsFirst": {
+    "description": "Remove agent assignments instruction"
+  },
+
+  "archiveTheRouteInsteadOfDeletingToPreserveHistoricalData": "Archive the route instead of deleting to preserve historical data",
+  "@archiveTheRouteInsteadOfDeletingToPreserveHistoricalData": {
+    "description": "Archive route instruction"
+  },
+
+  "archive": "Archive",
+  "@archive": {
+    "description": "Archive button text"
+  },
+
+  "routeDeletedSuccessfully": "Route deleted successfully",
+  "@routeDeletedSuccessfully": {
+    "description": "Route deletion success message"
+  },
+
+  "errorDeletingRoute": "Error deleting route",
+  "@errorDeletingRoute": {
+    "description": "Route deletion error message"
+  },
+
+  "areYouSureYouWantToArchive": "Are you sure you want to archive",
+  "@areYouSureYouWantToArchive": {
+    "description": "Archive confirmation message"
+  },
+
+  "theRouteWillBeMovedToArchivedStatusAllHistoricalDataWillBePreservedAndItWillNoLongerBeAvailableForNewAssignments": "The route will be moved to archived status. All historical data will be preserved and it will no longer be available for new assignments.",
+  "@theRouteWillBeMovedToArchivedStatusAllHistoricalDataWillBePreservedAndItWillNoLongerBeAvailableForNewAssignments": {
+    "description": "Archive route explanation"
+  },
+
+  "routeArchivedSuccessfully": "Route archived successfully",
+  "@routeArchivedSuccessfully": {
+    "description": "Route archive success message"
+  },
+
+  "errorArchivingRoute": "Error archiving route",
+  "@errorArchivingRoute": {
+    "description": "Route archive error message"
+  },
+
+  "fileUrlNotAvailable": "File URL not available",
+  "@fileUrlNotAvailable": {
+    "description": "File URL not available error"
+  },
+
+  "routeName": "Route Name",
+  "@routeName": {
+    "description": "Route name field label"
+  },
+
+  "enterRouteName": "Enter route name",
+  "@enterRouteName": {
+    "description": "Route name field hint"
+  },
+
+  "routeNameIsRequired": "Route name is required",
+  "@routeNameIsRequired": {
+    "description": "Route name validation message"
+  },
+
+  "briefDescriptionOfTheRoute": "Brief description of the route",
+  "@briefDescriptionOfTheRoute": {
+    "description": "Route description field hint"
+  },
+
+  "estimatedDuration": "Estimated Duration",
+  "@estimatedDuration": {
+    "description": "Estimated duration field label"
+  },
+
+  "hours": "Hours",
+  "@hours": {
+    "description": "Hours label"
+  },
+
+  "minutes": "Minutes",
+  "@minutes": {
+    "description": "Minutes label"
+  },
+
+  "schedule": "Schedule",
+  "@schedule": {
+    "description": "Schedule section header"
+  },
+
+  "allAvailablePlacesHaveBeenAddedToTheRoute": "All available places have been added to the route",
+  "@allAvailablePlacesHaveBeenAddedToTheRoute": {
+    "description": "All places added message"
+  },
+
+  "requiredEvidence": "Required Evidence",
+  "@requiredEvidence": {
+    "description": "Required evidence field label"
+  },
+
+  "visitFrequency": "Visit Frequency",
+  "@visitFrequency": {
+    "description": "Visit frequency field label"
+  },
+
+  "instructions": "Instructions",
+  "@instructions": {
+    "description": "Instructions field label"
+  },
+
+  "mustSaveTaskBeforeGeofence": "Must save task before adding geofence",
+  "@mustSaveTaskBeforeGeofence": {
+    "description": "Save task before geofence message"
+  },
+
+  "searchTeamMembers": "Search team members...",
+  "@searchTeamMembers": {
+    "description": "Search team members placeholder"
+  },
+
+  "rejectionReason": "Rejection Reason",
+  "@rejectionReason": {
+    "description": "Rejection reason field label"
+  },
+
+  "editModeActive": "Edit mode active",
+  "@editModeActive": {
+    "description": "Edit mode active status"
+  },
+
+  "tapOnTheMapOrDragTheMarkerToChangeTheLocation": "Tap on the map or drag the marker to change the location",
+  "@tapOnTheMapOrDragTheMarkerToChangeTheLocation": {
+    "description": "Map editing instruction"
+  },
+
+  "geofence": "Geofence",
+  "@geofence": {
+    "description": "Geofence label"
+  },
+
+  "radius": "Radius",
+  "@radius": {
+    "description": "Radius label"
+  },
+
+  "evidenceTitleRequired": "Evidence Title (Required)",
+  "@evidenceTitleRequired": {
+    "description": "Evidence title required field label"
+  },
+
+  "noVisitsYet": "No visits yet",
+  "@noVisitsYet": {
+    "description": "No visits yet message"
+  },
+
+  "required": "Required",
+  "@required": {
+    "description": "Required field indicator"
+  },
+
+  "readyToSave": "Ready to Save",
+  "@readyToSave": {
+    "description": "Ready to save button text"
+  },
+
+  "managerDashboard": "Manager Dashboard",
+  "@managerDashboard": {
+    "description": "Manager dashboard title"
+  },
+
+  "create": "Create",
+  "@create": {
+    "description": "Create button text"
+  },
+
+  "save": "Save",
+  "@save": {
+    "description": "Save button text"
+  },
+
+  "details": "Details",
+  "@details": {
+    "description": "Details section header"
+  },
+
+  "created": "Created",
+  "@created": {
+    "description": "Created label"
+  },
+
+  "statistics": "Statistics",
+  "@statistics": {
+    "description": "Statistics section header"
+  },
+
+  "noAgentsAssignedYet": "No agents assigned yet",
+  "@noAgentsAssignedYet": {
+    "description": "No agents assigned message"
+  },
+
+  "tapAssignToAgentsToGetStarted": "Tap 'Assign to Agents' to get started",
+  "@tapAssignToAgentsToGetStarted": {
+    "description": "Assign agents instruction"
+  },
+
+  "agentHasntStartedVisitingPlaces": "Agent hasn't started visiting places",
+  "@agentHasntStartedVisitingPlaces": {
+    "description": "Agent hasn't started message"
+  },
+
+  "progressDetails": "Progress Details",
+  "@progressDetails": {
+    "description": "Progress details section header"
+  },
+
+  "noPlacesInThisRoute": "No places in this route",
+  "@noPlacesInThisRoute": {
+    "description": "No places in route message"
+  },
+
+  "areYouSureYouWantToActivate": "Are you sure you want to activate",
+  "@areYouSureYouWantToActivate": {
+    "description": "Activate confirmation message"
+  },
+
+  "onceActivatedItWillBeAvailableForAgentAssignment": "Once activated, it will be available for agent assignment",
+  "@onceActivatedItWillBeAvailableForAgentAssignment": {
+    "description": "Activation explanation"
+  },
+
+  "routeActivatedSuccessfully": "Route activated successfully",
+  "@routeActivatedSuccessfully": {
+    "description": "Route activation success message"
+  },
+
+  "errorActivatingRoute": "Error activating route",
+  "@errorActivatingRoute": {
+    "description": "Route activation error message"
+  },
+
+  "areYouSureYouWantToPermanentlyDelete": "Are you sure you want to permanently delete",
+  "@areYouSureYouWantToPermanentlyDelete": {
+    "description": "Permanent deletion confirmation"
+  },
+
+  "thisRouteHasNoAssignmentsOrVisitHistoryAndCanBeSafelyDeleted": "This route has no assignments or visit history and can be safely deleted",
+  "@thisRouteHasNoAssignmentsOrVisitHistoryAndCanBeSafelyDeleted": {
+    "description": "Safe deletion explanation"
+  },
+
+  "thisActionCannotBeUndoneTheRouteAndAllItsPlacesWillBePermanentlyDeleted": "This action cannot be undone. The route and all its places will be permanently deleted",
+  "@thisActionCannotBeUndoneTheRouteAndAllItsPlacesWillBePermanentlyDeleted": {
+    "description": "Permanent deletion warning"
+  },
+
+  "deletePermanently": "Delete Permanently",
+  "@deletePermanently": {
+    "description": "Delete permanently button text"
+  },
+
+  "noAgentsFoundInYourGroups": "No agents found in your groups",
+  "@noAgentsFoundInYourGroups": {
+    "description": "No agents in groups message"
+  },
+
+  "noAgentsAvailableForAssignment": "No agents available for assignment",
+  "@noAgentsAvailableForAssignment": {
+    "description": "No agents available message"
+  },
+
+  "errorLoadingAgents": "Error loading agents",
+  "@errorLoadingAgents": {
+    "description": "Error loading agents message"
+  },
+
+  "assign": "Assign",
+  "@assign": {
+    "description": "Assign button text"
+  },
+
+  "to": "to",
+  "@to": {
+    "description": "To preposition"
+  },
+
+  "agents": "Agents",
+  "@agents": {
+    "description": "Agents plural noun"
+  },
+
+  "currentlyAssigned": "Currently Assigned",
+  "@currentlyAssigned": {
+    "description": "Currently assigned section header"
+  },
+
+  "moreAgents": "More Agents",
+  "@moreAgents": {
+    "description": "More agents section header"
+  },
+
+  "allAgentsAreAlreadyAssigned": "All agents are already assigned",
+  "@allAgentsAreAlreadyAssigned": {
+    "description": "All agents assigned message"
+  },
+
+  "noAdditionalAgentsAvailable": "No additional agents available",
+  "@noAdditionalAgentsAvailable": {
+    "description": "No additional agents message"
+  },
+
+  "assignTo": "Assign to",
+  "@assignTo": {
+    "description": "Assign to button text"
+  },
+
+  "allSelectedAgentsAreAlreadyAssignedToThisRoute": "All selected agents are already assigned to this route",
+  "@allSelectedAgentsAreAlreadyAssignedToThisRoute": {
+    "description": "All selected agents already assigned message"
+  },
+
+  "newRouteAssigned": "New Route Assigned",
+  "@newRouteAssigned": {
+    "description": "New route assigned notification title"
+  },
+
+  "youHaveBeenAssignedToRoute": "You have been assigned to route",
+  "@youHaveBeenAssignedToRoute": {
+    "description": "Route assignment notification message"
+  },
+
+  "newAgents": "new agents",
+  "@newAgents": {
+    "description": "New agents text"
+  },
+
+  "wereAlreadyAssigned": "were already assigned",
+  "@wereAlreadyAssigned": {
+    "description": "Already assigned text"
+  },
+
+  "routeAssignedToAgentsSuccessfully": "Route assigned to {count} agents successfully",
+  "@routeAssignedToAgentsSuccessfully": {
+    "description": "Route assignment success message",
+    "placeholders": {
+      "count": {
+        "type": "String",
+        "description": "Number of agents"
+      }
+    }
+  },
+
+  "errorAssigningRoute": "Error assigning route",
+  "@errorAssigningRoute": {
+    "description": "Route assignment error message"
+  },
+
+  "pleaseSelectFile": "Please select a file",
+  "@pleaseSelectFile": {
+    "description": "Please select a file message"
+  },
+
+  "taskStatusUpdated": "Task status updated!",
+  "@taskStatusUpdated": {
+    "description": "Task status updated message"
+  },
+
+  "failedToUpdateStatus": "Failed to update status.",
+  "@failedToUpdateStatus": {
+    "description": "Failed to update status message"
+  },
+
+  "errorUploadingEvidence": "Error uploading evidence",
+  "@errorUploadingEvidence": {
+    "description": "Error uploading evidence message"
+  },
+
+  "noTasksAssigned": "You have not been assigned any tasks for this campaign.",
+  "@noTasksAssigned": {
+    "description": "No tasks assigned message"
+  },
+
+  "uploadingEvidence": "Uploading evidence...",
+  "@uploadingEvidence": {
+    "description": "Uploading evidence loading message"
+  },
+
+  "uploadingEvidenceProgress": "Uploading evidence... {progress}%",
+  "@uploadingEvidenceProgress": {
+    "description": "Uploading evidence with progress",
+    "placeholders": {
+      "progress": {"type": "int"}
+    }
+  },
+
+  "zoneCountFormat": "{current} of {total}",
+  "@zoneCountFormat": {
+    "description": "Zone count format",
+    "placeholders": {
+      "current": {"type": "String"},
+      "total": {"type": "String"}
+    }
+  },
+
+  "noLocationSet": "No Location Set",
+  "@noLocationSet": {
+    "description": "No location set title"
+  },
+
+  "taskHasLocationNameNoGeofence": "This task has a location name but no geofence area defined. You can submit evidence from any location.",
+  "@taskHasLocationNameNoGeofence": {
+    "description": "Task has location name but no geofence message"
+  },
+
+  "noLocationSetDescription": "The manager has not set a specific location or geofence for this task. You can submit evidence from any location.",
+  "@noLocationSetDescription": {
+    "description": "No location set description"
+  },
+
+  "geofenceAreas": "Geofence Areas",
+  "@geofenceAreas": {
+    "description": "Geofence areas title"
+  },
+
+  "pointsCount": "{count} points",
+  "@pointsCount": {
+    "description": "Points count format",
+    "placeholders": {
+      "count": {"type": "String"}
+    }
+  },
+
+  "assignmentPending": "Assignment Pending",
+  "@assignmentPending": {
+    "description": "Assignment pending title"
+  },
+
+  "assignmentPendingDescription": "Your assignment to this task is pending approval.\nYou cannot access task details until it is approved.",
+  "@assignmentPendingDescription": {
+    "description": "Assignment pending description"
+  },
+
+  "goBack": "Go Back",
+  "@goBack": {
+    "description": "Go back button"
+  },
+
+  "templateNotFound": "Template not found",
+  "@templateNotFound": {
+    "description": "Template not found title"
+  },
+
+  "templateNotFoundDescription": "This task template could not be loaded.",
+  "@templateNotFoundDescription": {
+    "description": "Template not found description"
+  },
+
+  "locationVerificationRequired": "Location verification required",
+  "@locationVerificationRequired": {
+    "description": "Location verification required message"
+  },
+
+  "taskAssignmentPendingApproval": "This task assignment is pending approval from your manager. You cannot start work until it is approved.",
+  "@taskAssignmentPendingApproval": {
+    "description": "Task assignment pending approval message"
+  },
+
+  "awaitingManagerApproval": "Awaiting Manager Approval",
+  "@awaitingManagerApproval": {
+    "description": "Awaiting manager approval text"
+  },
+
+  "uploadMoreEvidenceFormat": "Upload {count} more evidence file(s) to complete this task",
+  "@uploadMoreEvidenceFormat": {
+    "description": "Upload more evidence format",
+    "placeholders": {
+      "count": {"type": "String"}
+    }
+  },
+
+  "inProgress": "IN PROGRESS",
+  "@inProgress": {
+    "description": "In progress status"
+  },
+
+  "pending": "PENDING",
+  "@pending": {
+    "description": "Pending status"
+  },
+
+  "noTasksAvailable": "No Tasks Available",
+  "@noTasksAvailable": {
+    "description": "No tasks available title"
+  },
+
+  "noTasksAssignedDescription": "There are no tasks assigned to you in this campaign yet. Check back later or contact your manager.",
+  "@noTasksAssignedDescription": {
+    "description": "No tasks assigned description"
+  },
+
+  "activeVisit": "ACTIVE VISIT",
+  "@activeVisit": {
+    "description": "Active visit title"
+  },
+
+  "timeSpent": "Time Spent",
+  "@timeSpent": {
+    "description": "Time spent label"
+  },
+
+  "evidence": "Evidence",
+  "@evidence": {
+    "description": "Evidence label"
+  },
+
+  "pointsFormat": "{points} points",
+  "@pointsFormat": {
+    "description": "Points format",
+    "placeholders": {
+      "points": {"type": "String"}
+    }
+  },
+
+  "ptsFormat": "{points} pts",
+  "@ptsFormat": {
+    "description": "Points abbreviation format",
+    "placeholders": {
+      "points": {"type": "String"}
+    }
+  },
+
+  "appTitle": "Al-Tijwal",
+  "@appTitle": {
+    "description": "Application title"
+  },
+
+  "signUpSuccessMessage": "Sign up successful! Please check your email to confirm.",
+  "@signUpSuccessMessage": {
+    "description": "Sign up success message"
+  },
+
+  "unexpectedError": "An unexpected error occurred.",
+  "@unexpectedError": {
+    "description": "Unexpected error message"
+  },
+
+  "stopServicesQuestion": "Stop Services?",
+  "@stopServicesQuestion": {
+    "description": "Stop services dialog title"
+  },
+
+  "stopServicesWarning": "This will stop location tracking and status updates. Your manager will not be able to see your location or online status.\n\nAre you sure you want to stop all services?",
+  "@stopServicesWarning": {
+    "description": "Stop services warning message"
+  },
+
+  "stopServices": "Stop Services",
+  "@stopServices": {
+    "description": "Stop services button"
+  },
+
+  "backgroundServicesStopped": "Background services stopped",
+  "@backgroundServicesStopped": {
+    "description": "Background services stopped message"
+  },
+
+  "servicesDisabled": "Services Disabled",
+  "@servicesDisabled": {
+    "description": "Services disabled title"
+  },
+
+  "servicesActiveMessage": "Location tracking and status updates are now active",
+  "@servicesActiveMessage": {
+    "description": "Services active message"
+  },
+
+  "servicesStarted": "Services Started",
+  "@servicesStarted": {
+    "description": "Services started title"
+  },
+
+  "failedToStartServices": "Failed to start services. Please check permissions.",
+  "@failedToStartServices": {
+    "description": "Failed to start services message"
+  },
+
+  "serviceError": "Service Error",
+  "@serviceError": {
+    "description": "Service error title"
+  },
+
+  "unableToToggleServices": "Unable to toggle services",
+  "@unableToToggleServices": {
+    "description": "Unable to toggle services message"
+  },
+
+  "serviceDetails": "Service Details",
+  "@serviceDetails": {
+    "description": "Service details title"
+  },
+
+  "locationTracking": "Location Tracking",
+  "@locationTracking": {
+    "description": "Location tracking label"
+  },
+
+  "active": "Active",
+  "@active": {
+    "description": "Active status"
+  },
+
+  "inactive": "Inactive",
+  "@inactive": {
+    "description": "Inactive status"
+  },
+
+  "onlineStatus": "Online Status",
+  "@onlineStatus": {
+    "description": "Online status label"
+  },
+
+  "broadcasting": "Broadcasting",
+  "@broadcasting": {
+    "description": "Broadcasting status"
+  },
+
+  "offline": "Offline",
+  "@offline": {
+    "description": "Offline status"
+  },
+
+  "heartbeat": "Heartbeat",
+  "@heartbeat": {
+    "description": "Heartbeat label"
+  },
+
+  "every30s": "Every 30s",
+  "@every30s": {
+    "description": "Every 30 seconds"
+  },
+
+  "stopped": "Stopped",
+  "@stopped": {
+    "description": "Stopped status"
+  },
+
+  "youreOffline": "You're Offline",
+  "@youreOffline": {
+    "description": "You're offline message"
+  },
+
+  "noInternetConnection": "No internet connection. Please check your network settings and try again.",
+  "@noInternetConnection": {
+    "description": "No internet connection message"
+  },
+
+  "tryAgain": "Try Again",
+  "@tryAgain": {
+    "description": "Try again button"
+  },
+
+  "backOnline": "Back online",
+  "@backOnline": {
+    "description": "Back online message"
+  },
+
+  "errorLoadingUserProfile": "Error loading user profile",
+  "@errorLoadingUserProfile": {
+    "description": "Error loading user profile message"
+  },
+
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry button"
+  },
+
+  "delete": "Delete",
+  "@delete": {
+    "description": "Delete button"
+  },
+
+  "addField": "Add Field",
+  "@addField": {
+    "description": "Add field button"
+  },
+
+  "update": "Update",
+  "@update": {
+    "description": "Update button"
+  },
+
+  "deleteField": "Delete Field",
+  "@deleteField": {
+    "description": "Delete field dialog title"
+  },
+
+  "confirmDeleteField": "Are you sure you want to delete \"{fieldName}\"?",
+  "@confirmDeleteField": {
+    "description": "Confirm delete field message",
+    "placeholders": {
+      "fieldName": {"type": "String"}
+    }
+  },
+
+  "addTask": "Add Task",
+  "@addTask": {
+    "description": "Add task button"
+  },
+
+  "save": "Save",
+  "@save": {
+    "description": "Save button"
+  },
+
+  "done": "Done",
+  "@done": {
+    "description": "Done button"
+  },
+
+  "newZone": "New Zone",
+  "@newZone": {
+    "description": "New zone label"
+  },
+
+  "renameZone": "Rename Zone",
+  "@renameZone": {
+    "description": "Rename zone dialog title"
+  },
+
+  "zoneName": "Zone Name",
+  "@zoneName": {
+    "description": "Zone name field label"
+  },
+
+  "pickAColor": "Pick a color",
+  "@pickAColor": {
+    "description": "Pick a color dialog title"
+  },
+
+  "allTeamMembersOnline": "All team members are currently online.\nGreat job keeping the team active!",
+  "@allTeamMembersOnline": {
+    "description": "All team members online message"
+  },
+
+  "noTeamMembersAssigned": "You don't have any team members assigned to your groups yet.\nContact your administrator to add agents to your groups.",
+  "@noTeamMembersAssigned": {
+    "description": "No team members assigned message"
+  },
+
+  "editAgentName": "Edit Agent Name",
+  "@editAgentName": {
+    "description": "Edit agent name button"
+  },
+
+  "updateName": "Update Name",
+  "@updateName": {
+    "description": "Update name button"
+  },
+
+  "enterNewPassword": "Enter new password",
+  "@enterNewPassword": {
+    "description": "Enter new password hint"
+  },
+
+  "editNameForAgent": "Edit name for @{username}",
+  "@editNameForAgent": {
+    "description": "Edit name for agent message",
+    "placeholders": {
+      "username": {"type": "String"}
+    }
+  },
+
+  "enterAgentFullName": "Enter agent full name",
+  "@enterAgentFullName": {
+    "description": "Enter agent full name hint"
+  },
+
+  "newPassword": "New Password",
+  "@newPassword": {
+    "description": "New password label"
+  },
+
+  "enterNewPasswordFor": "Enter new password for {fullName}",
+  "@enterNewPasswordFor": {
+    "description": "Enter new password for user message",
+    "placeholders": {
+      "fullName": {"type": "String"}
+    }
+  },
+
+  "createFirstRoute": "Create your first route to get started",
+  "@createFirstRoute": {
+    "description": "Create first route message"
+  },
+
+  "createNewTask": "Create New Task",
+  "@createNewTask": {
+    "description": "Create new task title"
+  },
+
+  "chooseFromProfessionalTemplates": "Choose from professional task templates by category",
+  "@chooseFromProfessionalTemplates": {
+    "description": "Choose from professional templates description"
+  },
+
+  "createCustomTaskDescription": "Create a custom task with specific requirements",
+  "@createCustomTaskDescription": {
+    "description": "Create custom task description"
+  },
+
+  "editTask": "Edit Task",
+  "@editTask": {
+    "description": "Edit task button"
+  },
+
+  "createFirstTaskToGetStarted": "Create your first task to get started with task management",
+  "@createFirstTaskToGetStarted": {
+    "description": "Create first task to get started message"
+  },
+
+  "createTemplate": "Create Template",
+  "@createTemplate": {
+    "description": "Create template button"
+  },
+
+  "selectCategory": "Select a category",
+  "@selectCategory": {
+    "description": "Select category text"
+  },
+
+  "createNewTemplate": "Create New Template",
+  "@createNewTemplate": {
+    "description": "Create new template title"
+  },
+
+  "back": "Back",
+  "@back": {
+    "description": "Back button"
+  },
+
+  "next": "Next",
+  "@next": {
+    "description": "Next button"
+  },
+
+  "errorLoadingCategories": "Error loading categories",
+  "@errorLoadingCategories": {
+    "description": "Error loading categories message"
+  },
+
+  "templateCreatedSuccessfully": "Template created successfully!",
+  "@templateCreatedSuccessfully": {
+    "description": "Template created successfully message"
+  },
+
+  "errorCreatingTemplate": "Error creating template",
+  "@errorCreatingTemplate": {
+    "description": "Error creating template message"
+  },
+
+  "basicInformation": "Basic Information",
+  "@basicInformation": {
+    "description": "Basic information section title"
+  },
+
+  "tellUsAboutTemplate": "Tell us about your template",
+  "@tellUsAboutTemplate": {
+    "description": "Tell us about template subtitle"
+  },
+
+  "templateNameRequired": "Template Name *",
+  "@templateNameRequired": {
+    "description": "Template name required field"
+  },
+
+  "templateNameHint": "e.g., Hospital Equipment Check",
+  "@templateNameHint": {
+    "description": "Template name hint text"
+  },
+
+  "descriptionRequired": "Description *",
+  "@descriptionRequired": {
+    "description": "Description required field"
+  },
+
+  "describeAgentTask": "Describe what agents need to do...",
+  "@describeAgentTask": {
+    "description": "Describe agent task hint"
+  },
+
+  "categoryRequired": "Category *",
+  "@categoryRequired": {
+    "description": "Category required field"
+  },
+
+  "taskRequirements": "Task Requirements",
+  "@taskRequirements": {
+    "description": "Task requirements section title"
+  },
+
+  "configureAgentRequirements": "Configure what agents need to provide",
+  "@configureAgentRequirements": {
+    "description": "Configure agent requirements subtitle"
+  },
+
+  "difficultyLevel": "Difficulty Level",
+  "@difficultyLevel": {
+    "description": "Difficulty level label"
+  },
+
+  "evidenceRequired": "Evidence Required",
+  "@evidenceRequired": {
+    "description": "Evidence required label"
+  },
+
+  "estimatedDurationMinutes": "Estimated Duration (minutes)",
+  "@estimatedDurationMinutes": {
+    "description": "Estimated duration minutes label"
+  },
+
+  "rewardPoints": "Reward Points",
+  "@rewardPoints": {
+    "description": "Reward points label"
+  },
+
+  "requiresGeofence": "Requires Geofence",
+  "@requiresGeofence": {
+    "description": "Requires geofence label"
+  },
+
+  "taskMustBeCompletedAtLocation": "Task must be completed at specific location",
+  "@taskMustBeCompletedAtLocation": {
+    "description": "Task must be completed at location subtitle"
+  },
+
+  "customInstructionsOptional": "Custom Instructions (Optional)",
+  "@customInstructionsOptional": {
+    "description": "Custom instructions optional label"
+  },
+
+  "additionalInstructionsForAgents": "Additional instructions for agents...",
+  "@additionalInstructionsForAgents": {
+    "description": "Additional instructions hint"
+  },
+
+  "reviewAndCreate": "Review & Create",
+  "@reviewAndCreate": {
+    "description": "Review and create section title"
+  },
+
+  "verifyTemplateBeforeCreating": "Verify your template before creating",
+  "@verifyTemplateBeforeCreating": {
+    "description": "Verify template before creating subtitle"
+  },
+
+  "templateName": "Template Name",
+  "@templateName": {
+    "description": "Template name label"
+  },
+
+  "notSelected": "Not selected",
+  "@notSelected": {
+    "description": "Not selected text"
+  },
+
+  "difficulty": "Difficulty",
+  "@difficulty": {
+    "description": "Difficulty label"
+  },
+
+  "duration": "Duration",
+  "@duration": {
+    "description": "Duration label"
+  },
+
+  "minutesFormat": "{minutes} minutes",
+  "@minutesFormat": {
+    "description": "Minutes format",
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+
+  "reward": "Reward",
+  "@reward": {
+    "description": "Reward label"
+  },
+
+  "geofenceRequired": "Geofence Required",
+  "@geofenceRequired": {
+    "description": "Geofence required label"
+  },
+
+  "yes": "Yes",
+  "@yes": {
+    "description": "Yes text"
+  },
+
+  "no": "No",
+  "@no": {
+    "description": "No text"
+  },
+
+  "instructions": "Instructions",
+  "@instructions": {
+    "description": "Instructions label"
+  },
+
+  "photo": "Photo",
+  "@photo": {
+    "description": "Photo label"
+  },
+
+  "video": "Video",
+  "@video": {
+    "description": "Video label"
+  },
+
+  "document": "Document",
+  "@document": {
+    "description": "Document label"
+  },
+
+  "pdf": "PDF",
+  "@pdf": {
+    "description": "PDF label"
+  },
+
+  "audio": "Audio",
+  "@audio": {
+    "description": "Audio label"
+  },
+
+  "stepXOfY": "Step {x} of {y}",
+  "@stepXOfY": {
+    "description": "Step x of y format",
+    "placeholders": {
+      "x": {
+        "type": "int"
+      },
+      "y": {
+        "type": "int"
+      }
+    }
+  },
+
+  "basicInfo": "Basic Info",
+  "@basicInfo": {
+    "description": "Basic info step title"
+  },
+
+  "requirements": "Requirements",
+  "@requirements": {
+    "description": "Requirements step title"
+  },
+
+  "taskManagement": "Task Management",
+  "@taskManagement": {
+    "description": "Task management title"
+  },
+
+  "errorLoadingTasks": "Error loading tasks",
+  "@errorLoadingTasks": {
+    "description": "Error loading tasks message"
+  },
+
+  "retry": "Retry",
+  "@retry": {
+    "description": "Retry button"
+  },
+
+  "noTasksYet": "No Tasks Yet",
+  "@noTasksYet": {
+    "description": "No tasks yet message"
+  },
+
+  "confirmDelete": "Confirm Delete",
+  "@confirmDelete": {
+    "description": "Confirm delete title"
+  },
+
+  "confirmDeleteTaskMessage": "Are you sure you want to delete this task? This action cannot be undone.",
+  "@confirmDeleteTaskMessage": {
+    "description": "Confirm delete task message"
+  },
+
+  "deleteTask": "Delete Task",
+  "@deleteTask": {
+    "description": "Delete task text"
+  },
+
+  "newTask": "New Task",
+  "@newTask": {
+    "description": "New task button"
+  },
+
+  "taskDeletedSuccessfully": "Task deleted successfully",
+  "@taskDeletedSuccessfully": {
+    "description": "Task deleted successfully message"
+  },
+
+  "failedToDeleteTask": "Failed to delete task",
+  "@failedToDeleteTask": {
+    "description": "Failed to delete task message"
+  },
+
+  "fromTemplate": "From Template",
+  "@fromTemplate": {
+    "description": "From template option"
+  },
+
+  "customTask": "Custom Task",
+  "@customTask": {
+    "description": "Custom task option"
+  },
+
+  "managePlaces": "Manage Places",
+  "@managePlaces": {
+    "description": "Manage places tooltip"
+  },
+
+  "noDraftRoutes": "No draft routes",
+  "@noDraftRoutes": {
+    "description": "No draft routes message"
+  },
+
+  "noRoutesFound": "No routes found",
+  "@noRoutesFound": {
+    "description": "No routes found message"
+  },
+
+  "routeOrder": "Route Order:",
+  "@routeOrder": {
+    "description": "Route order label"
+  },
+
+  "createdByFormat": "Created by: {name}",
+  "@createdByFormat": {
+    "description": "Created by format",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+
+  "unknown": "Unknown",
+  "@unknown": {
+    "description": "Unknown text"
+  },
+
+  "noPlacesAdded": "No places added",
+  "@noPlacesAdded": {
+    "description": "No places added message"
+  },
+
+  "morePlacesFormat": "... (+{count} more)",
+  "@morePlacesFormat": {
+    "description": "More places format",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "category": "Category",
+  "@category": {
+    "description": "Category label"
+  },
+
+  "minutesShort": "min",
+  "@minutesShort": {
+    "description": "Minutes short form"
+  },
+
+  "pointsShort": "pts",
+  "@pointsShort": {
+    "description": "Points short form"
+  },
+
+  "newTaskAssigned": "New Task Assigned",
+  "@newTaskAssigned": {
+    "description": "New task assigned notification title"
+  },
+
+  "points": "Points",
+  "@points": {
+    "description": "Points label"
+  },
+
+  "campaignAssignment": "Campaign Assignment",
+  "@campaignAssignment": {
+    "description": "Campaign assignment title"
+  },
+
+  "title": "Title",
+  "@title": {
+    "description": "Title label"
+  },
+
+  "update": "Update",
+  "@update": {
+    "description": "Update button"
+  },
+
+  "remove": "Remove",
+  "@remove": {
+    "description": "Remove button"
+  },
+
+  "pointsPrefix": "Pts ",
+  "@pointsPrefix": {
+    "description": "Points prefix"
+  },
+
+  "confirmPayment": "Confirm Payment",
+  "@confirmPayment": {
+    "description": "Confirm payment button"
+  },
+
+  "removeAgent": "Remove Agent",
+  "@removeAgent": {
+    "description": "Remove agent tooltip"
+  },
+
+  "taskProgress": "Task Progress",
+  "@taskProgress": {
+    "description": "Task progress section title"
+  },
+
+  "uploadedFiles": "Uploaded Files",
+  "@uploadedFiles": {
+    "description": "Uploaded files section title"
+  },
+
+  "totalPoints": "Total Points",
+  "@totalPoints": {
+    "description": "Total points label"
+  },
+
+  "pointsPaid": "Points Paid",
+  "@pointsPaid": {
+    "description": "Points paid label"
+  },
+
+  "outstanding": "Outstanding",
+  "@outstanding": {
+    "description": "Outstanding balance label"
+  },
+
+  "untitledEvidence": "Untitled Evidence",
+  "@untitledEvidence": {
+    "description": "Untitled evidence label"
+  },
+
+  "view": "View",
+  "@view": {
+    "description": "View button"
+  },
+
+  "download": "Download",
+  "@download": {
+    "description": "Download button"
+  },
+
+  "evidenceRequiredMessage": "This task requires {requiredEvidence} evidence file(s) but only {uploadedEvidence} uploaded.\\n\\nPlease upload the required evidence before marking the task as complete.",
+  "@evidenceRequiredMessage": {
+    "description": "Evidence required dialog message",
+    "placeholders": {
+      "requiredEvidence": {
+        "type": "int"
+      },
+      "uploadedEvidence": {
+        "type": "int"
+      }
+    }
+  },
+
+  "ok": "OK",
+  "@ok": {
+    "description": "OK button"
+  },
+
+  "unknownFile": "Unknown file",
+  "@unknownFile": {
+    "description": "Unknown file label"
+  },
+
+  "unknownTask": "Unknown Task",
+  "@unknownTask": {
+    "description": "Unknown task label"
+  },
+
+  "earlyCompletion": "Early Completion",
+  "@earlyCompletion": {
+    "description": "Early completion dialog title"
+  },
+
+  "complete": "Complete",
+  "@complete": {
+    "description": "Complete button"
+  },
+
+  "geofenceStayTask": "Geofence Stay Task",
+  "@geofenceStayTask": {
+    "description": "Geofence stay task title"
+  },
+
+  "locationStatus": "Location Status",
+  "@locationStatus": {
+    "description": "Location status label"
+  },
+
+  "insideDesignatedArea": "Inside designated area",
+  "@insideDesignatedArea": {
+    "description": "Inside designated area status"
+  },
+
+  "outsideDesignatedArea": "Outside designated area",
+  "@outsideDesignatedArea": {
+    "description": "Outside designated area status"
+  },
+
+  "timeProgress": "Time Progress",
+  "@timeProgress": {
+    "description": "Time progress label"
+  },
+
+  "progress": "Progress",
+  "@progress": {
+    "description": "Progress label"
+  },
+
+  "completeEarly": "Complete Early",
+  "@completeEarly": {
+    "description": "Complete early button"
+  },
+
+  "inAreaReadyToStart": "In Area - Ready to Start",
+  "@inAreaReadyToStart": {
+    "description": "In area ready to start status"
+  },
+
+  "outsideArea": "Outside Area",
+  "@outsideArea": {
+    "description": "Outside area status"
+  },
+
+  "locationCheckFailed": "Location Check Failed",
+  "@locationCheckFailed": {
+    "description": "Location check failed status"
+  },
+
+  "taskActive": "Task Active",
+  "@taskActive": {
+    "description": "Task active status"
+  },
+
+  "notStarted": "Not Started",
+  "@notStarted": {
+    "description": "Not started status"
+  },
+
+  "checkingLocation": "Checking Location...",
+  "@checkingLocation": {
+    "description": "Checking location status"
+  },
+
+  "moveToDesignatedArea": "Move to Designated Area",
+  "@moveToDesignatedArea": {
+    "description": "Move to designated area button"
+  },
+
+  "startTask": "Start Task",
+  "@startTask": {
+    "description": "Start task button"
+  },
+
+  "selectCampaignDays": "Select Campaign Days",
+  "@selectCampaignDays": {
+    "description": "Title for campaign day selection dialog"
+  },
+
+  "campaignDays": "Campaign Days",
+  "@campaignDays": {
+    "description": "Label for campaign days field"
+  },
+
+  "pleaseSelectCampaignDays": "Please select campaign days",
+  "@pleaseSelectCampaignDays": {
+    "description": "Error message when no campaign days are selected"
+  },
+
+  "daysSelected": "{count} days selected",
+  "@daysSelected": {
+    "description": "Shows number of selected days",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "description": "Number of selected days"
+      }
+    }
+  },
+
+  "selectTaskDays": "Select Task Days",
+  "@selectTaskDays": {
+    "description": "Title for task day selection dialog"
+  },
+
+  "taskDays": "Task Days",
+  "@taskDays": {
+    "description": "Label for task days field"
+  },
+
+  "pleaseSelectTaskDays": "Please select task days",
+  "@pleaseSelectTaskDays": {
+    "description": "Error message when no task days are selected"
+  },
+
+  "selectHistoryDays": "Select History Days",
+  "@selectHistoryDays": {
+    "description": "Title for history day selection dialog"
+  },
+
+  "selectGeofence": "Select Geofence",
+  "@selectGeofence": {
+    "description": "Title for geofence selection screen"
+  },
+
+  "selectGeofenceInstructions": "Choose a work zone to be assigned to. You can only select zones that have available capacity.",
+  "@selectGeofenceInstructions": {
+    "description": "Instructions for geofence selection"
+  },
+
+  "noCurrentAssignment": "No Current Assignment",
+  "@noCurrentAssignment": {
+    "description": "Text when agent has no geofence assignment"
+  },
+
+  "selectGeofenceToStart": "Select a geofence below to start working.",
+  "@selectGeofenceToStart": {
+    "description": "Instructions to select geofence"
+  },
+
+  "currentAssignment": "Current Assignment",
+  "@currentAssignment": {
+    "description": "Current geofence assignment label"
+  },
+
+  "currentlyInside": "Currently Inside",
+  "@currentlyInside": {
+    "description": "Status when agent is inside their assigned geofence"
+  },
+
+  "availableGeofences": "Available Geofences",
+  "@availableGeofences": {
+    "description": "Title for available geofences section"
+  },
+
+  "errorLoadingGeofences": "Error Loading Geofences",
+  "@errorLoadingGeofences": {
+    "description": "Error message when geofences fail to load"
+  },
+
+  "noGeofencesAvailable": "No Geofences Available",
+  "@noGeofencesAvailable": {
+    "description": "Message when no geofences are available"
+  },
+
+  "contactManagerForGeofences": "Contact your manager to create geofences for this campaign.",
+  "@contactManagerForGeofences": {
+    "description": "Instructions when no geofences are available"
+  },
+
+  "geofenceIsFull": "Geofence is Full",
+  "@geofenceIsFull": {
+    "description": "Error when trying to select a full geofence"
+  },
+
+  "assignedToGeofence": "Assigned to Geofence",
+  "@assignedToGeofence": {
+    "description": "Success message when assigned to geofence"
+  },
+
+  "assignmentFailed": "Assignment Failed",
+  "@assignmentFailed": {
+    "description": "Error message when geofence assignment fails"
+  },
+
+  "cancelAssignment": "Cancel Assignment",
+  "@cancelAssignment": {
+    "description": "Cancel geofence assignment button text"
+  },
+
+  "cancelAssignmentConfirmation": "Are you sure you want to cancel your current geofence assignment?",
+  "@cancelAssignmentConfirmation": {
+    "description": "Confirmation dialog for canceling assignment"
+  },
+
+  "assignmentCancelled": "Assignment Cancelled",
+  "@assignmentCancelled": {
+    "description": "Success message when assignment is cancelled"
+  },
+
+  "cancellationFailed": "Cancellation Failed",
+  "@cancellationFailed": {
+    "description": "Error message when cancellation fails"
+  },
+
+  "evidenceRequiredCount": "{count} evidence required",
+  "@evidenceRequiredCount": {
+    "description": "Evidence count requirement text",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+
+  "locationVerificationRequired": "Location Verification Required",
+  "@locationVerificationRequired": {
+    "description": "Location verification requirement text"
+  },
+
+  "geofenceTracking": "Geofence Tracking",
+  "@geofenceTracking": {
+    "description": "Geofence tracking screen title"
+  },
+
+  "selectZone": "Select Zone",
+  "@selectZone": {
+    "description": "Button text to select geofence zone"
+  },
+
+  "manageGeofences": "Manage Geofences",
+  "@manageGeofences": {
+    "description": "Button text to manage geofences"
+  },
+
+  "geofenceZones": "Geofence Zones",
+  "@geofenceZones": {
+    "description": "Geofence zones section title"
+  },
+
+  "noGeofencesCreated": "No geofences created yet",
+  "@noGeofencesCreated": {
+    "description": "Message when no geofences exist"
+  },
+
+  "createFirstGeofence": "Create your first geofence to get started",
+  "@createFirstGeofence": {
+    "description": "Helper text for creating first geofence"
+  },
+
+  "insideGeofence": "Inside geofence",
+  "@insideGeofence": {
+    "description": "Status when agent is inside geofence"
+  },
+
+  "outsideGeofence": "Outside geofence",
+  "@outsideGeofence": {
+    "description": "Status when agent is outside geofence"
+  },
+
+  "enteredGeofence": "Entered geofence",
+  "@enteredGeofence": {
+    "description": "Notification when entering geofence"
+  },
+
+  "leftGeofence": "Left geofence",
+  "@leftGeofence": {
+    "description": "Notification when leaving geofence"
+  },
+
+  "returnToAssignedArea": "Return to your assigned area",
+  "@returnToAssignedArea": {
+    "description": "Warning message to return to geofence"
+  },
+
+  "trackingActive": "Tracking active",
+  "@trackingActive": {
+    "description": "Status when tracking is active"
+  },
+
+  "trackingStopped": "Tracking stopped",
+  "@trackingStopped": {
+    "description": "Status when tracking is stopped"
+  },
+
+  "startTracking": "Start Tracking",
+  "@startTracking": {
+    "description": "Button to start location tracking"
+  },
+
+  "stopTracking": "Stop Tracking",
+  "@stopTracking": {
+    "description": "Button to stop location tracking"
+  },
+
+  "completeAssignment": "Complete Assignment",
+  "@completeAssignment": {
+    "description": "Button to complete geofence assignment"
+  },
+
+  "assignmentCompletedSuccessfully": "Assignment completed successfully",
+  "@assignmentCompletedSuccessfully": {
+    "description": "Success message for completed assignment"
+  },
+
+  "failedToCompleteAssignment": "Failed to complete assignment",
+  "@failedToCompleteAssignment": {
+    "description": "Error message when assignment completion fails"
+  },
+
+  "accuracy": "Accuracy",
+  "@accuracy": {
+    "description": "GPS accuracy label"
+  },
+
+  "timeInside": "Time Inside",
+  "@timeInside": {
+    "description": "Time spent inside geofence label"
+  },
+
+  "noActiveAssignment": "No Active Assignment",
+  "@noActiveAssignment": {
+    "description": "Message when no geofence assignment exists"
+  },
+
+  "selectGeofenceToStartTracking": "Select a geofence to start tracking",
+  "@selectGeofenceToStartTracking": {
+    "description": "Instructions for starting geofence tracking"
+  },
+
+  "geofenceIsFull": "Geofence is full",
+  "@geofenceIsFull": {
+    "description": "Error message when geofence capacity is full"
+  },
+
+  "assignedToGeofence": "Assigned to geofence",
+  "@assignedToGeofence": {
+    "description": "Success message when assigned to geofence"
+  },
+
+  "assignmentFailed": "Assignment failed",
+  "@assignmentFailed": {
+    "description": "Error message when geofence assignment fails"
+  },
+
+  "changeGeofence": "Change Geofence",
+  "@changeGeofence": {
+    "description": "Button to change current geofence assignment"
+  },
+
+  "currentlyAssignedTo": "Currently assigned to",
+  "@currentlyAssignedTo": {
+    "description": "Label showing current geofence assignment"
+  },
+
+  "availableSlots": "Available slots",
+  "@availableSlots": {
+    "description": "Label showing available capacity slots"
+  },
+
+  "full": "Full",
+  "@full": {
+    "description": "Status when geofence is at full capacity"
+  },
+
+  "available": "Available",
+  "@available": {
+    "description": "Status when geofence has available capacity"
+  },
+
+  "selectGeofence": "Select Geofence",
+  "@selectGeofence": {
+    "description": "Select geofence screen title"
+  },
+
+  "selectGeofenceInstructions": "Choose a work area to start tracking your location and progress",
+  "@selectGeofenceInstructions": {
+    "description": "Instructions for selecting a geofence"
+  },
+
+  "noCurrentAssignment": "No Current Assignment",
+  "@noCurrentAssignment": {
+    "description": "Message when agent has no geofence assignment"
+  },
+
+  "selectGeofenceToStart": "Select a geofence below to start working",
+  "@selectGeofenceToStart": {
+    "description": "Instructions to select geofence"
+  },
+
+  "currentAssignment": "Current Assignment",
+  "@currentAssignment": {
+    "description": "Label for current geofence assignment"
+  },
+
+  "currentlyInside": "Currently inside",
+  "@currentlyInside": {
+    "description": "Status when agent is inside assigned geofence"
+  },
+
+  "availableGeofences": "Available Geofences",
+  "@availableGeofences": {
+    "description": "Section title for available geofences"
+  },
+
+  "errorLoadingGeofences": "Error loading geofences",
+  "@errorLoadingGeofences": {
+    "description": "Error message when geofences fail to load"
+  },
+
+  "retry": "Retry",
+  "@retry": {
+    "description": "Button text to retry an operation"
+  },
+
+  "noGeofencesAvailable": "No geofences available",
+  "@noGeofencesAvailable": {
+    "description": "Message when no geofences exist for selection"
+  },
+
+  "contactManagerForGeofences": "Contact your manager to create geofences for this campaign",
+  "@contactManagerForGeofences": {
+    "description": "Instructions when no geofences are available"
+  },
+
+  "geofences": "Geofences",
+  "@geofences": {
+    "description": "Geofences section title"
+  },
+
+  "assignmentCancelled": "Assignment cancelled successfully",
+  "@assignmentCancelled": {
+    "description": "Success message when assignment is cancelled"
+  }
+}

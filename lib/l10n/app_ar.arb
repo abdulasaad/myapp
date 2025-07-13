@@ -1,0 +1,6486 @@
+{
+  "@@locale": "ar",
+  "appName": "التجوال",
+  "@appName": {
+    "description": "اسم التطبيق"
+  },
+
+  "loginTitle": "أهلاً بعودتك",
+  "@loginTitle": {
+    "description": "عنوان شاشة تسجيل الدخول"
+  },
+
+  "loginSubtitle": "سجل دخولك إلى حساب التجوال",
+  "@loginSubtitle": {
+    "description": "العنوان الفرعي لشاشة تسجيل الدخول"
+  },
+
+  "signUp": "إنشاء حساب",
+  "@signUp": {
+    "description": "نص زر إنشاء الحساب"
+  },
+
+  "fullName": "الاسم الكامل",
+  "@fullName": {
+    "description": "تسمية حقل الاسم الكامل"
+  },
+
+  "email": "البريد الإلكتروني",
+  "@email": {
+    "description": "تسمية حقل البريد الإلكتروني"
+  },
+
+  "usernameOrEmail": "اسم المستخدم أو البريد الإلكتروني",
+  "@usernameOrEmail": {
+    "description": "تسمية حقل اسم المستخدم أو البريد الإلكتروني"
+  },
+
+  "password": "كلمة المرور",
+  "@password": {
+    "description": "تسمية حقل كلمة المرور"
+  },
+
+  "login": "تسجيل الدخول",
+  "@login": {
+    "description": "نص زر تسجيل الدخول"
+  },
+
+  "requiredField": "حقل مطلوب",
+  "@requiredField": {
+    "description": "رسالة التحقق للحقول المطلوبة"
+  },
+
+  "passwordMinLength": "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
+  "@passwordMinLength": {
+    "description": "رسالة التحقق من كلمة المرور"
+  },
+
+  "noInternetConnection": "لا يوجد اتصال بالإنترنت",
+  "@noInternetConnection": {
+    "description": "نص شريط عدم الاتصال"
+  },
+
+  "noInternetMessage": "لا يوجد اتصال بالإنترنت. يرجى التحقق من شبكتك والمحاولة مرة أخرى.",
+  "@noInternetMessage": {
+    "description": "رسالة تفصيلية لخطأ عدم الاتصال"
+  },
+
+  "invalidCredentials": "بيانات اعتماد غير صحيحة. يرجى التحقق من اسم المستخدم/البريد الإلكتروني وكلمة المرور.",
+  "@invalidCredentials": {
+    "description": "رسالة خطأ تسجيل الدخول للبيانات غير الصحيحة"
+  },
+
+  "loginSuccessful": "تم تسجيل الدخول بنجاح!",
+  "@loginSuccessful": {
+    "description": "رسالة نجاح تسجيل الدخول"
+  },
+
+  "unexpectedError": "حدث خطأ غير متوقع.",
+  "@unexpectedError": {
+    "description": "رسالة خطأ عامة"
+  },
+
+  "signUpSuccessful": "تم إنشاء الحساب بنجاح! يرجى التحقق من بريدك الإلكتروني للتأكيد.",
+  "@signUpSuccessful": {
+    "description": "رسالة نجاح إنشاء الحساب"
+  },
+
+  "couldNotOpenFacebook": "لا يمكن فتح فيسبوك",
+  "@couldNotOpenFacebook": {
+    "description": "رسالة خطأ رابط فيسبوك"
+  },
+
+  "couldNotOpenInstagram": "لا يمكن فتح إنستغرام",
+  "@couldNotOpenInstagram": {
+    "description": "رسالة خطأ رابط إنستغرام"
+  },
+
+  "couldNotOpenWhatsApp": "لا يمكن فتح واتساب",
+  "@couldNotOpenWhatsApp": {
+    "description": "رسالة خطأ رابط واتساب"
+  },
+
+  "couldNotOpenWebsite": "لا يمكن فتح الموقع الإلكتروني",
+  "@couldNotOpenWebsite": {
+    "description": "رسالة خطأ رابط الموقع"
+  },
+
+  "loading": "جاري التحميل...",
+  "@loading": {
+    "description": "نص التحميل العام"
+  },
+
+  "retry": "إعادة المحاولة",
+  "@retry": {
+    "description": "نص زر إعادة المحاولة"
+  },
+
+  "errorLoadingProfile": "خطأ في تحميل ملف المستخدم",
+  "@errorLoadingProfile": {
+    "description": "رسالة خطأ تحميل الملف الشخصي"
+  },
+
+  "dashboard": "لوحة التحكم",
+  "@dashboard": {
+    "description": "تسمية التنقل للوحة التحكم"
+  },
+
+  "campaigns": "الحملات",
+  "@campaigns": {
+    "description": "تسمية التنقل للحملات"
+  },
+
+  "tasks": "المهام",
+  "@tasks": {
+    "description": "تسمية التنقل للمهام"
+  },
+
+  "profile": "الملف الشخصي",
+  "@profile": {
+    "description": "تسمية التنقل للملف الشخصي"
+  },
+
+  "home": "الرئيسية",
+  "@home": {
+    "description": "تسمية التنقل للرئيسية"
+  },
+
+  "myTasks": "مهامي",
+  "@myTasks": {
+    "description": "تسمية التنقل لمهامي"
+  },
+
+  "youreOffline": "أنت غير متصل",
+  "@youreOffline": {
+    "description": "رسالة حالة عدم الاتصال"
+  },
+
+  "offlineMessage": "يرجى التحقق من اتصال الإنترنت لتحميل لوحة التحكم.",
+  "@offlineMessage": {
+    "description": "رسالة تفصيلية لحالة عدم الاتصال"
+  },
+
+  "errorLoadingDashboard": "خطأ في تحميل لوحة التحكم",
+  "@errorLoadingDashboard": {
+    "description": "خطأ تحميل لوحة التحكم"
+  },
+
+  "pleaseTryAgainLater": "يرجى المحاولة مرة أخرى لاحقاً",
+  "@pleaseTryAgainLater": {
+    "description": "رسالة إعادة المحاولة العامة"
+  },
+
+  "createNew": "إنشاء جديد",
+  "@createNew": {
+    "description": "نص زر إنشاء جديد"
+  },
+
+  "chooseTaskType": "اختر نوع المهمة",
+  "@chooseTaskType": {
+    "description": "عنوان اختيار نوع المهمة"
+  },
+
+  "campaign": "حملة",
+  "@campaign": {
+    "description": "تسمية الحملة"
+  },
+
+  "createCampaignDesc": "إنشاء حملة جديدة مع المهام",
+  "@createCampaignDesc": {
+    "description": "وصف إنشاء الحملة"
+  },
+
+  "task": "مهمة",
+  "@task": {
+    "description": "تسمية المهمة"
+  },
+
+  "createTaskDesc": "إنشاء مهمة مستقلة",
+  "@createTaskDesc": {
+    "description": "وصف إنشاء المهمة"
+  },
+
+  "route": "مسار",
+  "@route": {
+    "description": "تسمية المسار"
+  },
+
+  "createRouteDesc": "إنشاء مسار جديد",
+  "@createRouteDesc": {
+    "description": "وصف إنشاء المسار"
+  },
+
+  "templateTask": "مهمة قالب",
+  "@templateTask": {
+    "description": "تسمية مهمة القالب"
+  },
+
+  "createTemplateDesc": "إنشاء من قالب موجود",
+  "@createTemplateDesc": {
+    "description": "وصف إنشاء مهمة القالب"
+  },
+
+  "customTask": "مهمة مخصصة",
+  "@customTask": {
+    "description": "تسمية المهمة المخصصة"
+  },
+
+  "createCustomDesc": "إنشاء مهمة قائمة على الأدلة",
+  "@createCustomDesc": {
+    "description": "وصف إنشاء المهمة المخصصة"
+  },
+
+  "permissionRequired": "إذن مطلوب",
+  "@permissionRequired": {
+    "description": "حالة الإذن المطلوب"
+  },
+
+  "active": "نشط",
+  "@active": {
+    "description": "حالة نشط"
+  },
+
+  "disabled": "معطل",
+  "@disabled": {
+    "description": "حالة معطل"
+  },
+
+  "error": "خطأ",
+  "@error": {
+    "description": "حالة خطأ"
+  },
+
+  "permissionDenied": "تم رفض الإذن",
+  "@permissionDenied": {
+    "description": "حالة رفض الإذن"
+  },
+
+  "errorOccurred": "حدث خطأ",
+  "@errorOccurred": {
+    "description": "حالة حدوث خطأ"
+  },
+
+  "onRoute": "في المسار",
+  "@onRoute": {
+    "description": "حالة في المسار"
+  },
+
+  "workingTasks": "المهام الجارية",
+  "@workingTasks": {
+    "description": "حالة المهام الجارية"
+  },
+
+  "inCampaign": "في حملة",
+  "@inCampaign": {
+    "description": "حالة في حملة"
+  },
+
+  "available": "متاح",
+  "@available": {
+    "description": "حالة متاح"
+  },
+
+  "agentDashboard": "لوحة تحكم المندوب",
+  "@agentDashboard": {
+    "description": "عنوان لوحة تحكم المندوب"
+  },
+
+  "locationService": "خدمة الموقع",
+  "@locationService": {
+    "description": "تسمية خدمة الموقع"
+  },
+
+  "routes": "المسارات",
+  "@routes": {
+    "description": "تسمية المسارات"
+  },
+
+  "noneAssigned": "لا يوجد مُخصص",
+  "@noneAssigned": {
+    "description": "حالة عدم وجود مُخصص"
+  },
+
+  "noneActive": "لا يوجد نشط",
+  "@noneActive": {
+    "description": "حالة عدم وجود نشط"
+  },
+
+  "noActiveCampaigns": "لا توجد حملات نشطة",
+  "@noActiveCampaigns": {
+    "description": "حالة عدم وجود حملات نشطة"
+  },
+
+  "places": "الأماكن",
+  "@places": {
+    "description": "تسمية الأماكن"
+  },
+
+  "evidence": "الأدلة",
+  "@evidence": {
+    "description": "تسمية الأدلة"
+  },
+
+  "completionRate": "معدل الإنجاز",
+  "@completionRate": {
+    "description": "تسمية معدل الإنجاز"
+  },
+
+  "peakHour": "ساعة الذروة",
+  "@peakHour": {
+    "description": "تسمية ساعة الذروة"
+  },
+
+  "avgDuration": "متوسط المدة",
+  "@avgDuration": {
+    "description": "تسمية متوسط المدة"
+  },
+
+  "weekTotal": "إجمالي الأسبوع",
+  "@weekTotal": {
+    "description": "تسمية إجمالي الأسبوع"
+  },
+
+  "monthTotal": "إجمالي الشهر",
+  "@monthTotal": {
+    "description": "تسمية إجمالي الشهر"
+  },
+
+  "uniqueLocations": "المواقع الفريدة",
+  "@uniqueLocations": {
+    "description": "تسمية المواقع الفريدة"
+  },
+
+  "visitAnalytics": "تحليلات الزيارات",
+  "@visitAnalytics": {
+    "description": "تسمية تحليلات الزيارات"
+  },
+
+  "visitsToday": "زيارات اليوم",
+  "@visitsToday": {
+    "description": "تسمية زيارات اليوم"
+  },
+
+  "activeTasks": "المهام النشطة",
+  "@activeTasks": {
+    "description": "تسمية المهام النشطة"
+  },
+
+  "tasksInProgress": "المهام قيد التنفيذ",
+  "@tasksInProgress": {
+    "description": "تسمية المهام قيد التنفيذ"
+  },
+
+  "totalPoints": "إجمالي النقاط",
+  "@totalPoints": {
+    "description": "تسمية إجمالي النقاط"
+  },
+
+  "pointsEarned": "النقاط المكتسبة",
+  "@pointsEarned": {
+    "description": "تسمية النقاط المكتسبة"
+  },
+
+  "activeCampaigns": "الحملات النشطة",
+  "@activeCampaigns": {
+    "description": "تسمية الحملات النشطة"
+  },
+
+  "campaignsRunning": "الحملات الجارية",
+  "@campaignsRunning": {
+    "description": "تسمية الحملات الجارية"
+  },
+
+  "activeRoutes": "المسارات النشطة",
+  "@activeRoutes": {
+    "description": "تسمية المسارات النشطة"
+  },
+
+  "routesAssigned": "المسارات المخصصة",
+  "@routesAssigned": {
+    "description": "تسمية المسارات المخصصة"
+  },
+
+  "quickActions": "الإجراءات السريعة",
+  "@quickActions": {
+    "description": "تسمية الإجراءات السريعة"
+  },
+
+  "suggest": "اقتراح",
+  "@suggest": {
+    "description": "تسمية زر الاقتراح"
+  },
+
+  "map": "الخريطة",
+  "@map": {
+    "description": "تسمية زر الخريطة"
+  },
+
+  "cancel": "إلغاء",
+  "@cancel": {
+    "description": "تسمية زر الإلغاء"
+  },
+
+  "enable": "تفعيل",
+  "@enable": {
+    "description": "تسمية زر التفعيل"
+  },
+
+  "signOut": "تسجيل الخروج",
+  "@signOut": {
+    "description": "تسمية زر تسجيل الخروج"
+  },
+
+  "settings": "الإعدادات",
+  "@settings": {
+    "description": "تسمية الإعدادات"
+  },
+
+  "notifications": "الإشعارات",
+  "@notifications": {
+    "description": "تسمية الإشعارات"
+  },
+
+  "helpSupport": "المساعدة والدعم",
+  "@helpSupport": {
+    "description": "تسمية المساعدة والدعم"
+  },
+
+  "about": "حول",
+  "@about": {
+    "description": "تسمية حول"
+  },
+
+  "language": "اللغة",
+  "@language": {
+    "description": "تسمية اللغة"
+  },
+
+  "welcomeBack": "أهلاً بعودتك",
+  "@welcomeBack": {
+    "description": "ترحيب بالعودة"
+  },
+
+  "todaysActivity": "نشاط اليوم",
+  "@todaysActivity": {
+    "description": "عنوان قسم نشاط اليوم"
+  },
+
+  "toVisitToday": "للزيارة اليوم",
+  "@toVisitToday": {
+    "description": "لاحقة الأماكن للزيارة اليوم"
+  },
+
+  "completedToday": "مكتمل اليوم",
+  "@completedToday": {
+    "description": "لاحقة المكتمل اليوم"
+  },
+
+  "activeCampaign": "حملة نشطة",
+  "@activeCampaign": {
+    "description": "تسمية الحملة النشطة"
+  },
+
+  "currentCampaign": "الحملة الحالية",
+  "@currentCampaign": {
+    "description": "تسمية الحملة الحالية"
+  },
+
+  "startGuidedTask": "بدء المهمة الموجهة",
+  "@startGuidedTask": {
+    "description": "زر بدء المهمة الموجهة"
+  },
+
+  "quickUpload": "رفع سريع",
+  "@quickUpload": {
+    "description": "زر الرفع السريع"
+  },
+
+  "markDone": "تعيين كمكتمل",
+  "@markDone": {
+    "description": "زر تعيين كمكتمل"
+  },
+
+  "inProgress": "قيد التنفيذ",
+  "@inProgress": {
+    "description": "حالة قيد التنفيذ"
+  },
+
+  "selectLanguage": "اختر اللغة",
+  "@selectLanguage": {
+    "description": "عنوان اختيار اللغة"
+  },
+
+  "english": "English",
+  "@english": {
+    "description": "خيار اللغة الإنجليزية"
+  },
+
+  "arabic": "العربية",
+  "@arabic": {
+    "description": "خيار اللغة العربية"
+  },
+
+  "languageChanged": "تم تغيير اللغة بنجاح",
+  "@languageChanged": {
+    "description": "رسالة نجاح تغيير اللغة"
+  },
+
+  "restartRequired": "يرجى إعادة تشغيل التطبيق لتطبيق تغييرات اللغة",
+  "@restartRequired": {
+    "description": "رسالة إعادة التشغيل المطلوبة لتغيير اللغة"
+  },
+
+  "languageDesc": "اختر لغتك المفضلة",
+  "@languageDesc": {
+    "description": "وصف خيار اللغة"
+  },
+
+  "confirmDelete": "تأكيد الحذف",
+  "@confirmDelete": {
+    "description": "عنوان مربع حوار تأكيد الحذف"
+  },
+
+  "confirmDeleteCampaign": "هل أنت متأكد من رغبتك في حذف \"{name}\"؟ هذا الإجراء لا يمكن التراجع عنه.",
+  "@confirmDeleteCampaign": {
+    "description": "رسالة تأكيد حذف الحملة",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "description": "اسم الحملة"
+      }
+    }
+  },
+
+  "campaignDeleted": "تم حذف الحملة \"{name}\" بنجاح.",
+  "@campaignDeleted": {
+    "description": "رسالة نجاح حذف الحملة",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "description": "اسم الحملة"
+      }
+    }
+  },
+
+  "errorDeletingCampaign": "خطأ في حذف الحملة: {error}",
+  "@errorDeletingCampaign": {
+    "description": "رسالة خطأ حذف الحملة",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "تفاصيل الخطأ"
+      }
+    }
+  },
+
+  "noCampaignsYet": "لا توجد حملات بعد",
+  "@noCampaignsYet": {
+    "description": "عنوان الحالة الفارغة للمديرين بدون حملات"
+  },
+
+  "createFirstCampaign": "أنشئ حملتك الأولى للبدء في إدارة المهام والمندوبين",
+  "@createFirstCampaign": {
+    "description": "وصف الحالة الفارغة للمديرين بدون حملات"
+  },
+
+  "noCampaignsAssigned": "لا توجد حملات مُخصصة",
+  "@noCampaignsAssigned": {
+    "description": "عنوان الحالة الفارغة للمندوبين بدون حملات مُخصصة"
+  },
+
+  "viewAssignedCampaigns": "ستشاهد الحملات المُخصصة هنا عند توفرها",
+  "@viewAssignedCampaigns": {
+    "description": "وصف الحالة الفارغة للمندوبين بدون حملات مُخصصة"
+  },
+
+  "editCampaign": "تعديل الحملة",
+  "@editCampaign": {
+    "description": "تلميح تعديل الحملة"
+  },
+
+  "deleteCampaign": "حذف الحملة",
+  "@deleteCampaign": {
+    "description": "تلميح حذف الحملة"
+  },
+
+  "insideGeofence": "داخل النطاق الجغرافي",
+  "@insideGeofence": {
+    "description": "حالة النطاق الجغرافي عند التواجد بالداخل"
+  },
+
+  "outsideGeofence": "خارج النطاق الجغرافي",
+  "@outsideGeofence": {
+    "description": "حالة النطاق الجغرافي عند التواجد بالخارج"
+  },
+
+  "viewTaskLocation": "عرض موقع المهمة",
+  "@viewTaskLocation": {
+    "description": "تلميح عرض موقع المهمة"
+  },
+
+  "ends": "تنتهي:",
+  "@ends": {
+    "description": "بادئة تاريخ انتهاء الحملة"
+  },
+
+  "myCampaigns": "حملاتي",
+  "@myCampaigns": {
+    "description": "عنوان شاشة حملات المندوب"
+  },
+
+  "unableToLoadCampaigns": "غير قادر على تحميل الحملات. يرجى التحقق من اتصالك والمحاولة مرة أخرى.",
+  "@unableToLoadCampaigns": {
+    "description": "رسالة خطأ الشبكة لتحميل الحملات"
+  },
+
+  "errorLoadingCampaigns": "خطأ في تحميل الحملات",
+  "@errorLoadingCampaigns": {
+    "description": "رسالة خطأ عامة لتحميل الحملات"
+  },
+
+  "addNewTask": "إضافة مهمة جديدة",
+  "@addNewTask": {
+    "description": "عنوان مربع حوار إضافة مهمة جديدة"
+  },
+
+  "taskTitle": "عنوان المهمة",
+  "@taskTitle": {
+    "description": "تسمية حقل إدخال عنوان المهمة"
+  },
+
+  "assignAnAgent": "تعيين مندوب",
+  "@assignAnAgent": {
+    "description": "عنوان مربع حوار تعيين المندوب"
+  },
+
+  "assignedAgents": "المندوبون المُعيَّنون",
+  "@assignedAgents": {
+    "description": "رأس قسم المندوبين المُعيَّنين"
+  },
+
+  "assignAgent": "تعيين مندوب",
+  "@assignAgent": {
+    "description": "تسمية زر تعيين المندوب"
+  },
+
+  "noTasksCreated": "لم يتم إنشاء مهام بعد.",
+  "@noTasksCreated": {
+    "description": "رسالة الحالة الفارغة عندما لا توجد مهام"
+  },
+
+  "noAgentsAssigned": "لم يتم تعيين مندوبين بعد.",
+  "@noAgentsAssigned": {
+    "description": "رسالة الحالة الفارغة عندما لا يوجد مندوبون مُعيَّنون"
+  },
+
+  "editTask": "تعديل المهمة",
+  "@editTask": {
+    "description": "عنوان مربع حوار تعديل المهمة"
+  },
+
+  "deleteTask": "حذف المهمة",
+  "@deleteTask": {
+    "description": "عنوان مربع حوار حذف المهمة"
+  },
+
+  "manageGeofences": "إدارة النطاقات الجغرافية",
+  "@manageGeofences": {
+    "description": "تسمية زر إدارة النطاقات الجغرافية"
+  },
+
+  "confirmRemoval": "تأكيد الإزالة",
+  "@confirmRemoval": {
+    "description": "عنوان مربع حوار تأكيد إزالة المندوب"
+  },
+
+  "removeAgentConfirmation": "هل أنت متأكد من رغبتك في إزالة {name} من هذه الحملة؟",
+  "@removeAgentConfirmation": {
+    "description": "رسالة تأكيد إزالة المندوب",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "description": "اسم المندوب"
+      }
+    }
+  },
+
+  "payAgent": "دفع لـ {name}",
+  "@payAgent": {
+    "description": "عنوان مربع حوار دفع للمندوب",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "description": "اسم المندوب"
+      }
+    }
+  },
+
+  "amountPaid": "المبلغ المدفوع",
+  "@amountPaid": {
+    "description": "تسمية حقل إدخال مبلغ الدفع"
+  },
+
+  "outstandingBalance": "الرصيد المستحق: {amount} نقطة",
+  "@outstandingBalance": {
+    "description": "عرض الرصيد المستحق",
+    "placeholders": {
+      "amount": {
+        "type": "String",
+        "description": "مبلغ الرصيد"
+      }
+    }
+  },
+
+  "loadingEarnings": "جاري تحميل الأرباح...",
+  "@loadingEarnings": {
+    "description": "رسالة حالة تحميل الأرباح"
+  },
+
+  "taskAddedSuccess": "تم إضافة المهمة وتعيينها لجميع مندوبي الحملة!",
+  "@taskAddedSuccess": {
+    "description": "رسالة نجاح إضافة المهمة"
+  },
+
+  "taskAddFailed": "فشل في إضافة المهمة: {error}",
+  "@taskAddFailed": {
+    "description": "رسالة فشل إضافة المهمة",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "تفاصيل الخطأ"
+      }
+    }
+  },
+
+  "agentAssignedSuccess": "تم تعيين المندوب للحملة. تم تعيين جميع المهام.",
+  "@agentAssignedSuccess": {
+    "description": "رسالة نجاح تعيين المندوب"
+  },
+
+  "agentAssignFailed": "فشل في تعيين المندوب: {error}",
+  "@agentAssignFailed": {
+    "description": "رسالة فشل تعيين المندوب",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "تفاصيل الخطأ"
+      }
+    }
+  },
+
+  "taskUpdatedSuccess": "تم تحديث المهمة بنجاح!",
+  "@taskUpdatedSuccess": {
+    "description": "رسالة نجاح تحديث المهمة"
+  },
+
+  "taskUpdateFailed": "فشل في تحديث المهمة: {error}",
+  "@taskUpdateFailed": {
+    "description": "رسالة فشل تحديث المهمة",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "تفاصيل الخطأ"
+      }
+    }
+  },
+
+  "taskDeletedSuccess": "تم حذف المهمة بنجاح!",
+  "@taskDeletedSuccess": {
+    "description": "رسالة نجاح حذف المهمة"
+  },
+
+  "taskDeleteFailed": "فشل في حذف المهمة: {error}",
+  "@taskDeleteFailed": {
+    "description": "رسالة فشل حذف المهمة",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "تفاصيل الخطأ"
+      }
+    }
+  },
+
+  "agentRemovedSuccess": "تم إزالة المندوب بنجاح.",
+  "@agentRemovedSuccess": {
+    "description": "رسالة نجاح إزالة المندوب"
+  },
+
+  "agentRemoveFailed": "فشل في إزالة المندوب: {error}",
+  "@agentRemoveFailed": {
+    "description": "رسالة فشل إزالة المندوب",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "تفاصيل الخطأ"
+      }
+    }
+  },
+
+  "paymentRecordedSuccess": "تم تسجيل الدفع بنجاح!",
+  "@paymentRecordedSuccess": {
+    "description": "رسالة نجاح تسجيل الدفع"
+  },
+
+  "paymentRecordFailed": "فشل في تسجيل الدفع: {error}",
+  "@paymentRecordFailed": {
+    "description": "رسالة فشل تسجيل الدفع",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "تفاصيل الخطأ"
+      }
+    }
+  },
+
+  "pay": "دفع",
+  "@pay": {
+    "description": "تسمية زر الدفع"
+  },
+
+  "mustBeNumber": "يجب أن يكون رقماً",
+  "@mustBeNumber": {
+    "description": "رسالة خطأ التحقق من الرقم"
+  },
+
+  "uploadEvidence": "رفع الأدلة",
+  "@uploadEvidence": {
+    "description": "عنوان مربع حوار رفع الأدلة"
+  },
+
+  "evidenceName": "اسم الدليل",
+  "@evidenceName": {
+    "description": "تسمية حقل إدخال اسم الدليل"
+  },
+
+  "enterEvidenceName": "أدخل اسم الدليل",
+  "@enterEvidenceName": {
+    "description": "تلميح حقل إدخال اسم الدليل"
+  },
+
+  "evidenceNameRequired": "اسم الدليل مطلوب",
+  "@evidenceNameRequired": {
+    "description": "رسالة التحقق من اسم الدليل"
+  },
+
+  "selectFile": "اختر ملف",
+  "@selectFile": {
+    "description": "نص زر اختيار الملف"
+  },
+
+  "changeFile": "تغيير الملف",
+  "@changeFile": {
+    "description": "نص زر تغيير الملف"
+  },
+
+  "upload": "رفع",
+  "@upload": {
+    "description": "نص زر الرفع"
+  },
+
+  "takePhoto": "التقاط صورة",
+  "@takePhoto": {
+    "description": "خيار التقاط الصورة"
+  },
+
+  "captureWithCamera": "التقاط بالكاميرا",
+  "@captureWithCamera": {
+    "description": "وصف التقاط الصورة"
+  },
+
+  "chooseImage": "اختيار صورة",
+  "@chooseImage": {
+    "description": "خيار اختيار الصورة"
+  },
+
+  "selectFromGallery": "اختيار من المعرض",
+  "@selectFromGallery": {
+    "description": "وصف اختيار الصورة"
+  },
+
+  "recordVideo": "تسجيل فيديو",
+  "@recordVideo": {
+    "description": "خيار تسجيل الفيديو"
+  },
+
+  "captureVideo": "تسجيل فيديو",
+  "@captureVideo": {
+    "description": "وصف تسجيل الفيديو"
+  },
+
+  "chooseVideo": "اختيار فيديو",
+  "@chooseVideo": {
+    "description": "خيار اختيار الفيديو"
+  },
+
+  "selectVideoFromGallery": "اختيار من المعرض",
+  "@selectVideoFromGallery": {
+    "description": "وصف اختيار الفيديو"
+  },
+
+  "chooseDocument": "اختيار مستند",
+  "@chooseDocument": {
+    "description": "خيار اختيار المستند"
+  },
+
+  "documentTypes": "PDF، Word، Excel، إلخ.",
+  "@documentTypes": {
+    "description": "وصف أنواع المستندات"
+  },
+
+  "anyFile": "أي ملف",
+  "@anyFile": {
+    "description": "خيار أي ملف"
+  },
+
+  "browseAllFiles": "تصفح جميع الملفات",
+  "@browseAllFiles": {
+    "description": "وصف أي ملف"
+  },
+
+  "image": "صورة",
+  "@image": {
+    "description": "عرض نوع الملف صورة"
+  },
+
+  "pdf": "PDF",
+  "@pdf": {
+    "description": "عرض نوع الملف PDF"
+  },
+
+  "video": "فيديو",
+  "@video": {
+    "description": "عرض نوع الملف فيديو"
+  },
+
+  "document": "مستند",
+  "@document": {
+    "description": "عرض نوع الملف مستند"
+  },
+
+  "file": "ملف",
+  "@file": {
+    "description": "عرض نوع الملف العام"
+  },
+
+  "approved": "موافق عليه",
+  "@approved": {
+    "description": "حالة الموافقة"
+  },
+
+  "rejected": "مرفوض",
+  "@rejected": {
+    "description": "حالة الرفض"
+  },
+
+  "pendingReview": "في انتظار المراجعة",
+  "@pendingReview": {
+    "description": "حالة انتظار المراجعة"
+  },
+
+  "confirmDeletion": "تأكيد الحذف",
+  "@confirmDeletion": {
+    "description": "عنوان مربع حوار تأكيد الحذف"
+  },
+
+  "confirmDeleteEvidence": "هل أنت متأكد من رغبتك في حذف \"{title}\"؟",
+  "@confirmDeleteEvidence": {
+    "description": "رسالة تأكيد حذف الدليل",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "description": "عنوان الدليل"
+      }
+    }
+  },
+
+  "delete": "حذف",
+  "@delete": {
+    "description": "نص زر الحذف"
+  },
+
+  "evidenceDeletedSuccess": "تم حذف الدليل بنجاح.",
+  "@evidenceDeletedSuccess": {
+    "description": "رسالة نجاح حذف الدليل"
+  },
+
+  "evidenceDeleteFailed": "فشل في حذف الدليل: {error}",
+  "@evidenceDeleteFailed": {
+    "description": "رسالة فشل حذف الدليل",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "تفاصيل الخطأ"
+      }
+    }
+  },
+
+  "taskStatusReverted": "تم إرجاع حالة المهمة إلى قيد الانتظار.",
+  "@taskStatusReverted": {
+    "description": "رسالة إرجاع حالة المهمة"
+  },
+
+  "confirmCompletion": "تأكيد الإنجاز",
+  "@confirmCompletion": {
+    "description": "عنوان مربع حوار تأكيد إنجاز المهمة"
+  },
+
+  "confirmMarkTaskDone": "هل أنت متأكد من رغبتك في تمييز هذه المهمة كمنجزة؟ لا يمكن التراجع عن هذا الإجراء.",
+  "@confirmMarkTaskDone": {
+    "description": "رسالة تأكيد إنجاز المهمة"
+  },
+
+  "confirm": "تأكيد",
+  "@confirm": {
+    "description": "نص زر التأكيد"
+  },
+
+  "taskCompletedSuccess": "تم تمييز المهمة كمنجزة!",
+  "@taskCompletedSuccess": {
+    "description": "رسالة نجاح إنجاز المهمة"
+  },
+
+  "uploadFailed": "فشل الرفع: {error}",
+  "@uploadFailed": {
+    "description": "رسالة فشل الرفع",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "تفاصيل الخطأ"
+      }
+    }
+  },
+
+  "checkingLocation": "جاري فحص الموقع للتحقق من النطاق الجغرافي...",
+  "@checkingLocation": {
+    "description": "رسالة حالة فحص الموقع"
+  },
+
+  "geofenceValidationFailed": "يجب أن تكون داخل منطقة المهمة المحددة لرفع الأدلة. يرجى الانتقال إلى الموقع المحدد والمحاولة مرة أخرى.",
+  "@geofenceValidationFailed": {
+    "description": "رسالة فشل التحقق من النطاق الجغرافي"
+  },
+
+  "locationVerified": "تم التحقق من الموقع! جاري رفع الدليل...",
+  "@locationVerified": {
+    "description": "رسالة نجاح التحقق من الموقع"
+  },
+
+  "fileTooLarge": "الملف كبير جداً. الحد الأقصى للحجم هو 50 ميجابايت.",
+  "@fileTooLarge": {
+    "description": "رسالة خطأ حد حجم الملف"
+  },
+
+  "evidenceUploadedSuccess": "تم رفع الدليل بنجاح.",
+  "@evidenceUploadedSuccess": {
+    "description": "رسالة نجاح رفع الدليل"
+  },
+
+  "fileUrl": "رابط الملف",
+  "@fileUrl": {
+    "description": "عنوان مربع حوار رابط الملف"
+  },
+
+  "close": "إغلاق",
+  "@close": {
+    "description": "نص زر الإغلاق"
+  },
+
+  "open": "فتح",
+  "@open": {
+    "description": "نص زر الفتح"
+  },
+
+  "couldNotOpenFile": "لا يمكن فتح الملف: {error}",
+  "@couldNotOpenFile": {
+    "description": "رسالة خطأ فتح الملف",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "تفاصيل الخطأ"
+      }
+    }
+  },
+
+  "fileViewerInfo": "يمكن عرض هذا الملف في عارض المستندات في جهازك.",
+  "@fileViewerInfo": {
+    "description": "معلومات عارض ملف المستند"
+  },
+
+  "videoPlayerInfo": "يمكن تشغيل هذا الفيديو في مشغل الفيديو في جهازك.",
+  "@videoPlayerInfo": {
+    "description": "معلومات مشغل ملف الفيديو"
+  },
+
+  "compatibleAppInfo": "يمكن فتح هذا الملف بتطبيق متوافق في جهازك.",
+  "@compatibleAppInfo": {
+    "description": "معلومات تطبيق الملف العام"
+  },
+
+  "rejectionReason": "سبب الرفض:",
+  "@rejectionReason": {
+    "description": "تسمية سبب الرفض"
+  },
+
+  "approveEvidence": "الموافقة على الدليل",
+  "@approveEvidence": {
+    "description": "عنوان مربع حوار الموافقة على الدليل"
+  },
+
+  "confirmApproveEvidence": "هل أنت متأكد من رغبتك في الموافقة على \"{title}\"؟",
+  "@confirmApproveEvidence": {
+    "description": "رسالة تأكيد الموافقة على الدليل",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "description": "عنوان الدليل"
+      }
+    }
+  },
+
+  "approve": "موافقة",
+  "@approve": {
+    "description": "نص زر الموافقة"
+  },
+
+  "evidenceApprovedSuccess": "تم الموافقة على الدليل بنجاح",
+  "@evidenceApprovedSuccess": {
+    "description": "رسالة نجاح الموافقة على الدليل"
+  },
+
+  "evidenceApproveFailed": "فشل في الموافقة على الدليل: {error}",
+  "@evidenceApproveFailed": {
+    "description": "رسالة فشل الموافقة على الدليل",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "تفاصيل الخطأ"
+      }
+    }
+  },
+
+  "rejectEvidence": "رفض الدليل",
+  "@rejectEvidence": {
+    "description": "عنوان مربع حوار رفض الدليل"
+  },
+
+  "confirmRejectEvidence": "هل أنت متأكد من رغبتك في رفض \"{title}\"؟",
+  "@confirmRejectEvidence": {
+    "description": "رسالة تأكيد رفض الدليل",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "description": "عنوان الدليل"
+      }
+    }
+  },
+
+  "rejectionReasonLabel": "سبب الرفض",
+  "@rejectionReasonLabel": {
+    "description": "تسمية حقل إدخال سبب الرفض"
+  },
+
+  "rejectionReasonHint": "اشرح سبب رفض هذا الدليل",
+  "@rejectionReasonHint": {
+    "description": "تلميح حقل إدخال سبب الرفض"
+  },
+
+  "rejectionReasonRequired": "يرجى تقديم سبب للرفض",
+  "@rejectionReasonRequired": {
+    "description": "رسالة التحقق من سبب الرفض"
+  },
+
+  "reject": "رفض",
+  "@reject": {
+    "description": "نص زر الرفض"
+  },
+
+  "evidenceRejectedSuccess": "تم رفض الدليل",
+  "@evidenceRejectedSuccess": {
+    "description": "رسالة نجاح رفض الدليل"
+  },
+
+  "evidenceRejectFailed": "فشل في رفض الدليل: {error}",
+  "@evidenceRejectFailed": {
+    "description": "رسالة فشل رفض الدليل",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "تفاصيل الخطأ"
+      }
+    }
+  },
+
+  "noEvidenceSubmitted": "لم يتم تقديم أدلة بعد.",
+  "@noEvidenceSubmitted": {
+    "description": "رسالة الحالة الفارغة عندما لا توجد أدلة"
+  },
+
+  "progressLabel": "التقدم: {current} من أصل {total} تم رفعها",
+  "@progressLabel": {
+    "description": "تسمية تقدم الأدلة",
+    "placeholders": {
+      "current": {
+        "type": "int",
+        "description": "عدد الأدلة الحالي"
+      },
+      "total": {
+        "type": "int",
+        "description": "العدد الإجمالي للأدلة المطلوبة"
+      }
+    }
+  },
+
+  "statusCompleted": "الحالة: منجزة",
+  "@statusCompleted": {
+    "description": "تسمية حالة الإنجاز"
+  },
+
+  "isManager": "هو مدير: {isManager}",
+  "@isManager": {
+    "description": "تسمية حالة المدير للتصحيح",
+    "placeholders": {
+      "isManager": {
+        "type": "bool",
+        "description": "ما إذا كان المستخدم مديراً"
+      }
+    }
+  },
+
+  "viewEvidence": "عرض الدليل",
+  "@viewEvidence": {
+    "description": "تلميح عرض الدليل"
+  },
+
+  "deleteEvidence": "حذف الدليل",
+  "@deleteEvidence": {
+    "description": "تلميح حذف الدليل"
+  },
+
+  "markAsDone": "تمييز كمنجزة",
+  "@markAsDone": {
+    "description": "نص زر تمييز المهمة كمنجزة"
+  },
+
+  "assignmentPending": "التكليف في انتظار الموافقة",
+  "@assignmentPending": {
+    "description": "عنوان مربع حوار التكليف في انتظار الموافقة"
+  },
+
+  "assignmentPendingMessage": "تكليفك لهذه المهمة في انتظار الموافقة من مدير. لا يمكنك الوصول إلى تفاصيل المهمة أو تقديم أدلة حتى تتم الموافقة عليه.\n\nيرجى المراجعة لاحقاً أو الاتصال بمديرك.",
+  "@assignmentPendingMessage": {
+    "description": "رسالة مربع حوار التكليف في انتظار الموافقة"
+  },
+
+  "goBack": "عودة",
+  "@goBack": {
+    "description": "نص زر العودة"
+  },
+
+  "errorLoadingTaskAssignment": "خطأ في تحميل تكليف المهمة: {error}",
+  "@errorLoadingTaskAssignment": {
+    "description": "رسالة خطأ تحميل تكليف المهمة",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "تفاصيل الخطأ"
+      }
+    }
+  },
+
+  "noDescription": "لا يوجد وصف.",
+  "@noDescription": {
+    "description": "رسالة عدم توفر وصف"
+  },
+
+  "noLocationName": "لا يوجد اسم موقع",
+  "@noLocationName": {
+    "description": "رسالة عدم توفر اسم الموقع"
+  },
+
+  "overview": "نظرة عامة",
+  "@overview": {
+    "description": "تسمية خطوة النظرة العامة"
+  },
+
+  "locationVerification": "التحقق من الموقع",
+  "@locationVerification": {
+    "description": "تسمية خطوة التحقق من الموقع"
+  },
+
+  "evidenceUpload": "رفع الأدلة",
+  "@evidenceUpload": {
+    "description": "تسمية خطوة رفع الأدلة"
+  },
+
+  "complete": "مكتمل",
+  "@complete": {
+    "description": "تسمية خطوة الإكمال"
+  },
+
+  "taskOverview": "نظرة عامة على المهمة",
+  "@taskOverview": {
+    "description": "عنوان قسم نظرة عامة على المهمة"
+  },
+
+  "points": "النقاط",
+  "@points": {
+    "description": "تسمية النقاط"
+  },
+
+  "locationCheckRequired": "فحص الموقع مطلوب",
+  "@locationCheckRequired": {
+    "description": "تسمية فحص الموقع مطلوب"
+  },
+
+  "mustBeWithinArea": "يجب أن تكون داخل المنطقة المحددة",
+  "@mustBeWithinArea": {
+    "description": "وصف يجب أن تكون داخل المنطقة"
+  },
+
+  "evidenceRequired": "الأدلة مطلوبة",
+  "@evidenceRequired": {
+    "description": "تسمية الأدلة مطلوبة"
+  },
+
+  "uploadPhotosOrFiles": "رفع الصور أو الملفات كدليل على الإنجاز",
+  "@uploadPhotosOrFiles": {
+    "description": "وصف رفع الصور أو الملفات"
+  },
+
+  "startTask": "بدء المهمة",
+  "@startTask": {
+    "description": "زر بدء المهمة"
+  },
+
+  "locationVerified": "تم التحقق من الموقع!",
+  "@locationVerified": {
+    "description": "رسالة نجاح التحقق من الموقع"
+  },
+
+  "withinRequiredArea": "أنت ضمن منطقة المهمة المطلوبة. يمكنك الآن المتابعة لرفع الأدلة.",
+  "@withinRequiredArea": {
+    "description": "رسالة ضمن المنطقة المطلوبة"
+  },
+
+  "moveToDesignatedArea": "تتطلب هذه المهمة أن تكون في موقع محدد. يرجى الانتقال إلى المنطقة المحددة والتحقق من موقعك.",
+  "@moveToDesignatedArea": {
+    "description": "رسالة الانتقال إلى المنطقة المحددة"
+  },
+
+  "viewMap": "عرض الخريطة",
+  "@viewMap": {
+    "description": "زر عرض الخريطة"
+  },
+
+  "checkLocation": "فحص الموقع",
+  "@checkLocation": {
+    "description": "زر فحص الموقع"
+  },
+
+  "continueToEvidence": "المتابعة إلى الأدلة",
+  "@continueToEvidence": {
+    "description": "زر المتابعة إلى الأدلة"
+  },
+
+  "verifyLocationFirst": "تحقق من الموقع أولاً",
+  "@verifyLocationFirst": {
+    "description": "زر تحقق من الموقع أولاً"
+  },
+
+  "evidenceUploaded": "تم رفع الأدلة!",
+  "@evidenceUploaded": {
+    "description": "رسالة نجاح رفع الأدلة"
+  },
+
+  "successfullyUploadedEvidence": "لقد قمت برفع الأدلة بنجاح لهذه المهمة. يمكنك إضافة المزيد من الأدلة أو المتابعة لإكمال المهمة.",
+  "@successfullyUploadedEvidence": {
+    "description": "رسالة رفع الأدلة بنجاح"
+  },
+
+  "uploadEvidenceDesc": "رفع الصور أو المستندات أو الملفات الأخرى كدليل على إكمال هذه المهمة.",
+  "@uploadEvidenceDesc": {
+    "description": "وصف رفع الأدلة"
+  },
+
+  "addMoreEvidence": "إضافة المزيد من الأدلة",
+  "@addMoreEvidence": {
+    "description": "زر إضافة المزيد من الأدلة"
+  },
+
+  "uploadEvidenceFirst": "رفع الأدلة أولاً",
+  "@uploadEvidenceFirst": {
+    "description": "زر رفع الأدلة أولاً"
+  },
+
+  "taskCompleted": "تم إنجاز المهمة!",
+  "@taskCompleted": {
+    "description": "عنوان إنجاز المهمة"
+  },
+
+  "congratulationsCompleted": "تهانينا! لقد أنجزت بنجاح \"{title}\". تم إرسال أدلتك للمراجعة.",
+  "@congratulationsCompleted": {
+    "description": "رسالة التهاني على الإنجاز",
+    "placeholders": {
+      "title": {
+        "type": "String",
+        "description": "عنوان المهمة"
+      }
+    }
+  },
+
+  "returnToTasks": "العودة إلى المهام",
+  "@returnToTasks": {
+    "description": "زر العودة إلى المهام"
+  },
+
+  "assignmentPendingTitle": "التكليف في انتظار الموافقة",
+  "@assignmentPendingTitle": {
+    "description": "عنوان مربع حوار التكليف في انتظار الموافقة"
+  },
+
+  "assignmentPendingDesc": "تكليفك لهذه المهمة في انتظار الموافقة من مدير. لا يمكنك بدء العمل حتى تتم الموافقة عليه.\n\nيرجى المراجعة لاحقاً أو الاتصال بمديرك.",
+  "@assignmentPendingDesc": {
+    "description": "وصف مربع حوار التكليف في انتظار الموافقة"
+  },
+
+  "notWithinTaskLocation": "أنت لست ضمن منطقة موقع المهمة. يرجى الاقتراب أكثر للمتابعة.",
+  "@notWithinTaskLocation": {
+    "description": "رسالة خطأ عدم التواجد ضمن موقع المهمة"
+  },
+
+  "errorCheckingLocation": "خطأ في فحص الموقع: {error}",
+  "@errorCheckingLocation": {
+    "description": "رسالة خطأ فحص الموقع",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "تفاصيل الخطأ"
+      }
+    }
+  },
+
+  "completed": "مكتمل",
+  "@completed": {
+    "description": "حالة مكتمل"
+  },
+
+  "requested": "مطلوب",
+  "@requested": {
+    "description": "حالة مطلوب"
+  },
+
+  "ok": "موافق",
+  "@ok": {
+    "description": "نص زر موافق"
+  },
+
+  "markAllRead": "تمييز الكل كمقروء",
+  "@markAllRead": {
+    "description": "نص زر تمييز جميع الإشعارات كمقروءة"
+  },
+
+  "all": "الكل",
+  "@all": {
+    "description": "خيار تصفية الكل للإشعارات"
+  },
+
+  "unread": "غير مقروء",
+  "@unread": {
+    "description": "خيار تصفية غير مقروء للإشعارات"
+  },
+
+  "read": "مقروء",
+  "@read": {
+    "description": "خيار تصفية مقروء للإشعارات"
+  },
+
+  "justNow": "الآن",
+  "@justNow": {
+    "description": "عرض الوقت للإشعارات المنشورة الآن"
+  },
+
+  "minutesAgo": "منذ {minutes} د",
+  "@minutesAgo": {
+    "description": "عرض الوقت للإشعارات المنشورة منذ دقائق",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "description": "عدد الدقائق"
+      }
+    }
+  },
+
+  "hoursAgo": "منذ {hours} س",
+  "@hoursAgo": {
+    "description": "عرض الوقت للإشعارات المنشورة منذ ساعات",
+    "placeholders": {
+      "hours": {
+        "type": "int",
+        "description": "عدد الساعات"
+      }
+    }
+  },
+
+  "daysAgo": "منذ {days} ي",
+  "@daysAgo": {
+    "description": "عرض الوقت للإشعارات المنشورة منذ أيام",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "description": "عدد الأيام"
+      }
+    }
+  },
+
+  "campaignType": "حملة",
+  "@campaignType": {
+    "description": "اسم عرض نوع إشعار الحملة"
+  },
+
+  "taskType": "مهمة",
+  "@taskType": {
+    "description": "اسم عرض نوع إشعار المهمة"
+  },
+
+  "routeType": "مسار",
+  "@routeType": {
+    "description": "اسم عرض نوع إشعار المسار"
+  },
+
+  "placeType": "مكان",
+  "@placeType": {
+    "description": "اسم عرض نوع إشعار المكان"
+  },
+
+  "completionType": "إنجاز",
+  "@completionType": {
+    "description": "اسم عرض نوع إشعار الإنجاز"
+  },
+
+  "evidenceType": "دليل",
+  "@evidenceType": {
+    "description": "اسم عرض نوع إشعار الدليل"
+  },
+
+  "generalType": "عام",
+  "@generalType": {
+    "description": "اسم عرض نوع الإشعار العام"
+  },
+
+  "errorLoadingNotifications": "خطأ في تحميل الإشعارات",
+  "@errorLoadingNotifications": {
+    "description": "رسالة خطأ عند فشل تحميل الإشعارات"
+  },
+
+  "noNotificationsYet": "لا توجد إشعارات بعد",
+  "@noNotificationsYet": {
+    "description": "رسالة الحالة الفارغة عندما لا توجد إشعارات"
+  },
+
+  "noFilterNotifications": "لا توجد إشعارات {filter}",
+  "@noFilterNotifications": {
+    "description": "رسالة الحالة الفارغة للإشعارات المفلترة",
+    "placeholders": {
+      "filter": {
+        "type": "String",
+        "description": "نوع التصفية (غير مقروء، مقروء، إلخ.)"
+      }
+    }
+  },
+
+  "notificationsUpdatesMessage": "ستشاهد الإشعارات هنا عند وجود تحديثات",
+  "@notificationsUpdatesMessage": {
+    "description": "وصف الحالة الفارغة للإشعارات"
+  },
+
+  "markedNotificationsRead": "تم تمييز {count} إشعارات كمقروءة",
+  "@markedNotificationsRead": {
+    "description": "رسالة نجاح عند تمييز الإشعارات كمقروءة",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "description": "عدد الإشعارات المميزة كمقروءة"
+      }
+    }
+  },
+
+  "suggestPlace": "اقتراح مكان",
+  "@suggestPlace": {
+    "description": "نص الزر لاقتراح مكان جديد"
+  },
+
+  "myRoutes": "مساراتي",
+  "@myRoutes": {
+    "description": "عنوان لوحة معلومات مسارات الوكيل"
+  },
+
+  "activeRoutes": "المسارات النشطة",
+  "@activeRoutes": {
+    "description": "عنوان قسم المسارات النشطة"
+  },
+
+  "currentlyVisiting": "يزور حاليًا",
+  "@currentlyVisiting": {
+    "description": "تسمية للزيارة النشطة الحالية"
+  },
+
+  "checkOut": "المغادرة",
+  "@checkOut": {
+    "description": "نص زر المغادرة"
+  },
+
+  "addEvidence": "إضافة دليل",
+  "@addEvidence": {
+    "description": "نص زر إضافة الدليل"
+  },
+
+  "status": "الحالة",
+  "@status": {
+    "description": "تسمية الحالة"
+  },
+
+  "assigned": "مُعين",
+  "@assigned": {
+    "description": "تسمية مُعين"
+  },
+
+  "noActiveRoutes": "لا توجد مسارات نشطة",
+  "@noActiveRoutes": {
+    "description": "عنوان الحالة الفارغة لعدم وجود مسارات نشطة"
+  },
+
+  "created": "تم الإنشاء",
+  "@created": {
+    "description": "تسمية الإنشاء"
+  },
+
+  "statistics": "الإحصائيات",
+  "@statistics": {
+    "description": "عنوان قسم الإحصائيات"
+  },
+
+  "noAgentsAssignedYet": "لم يتم تعيين وكلاء بعد",
+  "@noAgentsAssignedYet": {
+    "description": "رسالة عدم وجود وكلاء معينين بعد"
+  },
+
+  "tapAssignToAgentsToGetStarted": "اضغط على 'تعيين للوكلاء' للبدء",
+  "@tapAssignToAgentsToGetStarted": {
+    "description": "رسالة للبدء بتعيين الوكلاء"
+  },
+
+  "progressDetails": "تفاصيل التقدم",
+  "@progressDetails": {
+    "description": "عنوان تفاصيل التقدم"
+  },
+
+  "noPlacesInThisRoute": "لا توجد أماكن في هذا المسار",
+  "@noPlacesInThisRoute": {
+    "description": "رسالة عدم وجود أماكن في المسار"
+  },
+
+  "areYouSureYouWantToActivate": "هل أنت متأكد من أنك تريد تفعيل",
+  "@areYouSureYouWantToActivate": {
+    "description": "رسالة تأكيد التفعيل"
+  },
+
+  "routeActivatedSuccessfully": "تم تفعيل المسار بنجاح",
+  "@routeActivatedSuccessfully": {
+    "description": "رسالة نجاح تفعيل المسار"
+  },
+
+  "errorActivatingRoute": "خطأ في تفعيل المسار",
+  "@errorActivatingRoute": {
+    "description": "رسالة خطأ تفعيل المسار"
+  },
+
+  "errorLoadingRouteDetails": "خطأ في تحميل تفاصيل المسار",
+  "@errorLoadingRouteDetails": {
+    "description": "رسالة خطأ تحميل تفاصيل المسار"
+  },
+
+  "activateRoute": "تفعيل المسار",
+  "@activateRoute": {
+    "description": "نص زر تفعيل المسار"
+  },
+
+  "assignToAgents": "تعيين للوكلاء",
+  "@assignToAgents": {
+    "description": "نص زر تعيين للوكلاء"
+  },
+
+  "routeOverview": "نظرة عامة على المسار",
+  "@routeOverview": {
+    "description": "عنوان نظرة عامة على المسار"
+  },
+
+  "routePlaces": "أماكن المسار",
+  "@routePlaces": {
+    "description": "عنوان أماكن المسار"
+  },
+
+  "progressSummary": "ملخص التقدم",
+  "@progressSummary": {
+    "description": "عنوان ملخص التقدم"
+  },
+
+  "agentAssignments": "تعيينات الوكلاء",
+  "@agentAssignments": {
+    "description": "عنوان تعيينات الوكلاء"
+  },
+
+  "completedPlaces": "الأماكن المكتملة",
+  "@completedPlaces": {
+    "description": "تسمية الأماكن المكتملة"
+  },
+
+  "visitOrder": "ترتيب الزيارة",
+  "@visitOrder": {
+    "description": "تسمية ترتيب الزيارة"
+  },
+
+  "totalPlaces": "إجمالي الأماكن",
+  "@totalPlaces": {
+    "description": "تسمية إجمالي الأماكن"
+  },
+
+  "lastVisit": "آخر زيارة",
+  "@lastVisit": {
+    "description": "تسمية آخر زيارة"
+  },
+
+  "neverVisited": "لم تتم زيارته",
+  "@neverVisited": {
+    "description": "تسمية لم تتم زيارته"
+  },
+
+  "routeDetails": "تفاصيل المسار",
+  "@routeDetails": {
+    "description": "عنوان تفاصيل المسار"
+  },
+
+  "selectStartDate": "اختر تاريخ البداية",
+  "@selectStartDate": {
+    "description": "نص زر اختيار تاريخ البداية"
+  },
+
+  "selectEndDate": "اختر تاريخ النهاية",
+  "@selectEndDate": {
+    "description": "نص زر اختيار تاريخ النهاية"
+  },
+
+  "noPlacesAdded": "لم تتم إضافة أماكن",
+  "@noPlacesAdded": {
+    "description": "رسالة عدم إضافة أماكن"
+  },
+
+  "addPlacesToCreateYourRoute": "أضف أماكن لإنشاء مسارك",
+  "@addPlacesToCreateYourRoute": {
+    "description": "رسالة إضافة أماكن لإنشاء المسار"
+  },
+
+  "duration": "المدة",
+  "@duration": {
+    "description": "تسمية المدة"
+  },
+
+  "visits": "زيارات",
+  "@visits": {
+    "description": "تسمية الزيارات"
+  },
+
+  "loadingPlaces": "جاري تحميل الأماكن...",
+  "@loadingPlaces": {
+    "description": "رسالة تحميل الأماكن"
+  },
+
+  "noApprovedPlacesAvailableAskAgentsToSuggestPlaces": "لا توجد أماكن معتمدة متاحة. اطلب من الوكلاء اقتراح أماكن.",
+  "@noApprovedPlacesAvailableAskAgentsToSuggestPlaces": {
+    "description": "رسالة عدم توفر أماكن معتمدة"
+  },
+
+  "timesToVisit": "مرات الزيارة",
+  "@timesToVisit": {
+    "description": "تسمية مرات الزيارة"
+  },
+
+  "agentMustVisitTimesWithCooldown": "يجب على الوكيل الزيارة {times} مرات مع فترة انتظار {cooldown} ساعة",
+  "@agentMustVisitTimesWithCooldown": {
+    "description": "رسالة متطلبات زيارة الوكيل",
+    "placeholders": {
+      "times": {
+        "type": "int"
+      },
+      "cooldown": {
+        "type": "int"
+      }
+    }
+  },
+
+  "visitFrequencyMustBeBetween1And10": "يجب أن يكون تكرار الزيارة بين 1 و 10",
+  "@visitFrequencyMustBeBetween1And10": {
+    "description": "رسالة التحقق من تكرار الزيارة"
+  },
+
+  "pleaseAddAtLeastOnePlaceToTheRoute": "يرجى إضافة مكان واحد على الأقل إلى المسار",
+  "@pleaseAddAtLeastOnePlaceToTheRoute": {
+    "description": "رسالة التحقق من أماكن المسار"
+  },
+
+  "routeCreatedSuccessfully": "تم إنشاء المسار بنجاح",
+  "@routeCreatedSuccessfully": {
+    "description": "رسالة نجاح إنشاء المسار"
+  },
+
+  "errorCreatingRoute": "خطأ في إنشاء المسار",
+  "@errorCreatingRoute": {
+    "description": "رسالة خطأ إنشاء المسار"
+  },
+
+  "inactive": "غير نشط",
+  "@inactive": {
+    "description": "تسمية الحالة غير النشطة"
+  },
+
+  "noPendingSuggestions": "لا توجد اقتراحات معلقة",
+  "@noPendingSuggestions": {
+    "description": "رسالة عدم وجود اقتراحات معلقة"
+  },
+
+  "visitNotStartedYet": "لم تبدأ الزيارة بعد",
+  "@visitNotStartedYet": {
+    "description": "حالة الزيارة - لم تبدأ"
+  },
+
+  "currentlyAtLocation": "موجود حالياً في الموقع",
+  "@currentlyAtLocation": {
+    "description": "حالة الزيارة - مسجل دخول"
+  },
+
+  "visitCompletedSuccessfully": "تمت الزيارة بنجاح",
+  "@visitCompletedSuccessfully": {
+    "description": "حالة الزيارة - مكتملة"
+  },
+
+  "visitWasSkipped": "تم تخطي الزيارة",
+  "@visitWasSkipped": {
+    "description": "حالة الزيارة - متخطاة"
+  },
+
+  "unknownStatus": "حالة غير معروفة",
+  "@unknownStatus": {
+    "description": "حالة غير معروفة كافتراضي"
+  },
+
+  "checkIn": "تسجيل الدخول:",
+  "@checkIn": {
+    "description": "تسمية وقت تسجيل الدخول"
+  },
+
+  "checkOut": "تسجيل الخروج:",
+  "@checkOut": {
+    "description": "تسمية وقت تسجيل الخروج"
+  },
+
+  "duration": "المدة",
+  "@duration": {
+    "description": "تسمية المدة"
+  },
+
+  "coordinates": "الإحداثيات",
+  "@coordinates": {
+    "description": "تسمية الإحداثيات"
+  },
+
+  "assigned": "المعين",
+  "@assigned": {
+    "description": "تسمية التعيين"
+  },
+
+  "errorGettingLocation": "خطأ في الحصول على الموقع",
+  "@errorGettingLocation": {
+    "description": "رسالة خطأ الحصول على الموقع"
+  },
+
+  "selectedCoordinates": "الإحداثيات المحددة:",
+  "@selectedCoordinates": {
+    "description": "تسمية الإحداثيات المحددة"
+  },
+
+  "mapInstructions": "اضغط على الخريطة لتحديد موقع. اسحب العلامة للضبط الدقيق. اضبط نصف قطر السياج الجغرافي حسب الحاجة.",
+  "@mapInstructions": {
+    "description": "تعليمات التفاعل مع الخريطة"
+  },
+
+  "start": "البداية",
+  "@start": {
+    "description": "عنوان علامة البداية"
+  },
+
+  "end": "النهاية",
+  "@end": {
+    "description": "عنوان علامة النهاية"
+  },
+
+  "location": "الموقع",
+  "@location": {
+    "description": "عنوان علامة الموقع"
+  },
+
+  "sevenDays": "7 أيام",
+  "@sevenDays": {
+    "description": "زر سبعة أيام المحدد مسبقاً"
+  },
+
+  "thirtyDays": "30 يوم",
+  "@thirtyDays": {
+    "description": "زر ثلاثين يوماً المحدد مسبقاً"
+  },
+
+  "ninetyDays": "90 يوم",
+  "@ninetyDays": {
+    "description": "زر تسعين يوماً المحدد مسبقاً"
+  },
+
+  "map": "الخريطة",
+  "@map": {
+    "description": "عنوان تبويب الخريطة"
+  },
+
+  "totalEntries": "إجمالي الإدخالات",
+  "@totalEntries": {
+    "description": "تسمية إحصائيات إجمالي الإدخالات"
+  },
+
+  "avgAccuracy": "متوسط الدقة",
+  "@avgAccuracy": {
+    "description": "تسمية إحصائيات متوسط الدقة"
+  },
+
+  "avgSpeed": "متوسط السرعة",
+  "@avgSpeed": {
+    "description": "تسمية إحصائيات متوسط السرعة"
+  },
+
+  "period": "الفترة",
+  "@period": {
+    "description": "تسمية إحصائيات الفترة"
+  },
+
+  "daysSelected": "أيام محددة",
+  "@daysSelected": {
+    "description": "تسمية الأيام المحددة"
+  },
+
+  "selectDays": "اختر الأيام",
+  "@selectDays": {
+    "description": "تسمية اختيار الأيام"
+  },
+
+  "selectStartTime": "اختر وقت البداية",
+  "@selectStartTime": {
+    "description": "تسمية اختيار وقت البداية"
+  },
+
+  "selectEndTime": "اختر وقت النهاية",
+  "@selectEndTime": {
+    "description": "تسمية اختيار وقت النهاية"
+  },
+
+  "history": "التاريخ",
+  "@history": {
+    "description": "عنوان تبويب التاريخ"
+  },
+
+  "selectAgent": "اختر الوكيل",
+  "@selectAgent": {
+    "description": "تسمية قائمة اختيار الوكيل"
+  },
+
+  "pleaseSelectAgentForLocationHistory": "يرجى اختيار وكيل لعرض تاريخ المواقع",
+  "@pleaseSelectAgentForLocationHistory": {
+    "description": "رسالة يرجى اختيار وكيل"
+  },
+
+  "noLocationHistoryFound": "لم يتم العثور على تاريخ مواقع للفترة المحددة",
+  "@noLocationHistoryFound": {
+    "description": "رسالة عدم العثور على تاريخ مواقع"
+  },
+
+  "agentMovementTrack": "مسار حركة الوكيل",
+  "@agentMovementTrack": {
+    "description": "عنوان مسار حركة الوكيل"
+  },
+
+  "totalLocations": "إجمالي المواقع",
+  "@totalLocations": {
+    "description": "تسمية إجمالي المواقع"
+  },
+
+  "timePeriod": "الفترة الزمنية",
+  "@timePeriod": {
+    "description": "تسمية الفترة الزمنية"
+  },
+
+  "startTime": "وقت البداية",
+  "@startTime": {
+    "description": "تسمية وقت البداية"
+  },
+
+  "endTime": "وقت النهاية",
+  "@endTime": {
+    "description": "تسمية وقت النهاية"
+  },
+
+  "tapToViewCompleteRoute": "اضغط لعرض المسار الكامل على الخريطة",
+  "@tapToViewCompleteRoute": {
+    "description": "رسالة اضغط لعرض المسار الكامل"
+  },
+
+  "locationStatistics": "إحصائيات المواقع",
+  "@locationStatistics": {
+    "description": "عنوان إحصائيات المواقع"
+  },
+
+  "noLocationDataToDisplay": "لا توجد بيانات مواقع للعرض على الخريطة",
+  "@noLocationDataToDisplay": {
+    "description": "رسالة عدم وجود بيانات مواقع للعرض"
+  },
+
+  "placeVisitDetails": "تفاصيل زيارة المكان",
+  "@placeVisitDetails": {
+    "description": "عنوان تفاصيل زيارة المكان"
+  },
+
+  "placeInformation": "معلومات المكان",
+  "@placeInformation": {
+    "description": "عنوان قسم معلومات المكان"
+  },
+
+  "visitStatus": "حالة الزيارة",
+  "@visitStatus": {
+    "description": "عنوان قسم حالة الزيارة"
+  },
+
+  "visitTiming": "توقيت الزيارة",
+  "@visitTiming": {
+    "description": "عنوان قسم توقيت الزيارة"
+  },
+
+  "notYet": "ليس بعد",
+  "@notYet": {
+    "description": "نص ليس بعد"
+  },
+
+  "routeInformation": "معلومات المسار",
+  "@routeInformation": {
+    "description": "عنوان قسم معلومات المسار"
+  },
+
+  "unknownRoute": "مسار غير معروف",
+  "@unknownRoute": {
+    "description": "نص مسار غير معروف"
+  },
+
+  "visitNotes": "ملاحظات الزيارة",
+  "@visitNotes": {
+    "description": "عنوان قسم ملاحظات الزيارة"
+  },
+
+  "tapToMoveLocation": "اضغط لنقل الموقع",
+  "@tapToMoveLocation": {
+    "description": "تعليمات اضغط لنقل الموقع"
+  },
+
+  "locationPermissionRequired": "مطلوب إذن الموقع",
+  "@locationPermissionRequired": {
+    "description": "رسالة مطلوب إذن الموقع"
+  },
+
+  "pleaseSelectLocationOnMap": "يرجى اختيار موقع على الخريطة",
+  "@pleaseSelectLocationOnMap": {
+    "description": "رسالة يرجى اختيار موقع على الخريطة"
+  },
+
+  "selectLocation": "اختر الموقع",
+  "@selectLocation": {
+    "description": "عنوان اختيار الموقع"
+  },
+
+  "agentSuggestionsWillAppearHere": "ستظهر اقتراحات الوكلاء هنا",
+  "@agentSuggestionsWillAppearHere": {
+    "description": "رسالة الحالة الفارغة لاقتراحات الوكلاء"
+  },
+
+  "noInactivePlaces": "لا توجد أماكن غير نشطة",
+  "@noInactivePlaces": {
+    "description": "رسالة عدم وجود أماكن غير نشطة"
+  },
+
+  "deactivatedPlacesWillAppearHere": "ستظهر الأماكن المعطلة هنا",
+  "@deactivatedPlacesWillAppearHere": {
+    "description": "رسالة الحالة الفارغة للأماكن المعطلة"
+  },
+
+  "placesWillAppearHereOnceAdded": "ستظهر الأماكن هنا بمجرد إضافتها",
+  "@placesWillAppearHereOnceAdded": {
+    "description": "رسالة الحالة الفارغة للأماكن"
+  },
+
+  "suggestedBy": "مقترح من قبل",
+  "@suggestedBy": {
+    "description": "تسمية مقترح من قبل"
+  },
+
+  "thisPlaceIsInactiveAndHiddenFromNewRoutes": "هذا المكان غير نشط ومخفي من المسارات الجديدة",
+  "@thisPlaceIsInactiveAndHiddenFromNewRoutes": {
+    "description": "رسالة تحذير المكان غير النشط"
+  },
+
+  "reactivate": "إعادة تفعيل",
+  "@reactivate": {
+    "description": "نص زر إعادة التفعيل"
+  },
+
+  "suggestion": "اقتراح",
+  "@suggestion": {
+    "description": "تسمية الاقتراح"
+  },
+
+  "areYouSureYouWantToReject": "هل أنت متأكد من أنك تريد رفض",
+  "@areYouSureYouWantToReject": {
+    "description": "رسالة تأكيد الرفض"
+  },
+
+  "explainWhyThisPlaceWasRejected": "اشرح لماذا تم رفض هذا المكان",
+  "@explainWhyThisPlaceWasRejected": {
+    "description": "تلميح سبب الرفض"
+  },
+
+  "newPlace": "مكان جديد",
+  "@newPlace": {
+    "description": "عنوان المكان الجديد"
+  },
+
+  "placeNameIsRequired": "اسم المكان مطلوب",
+  "@placeNameIsRequired": {
+    "description": "رسالة التحقق من اسم المكان"
+  },
+
+  "briefDescriptionOfThePlace": "وصف موجز للمكان",
+  "@briefDescriptionOfThePlace": {
+    "description": "تلميح وصف المكان"
+  },
+
+  "physicalAddress": "العنوان الفعلي",
+  "@physicalAddress": {
+    "description": "تسمية العنوان الفعلي"
+  },
+
+  "locationSelected": "تم اختيار الموقع",
+  "@locationSelected": {
+    "description": "رسالة اختيار الموقع"
+  },
+
+  "managerCreatedPlacesAreAutomaticallyApprovedAndReadyForUse": "الأماكن التي ينشئها المدير تتم الموافقة عليها تلقائياً وتكون جاهزة للاستخدام",
+  "@managerCreatedPlacesAreAutomaticallyApprovedAndReadyForUse": {
+    "description": "معلومات الموافقة على أماكن المدير"
+  },
+
+  "cannotRemovePlace": "لا يمكن إزالة المكان",
+  "@cannotRemovePlace": {
+    "description": "عنوان عدم إمكانية إزالة المكان"
+  },
+
+  "thePlaceCannotBeDeletedBecauseItHasHistoricalDataOrIsCurrentlyInUse": "لا يمكن حذف المكان لأنه يحتوي على بيانات تاريخية أو قيد الاستخدام حالياً",
+  "@thePlaceCannotBeDeletedBecauseItHasHistoricalDataOrIsCurrentlyInUse": {
+    "description": "رسالة عدم إمكانية حذف المكان"
+  },
+
+  "usedInRoutes": "مستخدم في المسارات",
+  "@usedInRoutes": {
+    "description": "تسمية مستخدم في المسارات"
+  },
+
+  "hasHistoricalVisitRecords": "يحتوي على سجلات زيارات تاريخية",
+  "@hasHistoricalVisitRecords": {
+    "description": "تسمية يحتوي على سجلات تاريخية"
+  },
+
+  "removeThisPlaceFromAllRoutesFirst": "قم بإزالة هذا المكان من جميع المسارات أولاً",
+  "@removeThisPlaceFromAllRoutesFirst": {
+    "description": "تعليمات الإزالة من المسارات"
+  },
+
+  "markThePlaceAsInactiveToHideItFromNewRoutesWhilePreservingHistory": "قم بتمييز المكان كغير نشط لإخفائه من المسارات الجديدة مع الحفاظ على التاريخ",
+  "@markThePlaceAsInactiveToHideItFromNewRoutesWhilePreservingHistory": {
+    "description": "اقتراح تمييز كغير نشط"
+  },
+
+  "goTo": "اذهب إلى",
+  "@goTo": {
+    "description": "نص زر اذهب إلى"
+  },
+
+  "areYouSureYouWantToPermanentlyRemove": "هل أنت متأكد من أنك تريد الإزالة الدائمة",
+  "@areYouSureYouWantToPermanentlyRemove": {
+    "description": "تأكيد الإزالة الدائمة"
+  },
+
+  "thisPlaceIsNotUsedInAnyRoutesOrVisitsAndCanBeSafelyDeleted": "هذا المكان غير مستخدم في أي مسارات أو زيارات ويمكن حذفه بأمان",
+  "@thisPlaceIsNotUsedInAnyRoutesOrVisitsAndCanBeSafelyDeleted": {
+    "description": "رسالة الحذف الآمن"
+  },
+
+  "thisActionCannotBeUndoneThePlaceWillBePermanentlyDeletedFromTheSystem": "لا يمكن التراجع عن هذا الإجراء. سيتم حذف المكان نهائياً من النظام",
+  "@thisActionCannotBeUndoneThePlaceWillBePermanentlyDeletedFromTheSystem": {
+    "description": "تحذير الحذف الدائم"
+  },
+
+  "areYouSureYouWantToDeactivate": "هل أنت متأكد من أنك تريد إلغاء التفعيل",
+  "@areYouSureYouWantToDeactivate": {
+    "description": "تأكيد إلغاء التفعيل"
+  },
+
+  "thePlaceWillBeHiddenFromNewRoutesButAllHistoricalDataWillBePreservedYouCanReactivateItLater": "سيتم إخفاء المكان من المسارات الجديدة ولكن جميع البيانات التاريخية ستبقى محفوظة. يمكنك إعادة تفعيله لاحقاً",
+  "@thePlaceWillBeHiddenFromNewRoutesButAllHistoricalDataWillBePreservedYouCanReactivateItLater": {
+    "description": "شرح إلغاء التفعيل"
+  },
+
+  "editLocation": "تعديل الموقع",
+  "@editLocation": {
+    "description": "نص زر تعديل الموقع"
+  },
+
+  "noGroupsFoundForThisManager": "لا توجد مجموعات لهذا المدير",
+  "@noGroupsFoundForThisManager": {
+    "description": "رسالة عدم وجود مجموعات"
+  },
+
+  "noAvailablePlacesToAddToThisRoute": "لا توجد أماكن متاحة لإضافتها إلى هذا المسار",
+  "@noAvailablePlacesToAddToThisRoute": {
+    "description": "رسالة عدم توفر أماكن متاحة"
+  },
+
+  "errorLoadingAvailablePlaces": "خطأ في تحميل الأماكن المتاحة",
+  "@errorLoadingAvailablePlaces": {
+    "description": "رسالة خطأ تحميل الأماكن"
+  },
+
+  "placeAddedToRouteSuccessfully": "تمت إضافة المكان إلى المسار بنجاح",
+  "@placeAddedToRouteSuccessfully": {
+    "description": "رسالة نجاح إضافة المكان"
+  },
+
+  "errorAddingPlaceToRoute": "خطأ في إضافة المكان إلى المسار",
+  "@errorAddingPlaceToRoute": {
+    "description": "رسالة خطأ إضافة المكان"
+  },
+
+  "createdBy": "تم الإنشاء بواسطة",
+  "@createdBy": {
+    "description": "تسمية تم الإنشاء بواسطة"
+  },
+
+  "evidenceRequiredFormat": "{current}/{required} دليل مطلوب",
+  "@evidenceRequiredFormat": {
+    "description": "تنسيق الدليل المطلوب",
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "required": {
+        "type": "String"
+      }
+    }
+  },
+
+  "evidenceFilesFormat": "{count} ملف أدلة",
+  "@evidenceFilesFormat": {
+    "description": "تنسيق ملفات الأدلة",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+
+  "evidenceRequiredCount": "{count} دليل مطلوب",
+  "@evidenceRequiredCount": {
+    "description": "تنسيق عدد الأدلة المطلوبة",
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+
+  "routesWillBeAssigned": "سيقوم مديرك بتعيين مسارات لك لزيارتها.",
+  "@routesWillBeAssigned": {
+    "description": "رسالة الحالة الفارغة للمسارات"
+  },
+
+  "checkoutComingSoon": "وظيفة المغادرة - قريبًا!",
+  "@checkoutComingSoon": {
+    "description": "رسالة قريبًا للمغادرة"
+  },
+
+  "evidenceUploadComingSoon": "رفع الأدلة - قريبًا!",
+  "@evidenceUploadComingSoon": {
+    "description": "رسالة قريبًا لرفع الأدلة"
+  },
+
+  "suggestNewPlace": "اقتراح مكان جديد",
+  "@suggestNewPlace": {
+    "description": "عنوان مربع الحوار لاقتراح مكان جديد"
+  },
+
+  "placeNameRequired": "اسم المكان *",
+  "@placeNameRequired": {
+    "description": "تسمية حقل اسم المكان المطلوب"
+  },
+
+  "enterPlaceName": "أدخل اسم المكان",
+  "@enterPlaceName": {
+    "description": "نص توضيحي لإدخال اسم المكان"
+  },
+
+  "description": "الوصف",
+  "@description": {
+    "description": "تسمية الوصف"
+  },
+
+  "briefDescription": "وصف موجز للمكان",
+  "@briefDescription": {
+    "description": "نص توضيحي لإدخال الوصف"
+  },
+
+  "address": "العنوان",
+  "@address": {
+    "description": "تسمية العنوان"
+  },
+
+  "streetAddressOrLandmark": "عنوان الشارع أو معلم",
+  "@streetAddressOrLandmark": {
+    "description": "نص توضيحي لإدخال العنوان"
+  },
+
+  "locationRequired": "الموقع *",
+  "@locationRequired": {
+    "description": "تسمية حقل الموقع المطلوب"
+  },
+
+  "selectedLocation": "الموقع المحدد:",
+  "@selectedLocation": {
+    "description": "تسمية للموقع المحدد"
+  },
+
+  "radius": "نصف القطر",
+  "@radius": {
+    "description": "تسمية نصف القطر"
+  },
+
+  "selectLocationOnMap": "اختر الموقع على الخريطة",
+  "@selectLocationOnMap": {
+    "description": "نص الزر لاختيار الموقع"
+  },
+
+  "changeLocation": "تغيير الموقع",
+  "@changeLocation": {
+    "description": "نص الزر لتغيير الموقع"
+  },
+
+  "cancel": "إلغاء",
+  "@cancel": {
+    "description": "نص زر الإلغاء"
+  },
+
+  "submitSuggestion": "إرسال الاقتراح",
+  "@submitSuggestion": {
+    "description": "نص زر إرسال الاقتراح"
+  },
+
+  "pleaseFillRequiredFields": "يرجى ملء الحقول المطلوبة",
+  "@pleaseFillRequiredFields": {
+    "description": "رسالة التحقق للحقول المطلوبة"
+  },
+
+  "authenticationRequired": "المصادقة مطلوبة",
+  "@authenticationRequired": {
+    "description": "رسالة خطأ المصادقة"
+  },
+
+  "placeSuggestionSubmitted": "تم إرسال اقتراح المكان! في انتظار موافقة المدير.",
+  "@placeSuggestionSubmitted": {
+    "description": "رسالة نجاح لاقتراح المكان"
+  },
+
+  "errorSubmittingSuggestion": "خطأ في إرسال الاقتراح",
+  "@errorSubmittingSuggestion": {
+    "description": "رسالة خطأ لإرسال الاقتراح"
+  },
+
+  "errorLoadingForm": "خطأ في تحميل النموذج",
+  "@errorLoadingForm": {
+    "description": "رسالة خطأ عند فشل تحميل النموذج"
+  },
+
+  "retry": "إعادة المحاولة",
+  "@retry": {
+    "description": "نص زر إعادة المحاولة"
+  },
+
+  "noFormFields": "لا توجد حقول نموذج",
+  "@noFormFields": {
+    "description": "عنوان الحالة الفارغة لعدم وجود حقول نموذج"
+  },
+
+  "noCustomFieldsConfigured": "هذا القالب لا يحتوي على حقول مخصصة مُكونة.",
+  "@noCustomFieldsConfigured": {
+    "description": "رسالة الحالة الفارغة لعدم وجود حقول مخصصة"
+  },
+
+  "required": "مطلوب",
+  "@required": {
+    "description": "مؤشر الحقل المطلوب"
+  },
+
+  "enterEmailAddress": "أدخل عنوان البريد الإلكتروني",
+  "@enterEmailAddress": {
+    "description": "نص توضيحي لإدخال البريد الإلكتروني"
+  },
+
+  "enterPhoneNumber": "أدخل رقم الهاتف",
+  "@enterPhoneNumber": {
+    "description": "نص توضيحي لإدخال الهاتف"
+  },
+
+  "selectAnOption": "اختر خيارًا",
+  "@selectAnOption": {
+    "description": "نص توضيحي لاختيار من القائمة المنسدلة"
+  },
+
+  "selectDate": "اختر التاريخ",
+  "@selectDate": {
+    "description": "نص توضيحي لاختيار التاريخ"
+  },
+
+  "selectTime": "اختر الوقت",
+  "@selectTime": {
+    "description": "نص توضيحي لاختيار الوقت"
+  },
+
+  "signature": "التوقيع",
+  "@signature": {
+    "description": "تسمية حقل التوقيع"
+  },
+
+  "pleaseSignToConfirm": "يرجى التوقيع أدناه لتأكيد الإنجاز",
+  "@pleaseSignToConfirm": {
+    "description": "تعليمات لحقل التوقيع"
+  },
+
+  "clearSignature": "مسح التوقيع",
+  "@clearSignature": {
+    "description": "نص زر مسح التوقيع"
+  },
+
+  "submitting": "جارٍ الإرسال...",
+  "@submitting": {
+    "description": "نص التحميل أثناء الإرسال"
+  },
+
+  "submitForm": "إرسال النموذج",
+  "@submitForm": {
+    "description": "نص زر إرسال النموذج"
+  },
+
+  "isRequired": "مطلوب",
+  "@isRequired": {
+    "description": "لاحقة التحقق من الحقل"
+  },
+
+  "pleaseEnterValidEmail": "يرجى إدخال عنوان بريد إلكتروني صالح",
+  "@pleaseEnterValidEmail": {
+    "description": "رسالة التحقق من البريد الإلكتروني"
+  },
+
+  "pleaseEnterValidPhone": "يرجى إدخال رقم هاتف صالح",
+  "@pleaseEnterValidPhone": {
+    "description": "رسالة التحقق من الهاتف"
+  },
+
+  "pleaseEnterValidNumber": "يرجى إدخال رقم صالح",
+  "@pleaseEnterValidNumber": {
+    "description": "رسالة التحقق من الرقم"
+  },
+
+  "mustBeAtLeast": "يجب أن يكون على الأقل",
+  "@mustBeAtLeast": {
+    "description": "بادئة التحقق من الطول الأدنى"
+  },
+
+  "characters": "أحرف",
+  "@characters": {
+    "description": "وحدة عدد الأحرف"
+  },
+
+  "mustBeNoMoreThan": "يجب ألا يزيد عن",
+  "@mustBeNoMoreThan": {
+    "description": "بادئة التحقق من الطول الأقصى"
+  },
+
+  "signatureRequired": "التوقيع مطلوب",
+  "@signatureRequired": {
+    "description": "رسالة التحقق من التوقيع"
+  },
+
+  "formSubmittedSuccessfully": "تم إرسال النموذج بنجاح!",
+  "@formSubmittedSuccessfully": {
+    "description": "رسالة نجاح إرسال النموذج"
+  },
+
+  "failedToSubmitForm": "فشل في إرسال النموذج",
+  "@failedToSubmitForm": {
+    "description": "رسالة خطأ إرسال النموذج"
+  },
+
+  "formData": "بيانات النموذج",
+  "@formData": {
+    "description": "تسمية بيانات النموذج"
+  },
+
+  "evidenceUpload": "رفع الأدلة",
+  "@evidenceUpload": {
+    "description": "عنوان قسم رفع الأدلة"
+  },
+
+  "uploadSupportingEvidence": "رفع أدلة داعمة لهذه المهمة (اختياري)",
+  "@uploadSupportingEvidence": {
+    "description": "وصف رفع الأدلة"
+  },
+
+  "uploadEvidence": "رفع دليل",
+  "@uploadEvidence": {
+    "description": "نص زر رفع الدليل"
+  },
+
+  "evidenceName": "اسم الدليل",
+  "@evidenceName": {
+    "description": "تسمية حقل اسم الدليل"
+  },
+
+  "enterEvidenceName": "أدخل اسم الدليل",
+  "@enterEvidenceName": {
+    "description": "نص توضيحي لإدخال اسم الدليل"
+  },
+
+  "evidenceNameRequired": "اسم الدليل مطلوب",
+  "@evidenceNameRequired": {
+    "description": "رسالة التحقق من اسم الدليل"
+  },
+
+  "selectFile": "اختر ملف",
+  "@selectFile": {
+    "description": "نص زر اختيار الملف"
+  },
+
+  "changeFile": "تغيير الملف",
+  "@changeFile": {
+    "description": "نص زر تغيير الملف"
+  },
+
+  "fileUploaded": "تم رفع الملف",
+  "@fileUploaded": {
+    "description": "نص حالة رفع الملف"
+  },
+
+  "upload": "رفع",
+  "@upload": {
+    "description": "نص زر الرفع"
+  },
+
+  "evidenceUploadedSuccessfully": "تم رفع الدليل بنجاح",
+  "@evidenceUploadedSuccessfully": {
+    "description": "رسالة نجاح رفع الدليل"
+  },
+
+  "failedToUploadEvidence": "فشل في رفع الدليل",
+  "@failedToUploadEvidence": {
+    "description": "رسالة خطأ رفع الدليل"
+  },
+
+  "mySubmissions": "إرسالاتي",
+  "@mySubmissions": {
+    "description": "عنوان شاشة تاريخ الإرسال"
+  },
+
+  "type": "النوع",
+  "@type": {
+    "description": "تسمية مرشح النوع"
+  },
+
+  "all": "الكل",
+  "@all": {
+    "description": "خيار مرشح الكل"
+  },
+
+  "forms": "النماذج",
+  "@forms": {
+    "description": "خيار مرشح النماذج"
+  },
+
+  "evidence": "الأدلة",
+  "@evidence": {
+    "description": "خيار مرشح الأدلة"
+  },
+
+  "pending": "معلق",
+  "@pending": {
+    "description": "حالة معلق"
+  },
+
+  "approved": "موافق عليه",
+  "@approved": {
+    "description": "حالة موافق عليه"
+  },
+
+  "rejected": "مرفوض",
+  "@rejected": {
+    "description": "حالة مرفوض"
+  },
+
+  "loadingSubmissions": "جارٍ تحميل الإرسالات...",
+  "@loadingSubmissions": {
+    "description": "نص التحميل للإرسالات"
+  },
+
+  "error": "خطأ",
+  "@error": {
+    "description": "بادئة الخطأ"
+  },
+
+  "tryAgain": "حاول مرة أخرى",
+  "@tryAgain": {
+    "description": "نص زر المحاولة مرة أخرى"
+  },
+
+  "moreFields": "حقول أخرى",
+  "@moreFields": {
+    "description": "مؤشر الحقول الإضافية"
+  },
+
+  "form": "نموذج",
+  "@form": {
+    "description": "تسمية نوع النموذج"
+  },
+
+  "noSubmissionsYet": "لا توجد إرسالات بعد",
+  "@noSubmissionsYet": {
+    "description": "عنوان الحالة الفارغة لعدم وجود إرسالات"
+  },
+
+  "submissionsWillAppearHere": "ستظهر إرسالات النماذج ورفع الأدلة هنا.",
+  "@submissionsWillAppearHere": {
+    "description": "رسالة الحالة الفارغة للإرسالات"
+  },
+
+  "userManagement": "إدارة المستخدمين",
+  "@userManagement": {
+    "description": "عنوان شاشة إدارة المستخدمين"
+  },
+
+  "evidenceReview": "مراجعة الأدلة",
+  "@evidenceReview": {
+    "description": "عنوان شاشة مراجعة الأدلة"
+  },
+
+  "adminDashboard": "لوحة تحكم المدير",
+  "@adminDashboard": {
+    "description": "عنوان شاشة لوحة تحكم المدير"
+  },
+
+  "searchByName": "البحث بالاسم أو البريد الإلكتروني أو اسم المستخدم...",
+  "@searchByName": {
+    "description": "نص البحث التوضيحي لإدارة المستخدمين"
+  },
+
+  "allUsers": "جميع المستخدمين",
+  "@allUsers": {
+    "description": "خيار تصفية جميع المستخدمين"
+  },
+
+  "managersOnly": "المديرون فقط",
+  "@managersOnly": {
+    "description": "خيار تصفية المديرين فقط"
+  },
+
+  "agentsOnly": "المندوبون فقط",
+  "@agentsOnly": {
+    "description": "خيار تصفية المندوبين فقط"
+  },
+
+  "noUsersFound": "لم يتم العثور على مستخدمين",
+  "@noUsersFound": {
+    "description": "عنوان الحالة الفارغة عند عدم العثور على مستخدمين"
+  },
+
+  "tryAdjustingFilters": "جرب تعديل البحث أو المرشحات",
+  "@tryAdjustingFilters": {
+    "description": "رسالة الحالة الفارغة عند عدم مطابقة المستخدمين للمرشحات"
+  },
+
+  "createFirstUser": "ابدأ بإنشاء أول مستخدم",
+  "@createFirstUser": {
+    "description": "رسالة الحالة الفارغة عند عدم وجود مستخدمين"
+  },
+
+  "createUser": "إنشاء مستخدم",
+  "@createUser": {
+    "description": "نص زر إنشاء المستخدم"
+  },
+
+  "viewDetails": "عرض التفاصيل",
+  "@viewDetails": {
+    "description": "خيار قائمة عرض التفاصيل"
+  },
+
+  "activate": "تفعيل",
+  "@activate": {
+    "description": "إجراء تفعيل المستخدم"
+  },
+
+  "deactivate": "إلغاء التفعيل",
+  "@deactivate": {
+    "description": "إجراء إلغاء تفعيل المستخدم"
+  },
+
+  "searchGroups": "البحث في المجموعات...",
+  "@searchGroups": {
+    "description": "نص البحث التوضيحي للمجموعات"
+  },
+
+  "noGroupsFound": "لم يتم العثور على مجموعات",
+  "@noGroupsFound": {
+    "description": "الحالة الفارغة عند عدم وجود مجموعات"
+  },
+
+  "noGroupsMatch": "لا توجد مجموعات تطابق البحث",
+  "@noGroupsMatch": {
+    "description": "الحالة الفارغة عند عدم مطابقة المجموعات للبحث"
+  },
+
+  "createFirstGroup": "أنشئ مجموعتك الأولى للبدء",
+  "@createFirstGroup": {
+    "description": "رسالة الحالة الفارغة للمجموعة الأولى"
+  },
+
+  "createGroup": "إنشاء مجموعة",
+  "@createGroup": {
+    "description": "نص زر إنشاء المجموعة"
+  },
+
+  "deleteGroup": "حذف المجموعة",
+  "@deleteGroup": {
+    "description": "إجراء حذف المجموعة"
+  },
+
+  "confirmDeleteGroup": "هل أنت متأكد من رغبتك في حذف \"{name}\"؟ هذا الإجراء لا يمكن التراجع عنه.",
+  "@confirmDeleteGroup": {
+    "description": "رسالة تأكيد حذف المجموعة",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "description": "اسم المجموعة"
+      }
+    }
+  },
+
+  "groupDeleted": "تم حذف المجموعة \"{name}\" بنجاح",
+  "@groupDeleted": {
+    "description": "رسالة نجاح حذف المجموعة",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "description": "اسم المجموعة"
+      }
+    }
+  },
+
+  "failedToDeleteGroup": "فشل في حذف المجموعة",
+  "@failedToDeleteGroup": {
+    "description": "رسالة خطأ حذف المجموعة"
+  },
+
+  "goodMorning": "صباح الخير",
+  "@goodMorning": {
+    "description": "تحية الصباح"
+  },
+
+  "goodAfternoon": "مساء الخير",
+  "@goodAfternoon": {
+    "description": "تحية بعد الظهر"
+  },
+
+  "goodEvening": "مساء الخير",
+  "@goodEvening": {
+    "description": "تحية المساء"
+  },
+
+  "systemAdministrator": "مدير النظام",
+  "@systemAdministrator": {
+    "description": "لقب دور مدير النظام"
+  },
+
+  "monitorPlatform": "راقب وأدر منصة التجوال الخاصة بك",
+  "@monitorPlatform": {
+    "description": "وصف لوحة تحكم المدير"
+  },
+
+  "systemOverview": "نظرة عامة على النظام",
+  "@systemOverview": {
+    "description": "عنوان قسم نظرة عامة على النظام"
+  },
+
+  "totalManagers": "إجمالي المديرين",
+  "@totalManagers": {
+    "description": "مقياس إجمالي المديرين"
+  },
+
+  "totalAgents": "إجمالي المندوبين",
+  "@totalAgents": {
+    "description": "مقياس إجمالي المندوبين"
+  },
+
+  "activeUsers": "المستخدمون النشطون",
+  "@activeUsers": {
+    "description": "مقياس المستخدمين النشطين"
+  },
+
+  "totalCampaigns": "إجمالي الحملات",
+  "@totalCampaigns": {
+    "description": "مقياس إجمالي الحملات"
+  },
+
+  "totalTasks": "إجمالي المهام",
+  "@totalTasks": {
+    "description": "مقياس إجمالي المهام"
+  },
+
+  "newThisMonth": "الجديد هذا الشهر",
+  "@newThisMonth": {
+    "description": "مقياس المستخدمين الجدد هذا الشهر"
+  },
+
+  "edit": "تعديل",
+  "@edit": {
+    "description": "زر إجراء التعديل"
+  },
+
+  "user": "مستخدم",
+  "@user": {
+    "description": "تسمية المستخدم"
+  },
+
+  "areYouSure": "هل أنت متأكد من رغبتك في",
+  "@areYouSure": {
+    "description": "بادئة سؤال التأكيد"
+  },
+
+  "cannotBeUndone": "هذا الإجراء لا يمكن التراجع عنه",
+  "@cannotBeUndone": {
+    "description": "تحذير حول الإجراء غير القابل للإلغاء"
+  },
+
+  "errorLoadingData": "خطأ في تحميل البيانات",
+  "@errorLoadingData": {
+    "description": "رسالة خطأ عامة لتحميل البيانات"
+  },
+
+  "noEvidenceFound": "لم يتم العثور على أدلة",
+  "@noEvidenceFound": {
+    "description": "الحالة الفارغة عند عدم وجود أدلة"
+  },
+
+  "noEvidenceFromMembers": "لا توجد أدلة من الأعضاء في مجموعاتك",
+  "@noEvidenceFromMembers": {
+    "description": "الحالة الفارغة للمديرين بدون أدلة من أعضاء المجموعة"
+  },
+
+  "noEvidenceUploaded": "لم يتم رفع أدلة بعد",
+  "@noEvidenceUploaded": {
+    "description": "الحالة الفارغة عند عدم رفع أدلة"
+  },
+
+  "showingEvidenceFromMembers": "عرض الأدلة من جميع الأعضاء في مجموعاتك",
+  "@showingEvidenceFromMembers": {
+    "description": "رسالة معلوماتية للمديرين حول تصفية الأدلة"
+  },
+
+  "failedToRefreshGroups": "فشل في تحديث المجموعات",
+  "@failedToRefreshGroups": {
+    "description": "رسالة خطأ عند فشل تحديث المجموعات"
+  },
+
+  "errorLoadingGroups": "خطأ في تحميل المجموعات",
+  "@errorLoadingGroups": {
+    "description": "رسالة خطأ عند فشل تحميل المجموعات"
+  },
+
+  "createdDate": "تم الإنشاء {date}",
+  "@createdDate": {
+    "description": "بادئة تاريخ الإنشاء للمجموعات",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "description": "التاريخ المنسق"
+      }
+    }
+  },
+
+  "noDescriptionProvided": "لم يتم تقديم وصف",
+  "@noDescriptionProvided": {
+    "description": "نص بديل عند عدم تقديم وصف"
+  },
+
+  "tapToViewMembers": "اضغط لعرض الأعضاء",
+  "@tapToViewMembers": {
+    "description": "نص التعليمات لعرض أعضاء المجموعة"
+  },
+
+  "today": "اليوم",
+  "@today": {
+    "description": "مؤشر تاريخ اليوم"
+  },
+
+  "yesterday": "أمس",
+  "@yesterday": {
+    "description": "مؤشر تاريخ أمس"
+  },
+
+  "daysAgoCount": "منذ {count} أيام",
+  "@daysAgoCount": {
+    "description": "مؤشر تاريخ منذ أيام",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "description": "عدد الأيام"
+      }
+    }
+  },
+
+  "teamMembers": "أعضاء الفريق",
+  "@teamMembers": {
+    "description": "عنوان شاشة أعضاء الفريق"
+  },
+
+  "searchTeamMembers": "البحث في أعضاء الفريق...",
+  "@searchTeamMembers": {
+    "description": "نص البحث لأعضاء الفريق"
+  },
+
+  "allMembers": "جميع الأعضاء",
+  "@allMembers": {
+    "description": "خيار التصفية لجميع الأعضاء"
+  },
+
+  "onlineActiveAway": "متصل (نشط/غائب)",
+  "@onlineActiveAway": {
+    "description": "خيار التصفية للأعضاء المتصلين"
+  },
+
+  "offline": "غير متصل",
+  "@offline": {
+    "description": "حالة غير متصل"
+  },
+
+  "unableToLoadTeamMembers": "غير قادر على تحميل أعضاء الفريق",
+  "@unableToLoadTeamMembers": {
+    "description": "رسالة خطأ عند فشل تحميل أعضاء الفريق"
+  },
+
+  "noMembersFound": "لم يتم العثور على أعضاء",
+  "@noMembersFound": {
+    "description": "الحالة الفارغة عند عدم العثور على أعضاء"
+  },
+
+  "noOnlineMembers": "لا يوجد أعضاء متصلين",
+  "@noOnlineMembers": {
+    "description": "الحالة الفارغة عند عدم وجود أعضاء متصلين"
+  },
+
+  "noOfflineMembers": "لا يوجد أعضاء غير متصلين",
+  "@noOfflineMembers": {
+    "description": "الحالة الفارغة عند عدم وجود أعضاء غير متصلين"
+  },
+
+  "noTeamMembersFound": "لم يتم العثور على أعضاء فريق",
+  "@noTeamMembersFound": {
+    "description": "الحالة الفارغة عند عدم العثور على أعضاء فريق"
+  },
+
+  "searchResults": "البحث: \"{query}\"",
+  "@searchResults": {
+    "description": "مؤشر نتائج البحث",
+    "placeholders": {
+      "query": {
+        "type": "String",
+        "description": "استعلام البحث"
+      }
+    }
+  },
+
+  "clearAll": "مسح الكل",
+  "@clearAll": {
+    "description": "زر مسح جميع المرشحات"
+  },
+
+  "online": "متصل",
+  "@online": {
+    "description": "مرشح الحالة المتصلة"
+  },
+
+  "viewDetails": "عرض التفاصيل",
+  "@viewDetails": {
+    "description": "خيار قائمة عرض التفاصيل"
+  },
+
+  "editName": "تعديل الاسم",
+  "@editName": {
+    "description": "خيار قائمة تعديل الاسم"
+  },
+
+  "resetPassword": "إعادة تعيين كلمة المرور",
+  "@resetPassword": {
+    "description": "خيار قائمة إعادة تعيين كلمة المرور"
+  },
+
+  "editAgentName": "تعديل اسم الوكيل",
+  "@editAgentName": {
+    "description": "عنوان حوار تعديل اسم الوكيل"
+  },
+
+  "active": "نشط",
+  "@active": {
+    "description": "حالة نشط"
+  },
+
+  "away": "غائب",
+  "@away": {
+    "description": "حالة غائب"
+  },
+
+  "myEarnings": "أرباحي",
+  "@myEarnings": {
+    "description": "عنوان شاشة الأرباح"
+  },
+
+  "errorFetchingEarnings": "خطأ في جلب الأرباح: {error}",
+  "@errorFetchingEarnings": {
+    "description": "رسالة خطأ عند فشل تحميل الأرباح",
+    "placeholders": {
+      "error": {
+        "type": "String",
+        "description": "تفاصيل الخطأ"
+      }
+    }
+  },
+
+  "noEarningsDataFound": "لم يتم العثور على بيانات أرباح.",
+  "@noEarningsDataFound": {
+    "description": "حالة فارغة للأرباح"
+  },
+
+  "totalEarned": "إجمالي الأرباح",
+  "@totalEarned": {
+    "description": "تسمية إجمالي الأرباح"
+  },
+
+  "outstandingBalance": "الرصيد المستحق",
+  "@outstandingBalance": {
+    "description": "تسمية الرصيد المستحق"
+  },
+
+  "totalForCampaign": "الإجمالي للحملة:",
+  "@totalForCampaign": {
+    "description": "إجمالي أرباح الحملة"
+  },
+
+  "alreadyPaid": "المدفوع بالفعل:",
+  "@alreadyPaid": {
+    "description": "المبلغ المدفوع بالفعل"
+  },
+
+  "balanceForCampaign": "رصيد الحملة:",
+  "@balanceForCampaign": {
+    "description": "الرصيد المستحق للحملة"
+  },
+
+  "pointsEarned": "النقاط المكتسبة:",
+  "@pointsEarned": {
+    "description": "تسمية النقاط المكتسبة"
+  },
+
+  "pointsPaid": "النقاط المدفوعة:",
+  "@pointsPaid": {
+    "description": "تسمية النقاط المدفوعة"
+  },
+
+  "notStarted": "لم يبدأ",
+  "@notStarted": {
+    "description": "حالة المهمة لم تبدأ"
+  },
+
+  "inAreaReadyToStart": "داخل المنطقة - جاهز للبدء",
+  "@inAreaReadyToStart": {
+    "description": "جاهز لبدء مهمة السياج الجغرافي"
+  },
+
+  "outsideArea": "خارج المنطقة",
+  "@outsideArea": {
+    "description": "خارج منطقة السياج الجغرافي"
+  },
+
+  "locationCheckFailed": "فشل فحص الموقع",
+  "@locationCheckFailed": {
+    "description": "فشل في فحص الموقع"
+  },
+
+  "taskActive": "المهمة نشطة",
+  "@taskActive": {
+    "description": "المهمة نشطة حالياً"
+  },
+
+  "taskStartedStayInArea": "بدأت المهمة! ابق في المنطقة لمدة {minutes} دقيقة.",
+  "@taskStartedStayInArea": {
+    "description": "رسالة بدء المهمة للبقاء في السياج الجغرافي",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "description": "الدقائق المطلوبة"
+      }
+    }
+  },
+
+  "youLeftDesignatedArea": "لقد غادرت المنطقة المحددة. تم إيقاف المهمة مؤقتاً.",
+  "@youLeftDesignatedArea": {
+    "description": "تحذير مغادرة منطقة السياج الجغرافي"
+  },
+
+  "welcomeBackTaskResumed": "مرحباً بعودتك! تم استئناف المهمة.",
+  "@welcomeBackTaskResumed": {
+    "description": "العودة إلى منطقة السياج الجغرافي"
+  },
+
+  "pausedOutsideArea": "متوقف مؤقتاً - خارج المنطقة",
+  "@pausedOutsideArea": {
+    "description": "حالة إيقاف المهمة مؤقتاً"
+  },
+
+  "earlyCompletion": "إنهاء مبكر",
+  "@earlyCompletion": {
+    "description": "عنوان حوار الإنهاء المبكر"
+  },
+
+  "earlyCompletionConfirm": "هل أنت متأكد من أنك تريد إنهاء هذه المهمة مبكراً؟",
+  "@earlyCompletionConfirm": {
+    "description": "تأكيد الإنهاء المبكر"
+  },
+
+  "geofenceStayTask": "مهمة البقاء في السياج الجغرافي",
+  "@geofenceStayTask": {
+    "description": "عنوان مهمة البقاء في السياج الجغرافي"
+  },
+
+  "stayInDesignatedArea": "ابق في المنطقة المحددة للمدة المطلوبة.",
+  "@stayInDesignatedArea": {
+    "description": "تعليمات مهمة البقاء في السياج الجغرافي"
+  },
+
+  "requiredStay": "البقاء المطلوب: {minutes} دقيقة",
+  "@requiredStay": {
+    "description": "مدة البقاء المطلوبة",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "description": "الدقائق المطلوبة"
+      }
+    }
+  },
+
+  "locationStatus": "حالة الموقع",
+  "@locationStatus": {
+    "description": "عنوان قسم حالة الموقع"
+  },
+
+  "insideDesignatedArea": "داخل المنطقة المحددة",
+  "@insideDesignatedArea": {
+    "description": "حالة داخل السياج الجغرافي"
+  },
+
+  "outsideDesignatedArea": "خارج المنطقة المحددة",
+  "@outsideDesignatedArea": {
+    "description": "حالة خارج السياج الجغرافي"
+  },
+
+  "timeProgress": "التقدم الزمني",
+  "@timeProgress": {
+    "description": "عنوان قسم التقدم الزمني"
+  },
+
+  "started": "بدأ: {time}",
+  "@started": {
+    "description": "وقت بدء المهمة",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "description": "وقت البدء"
+      }
+    }
+  },
+
+  "expectedCompletion": "الإنهاء المتوقع: {time}",
+  "@expectedCompletion": {
+    "description": "وقت الإنهاء المتوقع",
+    "placeholders": {
+      "time": {
+        "type": "String",
+        "description": "وقت الإنهاء"
+      }
+    }
+  },
+
+  "progress": "التقدم",
+  "@progress": {
+    "description": "تسمية التقدم"
+  },
+
+  "completeEarly": "إنهاء مبكر",
+  "@completeEarly": {
+    "description": "زر الإنهاء المبكر"
+  },
+
+  "moveToDesignatedArea": "انتقل إلى المنطقة المحددة",
+  "@moveToDesignatedArea": {
+    "description": "تعليمات الانتقال إلى المنطقة"
+  },
+
+  "routeDetails": "تفاصيل المسار",
+  "@routeDetails": {
+    "description": "عنوان شاشة تفاصيل المسار"
+  },
+
+  "noPlacesFound": "لم يتم العثور على أماكن في هذا المسار",
+  "@noPlacesFound": {
+    "description": "حالة فارغة لأماكن المسار"
+  },
+
+  "placesToVisit": "الأماكن للزيارة",
+  "@placesToVisit": {
+    "description": "قسم الأماكن للزيارة"
+  },
+
+  "timeSpent": "الوقت المستغرق",
+  "@timeSpent": {
+    "description": "تسمية الوقت المستغرق"
+  },
+
+  "checkOut": "تسجيل خروج",
+  "@checkOut": {
+    "description": "زر تسجيل الخروج"
+  },
+
+  "routeProgress": "تقدم المسار",
+  "@routeProgress": {
+    "description": "قسم تقدم المسار"
+  },
+
+  "checkIn": "تسجيل دخول",
+  "@checkIn": {
+    "description": "زر تسجيل الدخول"
+  },
+
+  "cooldownActive": "فترة الانتظار نشطة",
+  "@cooldownActive": {
+    "description": "فترة الانتظار نشطة"
+  },
+
+  "nextVisitAvailable": "الزيارة التالية متاحة بعد {hours} ساعات",
+  "@nextVisitAvailable": {
+    "description": "توفر الزيارة التالية",
+    "placeholders": {
+      "hours": {
+        "type": "int",
+        "description": "الساعات حتى التوفر"
+      }
+    }
+  },
+
+  "currentlyActiveSeeTop": "نشط حالياً - راجع البطاقة العلوية للإجراءات",
+  "@currentlyActiveSeeTop": {
+    "description": "رسالة الزيارة النشطة حالياً"
+  },
+
+  "allVisitsCompleted": "اكتملت جميع الزيارات {count}",
+  "@allVisitsCompleted": {
+    "description": "رسالة اكتمال جميع الزيارات",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "description": "عدد الزيارات"
+      }
+    }
+  },
+
+  "completePreviousPlacesFirst": "أكمل الأماكن السابقة أولاً",
+  "@completePreviousPlacesFirst": {
+    "description": "تعليمات إكمال الأماكن السابقة"
+  },
+
+  "waiting": "انتظار...",
+  "@waiting": {
+    "description": "حالة الانتظار"
+  },
+
+  "visitCount": "الزيارة {current}/{total}",
+  "@visitCount": {
+    "description": "عرض عدد الزيارات",
+    "placeholders": {
+      "current": {
+        "type": "int",
+        "description": "رقم الزيارة الحالية"
+      },
+      "total": {
+        "type": "int",
+        "description": "إجمالي الزيارات المطلوبة"
+      }
+    }
+  },
+
+  "notVisited": "لم تتم الزيارة",
+  "@notVisited": {
+    "description": "حالة عدم الزيارة"
+  },
+
+  "errorLoadingRouteDetails": "خطأ في تحميل تفاصيل المسار",
+  "@errorLoadingRouteDetails": {
+    "description": "خطأ في تحميل تفاصيل المسار"
+  },
+
+  "notAuthenticated": "غير مصدق عليه",
+  "@notAuthenticated": {
+    "description": "حالة عدم المصادقة"
+  },
+
+  "alreadyCheckedIn": "تم تسجيل الدخول بالفعل",
+  "@alreadyCheckedIn": {
+    "description": "حالة تسجيل الدخول بالفعل"
+  },
+
+  "allVisitsCompletedStatus": "اكتملت جميع الزيارات",
+  "@allVisitsCompletedStatus": {
+    "description": "حالة اكتمال جميع الزيارات"
+  },
+
+  "errorCheckingAvailability": "خطأ في فحص التوفر",
+  "@errorCheckingAvailability": {
+    "description": "خطأ في فحص التوفر"
+  },
+
+  "notes": "ملاحظات: {notes}",
+  "@notes": {
+    "description": "تسمية الملاحظات مع المحتوى",
+    "placeholders": {
+      "notes": {
+        "type": "String",
+        "description": "محتوى الملاحظات"
+      }
+    }
+  },
+
+  "zone": "المنطقة {number}",
+  "@zone": {
+    "description": "تسمية المنطقة مع الرقم",
+    "placeholders": {
+      "number": {
+        "type": "int",
+        "description": "رقم المنطقة"
+      }
+    }
+  },
+
+  "noLocationSet": "لم يتم تحديد موقع",
+  "@noLocationSet": {
+    "description": "لم يتم تحديد موقع للمهمة"
+  },
+
+  "taskHasLocationNameButNoGeofence": "لهذه المهمة اسم موقع ولكن لم يتم تحديد منطقة سياج جغرافي. يمكنك إرسال الأدلة من أي موقع.",
+  "@taskHasLocationNameButNoGeofence": {
+    "description": "المهمة لها اسم موقع ولكن بدون سياج جغرافي"
+  },
+
+  "managerNotSetLocation": "لم يحدد المدير موقعاً أو سياجاً جغرافياً محدداً لهذه المهمة. يمكنك إرسال الأدلة من أي موقع.",
+  "@managerNotSetLocation": {
+    "description": "المدير لم يحدد الموقع"
+  },
+
+  "geofenceAreas": "مناطق السياج الجغرافي",
+  "@geofenceAreas": {
+    "description": "عنوان قسم مناطق السياج الجغرافي"
+  },
+
+  "unnamedCampaign": "حملة بدون اسم",
+  "@unnamedCampaign": {
+    "description": "الاسم الافتراضي للحملة بدون اسم"
+  },
+
+  "unnamedTask": "مهمة بدون اسم",
+  "@unnamedTask": {
+    "description": "الاسم الافتراضي للمهمة بدون اسم"
+  },
+
+  "workAreas": "مناطق العمل",
+  "@workAreas": {
+    "description": "عنوان مناطق العمل"
+  },
+
+  "noZonesAvailable": "لا توجد مناطق متاحة",
+  "@noZonesAvailable": {
+    "description": "عنوان عدم توفر مناطق"
+  },
+
+  "notAssignedToZones": "لم يتم تعيينك لأي حملات أو مهام مع مناطق سياج جغرافي.",
+  "@notAssignedToZones": {
+    "description": "رسالة عدم التعيين للمناطق"
+  },
+
+  "taskZone": "منطقة المهمة",
+  "@taskZone": {
+    "description": "تسمية منطقة المهمة"
+  },
+
+  "campaignZone": "منطقة الحملة",
+  "@campaignZone": {
+    "description": "تسمية منطقة الحملة"
+  },
+
+  "backgroundServices": "خدمات الخلفية",
+  "@backgroundServices": {
+    "description": "تسمية خدمات الخلفية"
+  },
+
+  "locationTrackingActive": "تتبع الموقع والحالة نشط",
+  "@locationTrackingActive": {
+    "description": "حالة تتبع الموقع النشطة"
+  },
+
+  "servicesAreStopped": "الخدمات متوقفة",
+  "@servicesAreStopped": {
+    "description": "حالة توقف الخدمات"
+  },
+
+  "sameAsYesterday": "مثل الأمس",
+  "@sameAsYesterday": {
+    "description": "تسمية مثل الأمس"
+  },
+
+  "chooseWhatToCreate": "اختر ما تريد إنشاؤه",
+  "@chooseWhatToCreate": {
+    "description": "عنوان اختيار ما تريد إنشاؤه"
+  },
+
+  "agent": "وكيل",
+  "@agent": {
+    "description": "تسمية الوكيل"
+  },
+
+  "offlineFeatureMessage": "هذه الميزة متاحة في وضع عدم الاتصال",
+  "@offlineFeatureMessage": {
+    "description": "رسالة الميزة غير المتصلة"
+  },
+
+  "checking": "جاري التحقق",
+  "@checking": {
+    "description": "نص التحقق"
+  },
+
+  "requestingPermission": "طلب الإذن",
+  "@requestingPermission": {
+    "description": "نص طلب الإذن"
+  },
+
+  "starting": "البدء",
+  "@starting": {
+    "description": "نص البدء"
+  },
+
+  "locationEnabledSuccess": "تم تمكين الموقع بنجاح",
+  "@locationEnabledSuccess": {
+    "description": "رسالة نجاح تمكين الموقع"
+  },
+
+  "locationPermissionDeniedMessage": "تم رفض إذن الموقع",
+  "@locationPermissionDeniedMessage": {
+    "description": "رسالة رفض إذن الموقع"
+  },
+
+  "failedToEnableLocation": "فشل في تمكين الموقع",
+  "@failedToEnableLocation": {
+    "description": "رسالة فشل تمكين الموقع"
+  },
+
+  "routesAssignedSuffix": "الطرق المخصصة",
+  "@routesAssignedSuffix": {
+    "description": "لاحقة الطرق المخصصة"
+  },
+
+  "optional": "اختياري",
+  "@optional": {
+    "description": "نص اختياري"
+  },
+
+  "location": "الموقع",
+  "@location": {
+    "description": "تسمية الموقع"
+  },
+
+  "placeName": "اسم المكان",
+  "@placeName": {
+    "description": "تسمية اسم المكان"
+  },
+
+  "describePlaceHint": "صف هذا المكان",
+  "@describePlaceHint": {
+    "description": "تلميح وصف المكان"
+  },
+
+  "enterAddress": "أدخل العنوان",
+  "@enterAddress": {
+    "description": "تسمية إدخال العنوان"
+  },
+
+  "noLocationSelected": "لم يتم تحديد موقع",
+  "@noLocationSelected": {
+    "description": "رسالة عدم تحديد موقع"
+  },
+
+  "geofenceRadius": "نطاق السياج الجغرافي",
+  "@geofenceRadius": {
+    "description": "تسمية نطاق السياج الجغرافي"
+  },
+
+  "meters": "متر",
+  "@meters": {
+    "description": "وحدة المتر"
+  },
+
+  "fillRequiredFields": "يرجى ملء الحقول المطلوبة",
+  "@fillRequiredFields": {
+    "description": "رسالة ملء الحقول المطلوبة"
+  },
+
+  "failedToSubmitSuggestion": "فشل في تقديم الاقتراح",
+  "@failedToSubmitSuggestion": {
+    "description": "رسالة فشل تقديم الاقتراح"
+  },
+
+  "groupManagement": "إدارة المجموعات",
+  "@groupManagement": {
+    "description": "تسمية إدارة المجموعات"
+  },
+
+  "manageGroupsDesc": "إدارة المجموعات والفرق",
+  "@manageGroupsDesc": {
+    "description": "وصف إدارة المجموعات"
+  },
+
+  "settingsDesc": "تكوين تفضيلات التطبيق",
+  "@settingsDesc": {
+    "description": "وصف الإعدادات"
+  },
+
+  "notificationsEnabled": "الإشعارات مفعلة",
+  "@notificationsEnabled": {
+    "description": "نص الإشعارات مفعلة"
+  },
+
+  "settingUpNotifications": "إعداد الإشعارات",
+  "@settingUpNotifications": {
+    "description": "نص إعداد الإشعارات"
+  },
+
+  "helpSupportDesc": "الحصول على المساعدة والدعم",
+  "@helpSupportDesc": {
+    "description": "وصف المساعدة والدعم"
+  },
+
+  "helpSupportComingSoon": "المساعدة والدعم قريباً",
+  "@helpSupportComingSoon": {
+    "description": "رسالة المساعدة والدعم قريباً"
+  },
+
+  "aboutDesc": "معلومات حول التطبيق",
+  "@aboutDesc": {
+    "description": "وصف حول التطبيق"
+  },
+
+  "aboutComingSoon": "معلومات التطبيق قريباً",
+  "@aboutComingSoon": {
+    "description": "رسالة معلومات التطبيق قريباً"
+  },
+
+  "signOutDesc": "تسجيل الخروج من حسابك",
+  "@signOutDesc": {
+    "description": "وصف تسجيل الخروج"
+  },
+
+  "signOutConfirmation": "هل أنت متأكد من تسجيل الخروج؟",
+  "@signOutConfirmation": {
+    "description": "رسالة تأكيد تسجيل الخروج"
+  },
+
+  "failedToSignOut": "فشل في تسجيل الخروج",
+  "@failedToSignOut": {
+    "description": "رسالة فشل تسجيل الخروج"
+  },
+
+  "anErrorOccurred": "حدث خطأ",
+  "@anErrorOccurred": {
+    "description": "رسالة حدوث خطأ"
+  },
+
+  "currentCampaign": "الحملة الحالية",
+  "@currentCampaign": {
+    "description": "تسمية الحملة الحالية"
+  },
+
+  "startGuidedTask": "بدء المهمة الموجهة",
+  "@startGuidedTask": {
+    "description": "نص زر بدء المهمة الموجهة"
+  },
+
+  "quickUpload": "رفع سريع",
+  "@quickUpload": {
+    "description": "نص زر الرفع السريع"
+  },
+
+  "markDone": "تحديد كمنجز",
+  "@markDone": {
+    "description": "نص زر تحديد كمنجز"
+  },
+
+  "inProgress": "قيد التنفيذ",
+  "@inProgress": {
+    "description": "حالة قيد التنفيذ"
+  },
+
+  "awaitingManagerApproval": "في انتظار موافقة المدير",
+  "@awaitingManagerApproval": {
+    "description": "حالة انتظار موافقة المدير"
+  },
+
+  "evidenceRequiredMessage": "مطلوب دليل",
+  "@evidenceRequiredMessage": {
+    "description": "رسالة مطلوب دليل"
+  },
+
+  "confirmCompletionMessage": "تأكيد الإنجاز",
+  "@confirmCompletionMessage": {
+    "description": "رسالة تأكيد الإنجاز"
+  },
+
+  "taskAssignmentPending": "تخصيص المهمة معلق",
+  "@taskAssignmentPending": {
+    "description": "حالة تخصيص المهمة معلق"
+  },
+
+  "checkingLocationGeofence": "فحص السياج الجغرافي للموقع",
+  "@checkingLocationGeofence": {
+    "description": "نص فحص السياج الجغرافي"
+  },
+
+  "locationVerifiedUploading": "تم التحقق من الموقع، جاري الرفع",
+  "@locationVerifiedUploading": {
+    "description": "نص التحقق من الموقع والرفع"
+  },
+
+  "uploadMoreEvidence": "رفع مزيد من الأدلة",
+  "@uploadMoreEvidence": {
+    "description": "نص رفع مزيد من الأدلة"
+  },
+
+  "taskMarkedCompleted": "تم تحديد المهمة كمنجزة",
+  "@taskMarkedCompleted": {
+    "description": "رسالة تحديد المهمة كمنجزة"
+  },
+
+  "failedToUpdateTask": "فشل في تحديث المهمة",
+  "@failedToUpdateTask": {
+    "description": "رسالة فشل تحديث المهمة"
+  },
+
+  "noTasksAvailable": "لا توجد مهام متاحة",
+  "@noTasksAvailable": {
+    "description": "رسالة عدم وجود مهام متاحة"
+  },
+
+  "noTasksAssignedMessage": "لم يتم تخصيص مهام لك بعد",
+  "@noTasksAssignedMessage": {
+    "description": "رسالة عدم تخصيص مهام"
+  },
+
+  "loadingTasks": "جاري تحميل المهام",
+  "@loadingTasks": {
+    "description": "نص تحميل المهام"
+  },
+
+  "unableToLoadTasks": "غير قادر على تحميل المهام",
+  "@unableToLoadTasks": {
+    "description": "رسالة عدم القدرة على تحميل المهام"
+  },
+
+  "pleaseCheckConnection": "يرجى التحقق من الاتصال",
+  "@pleaseCheckConnection": {
+    "description": "رسالة التحقق من الاتصال"
+  },
+
+  "accountNotAssignedToGroup": "الحساب غير مخصص لمجموعة",
+  "@accountNotAssignedToGroup": {
+    "description": "رسالة الحساب غير مخصص لمجموعة"
+  },
+
+  "accountNotAssignedMessage": "حسابك غير مخصص لأي مجموعة",
+  "@accountNotAssignedMessage": {
+    "description": "رسالة تفصيلية للحساب غير المخصص"
+  },
+
+  "tasksWillAppear": "ستظهر المهام هنا",
+  "@tasksWillAppear": {
+    "description": "رسالة ستظهر المهام هنا"
+  },
+
+  "noTasksFound": "لم يتم العثور على مهام",
+  "@noTasksFound": {
+    "description": "رسالة عدم العثور على مهام"
+  },
+
+  "requestAssignment": "طلب تخصيص",
+  "@requestAssignment": {
+    "description": "نص طلب تخصيص"
+  },
+
+  "viewLocation": "عرض الموقع",
+  "@viewLocation": {
+    "description": "نص عرض الموقع"
+  },
+
+  "submitEvidence": "تقديم دليل",
+  "@submitEvidence": {
+    "description": "نص تقديم دليل"
+  },
+
+  "requestTaskAssignment": "طلب تخصيص مهمة",
+  "@requestTaskAssignment": {
+    "description": "نص طلب تخصيص مهمة"
+  },
+
+  "requestAssignmentMessage": "طلب تخصيص لهذه المهمة",
+  "@requestAssignmentMessage": {
+    "description": "رسالة طلب تخصيص المهمة"
+  },
+
+  "request": "طلب",
+  "@request": {
+    "description": "نص طلب"
+  },
+
+  "taskAssignmentRequested": "تم طلب تخصيص المهمة",
+  "@taskAssignmentRequested": {
+    "description": "رسالة تم طلب تخصيص المهمة"
+  },
+
+  "failedToRequestAssignment": "فشل في طلب التخصيص",
+  "@failedToRequestAssignment": {
+    "description": "رسالة فشل طلب التخصيص"
+  },
+
+  "assignmentRequestPending": "طلب التخصيص معلق",
+  "@assignmentRequestPending": {
+    "description": "حالة طلب التخصيص معلق"
+  },
+
+  "assignmentPendingApproval": "التخصيص في انتظار الموافقة",
+  "@assignmentPendingApproval": {
+    "description": "حالة التخصيص في انتظار الموافقة"
+  },
+
+  "cannotStartUntilApproved": "لا يمكن البدء حتى الموافقة",
+  "@cannotStartUntilApproved": {
+    "description": "رسالة عدم إمكانية البدء حتى الموافقة"
+  },
+
+  "createCampaign": "إنشاء حملة",
+  "@createCampaign": {
+    "description": "زر وعنوان إنشاء الحملة"
+  },
+
+  "editCampaign": "تعديل الحملة",
+  "@editCampaign": {
+    "description": "عنوان تعديل الحملة"
+  },
+
+  "newCampaign": "حملة جديدة",
+  "@newCampaign": {
+    "description": "عنوان الحملة الجديدة"
+  },
+
+  "updateCampaignDetails": "تحديث تفاصيل الحملة",
+  "@updateCampaignDetails": {
+    "description": "عنوان فرعي لتعديل الحملة"
+  },
+
+  "createNewCampaignForTeam": "إنشاء حملة جديدة لفريقك",
+  "@createNewCampaignForTeam": {
+    "description": "عنوان فرعي لإنشاء الحملة"
+  },
+
+  "campaignName": "اسم الحملة",
+  "@campaignName": {
+    "description": "تسمية حقل اسم الحملة"
+  },
+
+  "campaignNameRequired": "اسم الحملة مطلوب",
+  "@campaignNameRequired": {
+    "description": "رسالة التحقق من اسم الحملة"
+  },
+
+  "assignToManager": "تخصيص لمدير",
+  "@assignToManager": {
+    "description": "تسمية حقل تخصيص المدير"
+  },
+
+  "selectManagerToOversee": "اختر مديراً للإشراف على هذه الحملة",
+  "@selectManagerToOversee": {
+    "description": "تلميح حقل تخصيص المدير"
+  },
+
+  "noSpecificManager": "لا يوجد مدير محدد",
+  "@noSpecificManager": {
+    "description": "خيار عدم وجود مدير"
+  },
+
+  "campaignAssignmentInfo": "سيتم تخصيص هذه الحملة للمدير المختار. فقط هو والوكلاء التابعون له سيتمكنون من رؤية والعمل على هذه الحملة.",
+  "@campaignAssignmentInfo": {
+    "description": "معلومات تخصيص المدير"
+  },
+
+  "startDate": "تاريخ البداية",
+  "@startDate": {
+    "description": "تسمية حقل تاريخ البداية"
+  },
+
+  "endDate": "تاريخ النهاية",
+  "@endDate": {
+    "description": "تسمية حقل تاريخ النهاية"
+  },
+
+  "selectDate": "اختر التاريخ",
+  "@selectDate": {
+    "description": "نص منتقي التاريخ"
+  },
+
+  "updateCampaign": "تحديث الحملة",
+  "@updateCampaign": {
+    "description": "نص زر تحديث الحملة"
+  },
+
+  "pleaseSelectBothStartEndDates": "يرجى اختيار تاريخي البداية والنهاية.",
+  "@pleaseSelectBothStartEndDates": {
+    "description": "رسالة التحقق من التاريخ"
+  },
+
+  "endDateCannotBeforeStartDate": "تاريخ النهاية لا يمكن أن يكون قبل تاريخ البداية.",
+  "@endDateCannotBeforeStartDate": {
+    "description": "رسالة التحقق من نطاق التاريخ"
+  },
+
+  "campaignUpdatedSuccessfully": "تم تحديث الحملة بنجاح!",
+  "@campaignUpdatedSuccessfully": {
+    "description": "رسالة نجاح تحديث الحملة"
+  },
+
+  "campaignCreatedSuccessfully": "تم إنشاء الحملة بنجاح!",
+  "@campaignCreatedSuccessfully": {
+    "description": "رسالة نجاح إنشاء الحملة"
+  },
+
+  "failedToCreateCampaign": "فشل في إنشاء الحملة. يرجى المحاولة مرة أخرى.",
+  "@failedToCreateCampaign": {
+    "description": "رسالة خطأ إنشاء الحملة"
+  },
+
+  "newEvidenceTask": "مهمة أدلة جديدة",
+  "@newEvidenceTask": {
+    "description": "عنوان مهمة الأدلة الجديدة"
+  },
+
+  "editEvidenceTask": "تعديل مهمة الأدلة",
+  "@editEvidenceTask": {
+    "description": "عنوان تعديل مهمة الأدلة"
+  },
+
+  "coreInformation": "المعلومات الأساسية",
+  "@coreInformation": {
+    "description": "عنوان قسم المعلومات الأساسية"
+  },
+
+  "taskName": "اسم المهمة",
+  "@taskName": {
+    "description": "تسمية حقل اسم المهمة"
+  },
+
+  "required": "مطلوب",
+  "@required": {
+    "description": "رسالة التحقق من الحقل المطلوب"
+  },
+
+  "locationName": "اسم الموقع",
+  "@locationName": {
+    "description": "تسمية حقل اسم الموقع"
+  },
+
+  "startDateTime": "تاريخ ووقت البداية",
+  "@startDateTime": {
+    "description": "تسمية حقل تاريخ ووقت البداية"
+  },
+
+  "endDateTime": "تاريخ ووقت النهاية",
+  "@endDateTime": {
+    "description": "تسمية حقل تاريخ ووقت النهاية"
+  },
+
+  "rulesCompletion": "القواعد والإكمال",
+  "@rulesCompletion": {
+    "description": "عنوان قسم القواعد والإكمال"
+  },
+
+  "requiredEvidenceCount": "عدد الأدلة المطلوبة",
+  "@requiredEvidenceCount": {
+    "description": "تسمية حقل عدد الأدلة"
+  },
+
+  "invalidNumber": "رقم غير صحيح",
+  "@invalidNumber": {
+    "description": "رسالة التحقق من الرقم"
+  },
+
+  "enableTaskPoints": "تفعيل نقاط المهمة",
+  "@enableTaskPoints": {
+    "description": "تسمية مفتاح نقاط المهمة"
+  },
+
+  "pointsAwarded": "النقاط الممنوحة",
+  "@pointsAwarded": {
+    "description": "تسمية حقل النقاط"
+  },
+
+  "pointsAwardedHint": "مثال: 10، 50، 100",
+  "@pointsAwardedHint": {
+    "description": "تلميح حقل النقاط"
+  },
+
+  "mustBePositiveNumber": "يجب أن يكون رقماً موجباً",
+  "@mustBePositiveNumber": {
+    "description": "رسالة التحقق من الرقم الموجب"
+  },
+
+  "enforceGeofenceForUpload": "فرض السياج الجغرافي للرفع",
+  "@enforceGeofenceForUpload": {
+    "description": "تسمية مفتاح فرض السياج الجغرافي"
+  },
+
+  "agentMustBeInsideZone": "يجب على الوكيل أن يكون داخل المنطقة للرفع",
+  "@agentMustBeInsideZone": {
+    "description": "وصف فرض السياج الجغرافي النشط"
+  },
+
+  "uploadsAllowedAnywhere": "الرفع مسموح من أي مكان",
+  "@uploadsAllowedAnywhere": {
+    "description": "وصف فرض السياج الجغرافي غير النشط"
+  },
+
+  "managerAssignment": "تخصيص المدير",
+  "@managerAssignment": {
+    "description": "عنوان قسم تخصيص المدير"
+  },
+
+  "taskAssignmentInfo": "سيتم تخصيص هذه المهمة للمدير المختار. فقط هو والوكلاء التابعون له سيتمكنون من رؤية والعمل على هذه المهمة.",
+  "@taskAssignmentInfo": {
+    "description": "معلومات تخصيص مدير المهمة"
+  },
+
+  "geofencing": "السياج الجغرافي",
+  "@geofencing": {
+    "description": "عنوان قسم السياج الجغرافي"
+  },
+
+  "defineGeofenceZone": "تحديد منطقة السياج الجغرافي",
+  "@defineGeofenceZone": {
+    "description": "نص زر محرر السياج الجغرافي"
+  },
+
+  "mustSaveTaskBeforeGeofence": "يجب حفظ المهمة قبل تحديد السياج الجغرافي.",
+  "@mustSaveTaskBeforeGeofence": {
+    "description": "رسالة متطلب حفظ السياج الجغرافي"
+  },
+
+  "saveChanges": "حفظ التغييرات",
+  "@saveChanges": {
+    "description": "نص زر حفظ التغييرات"
+  },
+
+  "saveContinue": "حفظ ومتابعة",
+  "@saveContinue": {
+    "description": "نص زر الحفظ والمتابعة"
+  },
+
+  "taskCreatedSuccessfully": "تم إنشاء المهمة بنجاح.",
+  "@taskCreatedSuccessfully": {
+    "description": "رسالة نجاح إنشاء المهمة"
+  },
+
+  "taskDetailsSaved": "تم حفظ تفاصيل المهمة.",
+  "@taskDetailsSaved": {
+    "description": "رسالة نجاح تعديل المهمة"
+  },
+
+  "failedToSaveTask": "فشل في حفظ المهمة",
+  "@failedToSaveTask": {
+    "description": "بادئة رسالة خطأ حفظ المهمة"
+  },
+
+  "createFromTemplate": "إنشاء من {templateName}",
+  "@createFromTemplate": {
+    "description": "عنوان الإنشاء من القالب",
+    "placeholders": {
+      "templateName": {
+        "type": "String",
+        "description": "اسم القالب"
+      }
+    }
+  },
+
+  "errorLoadingTemplateDetails": "خطأ في تحميل تفاصيل القالب",
+  "@errorLoadingTemplateDetails": {
+    "description": "رسالة خطأ تحميل القالب"
+  },
+
+  "taskDetails": "تفاصيل المهمة",
+  "@taskDetails": {
+    "description": "عنوان قسم تفاصيل المهمة"
+  },
+
+  "taskTitleRequired": "عنوان المهمة *",
+  "@taskTitleRequired": {
+    "description": "تسمية حقل عنوان المهمة مع مؤشر المطلوب"
+  },
+
+  "enterDescriptiveTitle": "أدخل عنواناً وصفياً لهذه المهمة",
+  "@enterDescriptiveTitle": {
+    "description": "تلميح حقل عنوان المهمة"
+  },
+
+  "taskTitleIsRequired": "عنوان المهمة مطلوب",
+  "@taskTitleIsRequired": {
+    "description": "رسالة التحقق من عنوان المهمة"
+  },
+
+  "addMoreDetailsOptional": "اختياري: أضف المزيد من التفاصيل حول هذه المهمة",
+  "@addMoreDetailsOptional": {
+    "description": "تلميح حقل وصف المهمة"
+  },
+
+  "locationNameOptional": "اختياري: اسم الموقع (مثال: المستشفى الرئيسي)",
+  "@locationNameOptional": {
+    "description": "تلميح حقل اسم الموقع"
+  },
+
+  "configuration": "التكوين",
+  "@configuration": {
+    "description": "عنوان قسم التكوين"
+  },
+
+  "pointsRequired": "النقاط مطلوبة",
+  "@pointsRequired": {
+    "description": "رسالة التحقق من النقاط"
+  },
+
+  "mustBePositive": "يجب أن يكون موجباً",
+  "@mustBePositive": {
+    "description": "رسالة التحقق الموجب"
+  },
+
+  "evidenceFiles": "ملفات الأدلة",
+  "@evidenceFiles": {
+    "description": "تسمية حقل ملفات الأدلة"
+  },
+
+  "evidenceCountRequired": "عدد الأدلة مطلوب",
+  "@evidenceCountRequired": {
+    "description": "رسالة التحقق من عدد الأدلة"
+  },
+
+  "mustBeAtLeastOne": "يجب أن يكون على الأقل 1",
+  "@mustBeAtLeastOne": {
+    "description": "رسالة التحقق من القيمة الدنيا"
+  },
+
+  "requireLocationVerification": "طلب التحقق من الموقع",
+  "@requireLocationVerification": {
+    "description": "تسمية مفتاح التحقق من الموقع"
+  },
+
+  "agentMustBeAtCorrectLocation": "يجب على الوكيل أن يكون في الموقع الصحيح لتقديم الأدلة",
+  "@agentMustBeAtCorrectLocation": {
+    "description": "وصف التحقق من الموقع"
+  },
+
+  "geofenceConfigured": "تم تكوين السياج الجغرافي ({pointCount} نقطة)",
+  "@geofenceConfigured": {
+    "description": "حالة السياج الجغرافي المكون",
+    "placeholders": {
+      "pointCount": {
+        "type": "int",
+        "description": "عدد نقاط السياج الجغرافي"
+      }
+    }
+  },
+
+  "geofenceNotSet": "السياج الجغرافي غير محدد",
+  "@geofenceNotSet": {
+    "description": "حالة السياج الجغرافي غير المكون"
+  },
+
+  "setGeofence": "تحديد السياج الجغرافي",
+  "@setGeofence": {
+    "description": "نص زر تحديد السياج الجغرافي"
+  },
+
+  "defineAreaForAgents": "حدد المنطقة التي يجب على الوكلاء التواجد فيها لإكمال هذه المهمة.",
+  "@defineAreaForAgents": {
+    "description": "وصف منطقة السياج الجغرافي"
+  },
+
+  "additionalInformation": "معلومات إضافية",
+  "@additionalInformation": {
+    "description": "عنوان قسم المعلومات الإضافية"
+  },
+
+  "templateRequiresAdditionalInfo": "هذا القالب يتطلب معلومات إضافية ليتم جمعها من الوكلاء.",
+  "@templateRequiresAdditionalInfo": {
+    "description": "وصف المعلومات الإضافية للقالب"
+  },
+
+  "customFormFields": "حقول النموذج المخصص",
+  "@customFormFields": {
+    "description": "عنوان قسم حقول النموذج المخصص"
+  },
+
+  "addField": "إضافة حقل",
+  "@addField": {
+    "description": "نص زر إضافة حقل"
+  },
+
+  "createCustomFieldsInfo": "إنشاء حقول مخصصة سيملأها الوكلاء عند إكمال هذه المهمة",
+  "@createCustomFieldsInfo": {
+    "description": "معلومات إنشاء الحقول المخصصة"
+  },
+
+  "noCustomFieldsYet": "لا توجد حقول مخصصة حتى الآن",
+  "@noCustomFieldsYet": {
+    "description": "حالة فارغة للحقول المخصصة"
+  },
+
+  "clickAddFieldToCreate": "اضغط \"إضافة حقل\" لإنشاء حقول النموذج",
+  "@clickAddFieldToCreate": {
+    "description": "تعليمات إضافة حقل"
+  },
+
+  "editField": "تعديل الحقل",
+  "@editField": {
+    "description": "عنوان حوار تعديل الحقل"
+  },
+
+  "addCustomField": "إضافة حقل مخصص",
+  "@addCustomField": {
+    "description": "عنوان حوار إضافة حقل مخصص"
+  },
+
+  "fieldLabelRequired": "تسمية الحقل*",
+  "@fieldLabelRequired": {
+    "description": "تسمية إدخال تسمية الحقل"
+  },
+
+  "fieldLabelHint": "مثال: اسم العميل، مستوى الرضا",
+  "@fieldLabelHint": {
+    "description": "تلميح إدخال تسمية الحقل"
+  },
+
+  "fieldType": "نوع الحقل",
+  "@fieldType": {
+    "description": "تسمية قائمة نوع الحقل"
+  },
+
+  "placeholderTextOptional": "النص المؤقت (اختياري)",
+  "@placeholderTextOptional": {
+    "description": "تسمية إدخال النص المؤقت"
+  },
+
+  "hintTextShownInField": "النص التوضيحي المعروض في الحقل",
+  "@hintTextShownInField": {
+    "description": "تلميح إدخال النص المؤقت"
+  },
+
+  "optionsCommaSeparated": "الخيارات (مفصولة بفواصل)*",
+  "@optionsCommaSeparated": {
+    "description": "تسمية إدخال خيارات الحقل"
+  },
+
+  "optionsHint": "الخيار 1، الخيار 2، الخيار 3",
+  "@optionsHint": {
+    "description": "تلميح إدخال خيارات الحقل"
+  },
+
+  "requiredField": "حقل مطلوب",
+  "@requiredField": {
+    "description": "تسمية مربع اختيار الحقل المطلوب"
+  },
+
+  "agentMustFillField": "يجب على الوكيل ملء هذا الحقل",
+  "@agentMustFillField": {
+    "description": "وصف مربع اختيار الحقل المطلوب"
+  },
+
+  "fieldLabelIsRequired": "تسمية الحقل مطلوبة",
+  "@fieldLabelIsRequired": {
+    "description": "رسالة التحقق من تسمية الحقل"
+  },
+
+  "optionsRequiredForFieldType": "الخيارات مطلوبة لهذا النوع من الحقل",
+  "@optionsRequiredForFieldType": {
+    "description": "رسالة التحقق من خيارات الحقل"
+  },
+
+  "update": "تحديث",
+  "@update": {
+    "description": "نص زر التحديث"
+  },
+
+  "add": "إضافة",
+  "@add": {
+    "description": "نص زر الإضافة"
+  },
+
+  "creatingTask": "إنشاء المهمة...",
+  "@creatingTask": {
+    "description": "نص تحميل إنشاء المهمة"
+  },
+
+  "createTask": "إنشاء مهمة",
+  "@createTask": {
+    "description": "نص زر إنشاء المهمة"
+  },
+
+  "validationErrors": "أخطاء التحقق",
+  "@validationErrors": {
+    "description": "عنوان حوار أخطاء التحقق"
+  },
+
+  "setUpGeofence": "إعداد السياج الجغرافي",
+  "@setUpGeofence": {
+    "description": "عنوان حوار إعداد السياج الجغرافي"
+  },
+
+  "taskRequiresLocationBoundary": "هذه المهمة تتطلب حدود موقع. هل تريد إعداد السياج الجغرافي الآن؟",
+  "@taskRequiresLocationBoundary": {
+    "description": "رسالة حوار إعداد السياج الجغرافي"
+  },
+
+  "skip": "تخطي",
+  "@skip": {
+    "description": "نص زر التخطي"
+  },
+
+  "setUpNow": "إعداد الآن",
+  "@setUpNow": {
+    "description": "نص زر الإعداد الآن"
+  },
+
+  "setGeofenceTaskTitle": "تحديد السياج الجغرافي - {taskTitle}",
+  "@setGeofenceTaskTitle": {
+    "description": "عنوان شاشة تحديد السياج الجغرافي",
+    "placeholders": {
+      "taskTitle": {
+        "type": "String",
+        "description": "عنوان المهمة"
+      }
+    }
+  },
+
+  "clearAllPoints": "مسح جميع النقاط",
+  "@clearAllPoints": {
+    "description": "تلميح مسح النقاط"
+  },
+
+  "tapMapToAddPoints": "اضغط على الخريطة لإضافة نقاط. تحتاج إلى 3 نقاط على الأقل لإنشاء سياج جغرافي.",
+  "@tapMapToAddPoints": {
+    "description": "تعليمات التفاعل مع الخريطة"
+  },
+
+  "pointsAdded": "تمت إضافة {pointCount} نقطة",
+  "@pointsAdded": {
+    "description": "حالة النقاط المضافة",
+    "placeholders": {
+      "pointCount": {
+        "type": "int",
+        "description": "عدد النقاط"
+      }
+    }
+  },
+
+  "readyToSave": "(جاهز للحفظ)",
+  "@readyToSave": {
+    "description": "حالة الجاهزية للحفظ"
+  },
+
+  "saveGeofence": "حفظ السياج الجغرافي",
+  "@saveGeofence": {
+    "description": "نص زر حفظ السياج الجغرافي"
+  },
+
+  "addAtLeastThreePoints": "يرجى إضافة 3 نقاط على الأقل لإنشاء سياج جغرافي",
+  "@addAtLeastThreePoints": {
+    "description": "رسالة التحقق من الحد الأدنى للنقاط"
+  },
+
+  "campaignReport": "تقرير الحملة",
+  "@campaignReport": {
+    "description": "عنوان شاشة تقرير الحملة"
+  },
+
+  "campaignProgress": "تقدم الحملة",
+  "@campaignProgress": {
+    "description": "عنوان قسم تقدم الحملة"
+  },
+
+  "tasksCompleted": "المهام المكتملة",
+  "@tasksCompleted": {
+    "description": "تسمية المهام المكتملة"
+  },
+
+  "totalPointsEarned": "إجمالي النقاط المكتسبة",
+  "@totalPointsEarned": {
+    "description": "مقياس إجمالي النقاط المكتسبة"
+  },
+
+  "assignedAgents": "المندوبين المعينين",
+  "@assignedAgents": {
+    "description": "مقياس المندوبين المعينين"
+  },
+
+  "noReportDataAvailable": "لا توجد بيانات تقرير متاحة.",
+  "@noReportDataAvailable": {
+    "description": "رسالة عدم وجود بيانات تقرير"
+  },
+
+  "recentVisits": "الزيارات الحديثة",
+  "@recentVisits": {
+    "description": "عنوان تبويب الزيارات الحديثة"
+  },
+
+  "totalVisits": "إجمالي الزيارات",
+  "@totalVisits": {
+    "description": "مقياس إجمالي الزيارات"
+  },
+
+  "completed": "مكتمل",
+  "@completed": {
+    "description": "حالة مكتمل"
+  },
+
+  "activeNow": "نشط الآن",
+  "@activeNow": {
+    "description": "حالة نشط الآن"
+  },
+
+  "totalHours": "إجمالي الساعات",
+  "@totalHours": {
+    "description": "مقياس إجمالي الساعات"
+  },
+
+  "quickStats": "إحصائيات سريعة",
+  "@quickStats": {
+    "description": "عنوان قسم الإحصائيات السريعة"
+  },
+
+  "averageVisitDuration": "متوسط مدة الزيارة: {duration} دقيقة",
+  "@averageVisitDuration": {
+    "description": "نص متوسط مدة الزيارة",
+    "placeholders": {
+      "duration": {
+        "type": "int",
+        "description": "المدة بالدقائق"
+      }
+    }
+  },
+
+  "activeRouteAssignments": "تعيينات المسار النشط: {count}",
+  "@activeRouteAssignments": {
+    "description": "نص تعيينات المسار النشط",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "description": "عدد التعيينات"
+      }
+    }
+  },
+
+  "noRecentVisitsFound": "لم يتم العثور على زيارات حديثة",
+  "@noRecentVisitsFound": {
+    "description": "رسالة عدم وجود زيارات حديثة"
+  },
+
+  "checkedIn": "تم تسجيل الدخول",
+  "@checkedIn": {
+    "description": "حالة تسجيل الدخول"
+  },
+
+  "pending": "معلق",
+  "@pending": {
+    "description": "حالة معلق"
+  },
+
+  "unknownPlace": "مكان غير معروف",
+  "@unknownPlace": {
+    "description": "تسمية مكان غير معروف"
+  },
+
+  "agent": "مندوب",
+  "@agent": {
+    "description": "تسمية مندوب"
+  },
+
+  "unknown": "غير معروف",
+  "@unknown": {
+    "description": "تسمية غير معروف"
+  },
+
+  "noActiveRouteAssignments": "لا توجد تعيينات مسار نشطة",
+  "@noActiveRouteAssignments": {
+    "description": "رسالة عدم وجود تعيينات مسار نشطة"
+  },
+
+  "assignmentDetails": "تفاصيل التعيين - قريباً!",
+  "@assignmentDetails": {
+    "description": "رسالة تفاصيل التعيين قريباً"
+  },
+
+  "managementOverview": "نظرة عامة على الإدارة",
+  "@managementOverview": {
+    "description": "عنوان قسم نظرة عامة على الإدارة"
+  },
+
+  "teamMembers": "أعضاء الفريق",
+  "@teamMembers": {
+    "description": "تسمية أعضاء الفريق"
+  },
+
+  "online": "متصل",
+  "@online": {
+    "description": "لاحقة حالة متصل"
+  },
+
+  "routeManagement": "إدارة المسارات",
+  "@routeManagement": {
+    "description": "عنوان قسم إدارة المسارات"
+  },
+
+  "createManageRoutes": "إنشاء وإدارة المسارات",
+  "@createManageRoutes": {
+    "description": "وصف إنشاء وإدارة المسارات"
+  },
+
+  "placeManagement": "إدارة الأماكن",
+  "@placeManagement": {
+    "description": "عنوان قسم إدارة الأماكن"
+  },
+
+  "approveAgentSuggestions": "الموافقة على اقتراحات المندوبين",
+  "@approveAgentSuggestions": {
+    "description": "وصف الموافقة على اقتراحات المندوبين"
+  },
+
+  "liveMap": "الخريطة المباشرة",
+  "@liveMap": {
+    "description": "عنوان قسم الخريطة المباشرة"
+  },
+
+  "trackAgentsRealTime": "تتبع المندوبين في الوقت الفعلي",
+  "@trackAgentsRealTime": {
+    "description": "وصف تتبع المندوبين في الوقت الفعلي"
+  },
+
+  "manageTasks": "إدارة المهام",
+  "@manageTasks": {
+    "description": "إجراء إدارة المهام"
+  },
+
+  "reviewEvidence": "مراجعة الأدلة",
+  "@reviewEvidence": {
+    "description": "إجراء مراجعة الأدلة"
+  },
+
+  "routesPlaces": "المسارات والأماكن",
+  "@routesPlaces": {
+    "description": "إجراء المسارات والأماكن"
+  },
+
+  "calendar": "التقويم",
+  "@calendar": {
+    "description": "إجراء التقويم"
+  },
+
+  "visitAnalytics": "تحليلات الزيارات",
+  "@visitAnalytics": {
+    "description": "إجراء تحليلات الزيارات"
+  },
+
+  "locationHistory": "تاريخ المواقع",
+  "@locationHistory": {
+    "description": "إجراء تاريخ المواقع"
+  },
+
+  "sendNotification": "إرسال إشعار",
+  "@sendNotification": {
+    "description": "إجراء إرسال إشعار"
+  },
+
+  "messageUsers": "مراسلة المستخدمين",
+  "@messageUsers": {
+    "description": "وصف مراسلة المستخدمين"
+  },
+
+  "errorLoadingDashboard": "خطأ في تحميل لوحة التحكم",
+  "@errorLoadingDashboard": {
+    "description": "رسالة خطأ تحميل لوحة التحكم"
+  },
+
+  "loadingDashboard": "جاري تحميل لوحة التحكم...",
+  "@loadingDashboard": {
+    "description": "رسالة تحميل لوحة التحكم"
+  },
+
+  "welcome": "مرحباً",
+  "@welcome": {
+    "description": "نص الترحيب"
+  },
+
+  "managerDashboard": "لوحة تحكم المدير",
+  "@managerDashboard": {
+    "description": "عنوان لوحة تحكم المدير"
+  },
+
+  "loading": "جاري التحميل...",
+  "@loading": {
+    "description": "نص التحميل"
+  },
+
+  "justNow": "الآن",
+  "@justNow": {
+    "description": "نص الوقت الآن"
+  },
+
+  "minutesAgo": "منذ {minutes} دقيقة",
+  "@minutesAgo": {
+    "description": "نص منذ دقائق",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "description": "عدد الدقائق"
+      }
+    }
+  },
+
+  "hoursAgo": "منذ {hours} ساعة",
+  "@hoursAgo": {
+    "description": "نص منذ ساعات",
+    "placeholders": {
+      "hours": {
+        "type": "int",
+        "description": "عدد الساعات"
+      }
+    }
+  },
+
+  "daysAgo": "منذ {days} يوم",
+  "@daysAgo": {
+    "description": "نص منذ أيام",
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "description": "عدد الأيام"
+      }
+    }
+  },
+
+  "goodMorning": "صباح الخير",
+  "@goodMorning": {
+    "description": "تحية صباح الخير"
+  },
+
+  "goodAfternoon": "مساء الخير",
+  "@goodAfternoon": {
+    "description": "تحية مساء الخير"
+  },
+
+  "goodEvening": "مساء الخير",
+  "@goodEvening": {
+    "description": "تحية مساء الخير"
+  },
+
+  "systemAdministrator": "مدير النظام",
+  "@systemAdministrator": {
+    "description": "دور مدير النظام"
+  },
+
+  "monitorPlatform": "مراقبة وإدارة المنصة",
+  "@monitorPlatform": {
+    "description": "وصف مراقبة المنصة"
+  },
+
+  "systemOverview": "نظرة عامة على النظام",
+  "@systemOverview": {
+    "description": "عنوان قسم نظرة عامة على النظام"
+  },
+
+  "totalManagers": "إجمالي المديرين",
+  "@totalManagers": {
+    "description": "مقياس إجمالي المديرين"
+  },
+
+  "totalAgents": "إجمالي المندوبين",
+  "@totalAgents": {
+    "description": "مقياس إجمالي المندوبين"
+  },
+
+  "activeUsers": "المستخدمون النشطون",
+  "@activeUsers": {
+    "description": "مقياس المستخدمين النشطين"
+  },
+
+  "totalCampaigns": "إجمالي الحملات",
+  "@totalCampaigns": {
+    "description": "مقياس إجمالي الحملات"
+  },
+
+  "totalTasks": "إجمالي المهام",
+  "@totalTasks": {
+    "description": "مقياس إجمالي المهام"
+  },
+
+  "newThisMonth": "جديد هذا الشهر",
+  "@newThisMonth": {
+    "description": "مقياس جديد هذا الشهر"
+  },
+
+  "userManagement": "إدارة المستخدمين",
+  "@userManagement": {
+    "description": "إجراء إدارة المستخدمين"
+  },
+
+  "systemTasks": "مهام النظام",
+  "@systemTasks": {
+    "description": "إجراء مهام النظام"
+  },
+
+  "evidenceReview": "مراجعة الأدلة",
+  "@evidenceReview": {
+    "description": "إجراء مراجعة الأدلة"
+  },
+
+  "templates": "القوالب",
+  "@templates": {
+    "description": "إجراء القوالب"
+  },
+
+  "managerPerformance": "أداء المديرين",
+  "@managerPerformance": {
+    "description": "عنوان قسم أداء المديرين"
+  },
+
+  "onlineNow": "متصل الآن",
+  "@onlineNow": {
+    "description": "مقياس متصل الآن"
+  },
+
+  "topPerformers": "الأفضل أداءً",
+  "@topPerformers": {
+    "description": "مقياس الأفضل أداءً"
+  },
+
+  "topPerformingManagers": "المديرون الأفضل أداءً",
+  "@topPerformingManagers": {
+    "description": "عنوان قسم المديرين الأفضل أداءً"
+  },
+
+  "campaigns": "حملات",
+  "@campaigns": {
+    "description": "لاحقة الحملات"
+  },
+
+  "systemPerformance": "أداء النظام",
+  "@systemPerformance": {
+    "description": "عنوان قسم أداء النظام"
+  },
+
+  "weeklyTasks": "المهام الأسبوعية",
+  "@weeklyTasks": {
+    "description": "مقياس المهام الأسبوعية"
+  },
+
+  "completedThisWeek": "مكتملة هذا الأسبوع",
+  "@completedThisWeek": {
+    "description": "وصف مكتملة هذا الأسبوع"
+  },
+
+  "monthlyTasks": "المهام الشهرية",
+  "@monthlyTasks": {
+    "description": "مقياس المهام الشهرية"
+  },
+
+  "completedThisMonth": "مكتملة هذا الشهر",
+  "@completedThisMonth": {
+    "description": "وصف مكتملة هذا الشهر"
+  },
+
+  "approvalRate": "معدل الموافقة",
+  "@approvalRate": {
+    "description": "مقياس معدل الموافقة"
+  },
+
+  "evidenceQuality": "جودة الأدلة",
+  "@evidenceQuality": {
+    "description": "وصف جودة الأدلة"
+  },
+
+  "systemHealth": "صحة النظام",
+  "@systemHealth": {
+    "description": "مقياس صحة النظام"
+  },
+
+  "overallStatus": "الحالة العامة",
+  "@overallStatus": {
+    "description": "وصف الحالة العامة"
+  },
+
+  "recentSystemActivity": "النشاط الحديث للنظام",
+  "@recentSystemActivity": {
+    "description": "عنوان قسم النشاط الحديث للنظام"
+  },
+
+  "noRecentActivity": "لا يوجد نشاط حديث",
+  "@noRecentActivity": {
+    "description": "رسالة عدم وجود نشاط حديث"
+  },
+
+  "loadingEllipsis": "جاري التحميل...",
+  "@loadingEllipsis": {
+    "description": "تحميل مع النقاط"
+  },
+
+  "route": "مسار",
+  "@route": {
+    "description": "تسمية مسار"
+  },
+
+  "errorLoadingRouteData": "خطأ في تحميل بيانات المسار",
+  "@errorLoadingRouteData": {
+    "description": "رسالة خطأ تحميل بيانات المسار"
+  },
+
+  "anotherDeviceActive": "جهاز آخر نشط",
+  "@anotherDeviceActive": {
+    "description": "عنوان الحوار عندما يكون حساب المستخدم نشطاً على جهاز آخر"
+  },
+
+  "accountLoggedInElsewhere": "حسابك مسجل حالياً على جهاز آخر.",
+  "@accountLoggedInElsewhere": {
+    "description": "رسالة توضح أن الحساب مسجل على جهاز آخر"
+  },
+
+  "logoutOtherDeviceInstruction": "للمتابعة في تسجيل الدخول على هذا الجهاز، تحتاج لتسجيل الخروج من الجهاز الآخر أولاً.",
+  "@logoutOtherDeviceInstruction": {
+    "description": "تعليمات تسجيل الخروج من الجهاز الآخر"
+  },
+
+  "logoutOtherDevice": "إخراج الجهاز الآخر",
+  "@logoutOtherDevice": {
+    "description": "نص زر تسجيل الخروج من الجهاز الآخر"
+  },
+
+  "noGpsSignalOnebar": "لا توجد إشارة GPS (شريط واحد)",
+  "@noGpsSignalOnebar": {
+    "description": "رسالة حالة GPS لعدم وجود إشارة"
+  },
+
+  "excellentGpsFiveBars": "GPS ممتاز ({accuracy}م) - 5 أشرطة",
+  "@excellentGpsFiveBars": {
+    "description": "رسالة حالة GPS للإشارة الممتازة",
+    "placeholders": {
+      "accuracy": {
+        "type": "String"
+      }
+    }
+  },
+
+  "goodGpsFourBars": "GPS جيد ({accuracy}م) - 4 أشرطة",
+  "@goodGpsFourBars": {
+    "description": "رسالة حالة GPS للإشارة الجيدة",
+    "placeholders": {
+      "accuracy": {
+        "type": "String"
+      }
+    }
+  },
+
+  "fairGpsThreeBars": "GPS متوسط ({accuracy}م) - 3 أشرطة",
+  "@fairGpsThreeBars": {
+    "description": "رسالة حالة GPS للإشارة المتوسطة",
+    "placeholders": {
+      "accuracy": {
+        "type": "String"
+      }
+    }
+  },
+
+  "poorGpsTwoBars": "GPS ضعيف ({accuracy}م) - شريطان",
+  "@poorGpsTwoBars": {
+    "description": "رسالة حالة GPS للإشارة الضعيفة",
+    "placeholders": {
+      "accuracy": {
+        "type": "String"
+      }
+    }
+  },
+
+  "veryPoorGpsOnebar": "GPS ضعيف جداً ({accuracy}م) - شريط واحد",
+  "@veryPoorGpsOnebar": {
+    "description": "رسالة حالة GPS للإشارة الضعيفة جداً",
+    "placeholders": {
+      "accuracy": {
+        "type": "String"
+      }
+    }
+  },
+
+  "downloadingUpdate": "جاري تحميل التحديث...",
+  "@downloadingUpdate": {
+    "description": "رسالة الحالة عند تحميل تحديث التطبيق"
+  },
+
+  "downloadCompleteReadyToInstall": "اكتمل التحميل. جاهز للتثبيت.",
+  "@downloadCompleteReadyToInstall": {
+    "description": "رسالة الحالة عند اكتمال التحميل"
+  },
+
+  "installingUpdate": "جاري تثبيت التحديث...",
+  "@installingUpdate": {
+    "description": "رسالة الحالة عند تثبيت التحديث"
+  },
+
+  "installationStartedSecurityDialog": "بدأ التثبيت. إذا ظهر لك حوار فحص الأمان، اضغط على \"تثبيت بدون فحص\" للمتابعة بسرعة.",
+  "@installationStartedSecurityDialog": {
+    "description": "رسالة إرشادات التثبيت"
+  },
+
+  "failedToDownloadUpdate": "فشل في تحميل التحديث. يرجى المحاولة مرة أخرى.",
+  "@failedToDownloadUpdate": {
+    "description": "رسالة خطأ عند فشل تحميل التحديث"
+  },
+
+  "updateError": "خطأ: {error}",
+  "@updateError": {
+    "description": "رسالة خطأ عام للتحديث",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "updateAvailable": "تحديث متوفر",
+  "@updateAvailable": {
+    "description": "عنوان حوار التحديث"
+  },
+
+  "current": "الحالي",
+  "@current": {
+    "description": "تسمية الإصدار الحالي"
+  },
+
+  "newVersion": "الجديد",
+  "@newVersion": {
+    "description": "تسمية الإصدار الجديد"
+  },
+
+  "whatsNew": "ما الجديد",
+  "@whatsNew": {
+    "description": "عنوان قسم ملاحظات الإصدار"
+  },
+
+  "downloadSize": "حجم التحميل: {size} ميجابايت",
+  "@downloadSize": {
+    "description": "معلومات حجم التحميل",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+
+  "updating": "جاري التحديث...",
+  "@updating": {
+    "description": "نص الزر عند جاري التحديث"
+  },
+
+  "updateNow": "تحديث الآن",
+  "@updateNow": {
+    "description": "نص زر بدء التحديث"
+  },
+
+  "uploadEvidence": "رفع دليل",
+  "@uploadEvidence": {
+    "description": "عنوان حوار رفع الدليل ونص الزر"
+  },
+
+  "titleRequired": "العنوان *",
+  "@titleRequired": {
+    "description": "تسمية حقل العنوان المطلوب"
+  },
+
+  "enterTitleForEvidence": "أدخل عنواناً لهذا الدليل",
+  "@enterTitleForEvidence": {
+    "description": "نص تلميح لحقل عنوان الدليل"
+  },
+
+  "titleIsRequired": "العنوان مطلوب",
+  "@titleIsRequired": {
+    "description": "رسالة التحقق للعنوان المطلوب"
+  },
+
+  "titleMinLength": "العنوان يجب أن يكون 3 أحرف على الأقل",
+  "@titleMinLength": {
+    "description": "رسالة التحقق للحد الأدنى لطول العنوان"
+  },
+
+  "optionalDescriptionOrNotes": "وصف أو ملاحظات اختيارية",
+  "@optionalDescriptionOrNotes": {
+    "description": "نص تلميح لحقل الوصف الاختياري"
+  },
+
+  "selectFile": "اختر ملف",
+  "@selectFile": {
+    "description": "نص زر اختيار الملف"
+  },
+
+  "uploadingProgress": "جاري الرفع... {progress}%",
+  "@uploadingProgress": {
+    "description": "رسالة تقدم الرفع",
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+
+  "fileTooLargeMaxSize": "الملف كبير جداً. الحد الأقصى 50 ميجابايت.",
+  "@fileTooLargeMaxSize": {
+    "description": "رسالة خطأ للملفات كبيرة الحجم"
+  },
+
+  "errorSelectingFile": "خطأ في اختيار الملف: {error}",
+  "@errorSelectingFile": {
+    "description": "رسالة خطأ عند فشل اختيار الملف",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "fileHasNoData": "الملف لا يحتوي على بيانات",
+  "@fileHasNoData": {
+    "description": "رسالة خطأ عندما لا يحتوي الملف على بيانات"
+  },
+
+  "evidenceUploadedSuccessfully": "تم رفع الدليل بنجاح!",
+  "@evidenceUploadedSuccessfully": {
+    "description": "رسالة نجاح عند رفع الدليل"
+  },
+
+  "uploadFailed": "فشل الرفع: {error}",
+  "@uploadFailed": {
+    "description": "رسالة خطأ عند فشل الرفع",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
+  "place": "مكان",
+  "@place": {
+    "description": "تسمية مكان عامة"
+  },
+
+  "evidenceNumber": "دليل {number}",
+  "@evidenceNumber": {
+    "description": "تسمية رقم الدليل",
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+
+  "unknownPlace": "مكان غير معروف",
+  "@unknownPlace": {
+    "description": "تسمية للمكان غير المعروف"
+  },
+
+  "evidenceRequiredProgress": "دليل مطلوب: {remaining} أكثر مطلوب ({current}/{total})",
+  "@evidenceRequiredProgress": {
+    "description": "رسالة توضح متطلبات الدليل",
+    "placeholders": {
+      "remaining": {
+        "type": "String"
+      },
+      "current": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+
+  "evidenceComplete": "الدليل مكتمل: تم إرسال {current}/{total}",
+  "@evidenceComplete": {
+    "description": "رسالة توضح اكتمال الدليل",
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+
+  "evidenceTitleRequired": "عنوان الدليل *",
+  "@evidenceTitleRequired": {
+    "description": "تسمية حقل عنوان الدليل المطلوب"
+  },
+
+  "optionalNotesAboutEvidence": "ملاحظات اختيارية حول هذا الدليل",
+  "@optionalNotesAboutEvidence": {
+    "description": "نص تلميح لحقل ملاحظات الدليل"
+  },
+
+  "instructions": "التعليمات:",
+  "@instructions": {
+    "description": "تسمية قسم التعليمات"
+  },
+
+  "selectEvidenceFile": "اختر ملف الدليل",
+  "@selectEvidenceFile": {
+    "description": "نص زر اختيار ملف الدليل"
+  },
+
+  "takePhotoVideo": "التقط صورة/فيديو",
+  "@takePhotoVideo": {
+    "description": "نص زر التقاط صورة أو فيديو"
+  },
+
+  "or": "أو",
+  "@or": {
+    "description": "نص فاصل أو"
+  },
+
+  "uploadFile": "رفع ملف",
+  "@uploadFile": {
+    "description": "نص زر رفع الملف"
+  },
+
+  "uploadingEvidence": "جاري رفع الدليل... {progress}%",
+  "@uploadingEvidence": {
+    "description": "رسالة تقدم رفع الدليل",
+    "placeholders": {
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+
+  "formSubmitted": "تم إرسال النموذج",
+  "@formSubmitted": {
+    "description": "رسالة حالة للنموذج المرسل"
+  },
+
+  "formDataAvailable": "بيانات النموذج متوفرة",
+  "@formDataAvailable": {
+    "description": "رسالة حالة لبيانات النموذج المتوفرة"
+  },
+
+  "formSubmission": "إرسال نموذج",
+  "@formSubmission": {
+    "description": "العنوان الافتراضي لإرسال النماذج"
+  },
+
+  "evidenceFile": "ملف دليل",
+  "@evidenceFile": {
+    "description": "العنوان الافتراضي لملفات الدليل"
+  },
+
+  "fileUploaded": "تم رفع الملف",
+  "@fileUploaded": {
+    "description": "رسالة حالة للملف المرفوع"
+  },
+
+  "noData": "لا توجد بيانات",
+  "@noData": {
+    "description": "رسالة عدم توفر بيانات"
+  },
+
+  "previousSubmissionsCount": "الإرسالات السابقة ({count})",
+  "@previousSubmissionsCount": {
+    "description": "عنوان قسم الإرسالات السابقة مع العدد",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "viewAllSubmissions": "عرض جميع الإرسالات",
+  "@viewAllSubmissions": {
+    "description": "نص الرابط لعرض جميع الإرسالات"
+  },
+
+  "formSubmissionUppercase": "إرسال نموذج",
+  "@formSubmissionUppercase": {
+    "description": "تسمية بأحرف كبيرة لإرسال النموذج"
+  },
+
+  "evidenceUploadUppercase": "رفع دليل",
+  "@evidenceUploadUppercase": {
+    "description": "تسمية بأحرف كبيرة لرفع الدليل"
+  },
+
+  "remove": "إزالة",
+  "@remove": {
+    "description": "نص زر الإزالة"
+  },
+
+  "place": "مكان",
+  "@place": {
+    "description": "اسم مكان"
+  },
+
+  "from": "من",
+  "@from": {
+    "description": "حرف جر من"
+  },
+
+  "route": "مسار",
+  "@route": {
+    "description": "اسم مسار"
+  },
+
+  "areYouSureYouWantToRemove": "هل أنت متأكد من رغبتك في إزالة",
+  "@areYouSureYouWantToRemove": {
+    "description": "رسالة تأكيد الإزالة"
+  },
+
+  "fromThisRoute": "من هذا المسار",
+  "@fromThisRoute": {
+    "description": "عبارة من هذا المسار"
+  },
+
+  "unknownPlace": "مكان غير معروف",
+  "@unknownPlace": {
+    "description": "نص مكان غير معروف"
+  },
+
+  "placeRemovedFromRouteSuccessfully": "تم إزالة المكان من المسار بنجاح",
+  "@placeRemovedFromRouteSuccessfully": {
+    "description": "رسالة نجاح إزالة المكان"
+  },
+
+  "errorRemovingPlaceFromRoute": "خطأ في إزالة المكان من المسار",
+  "@errorRemovingPlaceFromRoute": {
+    "description": "رسالة خطأ إزالة المكان"
+  },
+
+  "cannotDeleteRoute": "لا يمكن حذف المسار",
+  "@cannotDeleteRoute": {
+    "description": "عنوان حوار عدم إمكانية حذف المسار"
+  },
+
+  "theRouteCannotBeDeletedBecauseItHasHistoricalDataOrActiveAssignments": "لا يمكن حذف المسار \"{routeName}\" لأنه يحتوي على بيانات تاريخية أو تخصيصات نشطة",
+  "@theRouteCannotBeDeletedBecauseItHasHistoricalDataOrActiveAssignments": {
+    "description": "شرح عدم إمكانية حذف المسار",
+    "placeholders": {
+      "routeName": {
+        "type": "String",
+        "description": "اسم المسار"
+      }
+    }
+  },
+
+  "assignedToAgents": "مخصص لـ {count} وكلاء",
+  "@assignedToAgents": {
+    "description": "عدد الوكلاء المخصصين",
+    "placeholders": {
+      "count": {
+        "type": "String",
+        "description": "عدد الوكلاء"
+      }
+    }
+  },
+
+  "hasVisitRecordsThisHistoricalDataCannotBeDeletedToMaintainAuditTrail": "يحتوي على {count} سجل زيارة. لا يمكن حذف هذه البيانات التاريخية للحفاظ على مسار التدقيق",
+  "@hasVisitRecordsThisHistoricalDataCannotBeDeletedToMaintainAuditTrail": {
+    "description": "شرح سجلات الزيارة",
+    "placeholders": {
+      "count": {
+        "type": "String",
+        "description": "عدد سجلات الزيارة"
+      }
+    }
+  },
+
+  "whatYouCanDo": "ما يمكنك فعله:",
+  "@whatYouCanDo": {
+    "description": "عنوان قسم ما يمكنك فعله"
+  },
+
+  "removeAgentAssignmentsFirst": "إزالة تخصيصات الوكلاء أولاً",
+  "@removeAgentAssignmentsFirst": {
+    "description": "تعليمات إزالة تخصيصات الوكلاء"
+  },
+
+  "archiveTheRouteInsteadOfDeletingToPreserveHistoricalData": "أرشف المسار بدلاً من حذفه للحفاظ على البيانات التاريخية",
+  "@archiveTheRouteInsteadOfDeletingToPreserveHistoricalData": {
+    "description": "تعليمات أرشفة المسار"
+  },
+
+  "archive": "أرشف",
+  "@archive": {
+    "description": "نص زر الأرشفة"
+  },
+
+  "routeDeletedSuccessfully": "تم حذف المسار بنجاح",
+  "@routeDeletedSuccessfully": {
+    "description": "رسالة نجاح حذف المسار"
+  },
+
+  "errorDeletingRoute": "خطأ في حذف المسار",
+  "@errorDeletingRoute": {
+    "description": "رسالة خطأ حذف المسار"
+  },
+
+  "areYouSureYouWantToArchive": "هل أنت متأكد من رغبتك في أرشفة",
+  "@areYouSureYouWantToArchive": {
+    "description": "رسالة تأكيد الأرشفة"
+  },
+
+  "theRouteWillBeMovedToArchivedStatusAllHistoricalDataWillBePreservedAndItWillNoLongerBeAvailableForNewAssignments": "سيتم نقل المسار إلى حالة مؤرشف. سيتم الحفاظ على جميع البيانات التاريخية ولن يكون متاحاً للتخصيصات الجديدة.",
+  "@theRouteWillBeMovedToArchivedStatusAllHistoricalDataWillBePreservedAndItWillNoLongerBeAvailableForNewAssignments": {
+    "description": "شرح أرشفة المسار"
+  },
+
+  "routeArchivedSuccessfully": "تم أرشفة المسار بنجاح",
+  "@routeArchivedSuccessfully": {
+    "description": "رسالة نجاح أرشفة المسار"
+  },
+
+  "errorArchivingRoute": "خطأ في أرشفة المسار",
+  "@errorArchivingRoute": {
+    "description": "رسالة خطأ أرشفة المسار"
+  },
+
+  "fileUrlNotAvailable": "رابط الملف غير متاح",
+  "@fileUrlNotAvailable": {
+    "description": "خطأ رابط الملف غير متاح"
+  },
+
+  "routeName": "اسم المسار",
+  "@routeName": {
+    "description": "تسمية حقل اسم المسار"
+  },
+
+  "enterRouteName": "أدخل اسم المسار",
+  "@enterRouteName": {
+    "description": "تلميح حقل اسم المسار"
+  },
+
+  "routeNameIsRequired": "اسم المسار مطلوب",
+  "@routeNameIsRequired": {
+    "description": "رسالة التحقق من اسم المسار"
+  },
+
+  "briefDescriptionOfTheRoute": "وصف موجز للمسار",
+  "@briefDescriptionOfTheRoute": {
+    "description": "تلميح حقل وصف المسار"
+  },
+
+  "estimatedDuration": "المدة المقدرة",
+  "@estimatedDuration": {
+    "description": "تسمية حقل المدة المقدرة"
+  },
+
+  "hours": "ساعات",
+  "@hours": {
+    "description": "تسمية الساعات"
+  },
+
+  "minutes": "دقائق",
+  "@minutes": {
+    "description": "تسمية الدقائق"
+  },
+
+  "schedule": "الجدولة",
+  "@schedule": {
+    "description": "عنوان قسم الجدولة"
+  },
+
+  "allAvailablePlacesHaveBeenAddedToTheRoute": "تم إضافة جميع الأماكن المتاحة إلى المسار",
+  "@allAvailablePlacesHaveBeenAddedToTheRoute": {
+    "description": "رسالة إضافة جميع الأماكن"
+  },
+
+  "requiredEvidence": "الأدلة المطلوبة",
+  "@requiredEvidence": {
+    "description": "تسمية حقل الأدلة المطلوبة"
+  },
+
+  "visitFrequency": "تكرار الزيارة",
+  "@visitFrequency": {
+    "description": "تسمية حقل تكرار الزيارة"
+  },
+
+  "instructions": "التعليمات",
+  "@instructions": {
+    "description": "تسمية حقل التعليمات"
+  },
+
+  "mustSaveTaskBeforeGeofence": "يجب حفظ المهمة قبل إضافة السياج الجغرافي",
+  "@mustSaveTaskBeforeGeofence": {
+    "description": "رسالة حفظ المهمة قبل السياج الجغرافي"
+  },
+
+  "searchTeamMembers": "البحث في أعضاء الفريق...",
+  "@searchTeamMembers": {
+    "description": "نص البحث في أعضاء الفريق"
+  },
+
+  "rejectionReason": "سبب الرفض",
+  "@rejectionReason": {
+    "description": "تسمية حقل سبب الرفض"
+  },
+
+  "editModeActive": "وضع التحرير نشط",
+  "@editModeActive": {
+    "description": "حالة وضع التحرير نشط"
+  },
+
+  "tapOnTheMapOrDragTheMarkerToChangeTheLocation": "اضغط على الخريطة أو اسحب العلامة لتغيير الموقع",
+  "@tapOnTheMapOrDragTheMarkerToChangeTheLocation": {
+    "description": "تعليمات تحرير الخريطة"
+  },
+
+  "geofence": "السياج الجغرافي",
+  "@geofence": {
+    "description": "تسمية السياج الجغرافي"
+  },
+
+  "radius": "نصف القطر",
+  "@radius": {
+    "description": "تسمية نصف القطر"
+  },
+
+  "evidenceTitleRequired": "عنوان الدليل (مطلوب)",
+  "@evidenceTitleRequired": {
+    "description": "تسمية حقل عنوان الدليل المطلوب"
+  },
+
+  "noVisitsYet": "لا توجد زيارات بعد",
+  "@noVisitsYet": {
+    "description": "رسالة عدم وجود زيارات بعد"
+  },
+
+  "required": "مطلوب",
+  "@required": {
+    "description": "مؤشر الحقل المطلوب"
+  },
+
+  "readyToSave": "جاهز للحفظ",
+  "@readyToSave": {
+    "description": "نص زر جاهز للحفظ"
+  },
+
+  "managerDashboard": "لوحة تحكم المدير",
+  "@managerDashboard": {
+    "description": "عنوان لوحة تحكم المدير"
+  },
+
+  "create": "إنشاء",
+  "@create": {
+    "description": "نص زر الإنشاء"
+  },
+
+  "save": "حفظ",
+  "@save": {
+    "description": "نص زر الحفظ"
+  },
+
+  "details": "التفاصيل",
+  "@details": {
+    "description": "عنوان قسم التفاصيل"
+  },
+
+  "pleaseSelectFile": "يرجى اختيار ملف",
+  "@pleaseSelectFile": {
+    "description": "رسالة يرجى اختيار ملف"
+  },
+
+  "taskStatusUpdated": "تم تحديث حالة المهمة!",
+  "@taskStatusUpdated": {
+    "description": "رسالة تحديث حالة المهمة"
+  },
+
+  "failedToUpdateStatus": "فشل في تحديث الحالة.",
+  "@failedToUpdateStatus": {
+    "description": "رسالة فشل تحديث الحالة"
+  },
+
+  "errorUploadingEvidence": "خطأ في رفع الدليل",
+  "@errorUploadingEvidence": {
+    "description": "رسالة خطأ رفع الدليل"
+  },
+
+  "noTasksAssigned": "لم يتم تكليفك بأي مهام لهذه الحملة.",
+  "@noTasksAssigned": {
+    "description": "رسالة عدم وجود مهام مكلف بها"
+  },
+
+  "uploadingEvidence": "جاري رفع الدليل...",
+  "@uploadingEvidence": {
+    "description": "رسالة تحميل رفع الدليل"
+  },
+
+  "uploadingEvidenceProgress": "جاري رفع الدليل... {progress}%",
+  "@uploadingEvidenceProgress": {
+    "description": "رفع الدليل مع التقدم",
+    "placeholders": {
+      "progress": {"type": "int"}
+    }
+  },
+
+  "zoneCountFormat": "{current} من {total}",
+  "@zoneCountFormat": {
+    "description": "تنسيق عدد المناطق",
+    "placeholders": {
+      "current": {"type": "String"},
+      "total": {"type": "String"}
+    }
+  },
+
+  "noLocationSet": "لم يتم تحديد موقع",
+  "@noLocationSet": {
+    "description": "عنوان عدم تحديد موقع"
+  },
+
+  "taskHasLocationNameNoGeofence": "هذه المهمة لديها اسم موقع ولكن لم يتم تحديد منطقة جغرافية. يمكنك تقديم الأدلة من أي موقع.",
+  "@taskHasLocationNameNoGeofence": {
+    "description": "رسالة المهمة لديها اسم موقع بدون منطقة جغرافية"
+  },
+
+  "noLocationSetDescription": "لم يحدد المدير موقعاً محدداً أو منطقة جغرافية لهذه المهمة. يمكنك تقديم الأدلة من أي موقع.",
+  "@noLocationSetDescription": {
+    "description": "وصف عدم تحديد موقع"
+  },
+
+  "geofenceAreas": "المناطق الجغرافية",
+  "@geofenceAreas": {
+    "description": "عنوان المناطق الجغرافية"
+  },
+
+  "pointsCount": "{count} نقاط",
+  "@pointsCount": {
+    "description": "تنسيق عدد النقاط",
+    "placeholders": {
+      "count": {"type": "String"}
+    }
+  },
+
+  "assignmentPending": "التكليف معلق",
+  "@assignmentPending": {
+    "description": "عنوان التكليف المعلق"
+  },
+
+  "assignmentPendingDescription": "تكليفك بهذه المهمة معلق في انتظار الموافقة.\nلا يمكنك الوصول إلى تفاصيل المهمة حتى تتم الموافقة عليها.",
+  "@assignmentPendingDescription": {
+    "description": "وصف التكليف المعلق"
+  },
+
+  "goBack": "العودة",
+  "@goBack": {
+    "description": "زر العودة"
+  },
+
+  "templateNotFound": "لم يتم العثور على القالب",
+  "@templateNotFound": {
+    "description": "عنوان عدم العثور على القالب"
+  },
+
+  "templateNotFoundDescription": "لا يمكن تحميل قالب هذه المهمة.",
+  "@templateNotFoundDescription": {
+    "description": "وصف عدم العثور على القالب"
+  },
+
+  "locationVerificationRequired": "مطلوب التحقق من الموقع",
+  "@locationVerificationRequired": {
+    "description": "رسالة التحقق من الموقع مطلوب"
+  },
+
+  "taskAssignmentPendingApproval": "تكليف هذه المهمة معلق في انتظار موافقة مديرك. لا يمكنك بدء العمل حتى تتم الموافقة عليه.",
+  "@taskAssignmentPendingApproval": {
+    "description": "رسالة تكليف المهمة معلق في انتظار الموافقة"
+  },
+
+  "awaitingManagerApproval": "في انتظار موافقة المدير",
+  "@awaitingManagerApproval": {
+    "description": "نص في انتظار موافقة المدير"
+  },
+
+  "uploadMoreEvidenceFormat": "ارفع {count} ملف دليل إضافي لإتمام هذه المهمة",
+  "@uploadMoreEvidenceFormat": {
+    "description": "تنسيق رفع المزيد من الأدلة",
+    "placeholders": {
+      "count": {"type": "String"}
+    }
+  },
+
+  "inProgress": "قيد التنفيذ",
+  "@inProgress": {
+    "description": "حالة قيد التنفيذ"
+  },
+
+  "pending": "معلق",
+  "@pending": {
+    "description": "حالة معلق"
+  },
+
+  "noTasksAvailable": "لا توجد مهام متاحة",
+  "@noTasksAvailable": {
+    "description": "عنوان عدم وجود مهام متاحة"
+  },
+
+  "noTasksAssignedDescription": "لا توجد مهام مكلف بها في هذه الحملة حتى الآن. تحقق مرة أخرى لاحقاً أو اتصل بمديرك.",
+  "@noTasksAssignedDescription": {
+    "description": "وصف عدم وجود مهام مكلف بها"
+  },
+
+  "activeVisit": "الزيارة النشطة",
+  "@activeVisit": {
+    "description": "عنوان الزيارة النشطة"
+  },
+
+  "timeSpent": "الوقت المستغرق",
+  "@timeSpent": {
+    "description": "تسمية الوقت المستغرق"
+  },
+
+  "evidence": "الدليل",
+  "@evidence": {
+    "description": "تسمية الدليل"
+  },
+
+  "pointsFormat": "{points} نقطة",
+  "@pointsFormat": {
+    "description": "تنسيق النقاط",
+    "placeholders": {
+      "points": {"type": "String"}
+    }
+  },
+
+  "ptsFormat": "{points} نقطة",
+  "@ptsFormat": {
+    "description": "تنسيق اختصار النقاط",
+    "placeholders": {
+      "points": {"type": "String"}
+    }
+  },
+
+  "appTitle": "الطجوال",
+  "@appTitle": {
+    "description": "عنوان التطبيق"
+  },
+
+  "signUpSuccessMessage": "تم التسجيل بنجاح! يرجى التحقق من بريدك الإلكتروني للتأكيد.",
+  "@signUpSuccessMessage": {
+    "description": "رسالة نجاح التسجيل"
+  },
+
+  "unexpectedError": "حدث خطأ غير متوقع.",
+  "@unexpectedError": {
+    "description": "رسالة خطأ غير متوقع"
+  },
+
+  "stopServicesQuestion": "إيقاف الخدمات؟",
+  "@stopServicesQuestion": {
+    "description": "عنوان حوار إيقاف الخدمات"
+  },
+
+  "stopServicesWarning": "سيؤدي هذا إلى إيقاف تتبع الموقع وتحديثات الحالة. لن يتمكن مديرك من رؤية موقعك أو حالتك عبر الإنترنت.\n\nهل أنت متأكد من أنك تريد إيقاف جميع الخدمات؟",
+  "@stopServicesWarning": {
+    "description": "رسالة تحذير إيقاف الخدمات"
+  },
+
+  "stopServices": "إيقاف الخدمات",
+  "@stopServices": {
+    "description": "زر إيقاف الخدمات"
+  },
+
+  "backgroundServicesStopped": "تم إيقاف الخدمات الخلفية",
+  "@backgroundServicesStopped": {
+    "description": "رسالة إيقاف الخدمات الخلفية"
+  },
+
+  "servicesDisabled": "الخدمات معطلة",
+  "@servicesDisabled": {
+    "description": "عنوان الخدمات المعطلة"
+  },
+
+  "servicesActiveMessage": "تتبع الموقع وتحديثات الحالة نشطة الآن",
+  "@servicesActiveMessage": {
+    "description": "رسالة الخدمات النشطة"
+  },
+
+  "servicesStarted": "تم بدء الخدمات",
+  "@servicesStarted": {
+    "description": "عنوان بدء الخدمات"
+  },
+
+  "failedToStartServices": "فشل في بدء الخدمات. يرجى التحقق من الأذونات.",
+  "@failedToStartServices": {
+    "description": "رسالة فشل بدء الخدمات"
+  },
+
+  "serviceError": "خطأ في الخدمة",
+  "@serviceError": {
+    "description": "عنوان خطأ الخدمة"
+  },
+
+  "unableToToggleServices": "غير قادر على تبديل الخدمات",
+  "@unableToToggleServices": {
+    "description": "رسالة عدم القدرة على تبديل الخدمات"
+  },
+
+  "serviceDetails": "تفاصيل الخدمة",
+  "@serviceDetails": {
+    "description": "عنوان تفاصيل الخدمة"
+  },
+
+  "locationTracking": "تتبع الموقع",
+  "@locationTracking": {
+    "description": "تسمية تتبع الموقع"
+  },
+
+  "active": "نشط",
+  "@active": {
+    "description": "حالة نشط"
+  },
+
+  "inactive": "غير نشط",
+  "@inactive": {
+    "description": "حالة غير نشط"
+  },
+
+  "onlineStatus": "الحالة عبر الإنترنت",
+  "@onlineStatus": {
+    "description": "تسمية الحالة عبر الإنترنت"
+  },
+
+  "broadcasting": "البث",
+  "@broadcasting": {
+    "description": "حالة البث"
+  },
+
+  "offline": "غير متصل",
+  "@offline": {
+    "description": "حالة غير متصل"
+  },
+
+  "heartbeat": "نبضة القلب",
+  "@heartbeat": {
+    "description": "تسمية نبضة القلب"
+  },
+
+  "every30s": "كل 30 ثانية",
+  "@every30s": {
+    "description": "كل 30 ثانية"
+  },
+
+  "stopped": "متوقف",
+  "@stopped": {
+    "description": "حالة متوقف"
+  },
+
+  "youreOffline": "أنت غير متصل",
+  "@youreOffline": {
+    "description": "رسالة أنت غير متصل"
+  },
+
+  "noInternetConnection": "لا يوجد اتصال بالإنترنت. يرجى التحقق من إعدادات الشبكة والمحاولة مرة أخرى.",
+  "@noInternetConnection": {
+    "description": "رسالة عدم وجود اتصال بالإنترنت"
+  },
+
+  "tryAgain": "حاول مرة أخرى",
+  "@tryAgain": {
+    "description": "زر حاول مرة أخرى"
+  },
+
+  "backOnline": "عاد للاتصال",
+  "@backOnline": {
+    "description": "رسالة عاد للاتصال"
+  },
+
+  "errorLoadingUserProfile": "خطأ في تحميل ملف المستخدم",
+  "@errorLoadingUserProfile": {
+    "description": "رسالة خطأ تحميل ملف المستخدم"
+  },
+
+  "retry": "حاول مرة أخرى",
+  "@retry": {
+    "description": "زر إعادة المحاولة"
+  },
+
+  "delete": "حذف",
+  "@delete": {
+    "description": "زر الحذف"
+  },
+
+  "addField": "إضافة حقل",
+  "@addField": {
+    "description": "زر إضافة حقل"
+  },
+
+  "update": "تحديث",
+  "@update": {
+    "description": "زر التحديث"
+  },
+
+  "deleteField": "حذف الحقل",
+  "@deleteField": {
+    "description": "عنوان حوار حذف الحقل"
+  },
+
+  "confirmDeleteField": "هل أنت متأكد من أنك تريد حذف \"{fieldName}\"؟",
+  "@confirmDeleteField": {
+    "description": "رسالة تأكيد حذف الحقل",
+    "placeholders": {
+      "fieldName": {"type": "String"}
+    }
+  },
+
+  "addTask": "إضافة مهمة",
+  "@addTask": {
+    "description": "زر إضافة مهمة"
+  },
+
+  "save": "حفظ",
+  "@save": {
+    "description": "زر الحفظ"
+  },
+
+  "done": "تم",
+  "@done": {
+    "description": "زر تم"
+  },
+
+  "newZone": "منطقة جديدة",
+  "@newZone": {
+    "description": "تسمية منطقة جديدة"
+  },
+
+  "renameZone": "إعادة تسمية المنطقة",
+  "@renameZone": {
+    "description": "عنوان حوار إعادة تسمية المنطقة"
+  },
+
+  "zoneName": "اسم المنطقة",
+  "@zoneName": {
+    "description": "تسمية حقل اسم المنطقة"
+  },
+
+  "pickAColor": "اختر لونًا",
+  "@pickAColor": {
+    "description": "عنوان حوار اختيار اللون"
+  },
+
+  "allTeamMembersOnline": "جميع أعضاء الفريق متصلون حاليًا.\nعمل رائع في الحفاظ على نشاط الفريق!",
+  "@allTeamMembersOnline": {
+    "description": "رسالة جميع أعضاء الفريق متصلون"
+  },
+
+  "noTeamMembersAssigned": "ليس لديك أي أعضاء فريق مكلفين لمجموعاتك حتى الآن.\nاتصل بالمدير لإضافة وكلاء إلى مجموعاتك.",
+  "@noTeamMembersAssigned": {
+    "description": "رسالة عدم وجود أعضاء فريق مكلفين"
+  },
+
+  "editAgentName": "تعديل اسم الوكيل",
+  "@editAgentName": {
+    "description": "زر تعديل اسم الوكيل"
+  },
+
+  "updateName": "تحديث الاسم",
+  "@updateName": {
+    "description": "زر تحديث الاسم"
+  },
+
+  "enterNewPassword": "أدخل كلمة مرور جديدة",
+  "@enterNewPassword": {
+    "description": "تلميح أدخل كلمة مرور جديدة"
+  },
+
+  "editNameForAgent": "تعديل الاسم لـ @{username}",
+  "@editNameForAgent": {
+    "description": "رسالة تعديل الاسم للوكيل",
+    "placeholders": {
+      "username": {"type": "String"}
+    }
+  },
+
+  "enterAgentFullName": "أدخل الاسم الكامل للوكيل",
+  "@enterAgentFullName": {
+    "description": "تلميح أدخل الاسم الكامل للوكيل"
+  },
+
+  "newPassword": "كلمة مرور جديدة",
+  "@newPassword": {
+    "description": "تسمية كلمة مرور جديدة"
+  },
+
+  "enterNewPasswordFor": "أدخل كلمة مرور جديدة لـ {fullName}",
+  "@enterNewPasswordFor": {
+    "description": "رسالة أدخل كلمة مرور جديدة للمستخدم",
+    "placeholders": {
+      "fullName": {"type": "String"}
+    }
+  },
+
+  "createFirstRoute": "أنشئ أول مسار لك للبدء",
+  "@createFirstRoute": {
+    "description": "رسالة إنشاء أول مسار"
+  },
+
+  "createNewTask": "إنشاء مهمة جديدة",
+  "@createNewTask": {
+    "description": "عنوان إنشاء مهمة جديدة"
+  },
+
+  "chooseFromProfessionalTemplates": "اختر من قوالب المهام المهنية حسب الفئة",
+  "@chooseFromProfessionalTemplates": {
+    "description": "وصف الاختيار من القوالب المهنية"
+  },
+
+  "createCustomTaskDescription": "أنشئ مهمة مخصصة بمتطلبات محددة",
+  "@createCustomTaskDescription": {
+    "description": "وصف إنشاء مهمة مخصصة"
+  },
+
+  "editTask": "تعديل المهمة",
+  "@editTask": {
+    "description": "زر تعديل المهمة"
+  },
+
+  "createFirstTaskToGetStarted": "أنشئ أول مهمة لك للبدء في إدارة المهام",
+  "@createFirstTaskToGetStarted": {
+    "description": "رسالة إنشاء أول مهمة للبدء"
+  },
+
+  "createTemplate": "إنشاء قالب",
+  "@createTemplate": {
+    "description": "زر إنشاء قالب"
+  },
+
+  "selectCategory": "اختر فئة",
+  "@selectCategory": {
+    "description": "نص اختيار فئة"
+  },
+
+  "createNewTemplate": "إنشاء قالب جديد",
+  "@createNewTemplate": {
+    "description": "عنوان إنشاء قالب جديد"
+  },
+
+  "back": "رجوع",
+  "@back": {
+    "description": "زر الرجوع"
+  },
+
+  "next": "التالي",
+  "@next": {
+    "description": "زر التالي"
+  },
+
+  "errorLoadingCategories": "خطأ في تحميل الفئات",
+  "@errorLoadingCategories": {
+    "description": "رسالة خطأ تحميل الفئات"
+  },
+
+  "templateCreatedSuccessfully": "تم إنشاء القالب بنجاح!",
+  "@templateCreatedSuccessfully": {
+    "description": "رسالة نجاح إنشاء القالب"
+  },
+
+  "errorCreatingTemplate": "خطأ في إنشاء القالب",
+  "@errorCreatingTemplate": {
+    "description": "رسالة خطأ إنشاء القالب"
+  },
+
+  "basicInformation": "المعلومات الأساسية",
+  "@basicInformation": {
+    "description": "عنوان قسم المعلومات الأساسية"
+  },
+
+  "tellUsAboutTemplate": "أخبرنا عن قالبك",
+  "@tellUsAboutTemplate": {
+    "description": "عنوان فرعي أخبرنا عن القالب"
+  },
+
+  "templateNameRequired": "اسم القالب *",
+  "@templateNameRequired": {
+    "description": "حقل اسم القالب مطلوب"
+  },
+
+  "templateNameHint": "مثال: فحص معدات المستشفى",
+  "@templateNameHint": {
+    "description": "نص توضيحي لاسم القالب"
+  },
+
+  "descriptionRequired": "الوصف *",
+  "@descriptionRequired": {
+    "description": "حقل الوصف مطلوب"
+  },
+
+  "describeAgentTask": "صف ما يحتاج الوكلاء للقيام به...",
+  "@describeAgentTask": {
+    "description": "نص توضيحي لوصف مهمة الوكيل"
+  },
+
+  "categoryRequired": "الفئة *",
+  "@categoryRequired": {
+    "description": "حقل الفئة مطلوب"
+  },
+
+  "taskRequirements": "متطلبات المهمة",
+  "@taskRequirements": {
+    "description": "عنوان قسم متطلبات المهمة"
+  },
+
+  "configureAgentRequirements": "تكوين ما يحتاج الوكلاء لتقديمه",
+  "@configureAgentRequirements": {
+    "description": "عنوان فرعي تكوين متطلبات الوكيل"
+  },
+
+  "difficultyLevel": "مستوى الصعوبة",
+  "@difficultyLevel": {
+    "description": "تسمية مستوى الصعوبة"
+  },
+
+  "evidenceRequired": "الأدلة المطلوبة",
+  "@evidenceRequired": {
+    "description": "تسمية الأدلة المطلوبة"
+  },
+
+  "estimatedDurationMinutes": "المدة المقدرة (بالدقائق)",
+  "@estimatedDurationMinutes": {
+    "description": "تسمية المدة المقدرة بالدقائق"
+  },
+
+  "rewardPoints": "نقاط المكافأة",
+  "@rewardPoints": {
+    "description": "تسمية نقاط المكافأة"
+  },
+
+  "requiresGeofence": "يتطلب جيوفنس",
+  "@requiresGeofence": {
+    "description": "تسمية يتطلب جيوفنس"
+  },
+
+  "taskMustBeCompletedAtLocation": "يجب إكمال المهمة في موقع محدد",
+  "@taskMustBeCompletedAtLocation": {
+    "description": "عنوان فرعي يجب إكمال المهمة في الموقع"
+  },
+
+  "customInstructionsOptional": "تعليمات مخصصة (اختيارية)",
+  "@customInstructionsOptional": {
+    "description": "تسمية التعليمات المخصصة الاختيارية"
+  },
+
+  "additionalInstructionsForAgents": "تعليمات إضافية للوكلاء...",
+  "@additionalInstructionsForAgents": {
+    "description": "نص توضيحي للتعليمات الإضافية"
+  },
+
+  "reviewAndCreate": "مراجعة وإنشاء",
+  "@reviewAndCreate": {
+    "description": "عنوان قسم المراجعة والإنشاء"
+  },
+
+  "verifyTemplateBeforeCreating": "تحقق من قالبك قبل الإنشاء",
+  "@verifyTemplateBeforeCreating": {
+    "description": "عنوان فرعي التحقق من القالب قبل الإنشاء"
+  },
+
+  "templateName": "اسم القالب",
+  "@templateName": {
+    "description": "تسمية اسم القالب"
+  },
+
+  "notSelected": "غير محدد",
+  "@notSelected": {
+    "description": "نص غير محدد"
+  },
+
+  "difficulty": "الصعوبة",
+  "@difficulty": {
+    "description": "تسمية الصعوبة"
+  },
+
+  "duration": "المدة",
+  "@duration": {
+    "description": "تسمية المدة"
+  },
+
+  "minutesFormat": "{minutes} دقيقة",
+  "@minutesFormat": {
+    "description": "تنسيق الدقائق",
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+
+  "reward": "المكافأة",
+  "@reward": {
+    "description": "تسمية المكافأة"
+  },
+
+  "geofenceRequired": "الجيوفنس مطلوب",
+  "@geofenceRequired": {
+    "description": "تسمية الجيوفنس مطلوب"
+  },
+
+  "yes": "نعم",
+  "@yes": {
+    "description": "نص نعم"
+  },
+
+  "no": "لا",
+  "@no": {
+    "description": "نص لا"
+  },
+
+  "instructions": "التعليمات",
+  "@instructions": {
+    "description": "تسمية التعليمات"
+  },
+
+  "photo": "صورة",
+  "@photo": {
+    "description": "تسمية الصورة"
+  },
+
+  "video": "فيديو",
+  "@video": {
+    "description": "تسمية الفيديو"
+  },
+
+  "document": "مستند",
+  "@document": {
+    "description": "تسمية المستند"
+  },
+
+  "pdf": "PDF",
+  "@pdf": {
+    "description": "تسمية PDF"
+  },
+
+  "audio": "صوت",
+  "@audio": {
+    "description": "تسمية الصوت"
+  },
+
+  "stepXOfY": "الخطوة {x} من {y}",
+  "@stepXOfY": {
+    "description": "تنسيق الخطوة x من y",
+    "placeholders": {
+      "x": {
+        "type": "int"
+      },
+      "y": {
+        "type": "int"
+      }
+    }
+  },
+
+  "basicInfo": "المعلومات الأساسية",
+  "@basicInfo": {
+    "description": "عنوان خطوة المعلومات الأساسية"
+  },
+
+  "requirements": "المتطلبات",
+  "@requirements": {
+    "description": "عنوان خطوة المتطلبات"
+  },
+
+  "taskManagement": "إدارة المهام",
+  "@taskManagement": {
+    "description": "عنوان إدارة المهام"
+  },
+
+  "errorLoadingTasks": "خطأ في تحميل المهام",
+  "@errorLoadingTasks": {
+    "description": "رسالة خطأ تحميل المهام"
+  },
+
+  "retry": "إعادة المحاولة",
+  "@retry": {
+    "description": "زر إعادة المحاولة"
+  },
+
+  "noTasksYet": "لا توجد مهام بعد",
+  "@noTasksYet": {
+    "description": "رسالة لا توجد مهام بعد"
+  },
+
+  "confirmDelete": "تأكيد الحذف",
+  "@confirmDelete": {
+    "description": "عنوان تأكيد الحذف"
+  },
+
+  "confirmDeleteTaskMessage": "هل أنت متأكد من أنك تريد حذف هذه المهمة؟ لا يمكن التراجع عن هذا الإجراء.",
+  "@confirmDeleteTaskMessage": {
+    "description": "رسالة تأكيد حذف المهمة"
+  },
+
+  "deleteTask": "حذف المهمة",
+  "@deleteTask": {
+    "description": "نص حذف المهمة"
+  },
+
+  "newTask": "مهمة جديدة",
+  "@newTask": {
+    "description": "زر مهمة جديدة"
+  },
+
+  "taskDeletedSuccessfully": "تم حذف المهمة بنجاح",
+  "@taskDeletedSuccessfully": {
+    "description": "رسالة نجاح حذف المهمة"
+  },
+
+  "failedToDeleteTask": "فشل في حذف المهمة",
+  "@failedToDeleteTask": {
+    "description": "رسالة فشل حذف المهمة"
+  },
+
+  "fromTemplate": "من قالب",
+  "@fromTemplate": {
+    "description": "خيار من قالب"
+  },
+
+  "customTask": "مهمة مخصصة",
+  "@customTask": {
+    "description": "خيار مهمة مخصصة"
+  },
+
+  "managePlaces": "إدارة الأماكن",
+  "@managePlaces": {
+    "description": "تلميح إدارة الأماكن"
+  },
+
+  "noDraftRoutes": "لا توجد مسارات مسودة",
+  "@noDraftRoutes": {
+    "description": "رسالة لا توجد مسارات مسودة"
+  },
+
+  "noRoutesFound": "لم يتم العثور على مسارات",
+  "@noRoutesFound": {
+    "description": "رسالة لم يتم العثور على مسارات"
+  },
+
+  "routeOrder": "ترتيب المسار:",
+  "@routeOrder": {
+    "description": "تسمية ترتيب المسار"
+  },
+
+  "createdByFormat": "أنشأ بواسطة: {name}",
+  "@createdByFormat": {
+    "description": "تنسيق أنشأ بواسطة",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+
+  "unknown": "غير معروف",
+  "@unknown": {
+    "description": "نص غير معروف"
+  },
+
+  "noPlacesAdded": "لم تتم إضافة أماكن",
+  "@noPlacesAdded": {
+    "description": "رسالة لم تتم إضافة أماكن"
+  },
+
+  "morePlacesFormat": "... (+{count} أكثر)",
+  "@morePlacesFormat": {
+    "description": "تنسيق أماكن أكثر",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "category": "الفئة",
+  "@category": {
+    "description": "تسمية الفئة"
+  },
+
+  "minutesShort": "د",
+  "@minutesShort": {
+    "description": "شكل مختصر للدقائق"
+  },
+
+  "pointsShort": "نقاط",
+  "@pointsShort": {
+    "description": "شكل مختصر للنقاط"
+  },
+
+  "newTaskAssigned": "تم تعيين مهمة جديدة",
+  "@newTaskAssigned": {
+    "description": "عنوان إشعار تعيين مهمة جديدة"
+  },
+
+  "points": "النقاط",
+  "@points": {
+    "description": "تسمية النقاط"
+  },
+
+  "campaignAssignment": "تعيين الحملة",
+  "@campaignAssignment": {
+    "description": "عنوان تعيين الحملة"
+  },
+
+  "title": "العنوان",
+  "@title": {
+    "description": "تسمية العنوان"
+  },
+
+  "update": "تحديث",
+  "@update": {
+    "description": "زر التحديث"
+  },
+
+  "remove": "إزالة",
+  "@remove": {
+    "description": "زر الإزالة"
+  },
+
+  "pointsPrefix": "نقاط ",
+  "@pointsPrefix": {
+    "description": "بادئة النقاط"
+  },
+
+  "confirmPayment": "تأكيد الدفع",
+  "@confirmPayment": {
+    "description": "زر تأكيد الدفع"
+  },
+
+  "removeAgent": "إزالة الوكيل",
+  "@removeAgent": {
+    "description": "تلميح إزالة الوكيل"
+  },
+
+  "taskProgress": "تقدم المهمة",
+  "@taskProgress": {
+    "description": "عنوان قسم تقدم المهمة"
+  },
+
+  "uploadedFiles": "الملفات المرفوعة",
+  "@uploadedFiles": {
+    "description": "عنوان قسم الملفات المرفوعة"
+  },
+
+  "totalPoints": "إجمالي النقاط",
+  "@totalPoints": {
+    "description": "تسمية إجمالي النقاط"
+  },
+
+  "pointsPaid": "النقاط المدفوعة",
+  "@pointsPaid": {
+    "description": "تسمية النقاط المدفوعة"
+  },
+
+  "outstanding": "المتبقي",
+  "@outstanding": {
+    "description": "تسمية الرصيد المتبقي"
+  },
+
+  "untitledEvidence": "دليل بدون عنوان",
+  "@untitledEvidence": {
+    "description": "تسمية الدليل بدون عنوان"
+  },
+
+  "view": "عرض",
+  "@view": {
+    "description": "زر العرض"
+  },
+
+  "download": "تحميل",
+  "@download": {
+    "description": "زر التحميل"
+  },
+
+  "evidenceRequiredMessage": "تتطلب هذه المهمة {requiredEvidence} ملف(ات) أدلة ولكن تم رفع {uploadedEvidence} فقط.\\n\\nيرجى رفع الأدلة المطلوبة قبل وضع علامة على المهمة كمكتملة.",
+  "@evidenceRequiredMessage": {
+    "description": "رسالة مربع حوار الأدلة المطلوبة",
+    "placeholders": {
+      "requiredEvidence": {
+        "type": "int"
+      },
+      "uploadedEvidence": {
+        "type": "int"
+      }
+    }
+  },
+
+  "ok": "موافق",
+  "@ok": {
+    "description": "زر موافق"
+  },
+
+  "unknownFile": "ملف غير معروف",
+  "@unknownFile": {
+    "description": "تسمية ملف غير معروف"
+  },
+
+  "unknownTask": "مهمة غير معروفة",
+  "@unknownTask": {
+    "description": "تسمية مهمة غير معروفة"
+  },
+
+  "earlyCompletion": "إكمال مبكر",
+  "@earlyCompletion": {
+    "description": "عنوان مربع حوار الإكمال المبكر"
+  },
+
+  "complete": "إكمال",
+  "@complete": {
+    "description": "زر الإكمال"
+  },
+
+  "geofenceStayTask": "مهمة البقاء في الجيوفنس",
+  "@geofenceStayTask": {
+    "description": "عنوان مهمة البقاء في الجيوفنس"
+  },
+
+  "locationStatus": "حالة الموقع",
+  "@locationStatus": {
+    "description": "تسمية حالة الموقع"
+  },
+
+  "insideDesignatedArea": "داخل المنطقة المحددة",
+  "@insideDesignatedArea": {
+    "description": "حالة داخل المنطقة المحددة"
+  },
+
+  "outsideDesignatedArea": "خارج المنطقة المحددة",
+  "@outsideDesignatedArea": {
+    "description": "حالة خارج المنطقة المحددة"
+  },
+
+  "timeProgress": "تقدم الوقت",
+  "@timeProgress": {
+    "description": "تسمية تقدم الوقت"
+  },
+
+  "progress": "التقدم",
+  "@progress": {
+    "description": "تسمية التقدم"
+  },
+
+  "completeEarly": "إكمال مبكر",
+  "@completeEarly": {
+    "description": "زر الإكمال المبكر"
+  },
+
+  "inAreaReadyToStart": "في المنطقة - جاهز للبدء",
+  "@inAreaReadyToStart": {
+    "description": "حالة في المنطقة جاهز للبدء"
+  },
+
+  "outsideArea": "خارج المنطقة",
+  "@outsideArea": {
+    "description": "حالة خارج المنطقة"
+  },
+
+  "locationCheckFailed": "فشل فحص الموقع",
+  "@locationCheckFailed": {
+    "description": "حالة فشل فحص الموقع"
+  },
+
+  "taskActive": "المهمة نشطة",
+  "@taskActive": {
+    "description": "حالة المهمة نشطة"
+  },
+
+  "notStarted": "لم تبدأ",
+  "@notStarted": {
+    "description": "حالة لم تبدأ"
+  },
+
+  "checkingLocation": "جارٍ فحص الموقع...",
+  "@checkingLocation": {
+    "description": "حالة جارٍ فحص الموقع"
+  },
+
+  "moveToDesignatedArea": "انتقل إلى المنطقة المحددة",
+  "@moveToDesignatedArea": {
+    "description": "زر الانتقال إلى المنطقة المحددة"
+  },
+
+  "startTask": "بدء المهمة",
+  "@startTask": {
+    "description": "زر بدء المهمة"
+  }
+}

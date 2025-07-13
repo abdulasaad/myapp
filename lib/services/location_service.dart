@@ -6,6 +6,7 @@ import 'package:logger/logger.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../utils/constants.dart';
 import 'settings_service.dart';
+import 'package:flutter/material.dart';
 
 final logger = Logger();
 
@@ -16,6 +17,27 @@ class GeofenceStatus {
 }
 
 class LocationService {
+  
+  // Check if a specific location is within a campaign geofence
+  Future<bool> isLocationInCampaignGeofence(
+    double latitude,
+    double longitude,
+    String geofenceId,
+  ) async {
+    try {
+      final response = await supabase.rpc('check_point_in_geofence', params: {
+        'p_lat': latitude,
+        'p_lng': longitude,
+        'p_geofence_id': geofenceId,
+      });
+      
+      return response == true;
+    } catch (e) {
+      debugPrint('Error checking location in geofence: $e');
+      return false;
+    }
+  }
+
   Timer? _timer;
   StreamSubscription<Position>? _positionStreamSubscription;
   StreamSubscription<Map<String, AppSetting>>? _settingsSubscription;

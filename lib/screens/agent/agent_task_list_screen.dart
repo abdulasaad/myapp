@@ -10,7 +10,9 @@ import '../../models/task.dart';
 import '../../utils/constants.dart';
 import '../../services/location_service.dart';
 import '../../services/task_assignment_service.dart';
+import '../../l10n/app_localizations.dart';
 import 'guided_task_screen.dart';
+import 'agent_touring_task_list_screen.dart';
 
 class AgentTask {
   final String taskId;
@@ -127,7 +129,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
       barrierDismissible: false,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Upload Evidence'),
+          title: Text(AppLocalizations.of(context)!.uploadEvidence),
           content: Form(
             key: formKey,
             child: Column(
@@ -135,12 +137,12 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
               children: [
                 TextFormField(
                   controller: titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Evidence Name',
-                    hintText: 'Enter evidence name',
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context)!.evidenceName,
+                    hintText: AppLocalizations.of(context)!.enterEvidenceName,
                   ),
                   validator: (v) => (v == null || v.isEmpty)
-                      ? 'Evidence name is required'
+                      ? AppLocalizations.of(context)!.evidenceNameRequired
                       : null,
                 ),
                 const SizedBox(height: 16),
@@ -163,8 +165,8 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                         },
                         icon: const Icon(Icons.attach_file),
                         label: Text(selectedFile == null
-                            ? 'Select File'
-                            : 'Change File'),
+                            ? AppLocalizations.of(context)!.selectFile
+                            : AppLocalizations.of(context)!.changeFile),
                       ),
                     ),
                   ],
@@ -198,7 +200,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(AppLocalizations.of(context)!.cancel),
             ),
             ElevatedButton(
               onPressed: selectedFile == null
@@ -210,7 +212,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                         _performUpload(task, title, selectedFile!);
                       }
                     },
-              child: const Text('Upload'),
+              child: Text(AppLocalizations.of(context)!.upload),
             ),
           ],
         ),
@@ -223,7 +225,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
       // Check geofence validation if enforcement is enabled
       if (task.enforceGeofence == true) {
         if (mounted) {
-          context.showSnackBar('Checking location for geofence validation...', isError: false);
+          context.showSnackBar(AppLocalizations.of(context)!.checkingLocation, isError: false);
         }
         
         final locationService = LocationService();
@@ -232,7 +234,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
         if (!isInGeofence) {
           if (mounted) {
             context.showSnackBar(
-              'You must be within the task location area to upload evidence. Please move to the designated location and try again.',
+              AppLocalizations.of(context)!.geofenceValidationFailed,
               isError: true
             );
           }
@@ -240,7 +242,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
         }
         
         if (mounted) {
-          context.showSnackBar('Location verified! Uploading evidence...', isError: false);
+          context.showSnackBar(AppLocalizations.of(context)!.locationVerified, isError: false);
         }
       }
 
@@ -284,10 +286,10 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
       await supabase.from('task_assignments').update({'evidence_urls': updatedUrls})
           .match({'task_id': task.taskId, 'agent_id': supabase.auth.currentUser!.id});
       
-      if(mounted) context.showSnackBar('Evidence "$title" uploaded successfully!');
+      if(mounted) context.showSnackBar('${AppLocalizations.of(context)!.evidenceUploadedSuccess}: "$title"');
       _refreshTasks();
     } catch (e) {
-      if(mounted) context.showSnackBar('Failed to upload evidence: $e', isError: true);
+      if(mounted) context.showSnackBar('Upload failed: $e', isError: true);
     }
   }
 
@@ -301,15 +303,14 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
       await showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Evidence Required'),
+          title: Text(AppLocalizations.of(context)!.evidenceRequired),
           content: Text(
-            'This task requires $requiredEvidence evidence file(s) but only $uploadedEvidence uploaded.\n\n'
-            'Please upload the required evidence before marking the task as complete.'
+            AppLocalizations.of(context)!.evidenceRequiredMessage(requiredEvidence, uploadedEvidence)
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
+              child: Text(AppLocalizations.of(context)!.ok),
             ),
           ],
         ),
@@ -320,15 +321,15 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
     final shouldComplete = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Confirm Completion'),
+        title: Text(AppLocalizations.of(context)!.confirmCompletion),
         content: Text(
           requiredEvidence > 0 
               ? 'You have uploaded $uploadedEvidence/$requiredEvidence required evidence files.\n\nAre you sure you want to mark this task as complete?'
               : 'Are you sure you want to mark this task as complete?'
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.of(context).pop(true), child: const Text('Confirm')),
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(AppLocalizations.of(context)!.cancel)),
+          ElevatedButton(onPressed: () => Navigator.of(context).pop(true), child: Text(AppLocalizations.of(context)!.confirm)),
         ],
       ),
     );
@@ -342,7 +343,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
           .update({'status': 'completed', 'completed_at': DateTime.now().toIso8601String()})
           .match({'task_id': task.taskId, 'agent_id': supabase.auth.currentUser!.id});
       
-      if(mounted) context.showSnackBar('Task marked as completed!');
+      if(mounted) context.showSnackBar(AppLocalizations.of(context)!.taskCompletedSuccess);
       _refreshTasks();
 
     } catch (e) {
@@ -396,13 +397,13 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
               future: _tasksFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
+                  return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         CircularProgressIndicator(),
                         SizedBox(height: 16),
-                        Text('Loading tasks...'),
+                        Text(AppLocalizations.of(context)!.loading),
                       ],
                     ),
                   );
@@ -415,11 +416,11 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                       children: [
                         Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
                         const SizedBox(height: 16),
-                        Text('Error: ${snapshot.error}'),
+                        Text('${AppLocalizations.of(context)!.error}: ${snapshot.error}'),
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: _refreshTasks,
-                          child: const Text('Try Again'),
+                          child: Text(AppLocalizations.of(context)!.retry),
                         ),
                       ],
                     ),
@@ -427,7 +428,18 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                 }
                 
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return _buildEmptyState();
+                  // Automatically navigate to touring tasks if no regular tasks
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (context) => AgentTouringTaskListScreen(
+                          campaign: widget.campaign,
+                          agentId: supabase.auth.currentUser!.id,
+                        ),
+                      ),
+                    );
+                  });
+                  return const Center(child: CircularProgressIndicator());
                 }
 
                 final tasks = snapshot.data!;
@@ -536,7 +548,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                '${task.points} points',
+                                AppLocalizations.of(context)!.pointsFormat(task.points.toString()),
                                 style: TextStyle(
                                   color: Colors.orange[600],
                                   fontWeight: FontWeight.w600,
@@ -553,7 +565,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                                   ),
                                 ),
                                 child: Text(
-                                  task.status.toUpperCase(),
+                                  _getLocalizedStatus(task.status, context).toUpperCase(),
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
@@ -598,7 +610,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'This task assignment is pending approval from your manager. You cannot start work until it is approved.',
+                            AppLocalizations.of(context)!.taskAssignmentPendingApproval,
                             style: TextStyle(
                               color: Colors.orange[700],
                               fontSize: 12,
@@ -620,9 +632,9 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'Progress',
-                            style: TextStyle(
+                          Text(
+                            AppLocalizations.of(context)!.progress,
+                            style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: Colors.black54,
@@ -660,8 +672,8 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                       const SizedBox(width: 8),
                       Text(
                         task.requiredEvidenceCount != null && task.requiredEvidenceCount! > 0
-                            ? '${task.evidenceUrls.length}/${task.requiredEvidenceCount} evidence required'
-                            : '${task.evidenceUrls.length} evidence file(s)',
+                            ? AppLocalizations.of(context)!.evidenceRequiredFormat(task.evidenceUrls.length.toString(), task.requiredEvidenceCount.toString())
+                            : AppLocalizations.of(context)!.evidenceFilesFormat(task.evidenceUrls.length.toString()),
                         style: TextStyle(
                           fontSize: 12,
                           color: task.requiredEvidenceCount != null && 
@@ -729,7 +741,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                         Icon(Icons.hourglass_empty, color: Colors.orange[600], size: 20),
                         const SizedBox(width: 8),
                         Text(
-                          'Awaiting Manager Approval',
+                          AppLocalizations.of(context)!.awaitingManagerApproval,
                           style: TextStyle(
                             color: Colors.orange[600],
                             fontWeight: FontWeight.bold,
@@ -765,7 +777,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                         }
                       },
                       icon: const Icon(Icons.play_arrow, size: 20),
-                      label: const Text('Start Guided Task'),
+                      label: Text(AppLocalizations.of(context)!.startGuidedTask),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).primaryColor,
                         foregroundColor: Colors.white,
@@ -784,7 +796,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                         child: OutlinedButton.icon(
                           onPressed: () => _uploadEvidence(task),
                           icon: const Icon(Icons.cloud_upload, size: 18),
-                          label: const Text('Quick Upload'),
+                          label: Text(AppLocalizations.of(context)!.quickUpload),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: RoundedRectangleBorder(
@@ -803,7 +815,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                             if (requiredEvidence > 0 && uploadedEvidence < requiredEvidence) {
                               // Show tooltip-like message for disabled button
                               context.showSnackBar(
-                                'Upload ${requiredEvidence - uploadedEvidence} more evidence file(s) to complete this task',
+                                AppLocalizations.of(context)!.uploadMoreEvidenceFormat((requiredEvidence - uploadedEvidence).toString()),
                                 isError: true,
                               );
                             } else {
@@ -823,7 +835,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                             }(),
                           ),
                           label: Text(
-                            'Mark Done',
+                            AppLocalizations.of(context)!.markDone,
                             style: TextStyle(
                               color: () {
                                 final requiredEvidence = task.requiredEvidenceCount ?? 0;
@@ -870,7 +882,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                         Icon(Icons.check_circle, color: Colors.green[600], size: 20),
                         const SizedBox(width: 8),
                         Text(
-                          'Task Completed',
+                          AppLocalizations.of(context)!.taskCompleted,
                           style: TextStyle(
                             color: Colors.green[600],
                             fontWeight: FontWeight.bold,
@@ -894,6 +906,22 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
     return 0.1; // Task assigned but no evidence yet
   }
   
+  String _getLocalizedStatus(String status, BuildContext context) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return AppLocalizations.of(context)!.completed;
+      case 'in_progress':
+      case 'started':
+        return AppLocalizations.of(context)!.inProgress;
+      case 'assigned':
+        return AppLocalizations.of(context)!.assigned;
+      case 'pending':
+        return AppLocalizations.of(context)!.pending;
+      default:
+        return status;
+    }
+  }
+
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'completed':
@@ -949,7 +977,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Current Campaign',
+                          AppLocalizations.of(context)!.currentCampaign,
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.7),
                             fontSize: 12,
@@ -996,7 +1024,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                         const Icon(Icons.calendar_today, color: Colors.white, size: 16),
                         const SizedBox(width: 6),
                         Text(
-                          'Ends ${DateFormat.yMMMd().format(widget.campaign.endDate)}',
+                          '${AppLocalizations.of(context)!.ends} ${DateFormat.yMMMd().format(widget.campaign.endDate)}',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
@@ -1037,7 +1065,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              'No Tasks Available',
+              AppLocalizations.of(context)!.noTasksAvailable,
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -1046,7 +1074,7 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'There are no tasks assigned to you in this campaign yet. Check back later or contact your manager.',
+              AppLocalizations.of(context)!.noTasksAssignedDescription,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,

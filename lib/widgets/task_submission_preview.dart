@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
+import '../l10n/app_localizations.dart';
 import '../utils/constants.dart';
 import '../screens/agent/agent_submission_history_screen.dart';
 
@@ -55,7 +56,7 @@ class _TaskSubmissionPreviewState extends State<TaskSubmissionPreview> {
 
       for (final item in formSubmissions) {
         // Try to extract form data from file_url if it's a data URL
-        String preview = 'Form submitted';
+        String preview = AppLocalizations.of(context)!.formSubmitted;
         if (item['file_url'] != null && item['file_url'].toString().startsWith('data:application/json')) {
           try {
             final dataUrl = item['file_url'] as String;
@@ -64,14 +65,14 @@ class _TaskSubmissionPreviewState extends State<TaskSubmissionPreview> {
             final formData = jsonDecode(jsonString) as Map<String, dynamic>;
             preview = _formatFormPreview(formData);
           } catch (e) {
-            preview = 'Form data available';
+            preview = AppLocalizations.of(context)!.formDataAvailable;
           }
         }
         
         submissions.add(TaskSubmissionItem(
           id: item['id'],
           type: 'form',
-          title: item['title'] ?? 'Form Submission',
+          title: item['title'] ?? AppLocalizations.of(context)!.formSubmission,
           submittedAt: DateTime.parse(item['created_at']),
           preview: preview,
         ));
@@ -98,9 +99,9 @@ class _TaskSubmissionPreviewState extends State<TaskSubmissionPreview> {
         submissions.add(TaskSubmissionItem(
           id: item['id'],
           type: 'evidence',
-          title: item['title'] ?? 'Evidence File',
+          title: item['title'] ?? AppLocalizations.of(context)!.evidenceFile,
           submittedAt: DateTime.parse(item['created_at']),
-          preview: 'File uploaded',
+          preview: AppLocalizations.of(context)!.fileUploaded,
           status: item['status'] ?? 'pending',
         ));
       }
@@ -125,7 +126,7 @@ class _TaskSubmissionPreviewState extends State<TaskSubmissionPreview> {
   }
 
   String _formatFormPreview(Map<String, dynamic> customFields) {
-    if (customFields.isEmpty) return 'No data';
+    if (customFields.isEmpty) return AppLocalizations.of(context)!.noData;
     
     final entries = customFields.entries.take(2);
     return entries.map((e) => '${e.key}: ${e.value}').join(', ');
@@ -159,7 +160,7 @@ class _TaskSubmissionPreviewState extends State<TaskSubmissionPreview> {
               ),
               const SizedBox(width: 8),
               Text(
-                'Previous Submissions (${_submissions.length})',
+                AppLocalizations.of(context)!.previousSubmissionsCount(_submissions.length),
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -187,7 +188,7 @@ class _TaskSubmissionPreviewState extends State<TaskSubmissionPreview> {
               },
               icon: Icon(Icons.open_in_new, size: 16, color: Colors.blue[600]),
               label: Text(
-                'View All Submissions',
+                AppLocalizations.of(context)!.viewAllSubmissions,
                 style: TextStyle(
                   color: Colors.blue[600],
                   fontWeight: FontWeight.w500,
@@ -301,7 +302,7 @@ class _TaskSubmissionPreviewState extends State<TaskSubmissionPreview> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Text(
-                    isForm ? 'FORM SUBMISSION' : 'EVIDENCE UPLOAD',
+                    isForm ? AppLocalizations.of(context)!.formSubmissionUppercase : AppLocalizations.of(context)!.evidenceUploadUppercase,
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,

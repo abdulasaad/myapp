@@ -8,6 +8,7 @@ import 'package:uuid/uuid.dart';
 import '../../models/campaign.dart';
 import '../../models/task.dart';
 import '../../utils/constants.dart';
+import '../../l10n/app_localizations.dart';
 
 // A Dart model to represent a single, editable geofence zone.
 class GeofenceZone {
@@ -99,7 +100,7 @@ class _GeofenceEditorScreenState extends State<GeofenceEditorScreen> {
   void _addNewZone() {
     setState(() {
       final newId = _uuid.v4();
-      _zones.add(GeofenceZone(id: newId, name: 'New Zone', points: [], color: Colors.blue, isNew: true));
+      _zones.add(GeofenceZone(id: newId, name: AppLocalizations.of(context)!.newZone, points: [], color: Colors.blue, isNew: true));
       _selectedZoneId = newId;
     });
   }
@@ -121,11 +122,11 @@ class _GeofenceEditorScreenState extends State<GeofenceEditorScreen> {
     final newName = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Rename Zone'),
-        content: TextField(controller: nameController, decoration: const InputDecoration(labelText: 'Zone Name')),
+        title: Text(AppLocalizations.of(context)!.renameZone),
+        content: TextField(controller: nameController, decoration: InputDecoration(labelText: AppLocalizations.of(context)!.zoneName)),
         actions: [
           TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancel')),
-          ElevatedButton(onPressed: () => Navigator.of(context).pop(nameController.text), child: const Text('Save')),
+          ElevatedButton(onPressed: () => Navigator.of(context).pop(nameController.text), child: Text(AppLocalizations.of(context)!.save)),
         ],
       ),
     );
@@ -139,9 +140,9 @@ class _GeofenceEditorScreenState extends State<GeofenceEditorScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Pick a color'),
+        title: Text(AppLocalizations.of(context)!.pickAColor),
         content: SingleChildScrollView(child: ColorPicker(pickerColor: _selectedZone!.color, onColorChanged: (color) => setState(() => _selectedZone!.color = color))),
-        actions: <Widget>[ElevatedButton(child: const Text('Done'), onPressed: () => Navigator.of(context).pop())],
+        actions: <Widget>[ElevatedButton(child: Text(AppLocalizations.of(context)!.done), onPressed: () => Navigator.of(context).pop())],
       ),
     );
   }
@@ -242,7 +243,7 @@ class _GeofenceEditorScreenState extends State<GeofenceEditorScreen> {
       floatingActionButton: _selectedZoneId == null
           ? FloatingActionButton.extended(
               onPressed: _addNewZone,
-              label: const Text('New Zone'),
+              label: Text(AppLocalizations.of(context)!.newZone),
               icon: const Icon(Icons.add_location_alt_outlined),
             )
           : null,
