@@ -839,8 +839,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noEvidenceSubmitted => 'No evidence submitted yet.';
 
   @override
-  String progressLabel(int current, int total) {
-    return 'Progress: $current of $total uploaded';
+  String progressLabel(String current, String total) {
+    return 'Progress: $current / $total';
   }
 
   @override
@@ -1080,7 +1080,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get uploadEvidenceFirst => 'Upload Evidence First';
 
   @override
-  String get taskCompleted => 'Task Completed!';
+  String get taskCompleted => 'Task Completed';
 
   @override
   String congratulationsCompleted(String title) {
@@ -1662,7 +1662,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tapToViewMembers => 'Tap to view members';
 
   @override
-  String get today => 'today';
+  String get today => 'Today';
 
   @override
   String get yesterday => 'yesterday';
@@ -2578,6 +2578,66 @@ class AppLocalizationsEn extends AppLocalizations {
   String get managerPerformance => 'Manager Performance';
 
   @override
+  String get touringTasks => 'Touring Tasks';
+
+  @override
+  String get touringTasksProgress => 'Touring Tasks Progress';
+
+  @override
+  String get noTouringTasksAssigned => 'No Touring Tasks Assigned';
+
+  @override
+  String get noTouringTasksDescription =>
+      'You don\'t have any touring tasks assigned yet. Check back later or contact your manager.';
+
+  @override
+  String get refresh => 'Refresh';
+
+  @override
+  String get workZone => 'Work Zone';
+
+  @override
+  String get movementTimeout => 'Movement Timeout';
+
+  @override
+  String get taskRequirements => 'Task Requirements';
+
+  @override
+  String spendTimeInWorkZone(String duration) {
+    return 'Spend $duration inside the work zone';
+  }
+
+  @override
+  String keepMovingTimer(String timeout) {
+    return 'Keep moving (timer pauses after $timeout of inactivity)';
+  }
+
+  @override
+  String movementThreshold(String threshold) {
+    return 'Movement threshold: ${threshold}m';
+  }
+
+  @override
+  String get locationActive => 'Location Active';
+
+  @override
+  String get locationUnknown => 'Location Unknown';
+
+  @override
+  String get moving => 'Moving';
+
+  @override
+  String get notMoving => 'Not Moving';
+
+  @override
+  String timerPaused(String reason) {
+    return 'Timer Paused: $reason';
+  }
+
+  @override
+  String get requiredTime => 'Required Time';
+
+  @override
   String get onlineNow => 'Online Now';
 
   @override
@@ -3321,9 +3381,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get categoryRequired => 'Category *';
 
   @override
-  String get taskRequirements => 'Task Requirements';
-
-  @override
   String get configureAgentRequirements =>
       'Configure what agents need to provide';
 
@@ -3647,4 +3704,74 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get geofences => 'Geofences';
+
+  @override
+  String workZoneLabel(String name) {
+    return 'Work Zone: $name';
+  }
+
+  @override
+  String get taskNotAvailableYet => 'Task Not Available Yet';
+
+  @override
+  String taskStartsOn(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.yMMMd(localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return 'This task will be available starting $dateString';
+  }
+
+  @override
+  String get taskExpired => 'Task Expired';
+
+  @override
+  String taskEndedOn(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.yMMMd(localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return 'This task ended on $dateString';
+  }
+
+  @override
+  String get backgroundServicesRequired => 'Background Services Required';
+
+  @override
+  String get enableBackgroundServicesMessage =>
+      'Please enable background services to start this task. Background location tracking is required for touring tasks.';
+
+  @override
+  String get enableBackgroundServices => 'Enable Background Services';
+
+  @override
+  String get backgroundServicesInstructions =>
+      'To enable background services:\n\n1. Go to phone Settings\n2. Find Al-Tijwal app\n3. Enable \'Allow background activity\'\n4. Enable \'Location\' permissions\n5. Restart the app';
+
+  @override
+  String get taskUnavailable => 'Task Unavailable';
+
+  @override
+  String get activeTaskRunning => 'Active Task Running';
+
+  @override
+  String get taskCompletedToday =>
+      'Task completed today. Available again tomorrow.';
+
+  @override
+  String tasksAvailable(Object count) {
+    return '$count tasks available';
+  }
+
+  @override
+  String get waitForTaskDay => 'Available on the scheduled day';
+
+  @override
+  String get availableOnDay => 'Available on scheduled day';
+
+  @override
+  String tasksCompletedCount(Object count) {
+    return '$count completed';
+  }
+
+  @override
+  String get noTouringTasksForDay => 'No touring tasks for this day';
 }

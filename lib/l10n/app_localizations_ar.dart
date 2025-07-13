@@ -832,8 +832,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noEvidenceSubmitted => 'لم يتم تقديم أدلة بعد.';
 
   @override
-  String progressLabel(int current, int total) {
-    return 'التقدم: $current من أصل $total تم رفعها';
+  String progressLabel(String current, String total) {
+    return 'التقدم: $current / $total';
   }
 
   @override
@@ -1061,7 +1061,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get uploadEvidenceFirst => 'رفع الأدلة أولاً';
 
   @override
-  String get taskCompleted => 'تم إنجاز المهمة!';
+  String get taskCompleted => 'اكتملت المهمة';
 
   @override
   String congratulationsCompleted(String title) {
@@ -2554,6 +2554,66 @@ class AppLocalizationsAr extends AppLocalizations {
   String get managerPerformance => 'أداء المديرين';
 
   @override
+  String get touringTasks => 'مهام الجولة';
+
+  @override
+  String get touringTasksProgress => 'تقدم مهام الجولة';
+
+  @override
+  String get noTouringTasksAssigned => 'لا توجد مهام جولة معينة';
+
+  @override
+  String get noTouringTasksDescription =>
+      'ليس لديك أي مهام جولة معينة بعد. تحقق لاحقاً أو اتصل بمديرك.';
+
+  @override
+  String get refresh => 'تحديث';
+
+  @override
+  String get workZone => 'منطقة العمل';
+
+  @override
+  String get movementTimeout => 'مهلة الحركة';
+
+  @override
+  String get taskRequirements => 'متطلبات المهمة';
+
+  @override
+  String spendTimeInWorkZone(String duration) {
+    return 'قضاء $duration داخل منطقة العمل';
+  }
+
+  @override
+  String keepMovingTimer(String timeout) {
+    return 'استمر في الحركة (يتوقف المؤقت بعد $timeout من عدم النشاط)';
+  }
+
+  @override
+  String movementThreshold(String threshold) {
+    return 'عتبة الحركة: $threshold متر';
+  }
+
+  @override
+  String get locationActive => 'الموقع نشط';
+
+  @override
+  String get locationUnknown => 'موقع غير معروف';
+
+  @override
+  String get moving => 'متحرك';
+
+  @override
+  String get notMoving => 'غير متحرك';
+
+  @override
+  String timerPaused(String reason) {
+    return 'المؤقت متوقف: $reason';
+  }
+
+  @override
+  String get requiredTime => 'الوقت المطلوب';
+
+  @override
   String get onlineNow => 'متصل الآن';
 
   @override
@@ -3291,9 +3351,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get categoryRequired => 'الفئة *';
 
   @override
-  String get taskRequirements => 'متطلبات المهمة';
-
-  @override
   String get configureAgentRequirements => 'تكوين ما يحتاج الوكلاء لتقديمه';
 
   @override
@@ -3613,4 +3670,74 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get geofences => 'Geofences';
+
+  @override
+  String workZoneLabel(String name) {
+    return 'منطقة العمل: $name';
+  }
+
+  @override
+  String get taskNotAvailableYet => 'المهمة غير متاحة بعد';
+
+  @override
+  String taskStartsOn(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.yMMMd(localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return 'ستكون هذه المهمة متاحة ابتداءً من $dateString';
+  }
+
+  @override
+  String get taskExpired => 'انتهت صلاحية المهمة';
+
+  @override
+  String taskEndedOn(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.yMMMd(localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return 'انتهت هذه المهمة في $dateString';
+  }
+
+  @override
+  String get backgroundServicesRequired => 'الخدمات الخلفية مطلوبة';
+
+  @override
+  String get enableBackgroundServicesMessage =>
+      'يرجى تفعيل الخدمات الخلفية لبدء هذه المهمة. تتبع الموقع في الخلفية مطلوب لمهام الجولة.';
+
+  @override
+  String get enableBackgroundServices => 'تفعيل الخدمات الخلفية';
+
+  @override
+  String get backgroundServicesInstructions =>
+      'لتفعيل الخدمات الخلفية:\n\n1. انتقل إلى إعدادات الهاتف\n2. ابحث عن تطبيق التجوال\n3. فعّل \'السماح بالنشاط في الخلفية\'\n4. فعّل أذونات \'الموقع\'\n5. أعد تشغيل التطبيق';
+
+  @override
+  String get taskUnavailable => 'المهمة غير متاحة';
+
+  @override
+  String get activeTaskRunning => 'مهمة نشطة قيد التشغيل';
+
+  @override
+  String get taskCompletedToday =>
+      'تم إنجاز المهمة اليوم. ستكون متاحة مرة أخرى غداً.';
+
+  @override
+  String tasksAvailable(Object count) {
+    return '$count مهام متاحة';
+  }
+
+  @override
+  String get waitForTaskDay => 'متاحة في اليوم المحدد';
+
+  @override
+  String get availableOnDay => 'متاحة في اليوم المحدد';
+
+  @override
+  String tasksCompletedCount(Object count) {
+    return '$count مكتملة';
+  }
+
+  @override
+  String get noTouringTasksForDay => 'لا توجد مهام سياحية لهذا اليوم';
 }

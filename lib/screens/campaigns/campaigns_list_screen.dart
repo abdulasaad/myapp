@@ -13,12 +13,14 @@ import '../../services/background_location_service.dart';
 import '../../services/profile_service.dart';
 import '../../services/session_service.dart';
 import '../../services/connectivity_service.dart';
+import '../../services/touring_task_movement_service.dart';
+import 'package:provider/provider.dart';
 import '../../utils/constants.dart';
 import '../../widgets/offline_widget.dart';
 import '../../widgets/modern_notification.dart';
 import './create_campaign_screen.dart'; // Added for navigation to edit
 import 'campaign_detail_screen.dart';
-import '../agent/agent_task_list_screen.dart';
+import '../agent/agent_touring_task_list_screen.dart';
 
 // Helper model for standalone tasks
 class AgentStandaloneTask {
@@ -639,9 +641,12 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
                 widget.locationService.setActiveCampaign(campaign.id);
                 // Also set active campaign in background service
                 BackgroundLocationService.setActiveCampaign(campaign.id);
+                // Navigate directly to touring tasks to avoid intermediate screen flash
                 Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) =>
-                        AgentTaskListScreen(campaign: campaign)));
+                    builder: (context) => AgentTouringTaskListScreen(
+                      campaign: campaign,
+                      agentId: supabase.auth.currentUser!.id,
+                    )));
               },
             ),
           );
@@ -731,6 +736,40 @@ class CampaignCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           child: Column(
             children: [
+              // Active task indicator
+              Consumer<TouringTaskMovementService>(
+                builder: (context, service, child) {
+                  final hasActiveTask = service.currentTask?.campaignId == campaign.id && service.isSessionActive;
+                  if (!hasActiveTask) return const SizedBox.shrink();
+                  
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.1),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(16),
+                        topRight: Radius.circular(16),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.timer, size: 16, color: Colors.orange),
+                        const SizedBox(width: 8),
+                        Text(
+                          AppLocalizations.of(context)!.activeTaskRunning,
+                          style: TextStyle(
+                            color: Colors.orange,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
               Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Row(children: [

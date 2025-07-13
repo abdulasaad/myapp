@@ -4718,6 +4718,144 @@
     "description": "عنوان قسم أداء المديرين"
   },
 
+  "touringTasks": "مهام الجولة",
+  "@touringTasks": {
+    "description": "Touring tasks section title"
+  },
+
+  "touringTasksProgress": "تقدم مهام الجولة",
+  "@touringTasksProgress": {
+    "description": "Touring tasks progress section title"
+  },
+
+  "noTouringTasksAssigned": "لا توجد مهام جولة معينة",
+  "@noTouringTasksAssigned": {
+    "description": "Message when agent has no touring tasks"
+  },
+
+  "noTouringTasksDescription": "ليس لديك أي مهام جولة معينة بعد. تحقق لاحقاً أو اتصل بمديرك.",
+  "@noTouringTasksDescription": {
+    "description": "Description when agent has no touring tasks"
+  },
+
+  "startTask": "بدء المهمة",
+  "@startTask": {
+    "description": "Start task button text"
+  },
+
+  "refresh": "تحديث",
+  "@refresh": {
+    "description": "Refresh button text"
+  },
+
+  "workZone": "منطقة العمل",
+  "@workZone": {
+    "description": "Work zone label"
+  },
+
+  "duration": "المدة",
+  "@duration": {
+    "description": "Duration label"
+  },
+
+  "movementTimeout": "مهلة الحركة",
+  "@movementTimeout": {
+    "description": "Movement timeout label"
+  },
+
+  "taskRequirements": "متطلبات المهمة",
+  "@taskRequirements": {
+    "description": "Task requirements section title"
+  },
+
+  "spendTimeInWorkZone": "قضاء {duration} داخل منطقة العمل",
+  "@spendTimeInWorkZone": {
+    "description": "Requirement to spend time in work zone",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+
+  "keepMovingTimer": "استمر في الحركة (يتوقف المؤقت بعد {timeout} من عدم النشاط)",
+  "@keepMovingTimer": {
+    "description": "Requirement to keep moving",
+    "placeholders": {
+      "timeout": {
+        "type": "String"
+      }
+    }
+  },
+
+  "movementThreshold": "عتبة الحركة: {threshold} متر",
+  "@movementThreshold": {
+    "description": "Movement threshold information",
+    "placeholders": {
+      "threshold": {
+        "type": "String"
+      }
+    }
+  },
+
+  "locationActive": "الموقع نشط",
+  "@locationActive": {
+    "description": "Location is active status"
+  },
+
+  "locationUnknown": "الموقع غير معروف",
+  "@locationUnknown": {
+    "description": "Location is unknown status"
+  },
+
+  "moving": "يتحرك",
+  "@moving": {
+    "description": "Agent is moving status"
+  },
+
+  "notMoving": "لا يتحرك",
+  "@notMoving": {
+    "description": "Agent is not moving status"
+  },
+
+  "timerPaused": "المؤقت متوقف: {reason}",
+  "@timerPaused": {
+    "description": "Timer paused with reason",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+
+  "taskCompleted": "تم إنجاز المهمة",
+  "@taskCompleted": {
+    "description": "Task completed status"
+  },
+
+  "notStarted": "لم تبدأ",
+  "@notStarted": {
+    "description": "Task not started status"
+  },
+
+  "requiredTime": "الوقت المطلوب",
+  "@requiredTime": {
+    "description": "Required time label"
+  },
+
+  "progress": "التقدم: {current} / {total}",
+  "@progress": {
+    "description": "Progress indicator",
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+
   "onlineNow": "متصل الآن",
   "@onlineNow": {
     "description": "مقياس متصل الآن"
@@ -6482,5 +6620,179 @@
   "startTask": "بدء المهمة",
   "@startTask": {
     "description": "زر بدء المهمة"
+  },
+
+  "workZoneLabel": "منطقة العمل: {name}",
+  "@workZoneLabel": {
+    "description": "تسمية منطقة العمل مع الاسم",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "description": "اسم المنطقة"
+      }
+    }
+  },
+
+  "progressLabel": "التقدم: {current} / {total}",
+  "@progressLabel": {
+    "description": "تسمية التقدم التي تُظهر الوقت الحالي مقابل الإجمالي",
+    "placeholders": {
+      "current": {
+        "type": "String",
+        "description": "الوقت الحالي"
+      },
+      "total": {
+        "type": "String",
+        "description": "إجمالي الوقت المطلوب"
+      }
+    }
+  },
+
+  "locationActive": "الموقع نشط",
+  "@locationActive": {
+    "description": "الحالة عندما يكون الموقع نشطاً"
+  },
+
+  "locationUnknown": "موقع غير معروف",
+  "@locationUnknown": {
+    "description": "الحالة عندما يكون الموقع غير معروف"
+  },
+
+  "notMoving": "غير متحرك",
+  "@notMoving": {
+    "description": "الحالة عندما لا يتحرك الوكيل"
+  },
+
+  "moving": "متحرك",
+  "@moving": {
+    "description": "الحالة عندما يتحرك الوكيل"
+  },
+
+  "timerPaused": "المؤقت متوقف: {reason}",
+  "@timerPaused": {
+    "description": "رسالة توقف المؤقت مع السبب",
+    "placeholders": {
+      "reason": {
+        "type": "String",
+        "description": "سبب التوقف"
+      }
+    }
+  },
+
+  "taskCompleted": "اكتملت المهمة",
+  "@taskCompleted": {
+    "description": "حالة اكتمال المهمة"
+  },
+
+  "requiredTime": "الوقت المطلوب",
+  "@requiredTime": {
+    "description": "تسمية الوقت المطلوب"
+  },
+
+  "taskNotAvailableYet": "المهمة غير متاحة بعد",
+  "@taskNotAvailableYet": {
+    "description": "عنوان المهمة غير متاحة بعد"
+  },
+
+  "taskStartsOn": "ستكون هذه المهمة متاحة ابتداءً من {date}",
+  "@taskStartsOn": {
+    "description": "رسالة تاريخ بداية المهمة",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMMMd"
+      }
+    }
+  },
+
+  "taskExpired": "انتهت صلاحية المهمة",
+  "@taskExpired": {
+    "description": "عنوان انتهاء صلاحية المهمة"
+  },
+
+  "taskEndedOn": "انتهت هذه المهمة في {date}",
+  "@taskEndedOn": {
+    "description": "رسالة تاريخ انتهاء المهمة",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMMMd"
+      }
+    }
+  },
+
+  "backgroundServicesRequired": "الخدمات الخلفية مطلوبة",
+  "@backgroundServicesRequired": {
+    "description": "عنوان الخدمات الخلفية مطلوبة"
+  },
+
+  "enableBackgroundServicesMessage": "يرجى تفعيل الخدمات الخلفية لبدء هذه المهمة. تتبع الموقع في الخلفية مطلوب لمهام الجولة.",
+  "@enableBackgroundServicesMessage": {
+    "description": "رسالة تفعيل الخدمات الخلفية"
+  },
+
+  "enableBackgroundServices": "تفعيل الخدمات الخلفية",
+  "@enableBackgroundServices": {
+    "description": "عنوان تفعيل الخدمات الخلفية"
+  },
+
+  "backgroundServicesInstructions": "لتفعيل الخدمات الخلفية:\n\n1. انتقل إلى إعدادات الهاتف\n2. ابحث عن تطبيق التجوال\n3. فعّل 'السماح بالنشاط في الخلفية'\n4. فعّل أذونات 'الموقع'\n5. أعد تشغيل التطبيق",
+  "@backgroundServicesInstructions": {
+    "description": "تعليمات تفعيل الخدمات الخلفية"
+  },
+
+  "settings": "الإعدادات",
+  "@settings": {
+    "description": "نص زر الإعدادات"
+  },
+
+  "ok": "موافق",
+  "@ok": {
+    "description": "نص زر موافق"
+  },
+
+  "taskUnavailable": "المهمة غير متاحة",
+  "@taskUnavailable": {
+    "description": "نص زر المهمة غير متاحة"
+  },
+
+  "activeTaskRunning": "مهمة نشطة قيد التشغيل",
+  "@activeTaskRunning": {
+    "description": "مؤشر يُظهر وجود مهمة نشطة قيد التشغيل"
+  },
+
+  "taskCompletedToday": "تم إنجاز المهمة اليوم. ستكون متاحة مرة أخرى غداً.",
+  "@taskCompletedToday": {
+    "description": "رسالة عند إنجاز المهمة لهذا اليوم"
+  },
+
+  "today": "اليوم",
+  "@today": {
+    "description": "تسمية اليوم"
+  },
+
+  "tasksAvailable": "{count} مهام متاحة",
+  "@tasksAvailable": {
+    "description": "عدد المهام المتاحة"
+  },
+
+  "waitForTaskDay": "متاحة في اليوم المحدد",
+  "@waitForTaskDay": {
+    "description": "رسالة للمهام غير المتاحة بعد"
+  },
+
+  "availableOnDay": "متاحة في اليوم المحدد",
+  "@availableOnDay": {
+    "description": "نص الزر للمهام المستقبلية"
+  },
+
+  "tasksCompletedCount": "{count} مكتملة",
+  "@tasksCompletedCount": {
+    "description": "عدد المهام المكتملة"
+  },
+
+  "noTouringTasksForDay": "لا توجد مهام سياحية لهذا اليوم",
+  "@noTouringTasksForDay": {
+    "description": "رسالة عند عدم وجود مهام سياحية مُعينة ليوم محدد"
   }
 }

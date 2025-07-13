@@ -19,6 +19,8 @@ import '../services/notification_manager.dart';
 import '../services/notification_service.dart';
 import '../services/background_notification_manager.dart';
 import '../services/persistent_service_manager.dart';
+import '../services/touring_task_movement_service.dart';
+import 'package:provider/provider.dart';
 import '../widgets/offline_widget.dart';
 import '../widgets/language_selection_dialog.dart';
 import '../widgets/service_control_widget.dart';
@@ -68,6 +70,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
     _loadNotificationCount();
     _setupNotificationManager();
     _initializeUserStatus();
+    _restoreActiveTouringSessions();
     // Clean up APKs after installation and old APKs on app start
     _updateService.cleanupAfterInstallation();
     _updateService.cleanupAllApks();
@@ -82,6 +85,27 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
       await PersistentServiceManager.restoreNotificationIfNeeded();
     } catch (e) {
       debugPrint('Failed to initialize user status: $e');
+    }
+  }
+
+  void _restoreActiveTouringSessions() async {
+    try {
+      final currentUser = supabase.auth.currentUser;
+      if (currentUser == null) return;
+
+      // Get the touring task movement service from Provider
+      final touringService = Provider.of<TouringTaskMovementService>(context, listen: false);
+      
+      // Check and restore any active sessions for this user
+      final restored = await touringService.checkAndRestoreActiveSession(currentUser.id);
+      
+      if (restored) {
+        debugPrint('✅ Active touring session restored');
+      } else {
+        debugPrint('ℹ️ No active touring sessions to restore');
+      }
+    } catch (e) {
+      debugPrint('❌ Failed to restore active touring sessions: $e');
     }
   }
 

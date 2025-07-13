@@ -4689,6 +4689,144 @@
     "description": "Manager performance section title"
   },
 
+  "touringTasks": "Touring Tasks",
+  "@touringTasks": {
+    "description": "Touring tasks section title"
+  },
+
+  "touringTasksProgress": "Touring Tasks Progress",
+  "@touringTasksProgress": {
+    "description": "Touring tasks progress section title"
+  },
+
+  "noTouringTasksAssigned": "No Touring Tasks Assigned",
+  "@noTouringTasksAssigned": {
+    "description": "Message when agent has no touring tasks"
+  },
+
+  "noTouringTasksDescription": "You don't have any touring tasks assigned yet. Check back later or contact your manager.",
+  "@noTouringTasksDescription": {
+    "description": "Description when agent has no touring tasks"
+  },
+
+  "startTask": "Start Task",
+  "@startTask": {
+    "description": "Start task button text"
+  },
+
+  "refresh": "Refresh",
+  "@refresh": {
+    "description": "Refresh button text"
+  },
+
+  "workZone": "Work Zone",
+  "@workZone": {
+    "description": "Work zone label"
+  },
+
+  "duration": "Duration",
+  "@duration": {
+    "description": "Duration label"
+  },
+
+  "movementTimeout": "Movement Timeout",
+  "@movementTimeout": {
+    "description": "Movement timeout label"
+  },
+
+  "taskRequirements": "Task Requirements",
+  "@taskRequirements": {
+    "description": "Task requirements section title"
+  },
+
+  "spendTimeInWorkZone": "Spend {duration} inside the work zone",
+  "@spendTimeInWorkZone": {
+    "description": "Requirement to spend time in work zone",
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+
+  "keepMovingTimer": "Keep moving (timer pauses after {timeout} of inactivity)",
+  "@keepMovingTimer": {
+    "description": "Requirement to keep moving",
+    "placeholders": {
+      "timeout": {
+        "type": "String"
+      }
+    }
+  },
+
+  "movementThreshold": "Movement threshold: {threshold}m",
+  "@movementThreshold": {
+    "description": "Movement threshold information",
+    "placeholders": {
+      "threshold": {
+        "type": "String"
+      }
+    }
+  },
+
+  "locationActive": "Location Active",
+  "@locationActive": {
+    "description": "Location is active status"
+  },
+
+  "locationUnknown": "Location Unknown",
+  "@locationUnknown": {
+    "description": "Location is unknown status"
+  },
+
+  "moving": "Moving",
+  "@moving": {
+    "description": "Agent is moving status"
+  },
+
+  "notMoving": "Not Moving",
+  "@notMoving": {
+    "description": "Agent is not moving status"
+  },
+
+  "timerPaused": "Timer Paused: {reason}",
+  "@timerPaused": {
+    "description": "Timer paused with reason",
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+
+  "taskCompleted": "Task Completed",
+  "@taskCompleted": {
+    "description": "Task completed status"
+  },
+
+  "notStarted": "Not Started",
+  "@notStarted": {
+    "description": "Task not started status"
+  },
+
+  "requiredTime": "Required Time",
+  "@requiredTime": {
+    "description": "Required time label"
+  },
+
+  "progress": "Progress: {current} / {total}",
+  "@progress": {
+    "description": "Progress indicator",
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+
   "onlineNow": "Online Now",
   "@onlineNow": {
     "description": "Online now metric"
@@ -6985,5 +7123,184 @@
   "assignmentCancelled": "Assignment cancelled successfully",
   "@assignmentCancelled": {
     "description": "Success message when assignment is cancelled"
+  },
+
+  "workZoneLabel": "Work Zone: {name}",
+  "@workZoneLabel": {
+    "description": "Work zone label with name",
+    "placeholders": {
+      "name": {
+        "type": "String",
+        "description": "Zone name"
+      }
+    }
+  },
+
+  "progressLabel": "Progress: {current} / {total}",
+  "@progressLabel": {
+    "description": "Progress label showing current vs total time",
+    "placeholders": {
+      "current": {
+        "type": "String",
+        "description": "Current time"
+      },
+      "total": {
+        "type": "String",
+        "description": "Total required time"
+      }
+    }
+  },
+
+  "locationActive": "Location Active",
+  "@locationActive": {
+    "description": "Status when location is active"
+  },
+
+  "locationUnknown": "Location Unknown",
+  "@locationUnknown": {
+    "description": "Status when location is unknown"
+  },
+
+  "notMoving": "Not Moving",
+  "@notMoving": {
+    "description": "Status when agent is not moving"
+  },
+
+  "moving": "Moving",
+  "@moving": {
+    "description": "Status when agent is moving"
+  },
+
+  "timerPaused": "Timer Paused: {reason}",
+  "@timerPaused": {
+    "description": "Timer paused message with reason",
+    "placeholders": {
+      "reason": {
+        "type": "String",
+        "description": "Pause reason"
+      }
+    }
+  },
+
+  "taskCompleted": "Task Completed",
+  "@taskCompleted": {
+    "description": "Task completed status"
+  },
+
+  "notStarted": "Not Started",
+  "@notStarted": {
+    "description": "Task not started status"
+  },
+
+  "requiredTime": "Required Time",
+  "@requiredTime": {
+    "description": "Required time label"
+  },
+
+  "taskNotAvailableYet": "Task Not Available Yet",
+  "@taskNotAvailableYet": {
+    "description": "Task not available yet title"
+  },
+
+  "taskStartsOn": "This task will be available starting {date}",
+  "@taskStartsOn": {
+    "description": "Task start date message",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMMMd"
+      }
+    }
+  },
+
+  "taskExpired": "Task Expired",
+  "@taskExpired": {
+    "description": "Task expired title"
+  },
+
+  "taskEndedOn": "This task ended on {date}",
+  "@taskEndedOn": {
+    "description": "Task end date message",
+    "placeholders": {
+      "date": {
+        "type": "DateTime",
+        "format": "yMMMd"
+      }
+    }
+  },
+
+  "backgroundServicesRequired": "Background Services Required",
+  "@backgroundServicesRequired": {
+    "description": "Background services required title"
+  },
+
+  "enableBackgroundServicesMessage": "Please enable background services to start this task. Background location tracking is required for touring tasks.",
+  "@enableBackgroundServicesMessage": {
+    "description": "Enable background services message"
+  },
+
+  "enableBackgroundServices": "Enable Background Services",
+  "@enableBackgroundServices": {
+    "description": "Enable background services title"
+  },
+
+  "backgroundServicesInstructions": "To enable background services:\n\n1. Go to phone Settings\n2. Find Al-Tijwal app\n3. Enable 'Allow background activity'\n4. Enable 'Location' permissions\n5. Restart the app",
+  "@backgroundServicesInstructions": {
+    "description": "Instructions for enabling background services"
+  },
+
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings button text"
+  },
+
+  "ok": "OK",
+  "@ok": {
+    "description": "OK button text"
+  },
+
+  "taskUnavailable": "Task Unavailable",
+  "@taskUnavailable": {
+    "description": "Task unavailable button text"
+  },
+
+  "activeTaskRunning": "Active Task Running",
+  "@activeTaskRunning": {
+    "description": "Indicator showing an active task is running"
+  },
+
+  "taskCompletedToday": "Task completed today. Available again tomorrow.",
+  "@taskCompletedToday": {
+    "description": "Message when task is completed for the day"
+  },
+
+  "today": "Today",
+  "@today": {
+    "description": "Today label"
+  },
+
+  "tasksAvailable": "{count} tasks available",
+  "@tasksAvailable": {
+    "description": "Number of tasks available"
+  },
+
+  "waitForTaskDay": "Available on the scheduled day",
+  "@waitForTaskDay": {
+    "description": "Message for tasks not yet available"
+  },
+
+  "availableOnDay": "Available on scheduled day",
+  "@availableOnDay": {
+    "description": "Button text for future tasks"
+  },
+
+  "tasksCompletedCount": "{count} completed",
+  "@tasksCompletedCount": {
+    "description": "Number of tasks completed"
+  },
+
+  "noTouringTasksForDay": "No touring tasks for this day",
+  "@noTouringTasksForDay": {
+    "description": "Message when no touring tasks are assigned for a specific day"
   }
 }

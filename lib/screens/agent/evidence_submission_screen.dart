@@ -1088,7 +1088,7 @@ class _EvidenceSubmissionScreenState extends State<EvidenceSubmissionScreen> {
                           Padding(
                             padding: const EdgeInsets.only(top: 8.0),
                             child: Text(
-                                AppLocalizations.of(context)!.progressLabel(evidenceList.length, requiredCount)),
+                                AppLocalizations.of(context)!.progressLabel(evidenceList.length.toString(), requiredCount.toString())),
                           ),
                           if (taskIsCompleted)
                             Padding(

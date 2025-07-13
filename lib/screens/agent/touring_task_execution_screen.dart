@@ -38,6 +38,17 @@ class _TouringTaskExecutionScreenState extends State<TouringTaskExecutionScreen>
     super.initState();
     _movementService = Provider.of<TouringTaskMovementService>(context, listen: false);
     _setupCompletionListener();
+    _checkExistingSession();
+  }
+
+  // Check if there's already an active session for this task
+  Future<void> _checkExistingSession() async {
+    if (_movementService?.currentTask?.id == widget.task.id && _movementService?.isSessionActive == true) {
+      setState(() {
+        _hasStarted = true;
+      });
+      debugPrint('🔄 Found existing active session for task: ${widget.task.title}');
+    }
   }
 
   void _setupCompletionListener() {

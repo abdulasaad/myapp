@@ -1,5 +1,6 @@
 // lib/services/touring_task_service.dart
 
+import 'package:flutter/material.dart';
 import '../models/touring_task.dart';
 import '../models/touring_task_session.dart';
 import '../models/campaign_geofence.dart';
@@ -112,7 +113,67 @@ class TouringTaskService {
       print('❌ Error fetching assignments: $e');
       rethrow;
     }
+  }
 
+  // Get touring task assignments for agent filtered by campaign
+  Future<List<Map<String, dynamic>>> getTouringTaskAssignmentsForAgentAndCampaign(String agentId, String campaignId) async {
+    print('📊 DEBUG: Fetching assignments for agent: $agentId and campaign: $campaignId');
+    
+    // Let's also check what campaign ID the "tet" task actually has
+    final allTasks = await supabase
+        .from('touring_tasks')
+        .select('id, title, campaign_id, status')
+        .filter('status', 'in', '(active,pending)');
+    
+    print('📊 DEBUG: All touring tasks found:');
+    for (final task in allTasks) {
+      print('   📋 Task: ${task['title']} (Campaign: ${task['campaign_id']}, Status: ${task['status']})');
+    }
+    
+    try {
+      // TEMPORARY: Let's try getting touring tasks directly for this campaign and create mock assignments
+      // This will help us test if the issue is missing tasks or missing assignments
+      final tasksResponse = await supabase
+          .from('touring_tasks')
+          .select('''
+            *,
+            campaign_geofences (
+              id,
+              name,
+              area_text,
+              color
+            )
+          ''')
+          .eq('campaign_id', campaignId)
+          .filter('status', 'in', '(active,pending)');
+      
+      print('📊 DEBUG: Found ${tasksResponse.length} touring tasks for campaign');
+      
+      if (tasksResponse.isEmpty) {
+        print('❌ DEBUG: No touring tasks found for campaign $campaignId');
+        return [];
+      }
+      
+      // Convert tasks to mock assignments for testing
+      final mockAssignments = tasksResponse.map((taskJson) => {
+        'assignment': {
+          'id': 'mock-assignment',
+          'agent_id': agentId,
+          'touring_task_id': taskJson['id'],
+          'status': 'assigned',
+          'assigned_at': DateTime.now().toIso8601String(),
+        },
+        'task': TouringTask.fromJson(taskJson),
+        'geofence': CampaignGeofence.fromJson(taskJson['campaign_geofences']),
+      }).toList();
+      
+      print('✅ DEBUG: Created ${mockAssignments.length} mock assignments for testing');
+      return mockAssignments;
+      
+    } catch (e) {
+      print('❌ DEBUG: Error in campaign assignments: $e');
+      rethrow;
+    }
   }
 
   // Start a touring task session
@@ -294,5 +355,77 @@ class TouringTaskService {
       'pause_time_seconds': totalDuration.inSeconds - sessionData.elapsedSeconds,
       'completion_percentage': sessionData.elapsedSeconds / (30 * 60) * 100, // Default 30 minutes
     };
+  }
+  
+  // Get all active sessions for an agent
+  Future<List<TouringTaskSession>> getActiveSessionsForAgent(String agentId) async {
+    final response = await supabase
+        .from('touring_task_sessions')
+        .select()
+        .eq('agent_id', agentId)
+        .eq('is_active', true)
+        .order('created_at', ascending: false);
+
+    return response.map((json) => TouringTaskSession.fromJson(json)).toList();
+  }
+  
+  // Get touring task by ID
+  Future<TouringTask?> getTouringTaskById(String taskId) async {
+    try {
+      final response = await supabase
+          .from('touring_tasks')
+          .select()
+          .eq('id', taskId)
+          .single();
+
+      return TouringTask.fromJson(response);
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  // Check if a touring task has been completed today
+  Future<bool> isTaskCompletedToday(String touringTaskId, String agentId) async {
+    try {
+      final today = DateTime.now();
+      final startOfDay = DateTime(today.year, today.month, today.day);
+      final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59);
+      
+      final response = await supabase
+          .from('touring_task_sessions')
+          .select('id')
+          .eq('touring_task_id', touringTaskId)
+          .eq('agent_id', agentId)
+          .eq('is_completed', true)
+          .gte('end_time', startOfDay.toIso8601String())
+          .lte('end_time', endOfDay.toIso8601String());
+      
+      return response.isNotEmpty;
+    } catch (e) {
+      debugPrint('Error checking daily completion: $e');
+      return false;
+    }
+  }
+  
+  // Get the latest completion time for a task
+  Future<DateTime?> getLatestCompletionTime(String touringTaskId, String agentId) async {
+    try {
+      final response = await supabase
+          .from('touring_task_sessions')
+          .select('end_time')
+          .eq('touring_task_id', touringTaskId)
+          .eq('agent_id', agentId)
+          .eq('is_completed', true)
+          .order('end_time', ascending: false)
+          .limit(1);
+      
+      if (response.isNotEmpty) {
+        return DateTime.parse(response.first['end_time']);
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error getting latest completion time: $e');
+      return null;
+    }
   }
 }

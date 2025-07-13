@@ -2,7 +2,6 @@
 
 import 'dart:async';
 import 'dart:math' as math;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import '../models/touring_task.dart';
@@ -73,6 +72,9 @@ class TouringTaskMovementService extends ChangeNotifier {
   // Start a touring task session
   Future<bool> startTouringTaskSession(TouringTask task, String agentId) async {
     try {
+      // CRITICAL FIX: Stop any existing timers first to prevent multiple instances
+      _stopAllTimers();
+      
       // Check if there's already an active session
       final existingSession = await _touringTaskService.getActiveSession(task.id, agentId);
       
@@ -81,6 +83,16 @@ class TouringTaskMovementService extends ChangeNotifier {
         _currentTask = task;
         _currentSession = existingSession;
         _elapsedSeconds = existingSession.elapsedSeconds;
+        
+        // Reset movement status - will be determined by location checks
+        _isMoving = false;
+        _isInGeofence = false;
+        _isTimerRunning = false;
+        _lastPosition = null;
+        _lastMovementTime = null;
+        
+        debugPrint('🔄 Resuming existing session with ${_elapsedSeconds}s elapsed');
+        debugPrint('🔄 Reset movement status - will be determined by location check');
       } else {
         // Create new session
         _currentTask = task;
@@ -89,6 +101,16 @@ class TouringTaskMovementService extends ChangeNotifier {
           agentId: agentId,
         );
         _elapsedSeconds = 0;
+        
+        // Initialize movement status for new session
+        _isMoving = false;
+        _isInGeofence = false;
+        _isTimerRunning = false;
+        _lastPosition = null;
+        _lastMovementTime = null;
+        
+        debugPrint('🆕 Starting new session from 0s');
+        debugPrint('🆕 Initialized movement status to false');
       }
 
       _isSessionActive = true;
@@ -126,6 +148,11 @@ class TouringTaskMovementService extends ChangeNotifier {
   Future<void> _startLocationTracking() async {
     if (_currentTask == null) return;
 
+    // CRITICAL FIX: Stop any existing timers before starting new ones to prevent multiple timers
+    _stopAllTimers();
+
+    debugPrint('🕐 Starting location tracking with elapsed time: ${_elapsedSeconds}s');
+
     // Start location updates every 5 seconds
     _locationTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
       await _updateLocation();
@@ -141,8 +168,8 @@ class TouringTaskMovementService extends ChangeNotifier {
       // CRITICAL: Timer only counts when agent is inside geofence AND moving AND session is active
       if (_isTimerRunning && _isInGeofence && _isMoving && _isSessionActive) {
         _elapsedSeconds++;
-        // Debug log every 10 seconds to confirm timer is running
-        if (_elapsedSeconds % 10 == 0) {
+        // Debug log every 5 seconds to monitor timer accuracy
+        if (_elapsedSeconds % 5 == 0) {
           debugPrint('⏱️ Timer COUNTING: ${_elapsedSeconds}s elapsed (In geofence: $_isInGeofence, Moving: $_isMoving)');
         }
         notifyListeners();
@@ -155,6 +182,11 @@ class TouringTaskMovementService extends ChangeNotifier {
           if (_elapsedSeconds % 10 == 0) {
             await _saveProgress();
           }
+        }
+      } else {
+        // Debug when timer is not counting
+        if (_elapsedSeconds % 5 == 0) {
+          debugPrint('⏸️ Timer NOT counting - TimerRunning: $_isTimerRunning, InGeofence: $_isInGeofence, Moving: $_isMoving, SessionActive: $_isSessionActive');
         }
       }
     });
@@ -218,8 +250,11 @@ class TouringTaskMovementService extends ChangeNotifier {
           _isMoving = true;
         }
       } else {
+        // CRITICAL FIX: First location reading - don't assume movement
+        // Just set the base position and time, but keep _isMoving = false initially
         _lastMovementTime = DateTime.now();
-        _isMoving = true;
+        debugPrint('📍 Initial location set: Lat ${position.latitude.toStringAsFixed(6)}, Lng ${position.longitude.toStringAsFixed(6)}');
+        debugPrint('🚫 Movement status: false (waiting for movement detection)');
       }
 
       _lastPosition = position;
@@ -353,6 +388,94 @@ class TouringTaskMovementService extends ChangeNotifier {
     if (!_isMoving) return const Color(0xFFFF9800);
     if (_isTimerRunning) return const Color(0xFF4CAF50);
     return const Color(0xFFFF9800);
+  }
+
+  // Check for and restore any active session for the current agent
+  Future<bool> checkAndRestoreActiveSession(String agentId) async {
+    try {
+      // CRITICAL FIX: Stop any existing timers first
+      _stopAllTimers();
+      
+      // Get all active sessions for this agent
+      final activeSessions = await _touringTaskService.getActiveSessionsForAgent(agentId);
+      
+      if (activeSessions.isNotEmpty) {
+        final session = activeSessions.first;
+        
+        // Get the task details
+        final taskDetails = await _touringTaskService.getTouringTaskById(session.touringTaskId);
+        if (taskDetails != null) {
+          _currentTask = taskDetails;
+          _currentSession = session;
+          _elapsedSeconds = session.elapsedSeconds;
+          _isSessionActive = true;
+          
+          // CRITICAL FIX: Reset movement status to false initially when restoring
+          _isMoving = false;
+          _isInGeofence = false;
+          _isTimerRunning = false;
+          _lastPosition = null;
+          _lastMovementTime = null;
+          
+          debugPrint('🔄 Restoring session: ${taskDetails.title} with ${_elapsedSeconds}s elapsed');
+          debugPrint('🔄 Reset movement status - will be determined by location check');
+          
+          // Restart location tracking
+          await _startLocationTracking();
+          notifyListeners();
+          
+          debugPrint('✅ Successfully restored active touring task session: ${taskDetails.title}');
+          return true;
+        }
+      }
+      
+      return false;
+    } catch (e) {
+      debugPrint('❌ Error checking for active sessions: $e');
+      return false;
+    }
+  }
+  
+  // Check if there's an active session for a specific campaign
+  Future<bool> hasActiveSessionForCampaign(String campaignId, String agentId) async {
+    try {
+      final activeSessions = await _touringTaskService.getActiveSessionsForAgent(agentId);
+      
+      for (final session in activeSessions) {
+        final taskDetails = await _touringTaskService.getTouringTaskById(session.touringTaskId);
+        if (taskDetails != null && taskDetails.campaignId == campaignId) {
+          return true;
+        }
+      }
+      
+      return false;
+    } catch (e) {
+      debugPrint('Error checking active sessions for campaign: $e');
+      return false;
+    }
+  }
+  
+  // Get active task info for campaign if any
+  Future<Map<String, dynamic>?> getActiveTaskInfoForCampaign(String campaignId, String agentId) async {
+    try {
+      final activeSessions = await _touringTaskService.getActiveSessionsForAgent(agentId);
+      
+      for (final session in activeSessions) {
+        final taskDetails = await _touringTaskService.getTouringTaskById(session.touringTaskId);
+        if (taskDetails != null && taskDetails.campaignId == campaignId) {
+          return {
+            'task': taskDetails,
+            'session': session,
+            'progressPercentage': (session.elapsedSeconds / (taskDetails.requiredTimeMinutes * 60)) * 100,
+          };
+        }
+      }
+      
+      return null;
+    } catch (e) {
+      debugPrint('Error getting active task info for campaign: $e');
+      return null;
+    }
   }
 
   @override

@@ -209,7 +209,7 @@ class _AgentCampaignProgressScreenState
                 ],
                 // Touring Tasks Section
                 if (_touringTaskProgress.isNotEmpty) ...[
-                  Text('Touring Tasks Progress',
+                  Text(AppLocalizations.of(context)!.touringTasksProgress,
                       style: Theme.of(context).textTheme.headlineSmall),
                   const SizedBox(height: 8),
                   _buildTouringTasksList(),
@@ -450,7 +450,7 @@ class _AgentCampaignProgressScreenState
                             ),
                           ),
                           Text(
-                            'Work Zone: ${geofence['name']}',
+                            AppLocalizations.of(context)!.workZoneLabel(geofence['name']),
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey[600],
@@ -474,7 +474,7 @@ class _AgentCampaignProgressScreenState
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Progress: ${_formatDuration(session.elapsedSeconds)} / ${task.formattedDuration}',
+                            AppLocalizations.of(context)!.progressLabel(_formatDuration(session.elapsedSeconds), task.formattedDuration),
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                           Text(
@@ -504,8 +504,8 @@ class _AgentCampaignProgressScreenState
                       _buildStatusChip(
                         icon: Icons.location_on,
                         label: session.lastLatitude != null 
-                            ? 'Location Active' 
-                            : 'Location Unknown',
+                            ? AppLocalizations.of(context)!.locationActive 
+                            : AppLocalizations.of(context)!.locationUnknown,
                         color: session.lastLatitude != null 
                             ? Colors.green 
                             : Colors.grey,
@@ -513,7 +513,7 @@ class _AgentCampaignProgressScreenState
                       const SizedBox(width: 8),
                       _buildStatusChip(
                         icon: Icons.directions_walk,
-                        label: session.isPaused ? 'Not Moving' : 'Moving',
+                        label: session.isPaused ? AppLocalizations.of(context)!.notMoving : AppLocalizations.of(context)!.moving,
                         color: session.isPaused ? Colors.orange : Colors.green,
                       ),
                     ],
@@ -534,7 +534,7 @@ class _AgentCampaignProgressScreenState
                           Icon(Icons.info_outline, size: 16, color: Colors.orange[700]),
                           const SizedBox(width: 8),
                           Text(
-                            'Timer Paused: ${session.pauseReason}',
+                            AppLocalizations.of(context)!.timerPaused(session.pauseReason!),
                             style: TextStyle(
                               color: Colors.orange[700],
                               fontSize: 14,
@@ -557,7 +557,7 @@ class _AgentCampaignProgressScreenState
                         Icon(Icons.check_circle, color: Colors.green[700]),
                         const SizedBox(width: 8),
                         Text(
-                          'Task Completed',
+                          AppLocalizations.of(context)!.taskCompleted,
                           style: TextStyle(
                             color: Colors.green[700],
                             fontWeight: FontWeight.bold,
@@ -579,7 +579,7 @@ class _AgentCampaignProgressScreenState
                         Icon(Icons.schedule, color: Colors.grey[700]),
                         const SizedBox(width: 8),
                         Text(
-                          'Not Started',
+                          AppLocalizations.of(context)!.notStarted,
                           style: TextStyle(
                             color: Colors.grey[700],
                             fontWeight: FontWeight.w600,
@@ -595,9 +595,9 @@ class _AgentCampaignProgressScreenState
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildDetailItem('Required Time', task.formattedDuration),
-                    _buildDetailItem('Points', '${task.points}'),
-                    _buildDetailItem('Movement Timeout', task.movementTimeoutText),
+                    _buildDetailItem(AppLocalizations.of(context)!.requiredTime, task.formattedDuration),
+                    _buildDetailItem(AppLocalizations.of(context)!.points, '${task.points}'),
+                    _buildDetailItem(AppLocalizations.of(context)!.movementTimeout, task.movementTimeoutText),
                   ],
                 ),
               ],

@@ -614,7 +614,7 @@ abstract class AppLocalizations {
   /// **'Sign Out'**
   String get signOut;
 
-  /// Settings label
+  /// Settings button text
   ///
   /// In en, this message translates to:
   /// **'Settings'**
@@ -1640,11 +1640,11 @@ abstract class AppLocalizations {
   /// **'No evidence submitted yet.'**
   String get noEvidenceSubmitted;
 
-  /// Evidence progress label
+  /// Progress label showing current vs total time
   ///
   /// In en, this message translates to:
-  /// **'Progress: {current} of {total} uploaded'**
-  String progressLabel(int current, int total);
+  /// **'Progress: {current} / {total}'**
+  String progressLabel(String current, String total);
 
   /// Completed status label
   ///
@@ -2054,10 +2054,10 @@ abstract class AppLocalizations {
   /// **'Upload Evidence First'**
   String get uploadEvidenceFirst;
 
-  /// Task completed title
+  /// Task completed status
   ///
   /// In en, this message translates to:
-  /// **'Task Completed!'**
+  /// **'Task Completed'**
   String get taskCompleted;
 
   /// Congratulations completed message
@@ -2402,7 +2402,7 @@ abstract class AppLocalizations {
   /// **'Requested'**
   String get requested;
 
-  /// OK button
+  /// OK button text
   ///
   /// In en, this message translates to:
   /// **'OK'**
@@ -3152,10 +3152,10 @@ abstract class AppLocalizations {
   /// **'Tap to view members'**
   String get tapToViewMembers;
 
-  /// Today date indicator
+  /// Today label
   ///
   /// In en, this message translates to:
-  /// **'today'**
+  /// **'Today'**
   String get today;
 
   /// Yesterday date indicator
@@ -3320,7 +3320,7 @@ abstract class AppLocalizations {
   /// **'Points Paid'**
   String get pointsPaid;
 
-  /// Not started status
+  /// Task not started status
   ///
   /// In en, this message translates to:
   /// **'Not Started'**
@@ -4811,6 +4811,108 @@ abstract class AppLocalizations {
   /// **'Manager Performance'**
   String get managerPerformance;
 
+  /// Touring tasks section title
+  ///
+  /// In en, this message translates to:
+  /// **'Touring Tasks'**
+  String get touringTasks;
+
+  /// Touring tasks progress section title
+  ///
+  /// In en, this message translates to:
+  /// **'Touring Tasks Progress'**
+  String get touringTasksProgress;
+
+  /// Message when agent has no touring tasks
+  ///
+  /// In en, this message translates to:
+  /// **'No Touring Tasks Assigned'**
+  String get noTouringTasksAssigned;
+
+  /// Description when agent has no touring tasks
+  ///
+  /// In en, this message translates to:
+  /// **'You don\'t have any touring tasks assigned yet. Check back later or contact your manager.'**
+  String get noTouringTasksDescription;
+
+  /// Refresh button text
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refresh;
+
+  /// Work zone label
+  ///
+  /// In en, this message translates to:
+  /// **'Work Zone'**
+  String get workZone;
+
+  /// Movement timeout label
+  ///
+  /// In en, this message translates to:
+  /// **'Movement Timeout'**
+  String get movementTimeout;
+
+  /// Task requirements section title
+  ///
+  /// In en, this message translates to:
+  /// **'Task Requirements'**
+  String get taskRequirements;
+
+  /// Requirement to spend time in work zone
+  ///
+  /// In en, this message translates to:
+  /// **'Spend {duration} inside the work zone'**
+  String spendTimeInWorkZone(String duration);
+
+  /// Requirement to keep moving
+  ///
+  /// In en, this message translates to:
+  /// **'Keep moving (timer pauses after {timeout} of inactivity)'**
+  String keepMovingTimer(String timeout);
+
+  /// Movement threshold information
+  ///
+  /// In en, this message translates to:
+  /// **'Movement threshold: {threshold}m'**
+  String movementThreshold(String threshold);
+
+  /// Status when location is active
+  ///
+  /// In en, this message translates to:
+  /// **'Location Active'**
+  String get locationActive;
+
+  /// Status when location is unknown
+  ///
+  /// In en, this message translates to:
+  /// **'Location Unknown'**
+  String get locationUnknown;
+
+  /// Status when agent is moving
+  ///
+  /// In en, this message translates to:
+  /// **'Moving'**
+  String get moving;
+
+  /// Status when agent is not moving
+  ///
+  /// In en, this message translates to:
+  /// **'Not Moving'**
+  String get notMoving;
+
+  /// Timer paused message with reason
+  ///
+  /// In en, this message translates to:
+  /// **'Timer Paused: {reason}'**
+  String timerPaused(String reason);
+
+  /// Required time label
+  ///
+  /// In en, this message translates to:
+  /// **'Required Time'**
+  String get requiredTime;
+
   /// Online now metric
   ///
   /// In en, this message translates to:
@@ -6124,12 +6226,6 @@ abstract class AppLocalizations {
   /// **'Category *'**
   String get categoryRequired;
 
-  /// Task requirements section title
-  ///
-  /// In en, this message translates to:
-  /// **'Task Requirements'**
-  String get taskRequirements;
-
   /// Configure agent requirements subtitle
   ///
   /// In en, this message translates to:
@@ -6741,6 +6837,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Geofences'**
   String get geofences;
+
+  /// Work zone label with name
+  ///
+  /// In en, this message translates to:
+  /// **'Work Zone: {name}'**
+  String workZoneLabel(String name);
+
+  /// Task not available yet title
+  ///
+  /// In en, this message translates to:
+  /// **'Task Not Available Yet'**
+  String get taskNotAvailableYet;
+
+  /// Task start date message
+  ///
+  /// In en, this message translates to:
+  /// **'This task will be available starting {date}'**
+  String taskStartsOn(DateTime date);
+
+  /// Task expired title
+  ///
+  /// In en, this message translates to:
+  /// **'Task Expired'**
+  String get taskExpired;
+
+  /// Task end date message
+  ///
+  /// In en, this message translates to:
+  /// **'This task ended on {date}'**
+  String taskEndedOn(DateTime date);
+
+  /// Background services required title
+  ///
+  /// In en, this message translates to:
+  /// **'Background Services Required'**
+  String get backgroundServicesRequired;
+
+  /// Enable background services message
+  ///
+  /// In en, this message translates to:
+  /// **'Please enable background services to start this task. Background location tracking is required for touring tasks.'**
+  String get enableBackgroundServicesMessage;
+
+  /// Enable background services title
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Background Services'**
+  String get enableBackgroundServices;
+
+  /// Instructions for enabling background services
+  ///
+  /// In en, this message translates to:
+  /// **'To enable background services:\n\n1. Go to phone Settings\n2. Find Al-Tijwal app\n3. Enable \'Allow background activity\'\n4. Enable \'Location\' permissions\n5. Restart the app'**
+  String get backgroundServicesInstructions;
+
+  /// Task unavailable button text
+  ///
+  /// In en, this message translates to:
+  /// **'Task Unavailable'**
+  String get taskUnavailable;
+
+  /// Indicator showing an active task is running
+  ///
+  /// In en, this message translates to:
+  /// **'Active Task Running'**
+  String get activeTaskRunning;
+
+  /// Message when task is completed for the day
+  ///
+  /// In en, this message translates to:
+  /// **'Task completed today. Available again tomorrow.'**
+  String get taskCompletedToday;
+
+  /// Number of tasks available
+  ///
+  /// In en, this message translates to:
+  /// **'{count} tasks available'**
+  String tasksAvailable(Object count);
+
+  /// Message for tasks not yet available
+  ///
+  /// In en, this message translates to:
+  /// **'Available on the scheduled day'**
+  String get waitForTaskDay;
+
+  /// Button text for future tasks
+  ///
+  /// In en, this message translates to:
+  /// **'Available on scheduled day'**
+  String get availableOnDay;
+
+  /// Number of tasks completed
+  ///
+  /// In en, this message translates to:
+  /// **'{count} completed'**
+  String tasksCompletedCount(Object count);
+
+  /// Message when no touring tasks are assigned for a specific day
+  ///
+  /// In en, this message translates to:
+  /// **'No touring tasks for this day'**
+  String get noTouringTasksForDay;
 }
 
 class _AppLocalizationsDelegate
