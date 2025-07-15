@@ -15,6 +15,7 @@ import '../services/timezone_service.dart';
 import '../widgets/offline_widget.dart';
 import '../l10n/app_localizations.dart';
 import 'agent/agent_route_dashboard_screen.dart';
+import 'agent/app_health_screen.dart';
 import '../widgets/update_dialog.dart';
 import 'package:logger/logger.dart';
 import 'campaigns/campaigns_list_screen.dart';
@@ -478,20 +479,34 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
   }
 
   Future<AgentTaskStats> _getAgentTaskStats(String userId) async {
+    // Get comprehensive earnings using the RPC function
+    final earningsResult = await supabase.rpc('get_agent_overall_earnings', params: {
+      'p_agent_id': userId,
+    }).single();
+
+    final totalPoints = earningsResult['total_earned'] as int? ?? 0;
+
+    // Get task assignments for active/completed counts
     final taskAssignments = await supabase
         .from('task_assignments')
         .select('status, completed_at, tasks!inner(points)')
         .eq('agent_id', userId);
 
-    int activeTasks = 0, completedTasks = 0, totalPoints = 0;
+    // Get touring task assignments for additional counts
+    final touringTaskAssignments = await supabase
+        .from('touring_task_assignments')
+        .select('status, completed_at, touring_tasks!inner(points)')
+        .eq('agent_id', userId);
+
+    int activeTasks = 0, completedTasks = 0;
     int todayCompleted = 0, weeklyCompleted = 0;
     final today = DateTime.now();
     final todayStart = DateTime(today.year, today.month, today.day);
     final weekStart = today.subtract(Duration(days: today.weekday - 1));
 
+    // Process regular task assignments
     for (final assignment in taskAssignments) {
       final status = assignment['status'] as String;
-      final points = assignment['tasks']['points'] as int? ?? 0;
       
       switch (status) {
         case 'assigned':
@@ -500,7 +515,32 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
           break;
         case 'completed':
           completedTasks++;
-          totalPoints += points;
+          
+          final completedAt = assignment['completed_at'];
+          if (completedAt != null) {
+            final completedDate = DateTime.parse(completedAt);
+            if (completedDate.isAfter(todayStart)) {
+              todayCompleted++;
+            }
+            if (completedDate.isAfter(weekStart)) {
+              weeklyCompleted++;
+            }
+          }
+          break;
+      }
+    }
+
+    // Process touring task assignments
+    for (final assignment in touringTaskAssignments) {
+      final status = assignment['status'] as String;
+      
+      switch (status) {
+        case 'assigned':
+        case 'in_progress':
+          activeTasks++;
+          break;
+        case 'completed':
+          completedTasks++;
           
           final completedAt = assignment['completed_at'];
           if (completedAt != null) {
@@ -868,19 +908,32 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                                           ),
                                           Row(
                                             children: [
-                                              Container(
-                                                padding: const EdgeInsets.all(8),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white.withValues(alpha: 0.2),
-                                                  borderRadius: BorderRadius.circular(12),
+                                              // Only show app health for agents, nothing for managers
+                                              if (widget.user.role == 'agent') ...[
+                                                GestureDetector(
+                                                  onTap: () {
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) => const AppHealthScreen(),
+                                                      ),
+                                                    );
+                                                  },
+                                                  child: Container(
+                                                    padding: const EdgeInsets.all(8),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.white.withValues(alpha: 0.2),
+                                                      borderRadius: BorderRadius.circular(12),
+                                                    ),
+                                                    child: const Icon(
+                                                      Icons.health_and_safety_outlined,
+                                                      color: Colors.white,
+                                                      size: 24,
+                                                    ),
+                                                  ),
                                                 ),
-                                                child: const Icon(
-                                                  Icons.notifications_outlined,
-                                                  color: Colors.white,
-                                                  size: 24,
-                                                ),
-                                              ),
-                                              const SizedBox(width: 8),
+                                                const SizedBox(width: 8),
+                                              ],
                                               Container(
                                                 padding: const EdgeInsets.all(8),
                                                 decoration: BoxDecoration(
@@ -2097,6 +2150,23 @@ class _ProfileTab extends StatelessWidget {
             );
           },
         ),
+        // Add App Health option for agents only
+        if (user.role == 'agent') ...[
+          _buildOptionCard(
+            context,
+            icon: Icons.health_and_safety,
+            title: 'App Health Check',
+            subtitle: 'Check GPS, notifications, and system status',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AppHealthScreen(),
+                ),
+              );
+            },
+          ),
+        ],
         _buildOptionCard(
           context,
           icon: Icons.location_on,

@@ -1238,6 +1238,12 @@ abstract class AppLocalizations {
   /// **'Failed to record payment: {error}'**
   String paymentRecordFailed(String error);
 
+  /// Payment amount input label
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Amount'**
+  String get paymentAmount;
+
   /// Pay button label
   ///
   /// In en, this message translates to:
@@ -4811,7 +4817,7 @@ abstract class AppLocalizations {
   /// **'Manager Performance'**
   String get managerPerformance;
 
-  /// Touring tasks section title
+  /// Label for touring tasks count
   ///
   /// In en, this message translates to:
   /// **'Touring Tasks'**
@@ -6939,6 +6945,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No touring tasks for this day'**
   String get noTouringTasksForDay;
+
+  /// Label for remaining points to be paid
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining Points'**
+  String get remainingPoints;
+
+  /// Section title for campaign tasks
+  ///
+  /// In en, this message translates to:
+  /// **'Campaign Tasks'**
+  String get campaignTasks;
+
+  /// Message when agent has no completed campaign tasks
+  ///
+  /// In en, this message translates to:
+  /// **'No completed campaign tasks'**
+  String get noCompletedCampaignTasks;
+
+  /// Message when agent has no completed standalone tasks
+  ///
+  /// In en, this message translates to:
+  /// **'No completed standalone tasks'**
+  String get noCompletedStandaloneTasks;
+
+  /// Label showing when a task was completed
+  ///
+  /// In en, this message translates to:
+  /// **'Completed on'**
+  String get completedOn;
+
+  /// Title for agents earnings management screen
+  ///
+  /// In en, this message translates to:
+  /// **'Agents Earnings Management'**
+  String get agentsEarningsManagement;
+
+  /// Placeholder text for agent search field
+  ///
+  /// In en, this message translates to:
+  /// **'Search agents...'**
+  String get searchAgents;
+
+  /// Message when no agents are found
+  ///
+  /// In en, this message translates to:
+  /// **'No Agents Found'**
+  String get noAgentsFound;
+
+  /// Description when no agents are found
+  ///
+  /// In en, this message translates to:
+  /// **'No agents are registered in the system yet.'**
+  String get noAgentsFoundDesc;
+
+  /// Message when no agents match the search query
+  ///
+  /// In en, this message translates to:
+  /// **'No Agents Match Search'**
+  String get noAgentsMatchSearch;
+
+  /// Suggestion when no agents match search
+  ///
+  /// In en, this message translates to:
+  /// **'Try a different search term or clear the search.'**
+  String get tryDifferentSearch;
+
+  /// Label for completed tasks count
+  ///
+  /// In en, this message translates to:
+  /// **'Completed Tasks'**
+  String get completedTasks;
+
+  /// Subtitle for agent earnings management feature
+  ///
+  /// In en, this message translates to:
+  /// **'Manage agent earnings and payments'**
+  String get manageAgentEarnings;
+
+  /// Section title for daily participation records
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Participation'**
+  String get dailyParticipation;
+
+  /// Label for hours worked in daily participation
+  ///
+  /// In en, this message translates to:
+  /// **'Hours Worked'**
+  String get hoursWorked;
+
+  /// Message when no daily participation records exist
+  ///
+  /// In en, this message translates to:
+  /// **'No daily participation records found'**
+  String get noDailyParticipation;
+
+  /// Title for editing touring task screen
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Touring Task'**
+  String get editTouringTask;
+
+  /// Title for creating touring task screen
+  ///
+  /// In en, this message translates to:
+  /// **'Create Touring Task'**
+  String get createTouringTask;
+
+  /// Button text for updating touring task
+  ///
+  /// In en, this message translates to:
+  /// **'Update Touring Task'**
+  String get updateTouringTask;
+
+  /// Success message when touring task is updated
+  ///
+  /// In en, this message translates to:
+  /// **'Touring task updated successfully'**
+  String get touringTaskUpdatedSuccessfully;
+
+  /// Success message when touring task is created
+  ///
+  /// In en, this message translates to:
+  /// **'Touring task created successfully'**
+  String get touringTaskCreatedSuccessfully;
+
+  /// Error message when touring task update fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update touring task'**
+  String get failedToUpdateTouringTask;
+
+  /// Error message when touring task creation fails
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to create touring task'**
+  String get failedToCreateTouringTask;
 }
 
 class _AppLocalizationsDelegate

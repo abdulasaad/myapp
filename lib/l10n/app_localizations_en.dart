@@ -616,6 +616,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get paymentAmount => 'Payment Amount';
+
+  @override
   String get pay => 'PAY';
 
   @override
@@ -3774,4 +3777,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noTouringTasksForDay => 'No touring tasks for this day';
+
+  @override
+  String get remainingPoints => 'Remaining Points';
+
+  @override
+  String get campaignTasks => 'Campaign Tasks';
+
+  @override
+  String get noCompletedCampaignTasks => 'No completed campaign tasks';
+
+  @override
+  String get noCompletedStandaloneTasks => 'No completed standalone tasks';
+
+  @override
+  String get completedOn => 'Completed on';
+
+  @override
+  String get agentsEarningsManagement => 'Agents Earnings Management';
+
+  @override
+  String get searchAgents => 'Search agents...';
+
+  @override
+  String get noAgentsFound => 'No Agents Found';
+
+  @override
+  String get noAgentsFoundDesc => 'No agents are registered in the system yet.';
+
+  @override
+  String get noAgentsMatchSearch => 'No Agents Match Search';
+
+  @override
+  String get tryDifferentSearch =>
+      'Try a different search term or clear the search.';
+
+  @override
+  String get completedTasks => 'Completed Tasks';
+
+  @override
+  String get manageAgentEarnings => 'Manage agent earnings and payments';
+
+  @override
+  String get dailyParticipation => 'Daily Participation';
+
+  @override
+  String get hoursWorked => 'Hours Worked';
+
+  @override
+  String get noDailyParticipation => 'No daily participation records found';
+
+  @override
+  String get editTouringTask => 'Edit Touring Task';
+
+  @override
+  String get createTouringTask => 'Create Touring Task';
+
+  @override
+  String get updateTouringTask => 'Update Touring Task';
+
+  @override
+  String get touringTaskUpdatedSuccessfully =>
+      'Touring task updated successfully';
+
+  @override
+  String get touringTaskCreatedSuccessfully =>
+      'Touring task created successfully';
+
+  @override
+  String get failedToUpdateTouringTask => 'Failed to update touring task';
+
+  @override
+  String get failedToCreateTouringTask => 'Failed to create touring task';
 }

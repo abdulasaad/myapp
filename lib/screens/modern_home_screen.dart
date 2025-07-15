@@ -25,6 +25,7 @@ import '../widgets/offline_widget.dart';
 import '../widgets/language_selection_dialog.dart';
 import '../widgets/service_control_widget.dart';
 import 'agent/agent_route_dashboard_screen.dart';
+import 'agent/app_health_screen.dart';
 import '../widgets/update_dialog.dart';
 import 'package:logger/logger.dart';
 import 'campaigns/campaigns_list_screen.dart';
@@ -3692,20 +3693,22 @@ class _ProfileTab extends StatelessWidget {
         if (user.role == 'admin' || user.role == 'manager')
           const SizedBox(height: 12),
         
-        // FCM Token Status for all users (read-only status)
-        FutureBuilder<bool>(
-          future: _checkFCMTokenStatus(),
-          builder: (context, snapshot) {
-            final hasToken = snapshot.data ?? false;
-            return _buildOptionCard(
-              icon: hasToken ? Icons.notifications_active : Icons.sync,
-              title: AppLocalizations.of(context)!.notifications,
-              subtitle: hasToken ? AppLocalizations.of(context)!.notificationsEnabled : AppLocalizations.of(context)!.settingUpNotifications,
-              color: hasToken ? successColor : Colors.blue,
-              onTap: null, // No user action required - fully automatic
-            );
-          },
-        ),
+        // App Health for agents only, nothing for managers
+        if (user.role == 'agent') ...[
+          _buildOptionCard(
+            icon: Icons.health_and_safety,
+            title: 'App Health Check',
+            subtitle: 'Check GPS, notifications, and system status',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AppHealthScreen(),
+                ),
+              );
+            },
+          ),
+        ],
         const SizedBox(height: 12),
         _buildOptionCard(
           icon: Icons.help_outline,

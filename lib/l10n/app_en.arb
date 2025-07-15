@@ -1022,6 +1022,11 @@
     }
   },
 
+  "paymentAmount": "Payment Amount",
+  "@paymentAmount": {
+    "description": "Payment amount input label"
+  },
+
   "pay": "PAY",
   "@pay": {
     "description": "Pay button label"
@@ -7302,5 +7307,125 @@
   "noTouringTasksForDay": "No touring tasks for this day",
   "@noTouringTasksForDay": {
     "description": "Message when no touring tasks are assigned for a specific day"
+  },
+
+  "remainingPoints": "Remaining Points",
+  "@remainingPoints": {
+    "description": "Label for remaining points to be paid"
+  },
+
+  "campaignTasks": "Campaign Tasks",
+  "@campaignTasks": {
+    "description": "Section title for campaign tasks"
+  },
+
+  "noCompletedCampaignTasks": "No completed campaign tasks",
+  "@noCompletedCampaignTasks": {
+    "description": "Message when agent has no completed campaign tasks"
+  },
+
+  "noCompletedStandaloneTasks": "No completed standalone tasks",
+  "@noCompletedStandaloneTasks": {
+    "description": "Message when agent has no completed standalone tasks"
+  },
+
+  "completedOn": "Completed on",
+  "@completedOn": {
+    "description": "Label showing when a task was completed"
+  },
+
+  "agentsEarningsManagement": "Agents Earnings Management",
+  "@agentsEarningsManagement": {
+    "description": "Title for agents earnings management screen"
+  },
+
+  "searchAgents": "Search agents...",
+  "@searchAgents": {
+    "description": "Placeholder text for agent search field"
+  },
+
+  "noAgentsFound": "No Agents Found",
+  "@noAgentsFound": {
+    "description": "Message when no agents are found"
+  },
+
+  "noAgentsFoundDesc": "No agents are registered in the system yet.",
+  "@noAgentsFoundDesc": {
+    "description": "Description when no agents are found"
+  },
+
+  "noAgentsMatchSearch": "No Agents Match Search",
+  "@noAgentsMatchSearch": {
+    "description": "Message when no agents match the search query"
+  },
+
+  "tryDifferentSearch": "Try a different search term or clear the search.",
+  "@tryDifferentSearch": {
+    "description": "Suggestion when no agents match search"
+  },
+
+  "completedTasks": "Completed Tasks",
+  "@completedTasks": {
+    "description": "Label for completed tasks count"
+  },
+
+  "manageAgentEarnings": "Manage agent earnings and payments",
+  "@manageAgentEarnings": {
+    "description": "Subtitle for agent earnings management feature"
+  },
+
+  "dailyParticipation": "Daily Participation",
+  "@dailyParticipation": {
+    "description": "Section title for daily participation records"
+  },
+
+  "hoursWorked": "Hours Worked",
+  "@hoursWorked": {
+    "description": "Label for hours worked in daily participation"
+  },
+
+  "touringTasks": "Touring Tasks",
+  "@touringTasks": {
+    "description": "Label for touring tasks count"
+  },
+
+  "noDailyParticipation": "No daily participation records found",
+  "@noDailyParticipation": {
+    "description": "Message when no daily participation records exist"
+  },
+
+  "editTouringTask": "Edit Touring Task",
+  "@editTouringTask": {
+    "description": "Title for editing touring task screen"
+  },
+
+  "createTouringTask": "Create Touring Task",
+  "@createTouringTask": {
+    "description": "Title for creating touring task screen"
+  },
+
+  "updateTouringTask": "Update Touring Task",
+  "@updateTouringTask": {
+    "description": "Button text for updating touring task"
+  },
+
+  "touringTaskUpdatedSuccessfully": "Touring task updated successfully",
+  "@touringTaskUpdatedSuccessfully": {
+    "description": "Success message when touring task is updated"
+  },
+
+  "touringTaskCreatedSuccessfully": "Touring task created successfully",
+  "@touringTaskCreatedSuccessfully": {
+    "description": "Success message when touring task is created"
+  },
+
+  "failedToUpdateTouringTask": "Failed to update touring task",
+  "@failedToUpdateTouringTask": {
+    "description": "Error message when touring task update fails"
+  },
+
+  "failedToCreateTouringTask": "Failed to create touring task",
+  "@failedToCreateTouringTask": {
+    "description": "Error message when touring task creation fails"
   }
 }

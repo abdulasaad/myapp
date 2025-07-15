@@ -832,6 +832,11 @@
     }
   },
 
+  "paymentAmount": "مبلغ الدفع",
+  "@paymentAmount": {
+    "description": "تسمية مدخل مبلغ الدفع"
+  },
+
   "pay": "دفع",
   "@pay": {
     "description": "تسمية زر الدفع"
@@ -6794,5 +6799,125 @@
   "noTouringTasksForDay": "لا توجد مهام سياحية لهذا اليوم",
   "@noTouringTasksForDay": {
     "description": "رسالة عند عدم وجود مهام سياحية مُعينة ليوم محدد"
+  },
+
+  "remainingPoints": "النقاط المتبقية",
+  "@remainingPoints": {
+    "description": "تسمية للنقاط المتبقية لدفعها"
+  },
+
+  "campaignTasks": "مهام الحملة",
+  "@campaignTasks": {
+    "description": "عنوان قسم مهام الحملة"
+  },
+
+  "noCompletedCampaignTasks": "لا توجد مهام حملة مكتملة",
+  "@noCompletedCampaignTasks": {
+    "description": "رسالة عند عدم وجود مهام حملة مكتملة للوكيل"
+  },
+
+  "noCompletedStandaloneTasks": "لا توجد مهام مستقلة مكتملة",
+  "@noCompletedStandaloneTasks": {
+    "description": "رسالة عند عدم وجود مهام مستقلة مكتملة للوكيل"
+  },
+
+  "completedOn": "اكتملت في",
+  "@completedOn": {
+    "description": "تسمية تُظهر متى تم إكمال المهمة"
+  },
+
+  "agentsEarningsManagement": "إدارة أرباح الوكلاء",
+  "@agentsEarningsManagement": {
+    "description": "عنوان شاشة إدارة أرباح الوكلاء"
+  },
+
+  "searchAgents": "البحث عن الوكلاء...",
+  "@searchAgents": {
+    "description": "نص مساعد لحقل البحث عن الوكلاء"
+  },
+
+  "noAgentsFound": "لم يتم العثور على وكلاء",
+  "@noAgentsFound": {
+    "description": "رسالة عند عدم العثور على وكلاء"
+  },
+
+  "noAgentsFoundDesc": "لم يتم تسجيل أي وكلاء في النظام بعد.",
+  "@noAgentsFoundDesc": {
+    "description": "وصف عند عدم العثور على وكلاء"
+  },
+
+  "noAgentsMatchSearch": "لا يوجد وكلاء مطابقون للبحث",
+  "@noAgentsMatchSearch": {
+    "description": "رسالة عند عدم مطابقة الوكلاء لاستعلام البحث"
+  },
+
+  "tryDifferentSearch": "جرب مصطلح بحث مختلف أو امسح البحث.",
+  "@tryDifferentSearch": {
+    "description": "اقتراح عند عدم مطابقة الوكلاء للبحث"
+  },
+
+  "completedTasks": "المهام المكتملة",
+  "@completedTasks": {
+    "description": "تسمية لعدد المهام المكتملة"
+  },
+
+  "manageAgentEarnings": "إدارة أرباح ومدفوعات الوكلاء",
+  "@manageAgentEarnings": {
+    "description": "العنوان الفرعي لميزة إدارة أرباح الوكلاء"
+  },
+
+  "dailyParticipation": "المشاركة اليومية",
+  "@dailyParticipation": {
+    "description": "عنوان قسم سجلات المشاركة اليومية"
+  },
+
+  "hoursWorked": "ساعات العمل",
+  "@hoursWorked": {
+    "description": "تسمية لساعات العمل في المشاركة اليومية"
+  },
+
+  "touringTasks": "مهام الجولة",
+  "@touringTasks": {
+    "description": "تسمية لعدد مهام الجولة"
+  },
+
+  "noDailyParticipation": "لا توجد سجلات مشاركة يومية",
+  "@noDailyParticipation": {
+    "description": "رسالة عند عدم وجود سجلات مشاركة يومية"
+  },
+
+  "editTouringTask": "تحرير مهمة الجولة",
+  "@editTouringTask": {
+    "description": "عنوان شاشة تحرير مهمة الجولة"
+  },
+
+  "createTouringTask": "إنشاء مهمة جولة",
+  "@createTouringTask": {
+    "description": "عنوان شاشة إنشاء مهمة الجولة"
+  },
+
+  "updateTouringTask": "تحديث مهمة الجولة",
+  "@updateTouringTask": {
+    "description": "نص زر تحديث مهمة الجولة"
+  },
+
+  "touringTaskUpdatedSuccessfully": "تم تحديث مهمة الجولة بنجاح",
+  "@touringTaskUpdatedSuccessfully": {
+    "description": "رسالة نجاح عند تحديث مهمة الجولة"
+  },
+
+  "touringTaskCreatedSuccessfully": "تم إنشاء مهمة الجولة بنجاح",
+  "@touringTaskCreatedSuccessfully": {
+    "description": "رسالة نجاح عند إنشاء مهمة الجولة"
+  },
+
+  "failedToUpdateTouringTask": "فشل في تحديث مهمة الجولة",
+  "@failedToUpdateTouringTask": {
+    "description": "رسالة خطأ عند فشل تحديث مهمة الجولة"
+  },
+
+  "failedToCreateTouringTask": "فشل في إنشاء مهمة الجولة",
+  "@failedToCreateTouringTask": {
+    "description": "رسالة خطأ عند فشل إنشاء مهمة الجولة"
   }
 }

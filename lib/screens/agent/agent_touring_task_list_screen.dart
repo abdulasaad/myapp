@@ -1,17 +1,14 @@
 // lib/screens/agent/agent_touring_task_list_screen.dart
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../models/campaign.dart';
 import '../../models/touring_task.dart';
 import '../../models/campaign_geofence.dart';
 import '../../services/touring_task_service.dart';
-import '../../services/touring_task_movement_service.dart';
 import '../../services/persistent_service_manager.dart';
 import '../../utils/constants.dart';
 import '../../l10n/app_localizations.dart';
-import '../../widgets/modern_notification.dart';
 import 'touring_task_execution_screen.dart';
 
 class AgentTouringTaskListScreen extends StatefulWidget {
@@ -332,15 +329,6 @@ class _AgentTouringTaskListScreenState extends State<AgentTouringTaskListScreen>
     final isAvailable = _isDayAvailable(day);
     final isToday = _isToday(day);
     
-    // Count completed tasks for this day
-    int completedTasksCount = 0;
-    for (final assignment in assignments) {
-      final task = assignment['task'] as TouringTask;
-      final isCompletedToday = _dailyCompletionStatus[task.id] ?? false;
-      if (isToday && isCompletedToday) {
-        completedTasksCount++;
-      }
-    }
     
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -466,22 +454,6 @@ class _AgentTouringTaskListScreenState extends State<AgentTouringTaskListScreen>
                                   color: isAvailable ? textSecondaryColor : Colors.grey,
                                 ),
                               ),
-                              if (isToday && completedTasksCount > 0) ...[
-                                const SizedBox(width: 16),
-                                Icon(
-                                  Icons.check_circle,
-                                  size: 16,
-                                  color: Colors.green,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  AppLocalizations.of(context)!.tasksCompletedCount(completedTasksCount.toString()),
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.green,
-                                  ),
-                                ),
-                              ],
                             ],
                           ),
                         ],
@@ -546,7 +518,7 @@ class _AgentTouringTaskListScreenState extends State<AgentTouringTaskListScreen>
     final isToday = _isToday(day);
     final isTaskAvailable = isToday ? _isTaskAvailable(task.id) : false;
     final canStart = isTaskAvailable && _backgroundServicesRunning;
-    final reason = isToday ? _getTaskUnavailableReason(task.id) : AppLocalizations.of(context)!.waitForTaskDay;
+    final isCompletedToday = _dailyCompletionStatus[task.id] ?? false;
     
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -646,16 +618,28 @@ class _AgentTouringTaskListScreenState extends State<AgentTouringTaskListScreen>
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: canStart ? () => _startTouringTask(task, geofence) : null,
-                icon: Icon(canStart ? Icons.play_arrow : Icons.block),
+                icon: Icon(
+                  isToday && isCompletedToday 
+                      ? Icons.check_circle 
+                      : canStart 
+                          ? Icons.play_arrow 
+                          : Icons.block
+                ),
                 label: Text(
-                  canStart 
-                      ? AppLocalizations.of(context)!.startTask 
-                      : isToday 
-                          ? AppLocalizations.of(context)!.taskUnavailable
-                          : AppLocalizations.of(context)!.availableOnDay,
+                  isToday && isCompletedToday 
+                      ? AppLocalizations.of(context)!.taskCompleted
+                      : canStart 
+                          ? AppLocalizations.of(context)!.startTask 
+                          : isToday 
+                              ? AppLocalizations.of(context)!.taskUnavailable
+                              : AppLocalizations.of(context)!.availableOnDay,
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: canStart ? primaryColor : Colors.grey,
+                  backgroundColor: isToday && isCompletedToday 
+                      ? Colors.green 
+                      : canStart 
+                          ? primaryColor 
+                          : Colors.grey,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
@@ -664,44 +648,6 @@ class _AgentTouringTaskListScreenState extends State<AgentTouringTaskListScreen>
                 ),
               ),
             ),
-            
-            // Reason message
-            if (!canStart && reason != null) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: isToday 
-                      ? Colors.orange.withValues(alpha: 0.1)
-                      : Colors.blue.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: isToday 
-                        ? Colors.orange.withValues(alpha: 0.3)
-                        : Colors.blue.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      isToday ? Icons.info_outline : Icons.schedule,
-                      size: 14,
-                      color: isToday ? Colors.orange[700] : Colors.blue[700],
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        reason,
-                        style: TextStyle(
-                          color: isToday ? Colors.orange[700] : Colors.blue[700],
-                          fontSize: 11,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
           ],
         ),
       ),

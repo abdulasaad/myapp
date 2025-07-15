@@ -611,6 +611,9 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get paymentAmount => 'مبلغ الدفع';
+
+  @override
   String get pay => 'دفع';
 
   @override
@@ -3740,4 +3743,73 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noTouringTasksForDay => 'لا توجد مهام سياحية لهذا اليوم';
+
+  @override
+  String get remainingPoints => 'النقاط المتبقية';
+
+  @override
+  String get campaignTasks => 'مهام الحملة';
+
+  @override
+  String get noCompletedCampaignTasks => 'لا توجد مهام حملة مكتملة';
+
+  @override
+  String get noCompletedStandaloneTasks => 'لا توجد مهام مستقلة مكتملة';
+
+  @override
+  String get completedOn => 'اكتملت في';
+
+  @override
+  String get agentsEarningsManagement => 'إدارة أرباح الوكلاء';
+
+  @override
+  String get searchAgents => 'البحث عن الوكلاء...';
+
+  @override
+  String get noAgentsFound => 'لم يتم العثور على وكلاء';
+
+  @override
+  String get noAgentsFoundDesc => 'لم يتم تسجيل أي وكلاء في النظام بعد.';
+
+  @override
+  String get noAgentsMatchSearch => 'لا يوجد وكلاء مطابقون للبحث';
+
+  @override
+  String get tryDifferentSearch => 'جرب مصطلح بحث مختلف أو امسح البحث.';
+
+  @override
+  String get completedTasks => 'المهام المكتملة';
+
+  @override
+  String get manageAgentEarnings => 'إدارة أرباح ومدفوعات الوكلاء';
+
+  @override
+  String get dailyParticipation => 'المشاركة اليومية';
+
+  @override
+  String get hoursWorked => 'ساعات العمل';
+
+  @override
+  String get noDailyParticipation => 'لا توجد سجلات مشاركة يومية';
+
+  @override
+  String get editTouringTask => 'تحرير مهمة الجولة';
+
+  @override
+  String get createTouringTask => 'إنشاء مهمة جولة';
+
+  @override
+  String get updateTouringTask => 'تحديث مهمة الجولة';
+
+  @override
+  String get touringTaskUpdatedSuccessfully => 'تم تحديث مهمة الجولة بنجاح';
+
+  @override
+  String get touringTaskCreatedSuccessfully => 'تم إنشاء مهمة الجولة بنجاح';
+
+  @override
+  String get failedToUpdateTouringTask => 'فشل في تحديث مهمة الجولة';
+
+  @override
+  String get failedToCreateTouringTask => 'فشل في إنشاء مهمة الجولة';
 }

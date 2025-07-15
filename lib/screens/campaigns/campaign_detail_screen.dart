@@ -1270,63 +1270,7 @@ class _AgentEarningTileState extends State<AgentEarningTile> {
     }
   }
 
-  Future<void> _showRecordPaymentDialog() async {
-    final formKey = GlobalKey<FormState>();
-    final amountController = TextEditingController();
-    final outstandingBalance = _earningsData?['outstanding_balance'] ?? 0;
 
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.payAgent(widget.agent.fullName)),
-        content: Form(
-          key: formKey,
-          child: TextFormField(
-            controller: amountController,
-            decoration:
-                InputDecoration(labelText: AppLocalizations.of(context)!.amountPaid, prefixText: AppLocalizations.of(context)!.pointsPrefix),
-            keyboardType: TextInputType.number,
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            validator: (value) {
-              if (value == null || value.isEmpty) return AppLocalizations.of(context)!.requiredField;
-              final enteredAmount = int.tryParse(value);
-              if (enteredAmount == null || enteredAmount <= 0) return AppLocalizations.of(context)!.mustBeNumber;
-              if (enteredAmount > outstandingBalance) return 'Cannot pay more than the balance of $outstandingBalance';
-              return null;
-            },
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: Text(AppLocalizations.of(context)!.cancel)),
-          ElevatedButton(
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                _recordPayment(amount: int.parse(amountController.text));
-                Navigator.of(context).pop(true);
-              }
-            },
-            child: Text(AppLocalizations.of(context)!.confirmPayment),
-          )
-        ],
-      ),
-    );
-    if (result == true) _fetchEarnings();
-  }
-
-  Future<void> _recordPayment({required int amount}) async {
-    try {
-      await supabase.from('payments').insert({
-        'campaign_id': widget.campaignId,
-        'agent_id': widget.agent.id,
-        'paid_by_manager_id': supabase.auth.currentUser!.id,
-        'amount': amount,
-        'paid_at': DateTime.now().toIso8601String(),
-      });
-      if (mounted) context.showSnackBar(AppLocalizations.of(context)!.paymentRecordedSuccess);
-    } catch (e) {
-      if (mounted) context.showSnackBar(AppLocalizations.of(context)!.paymentRecordFailed(e.toString()), isError: true);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -1341,20 +1285,11 @@ class _AgentEarningTileState extends State<AgentEarningTile> {
         subtitle: _earningsData == null
             ? Text(AppLocalizations.of(context)!.loadingEarnings)
             : Text('${AppLocalizations.of(context)!.outstandingBalance}: ${balance.toString()} ${AppLocalizations.of(context)!.points}'),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextButton(
-              onPressed: balance > 0 ? _showRecordPaymentDialog : null,
-              child: Text(AppLocalizations.of(context)!.pay),
-            ),
-            IconButton(
-              icon: const Icon(Icons.person_remove_outlined),
-              color: Colors.red[300],
-              tooltip: AppLocalizations.of(context)!.removeAgent,
-              onPressed: _removeAgent,
-            ),
-          ],
+        trailing: IconButton(
+          icon: const Icon(Icons.person_remove_outlined),
+          color: Colors.red[300],
+          tooltip: AppLocalizations.of(context)!.removeAgent,
+          onPressed: _removeAgent,
         ),
         onTap: () {
           Navigator.of(context).push(MaterialPageRoute(

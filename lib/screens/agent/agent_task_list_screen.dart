@@ -750,6 +750,30 @@ class _AgentTaskListScreenState extends State<AgentTaskListScreen> {
                       ],
                     ),
                   ),
+                ] else if (isCompleted) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.green[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.green[200]!),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.green[600], size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          AppLocalizations.of(context)!.taskCompleted,
+                          style: TextStyle(
+                            color: Colors.green[600],
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ] else if (!isCompleted) ...[
                   SizedBox(
                     width: double.infinity,

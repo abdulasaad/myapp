@@ -13,8 +13,9 @@ import '../../widgets/modern_notification.dart';
 
 class CreateTouringTaskScreen extends StatefulWidget {
   final Campaign campaign;
+  final TouringTask? touringTask;
 
-  const CreateTouringTaskScreen({super.key, required this.campaign});
+  const CreateTouringTaskScreen({super.key, required this.campaign, this.touringTask});
 
   @override
   State<CreateTouringTaskScreen> createState() => _CreateTouringTaskScreenState();
@@ -41,6 +42,16 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
   void initState() {
     super.initState();
     _loadGeofences();
+    
+    // If editing an existing touring task, populate the form fields
+    if (widget.touringTask != null) {
+      _titleController.text = widget.touringTask!.title;
+      _descriptionController.text = widget.touringTask!.description ?? '';
+      _requiredTimeController.text = widget.touringTask!.requiredTimeMinutes.toString();
+      _movementTimeoutController.text = widget.touringTask!.movementTimeoutSeconds.toString();
+      _movementThresholdController.text = widget.touringTask!.minMovementThreshold.toString();
+      _pointsController.text = widget.touringTask!.points.toString();
+    }
   }
 
   @override
@@ -61,6 +72,14 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
       setState(() {
         _geofences = geofences;
         _isLoading = false;
+        
+        // If editing, select the current geofence
+        if (widget.touringTask != null) {
+          _selectedGeofence = geofences.firstWhere(
+            (g) => g.id == widget.touringTask!.geofenceId,
+            orElse: () => geofences.first,
+          );
+        }
       });
     } catch (e) {
       setState(() => _isLoading = false);
@@ -74,7 +93,7 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
     }
   }
 
-  Future<void> _createTouringTask() async {
+  Future<void> _saveTouringTask() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedGeofence == null) {
       ModernNotification.error(context, message: 'Please select a work zone');
@@ -84,21 +103,40 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
     setState(() => _isCreating = true);
 
     try {
-      final task = await _touringTaskService.createTouringTask(
-        campaignId: widget.campaign.id,
-        geofenceId: _selectedGeofence!.id,
-        title: _titleController.text.trim(),
-        description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
-        requiredTimeMinutes: int.parse(_requiredTimeController.text),
-        movementTimeoutSeconds: int.parse(_movementTimeoutController.text),
-        minMovementThreshold: double.parse(_movementThresholdController.text),
-        points: int.parse(_pointsController.text),
-      );
+      final TouringTask task;
+      final bool isEditing = widget.touringTask != null;
+      
+      if (isEditing) {
+        // Update existing task
+        task = await _touringTaskService.updateTouringTask(
+          taskId: widget.touringTask!.id,
+          title: _titleController.text.trim(),
+          description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
+          requiredTimeMinutes: int.parse(_requiredTimeController.text),
+          movementTimeoutSeconds: int.parse(_movementTimeoutController.text),
+          minMovementThreshold: double.parse(_movementThresholdController.text),
+          points: int.parse(_pointsController.text),
+        );
+      } else {
+        // Create new task
+        task = await _touringTaskService.createTouringTask(
+          campaignId: widget.campaign.id,
+          geofenceId: _selectedGeofence!.id,
+          title: _titleController.text.trim(),
+          description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
+          requiredTimeMinutes: int.parse(_requiredTimeController.text),
+          movementTimeoutSeconds: int.parse(_movementTimeoutController.text),
+          minMovementThreshold: double.parse(_movementThresholdController.text),
+          points: int.parse(_pointsController.text),
+        );
+      }
 
       if (mounted) {
         ModernNotification.success(
           context,
-          message: 'Touring task created successfully',
+          message: isEditing 
+              ? AppLocalizations.of(context)!.touringTaskUpdatedSuccessfully 
+              : AppLocalizations.of(context)!.touringTaskCreatedSuccessfully,
           subtitle: task.title,
         );
         Navigator.of(context).pop(task);
@@ -107,7 +145,9 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
       if (mounted) {
         ModernNotification.error(
           context,
-          message: 'Failed to create touring task',
+          message: widget.touringTask != null 
+              ? AppLocalizations.of(context)!.failedToUpdateTouringTask 
+              : AppLocalizations.of(context)!.failedToCreateTouringTask,
           subtitle: e.toString(),
         );
       }
@@ -121,7 +161,9 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Create Touring Task'),
+        title: Text(widget.touringTask != null 
+            ? AppLocalizations.of(context)!.editTouringTask 
+            : AppLocalizations.of(context)!.createTouringTask),
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
       ),
@@ -543,7 +585,7 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
-        onPressed: _isCreating ? null : _createTouringTask,
+        onPressed: _isCreating ? null : _saveTouringTask,
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
@@ -555,7 +597,12 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
                 height: 20,
                 child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
               )
-            : const Text('Create Touring Task', style: TextStyle(fontSize: 16)),
+            : Text(
+                widget.touringTask != null 
+                    ? AppLocalizations.of(context)!.updateTouringTask 
+                    : AppLocalizations.of(context)!.createTouringTask,
+                style: const TextStyle(fontSize: 16),
+              ),
       ),
     );
   }

@@ -16,6 +16,7 @@ import '../manager/place_management_screen.dart';
 import '../manager/route_visit_analytics_screen.dart';
 import '../map/live_map_screen.dart';
 import 'send_notification_screen.dart';
+import 'agents_earnings_management_screen.dart';
 
 class EnhancedManagerDashboardScreen extends StatefulWidget {
   const EnhancedManagerDashboardScreen({super.key});
@@ -1020,7 +1021,40 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
         
         const SizedBox(height: 12),
         
-        // Row 3: Admin Features (only show for admin role)
+        // Row 3: Manager Features (earnings management)
+        IntrinsicHeight(
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildActionCard(
+                  title: AppLocalizations.of(context)!.agentsEarningsManagement,
+                  subtitle: '',
+                  icon: Icons.account_balance_wallet,
+                  color: Colors.green,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const AgentsEarningsManagementScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Container(), // Placeholder for future manager feature
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Container(), // Placeholder for future manager feature
+              ),
+            ],
+          ),
+        ),
+        
+        const SizedBox(height: 12),
+        
+        // Row 4: Admin Features (only show for admin role)
         FutureBuilder<String?>(
           future: _getCurrentUserRole(),
           builder: (context, snapshot) {

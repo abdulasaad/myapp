@@ -6,6 +6,8 @@ import '../../models/task.dart';
 import '../../models/agent_task_progress.dart'; // New model
 import '../../utils/constants.dart';
 import '../admin/form_responses_screen.dart';
+import './create_evidence_task_screen.dart';
+import '../../l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart'; // For Supabase.instance.client
 
 class StandaloneTaskDetailScreen extends StatefulWidget {
@@ -292,7 +294,25 @@ class _StandaloneTaskDetailScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.task.title)),
+      appBar: AppBar(
+        title: Text(widget.task.title),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            tooltip: AppLocalizations.of(context)!.editTask,
+            onPressed: () async {
+              final result = await Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => CreateEvidenceTaskScreen(task: widget.task),
+                ),
+              );
+              if (result == true && mounted) {
+                _refresh();
+              }
+            },
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
