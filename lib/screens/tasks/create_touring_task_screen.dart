@@ -10,12 +10,21 @@ import '../../services/touring_task_service.dart';
 import '../../utils/constants.dart';
 import '../../l10n/app_localizations.dart';
 import '../../widgets/modern_notification.dart';
+import '../campaigns/campaign_wizard_step2_screen.dart';
 
 class CreateTouringTaskScreen extends StatefulWidget {
   final Campaign campaign;
   final TouringTask? touringTask;
+  final List<TempGeofenceData>? tempGeofences;
+  final Function(TempTouringTaskData)? onTempTouringTaskAdded;
 
-  const CreateTouringTaskScreen({super.key, required this.campaign, this.touringTask});
+  const CreateTouringTaskScreen({
+    super.key, 
+    required this.campaign, 
+    this.touringTask,
+    this.tempGeofences,
+    this.onTempTouringTaskAdded,
+  });
 
   @override
   State<CreateTouringTaskScreen> createState() => _CreateTouringTaskScreenState();
@@ -94,19 +103,57 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
   Future<void> _loadGeofences() async {
     setState(() => _isLoading = true);
     try {
-      final geofences = await _geofenceService.getAvailableGeofencesForCampaign(widget.campaign.id);
-      setState(() {
-        _geofences = geofences;
-        _isLoading = false;
-        
-        // If editing, select the current geofence
-        if (widget.touringTask != null) {
-          _selectedGeofence = geofences.firstWhere(
-            (g) => g.id == widget.touringTask!.geofenceId,
-            orElse: () => geofences.first,
+      if (widget.tempGeofences != null) {
+        // Working with temporary geofences during wizard
+        final geofences = widget.tempGeofences!.map((tempGeofence) {
+          return CampaignGeofence(
+            id: tempGeofence.id,
+            campaignId: widget.campaign.id,
+            name: tempGeofence.name,
+            description: tempGeofence.description,
+            areaText: tempGeofence.areaText,
+            maxAgents: tempGeofence.maxAgents,
+            color: Color(int.parse('0xFF${tempGeofence.color}') & 0xFFFFFFFF),
+            isActive: true,
+            currentAgents: 0,
+            createdAt: DateTime.now(),
           );
-        }
-      });
+        }).toList();
+        
+        setState(() {
+          _geofences = geofences;
+          _isLoading = false;
+          
+          // If editing, select the current geofence
+          if (widget.touringTask != null && geofences.isNotEmpty) {
+            try {
+              _selectedGeofence = geofences.firstWhere(
+                (g) => g.id == widget.touringTask!.geofenceId,
+              );
+            } catch (e) {
+              _selectedGeofence = geofences.first;
+            }
+          }
+        });
+      } else {
+        // Working with real geofences for existing campaign
+        final geofences = await _geofenceService.getAvailableGeofencesForCampaign(widget.campaign.id);
+        setState(() {
+          _geofences = geofences;
+          _isLoading = false;
+          
+          // If editing, select the current geofence
+          if (widget.touringTask != null && geofences.isNotEmpty) {
+            try {
+              _selectedGeofence = geofences.firstWhere(
+                (g) => g.id == widget.touringTask!.geofenceId,
+              );
+            } catch (e) {
+              _selectedGeofence = geofences.first;
+            }
+          }
+        });
+      }
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
@@ -129,16 +176,15 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
     setState(() => _isCreating = true);
 
     try {
-      final TouringTask task;
       final bool isEditing = widget.touringTask != null;
       
       final dailyStartTime = _useSchedule ? '${_startTime.hour.toString().padLeft(2, '0')}:${_startTime.minute.toString().padLeft(2, '0')}' : null;
       final dailyEndTime = _useSchedule ? '${_endTime.hour.toString().padLeft(2, '0')}:${_endTime.minute.toString().padLeft(2, '0')}' : null;
       
-      if (isEditing) {
-        // Update existing task
-        task = await _touringTaskService.updateTouringTask(
-          taskId: widget.touringTask!.id,
+      if (widget.tempGeofences != null && widget.onTempTouringTaskAdded != null && !isEditing) {
+        // Working with temporary touring tasks during wizard
+        final tempTouringTask = TempTouringTaskData(
+          id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
           title: _titleController.text.trim(),
           description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
           requiredTimeMinutes: int.parse(_requiredTimeController.text),
@@ -148,33 +194,64 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
           useSchedule: _useSchedule,
           dailyStartTime: dailyStartTime,
           dailyEndTime: dailyEndTime,
-        );
-      } else {
-        // Create new task
-        task = await _touringTaskService.createTouringTask(
-          campaignId: widget.campaign.id,
           geofenceId: _selectedGeofence!.id,
-          title: _titleController.text.trim(),
-          description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
-          requiredTimeMinutes: int.parse(_requiredTimeController.text),
-          movementTimeoutSeconds: int.parse(_movementTimeoutController.text),
-          minMovementThreshold: double.parse(_movementThresholdController.text),
-          points: int.parse(_pointsController.text),
-          useSchedule: _useSchedule,
-          dailyStartTime: dailyStartTime,
-          dailyEndTime: dailyEndTime,
         );
-      }
+        
+        widget.onTempTouringTaskAdded!(tempTouringTask);
+        
+        if (mounted) {
+          ModernNotification.success(
+            context,
+            message: 'Touring task added to campaign',
+            subtitle: tempTouringTask.title,
+          );
+          Navigator.of(context).pop(tempTouringTask);
+        }
+      } else {
+        // Working with real touring tasks for existing campaign
+        final TouringTask task;
+        
+        if (isEditing) {
+          // Update existing task
+          task = await _touringTaskService.updateTouringTask(
+            taskId: widget.touringTask!.id,
+            title: _titleController.text.trim(),
+            description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
+            requiredTimeMinutes: int.parse(_requiredTimeController.text),
+            movementTimeoutSeconds: int.parse(_movementTimeoutController.text),
+            minMovementThreshold: double.parse(_movementThresholdController.text),
+            points: int.parse(_pointsController.text),
+            useSchedule: _useSchedule,
+            dailyStartTime: dailyStartTime,
+            dailyEndTime: dailyEndTime,
+          );
+        } else {
+          // Create new task
+          task = await _touringTaskService.createTouringTask(
+            campaignId: widget.campaign.id,
+            geofenceId: _selectedGeofence!.id,
+            title: _titleController.text.trim(),
+            description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
+            requiredTimeMinutes: int.parse(_requiredTimeController.text),
+            movementTimeoutSeconds: int.parse(_movementTimeoutController.text),
+            minMovementThreshold: double.parse(_movementThresholdController.text),
+            points: int.parse(_pointsController.text),
+            useSchedule: _useSchedule,
+            dailyStartTime: dailyStartTime,
+            dailyEndTime: dailyEndTime,
+          );
+        }
 
-      if (mounted) {
-        ModernNotification.success(
-          context,
-          message: isEditing 
-              ? AppLocalizations.of(context)!.touringTaskUpdatedSuccessfully 
-              : AppLocalizations.of(context)!.touringTaskCreatedSuccessfully,
-          subtitle: task.title,
-        );
-        Navigator.of(context).pop(task);
+        if (mounted) {
+          ModernNotification.success(
+            context,
+            message: isEditing 
+                ? AppLocalizations.of(context)!.touringTaskUpdatedSuccessfully 
+                : AppLocalizations.of(context)!.touringTaskCreatedSuccessfully,
+            subtitle: task.title,
+          );
+          Navigator.of(context).pop(task);
+        }
       }
     } catch (e) {
       if (mounted) {

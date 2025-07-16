@@ -42,19 +42,22 @@ import 'agent/notifications_screen.dart';
 import 'manager/map_location_picker_screen.dart';
 import 'manager/create_route_screen.dart';
 import 'campaigns/create_campaign_screen.dart';
+import 'campaigns/campaign_wizard_step1_screen.dart';
 import 'tasks/create_evidence_task_screen.dart';
 import 'tasks/template_categories_screen.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class ModernHomeScreen extends StatefulWidget {
-  const ModernHomeScreen({super.key});
+  final int? initialTabIndex;
+  
+  const ModernHomeScreen({super.key, this.initialTabIndex});
 
   @override
   State<ModernHomeScreen> createState() => _ModernHomeScreenState();
 }
 
 class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBindingObserver {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
   AppUser? _currentUser;
   bool _isLoading = true;
   final UpdateService _updateService = UpdateService();
@@ -65,6 +68,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
   @override
   void initState() {
     super.initState();
+    _selectedIndex = widget.initialTabIndex ?? 0;
     WidgetsBinding.instance.addObserver(this);
     _loadUserProfile();
     _setupSessionManagement();
@@ -1046,7 +1050,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
   void _createNewCampaign() async {
     final result = await Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => const CreateCampaignScreen(),
+        builder: (context) => const CampaignWizardStep1Screen(),
       ),
     );
     

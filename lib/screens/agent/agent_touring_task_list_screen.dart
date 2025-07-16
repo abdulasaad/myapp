@@ -31,6 +31,7 @@ class _AgentTouringTaskListScreenState extends State<AgentTouringTaskListScreen>
   bool _backgroundServicesRunning = false;
   Map<String, bool> _dailyCompletionStatus = {}; // Track completion status for each task
   Set<DateTime> _expandedDays = {}; // Track which day cards are expanded
+  List<Map<String, dynamic>> _allAssignments = []; // Cache all assignments for task lookup
 
   @override
   void initState() {
@@ -60,9 +61,28 @@ class _AgentTouringTaskListScreenState extends State<AgentTouringTaskListScreen>
     // Check if task was completed today
     final isCompletedToday = _dailyCompletionStatus[taskId] ?? false;
     
-    return isInDateRange && !isCompletedToday;
+    // Check if task has schedule and is available at current time
+    final task = _getTaskById(taskId);
+    final isAvailableAtTime = task?.isAvailableAtTime(today) ?? true;
+    
+    return isInDateRange && !isCompletedToday && isAvailableAtTime && _backgroundServicesRunning;
   }
   
+  TouringTask? _getTaskById(String taskId) {
+    // Helper method to get task by ID from the cached assignments
+    try {
+      for (final assignment in _allAssignments) {
+        final task = assignment['task'] as TouringTask;
+        if (task.id == taskId) {
+          return task;
+        }
+      }
+    } catch (e) {
+      // If we can't find the task, return null
+    }
+    return null;
+  }
+
   String? _getTaskUnavailableReason(String taskId) {
     final today = DateTime.now();
     final campaignStartDate = DateTime(widget.campaign.startDate.year, widget.campaign.startDate.month, widget.campaign.startDate.day);
@@ -81,6 +101,16 @@ class _AgentTouringTaskListScreenState extends State<AgentTouringTaskListScreen>
     final isCompletedToday = _dailyCompletionStatus[taskId] ?? false;
     if (isCompletedToday) {
       return AppLocalizations.of(context)!.taskCompletedToday;
+    }
+    
+    // Check if task has schedule and is available at current time
+    final task = _getTaskById(taskId);
+    if (task != null && !task.isAvailableAtTime(today)) {
+      if (task.dailyStartTime != null && task.dailyEndTime != null) {
+        return 'Available from ${task.dailyStartTime} to ${task.dailyEndTime}';
+      } else {
+        return 'Not available at this time';
+      }
     }
     
     if (!_backgroundServicesRunning) {
@@ -116,6 +146,9 @@ class _AgentTouringTaskListScreenState extends State<AgentTouringTaskListScreen>
       _dailyCompletionStatus[task.id] = isCompletedToday;
     }
     
+    // Cache assignments for task lookup
+    _allAssignments = assignments;
+    
     return assignments;
   }
 
@@ -138,6 +171,21 @@ class _AgentTouringTaskListScreenState extends State<AgentTouringTaskListScreen>
       _showValidationError(
         AppLocalizations.of(context)!.taskExpired,
         AppLocalizations.of(context)!.taskEndedOn(widget.campaign.endDate),
+      );
+      return;
+    }
+    
+    // Check if task has schedule and is available at current time
+    if (!task.isAvailableAtTime(today)) {
+      String message;
+      if (task.dailyStartTime != null && task.dailyEndTime != null) {
+        message = 'Task is only available from ${task.dailyStartTime} to ${task.dailyEndTime}';
+      } else {
+        message = 'Task is not available at this time';
+      }
+      _showValidationError(
+        'Task Not Available',
+        message,
       );
       return;
     }
@@ -634,6 +682,68 @@ class _AgentTouringTaskListScreenState extends State<AgentTouringTaskListScreen>
               ],
             ),
             
+            // Schedule information if available
+            if (task.useSchedule && task.dailyStartTime != null && task.dailyEndTime != null) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: task.isAvailableAtTime(DateTime.now()) 
+                      ? Colors.green.withValues(alpha: 0.1)
+                      : Colors.orange.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: task.isAvailableAtTime(DateTime.now()) 
+                        ? Colors.green.withValues(alpha: 0.3)
+                        : Colors.orange.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.access_time,
+                      size: 16,
+                      color: task.isAvailableAtTime(DateTime.now()) 
+                          ? Colors.green.shade600
+                          : Colors.orange.shade600,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Available: ${task.dailyStartTime} - ${task.dailyEndTime}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: task.isAvailableAtTime(DateTime.now()) 
+                              ? Colors.green.shade600
+                              : Colors.orange.shade600,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: task.isAvailableAtTime(DateTime.now()) 
+                            ? Colors.green 
+                            : Colors.orange,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        task.isAvailableAtTime(DateTime.now()) 
+                            ? 'Available Now'
+                            : 'Not Available',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            
             const SizedBox(height: 16),
             
             // Start button (only available for today)
@@ -654,7 +764,7 @@ class _AgentTouringTaskListScreenState extends State<AgentTouringTaskListScreen>
                       : canStart 
                           ? AppLocalizations.of(context)!.startTask 
                           : isToday 
-                              ? AppLocalizations.of(context)!.taskUnavailable
+                              ? _getTaskUnavailableReason(task.id) ?? AppLocalizations.of(context)!.taskUnavailable
                               : AppLocalizations.of(context)!.availableOnDay,
                 ),
                 style: ElevatedButton.styleFrom(

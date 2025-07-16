@@ -9,12 +9,20 @@ import '../../services/campaign_geofence_service.dart';
 import '../../utils/constants.dart';
 import '../../l10n/app_localizations.dart';
 import '../../widgets/modern_notification.dart';
+import 'campaign_wizard_step2_screen.dart';
 import 'dart:async';
 
 class CampaignGeofenceManagementScreen extends StatefulWidget {
   final Campaign campaign;
+  final List<TempGeofenceData>? tempGeofences;
+  final Function(TempGeofenceData)? onTempGeofenceAdded;
 
-  const CampaignGeofenceManagementScreen({super.key, required this.campaign});
+  const CampaignGeofenceManagementScreen({
+    super.key, 
+    required this.campaign,
+    this.tempGeofences,
+    this.onTempGeofenceAdded,
+  });
 
   @override
   State<CampaignGeofenceManagementScreen> createState() => _CampaignGeofenceManagementScreenState();
@@ -55,14 +63,33 @@ class _CampaignGeofenceManagementScreenState extends State<CampaignGeofenceManag
 
   void _loadGeofences() {
     setState(() {
-      _geofencesFuture = _geofenceService.getAvailableGeofencesForCampaign(widget.campaign.id);
+      if (widget.tempGeofences != null) {
+        // Working with temporary geofences during wizard
+        _geofencesFuture = Future.value(widget.tempGeofences!.map((tempGeofence) {
+          return CampaignGeofence(
+            id: tempGeofence.id,
+            campaignId: widget.campaign.id,
+            name: tempGeofence.name,
+            description: tempGeofence.description,
+            areaText: tempGeofence.areaText,
+            maxAgents: tempGeofence.maxAgents,
+            color: Color(int.parse('0xFF${tempGeofence.color}') & 0xFFFFFFFF),
+            isActive: true,
+            currentAgents: 0,
+            createdAt: DateTime.now(),
+          );
+        }).toList());
+      } else {
+        // Working with real geofences for existing campaign
+        _geofencesFuture = _geofenceService.getAvailableGeofencesForCampaign(widget.campaign.id);
+      }
     });
     _updateMapPolygons();
   }
 
   Future<void> _updateMapPolygons() async {
     try {
-      final geofences = await _geofenceService.getAvailableGeofencesForCampaign(widget.campaign.id);
+      final geofences = await _geofencesFuture;
       setState(() {
         _polygons = geofences.map((geofence) {
           final points = _parseWKTToLatLng(geofence.areaText);
@@ -247,21 +274,43 @@ class _CampaignGeofenceManagementScreenState extends State<CampaignGeofenceManag
     try {
       final wkt = _latLngListToWKT(_currentPolygonPoints);
       final maxAgents = int.tryParse(_maxAgentsController.text) ?? 5;
+      final colorHex = _selectedColor.value.toRadixString(16).padLeft(8, '0').substring(2);
 
-      await _geofenceService.createCampaignGeofence(
-        campaignId: widget.campaign.id,
-        name: _nameController.text.trim(),
-        description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
-        areaText: wkt,
-        maxAgents: maxAgents,
-        color: '#${_selectedColor.value.toRadixString(16).padLeft(8, '0').substring(2)}',
-      );
+      if (widget.tempGeofences != null && widget.onTempGeofenceAdded != null) {
+        // Working with temporary geofences during wizard
+        final tempGeofence = TempGeofenceData(
+          id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+          name: _nameController.text.trim(),
+          description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
+          areaText: wkt,
+          maxAgents: maxAgents,
+          color: colorHex,
+        );
+        
+        widget.onTempGeofenceAdded!(tempGeofence);
+        
+        ModernNotification.success(
+          context,
+          message: 'Geofence added to campaign',
+          subtitle: _nameController.text.trim(),
+        );
+      } else {
+        // Working with real geofences for existing campaign
+        await _geofenceService.createCampaignGeofence(
+          campaignId: widget.campaign.id,
+          name: _nameController.text.trim(),
+          description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
+          areaText: wkt,
+          maxAgents: maxAgents,
+          color: '#$colorHex',
+        );
 
-      ModernNotification.success(
-        context,
-        message: 'Geofence created successfully',
-        subtitle: _nameController.text.trim(),
-      );
+        ModernNotification.success(
+          context,
+          message: 'Geofence created successfully',
+          subtitle: _nameController.text.trim(),
+        );
+      }
 
       _loadGeofences();
       _clearForm();
@@ -285,18 +334,40 @@ class _CampaignGeofenceManagementScreenState extends State<CampaignGeofenceManag
     try {
       final maxAgents = int.tryParse(_maxAgentsController.text) ?? 5;
 
-      await _geofenceService.updateCampaignGeofence(
-        geofenceId: _selectedGeofence!.id,
-        name: _nameController.text.trim().isEmpty ? null : _nameController.text.trim(),
-        description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
-        maxAgents: maxAgents,
-        color: '#${_selectedColor.value.toRadixString(16).padLeft(8, '0').substring(2)}',
-      );
+      if (widget.tempGeofences != null) {
+        // Working with temporary geofences during wizard
+        final tempIndex = widget.tempGeofences!.indexWhere((g) => g.id == _selectedGeofence!.id);
+        if (tempIndex >= 0) {
+          final updatedTempGeofence = TempGeofenceData(
+            id: _selectedGeofence!.id,
+            name: _nameController.text.trim(),
+            description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
+            areaText: _selectedGeofence!.areaText,
+            maxAgents: maxAgents,
+            color: _selectedColor.value.toRadixString(16).padLeft(8, '0').substring(2),
+          );
+          widget.tempGeofences![tempIndex] = updatedTempGeofence;
+        }
+        
+        ModernNotification.success(
+          context,
+          message: 'Geofence updated',
+        );
+      } else {
+        // Working with real geofences for existing campaign
+        await _geofenceService.updateCampaignGeofence(
+          geofenceId: _selectedGeofence!.id,
+          name: _nameController.text.trim().isEmpty ? null : _nameController.text.trim(),
+          description: _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
+          maxAgents: maxAgents,
+          color: '#${_selectedColor.value.toRadixString(16).padLeft(8, '0').substring(2)}',
+        );
 
-      ModernNotification.success(
-        context,
-        message: 'Geofence updated successfully',
-      );
+        ModernNotification.success(
+          context,
+          message: 'Geofence updated successfully',
+        );
+      }
 
       _loadGeofences();
       Navigator.of(context).pop();
@@ -338,12 +409,23 @@ class _CampaignGeofenceManagementScreenState extends State<CampaignGeofenceManag
     setState(() => _isSaving = true);
 
     try {
-      await _geofenceService.deleteCampaignGeofence(_selectedGeofence!.id);
+      if (widget.tempGeofences != null) {
+        // Working with temporary geofences during wizard
+        widget.tempGeofences!.removeWhere((g) => g.id == _selectedGeofence!.id);
+        
+        ModernNotification.success(
+          context,
+          message: 'Geofence removed from campaign',
+        );
+      } else {
+        // Working with real geofences for existing campaign
+        await _geofenceService.deleteCampaignGeofence(_selectedGeofence!.id);
 
-      ModernNotification.success(
-        context,
-        message: 'Geofence deleted successfully',
-      );
+        ModernNotification.success(
+          context,
+          message: 'Geofence deleted successfully',
+        );
+      }
 
       _loadGeofences();
       Navigator.of(context).pop();
