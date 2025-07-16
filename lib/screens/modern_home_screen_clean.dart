@@ -1407,7 +1407,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
       {'title': 'Evidence', 'icon': Icons.camera_alt, 'color': Colors.orange, 'route': '/evidence'},
       {'title': 'Earnings', 'icon': Icons.attach_money, 'color': Colors.teal, 'route': '/earnings'},
       {'title': 'Suggest Place', 'icon': Icons.add_location, 'color': Colors.indigo, 'route': '/suggest-place'},
-      {'title': 'Map', 'icon': Icons.map, 'color': Colors.red, 'route': '/map'},
+      {'title': 'My Areas', 'icon': Icons.map, 'color': Colors.red, 'route': '/map'},
       {'title': 'GPS Calibration', 'icon': Icons.gps_fixed, 'color': Colors.cyan, 'route': '/calibration'},
     ];
 
@@ -2171,7 +2171,7 @@ class _ProfileTab extends StatelessWidget {
           context,
           icon: Icons.location_on,
           title: 'Work Areas',
-          subtitle: 'View your assigned geofence zones',
+          subtitle: 'View all assigned geofences from campaigns, tasks, and touring routes',
           onTap: () {
             Navigator.push(
               context,

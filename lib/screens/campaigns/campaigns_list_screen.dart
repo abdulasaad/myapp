@@ -19,6 +19,7 @@ import '../../utils/constants.dart';
 import '../../widgets/offline_widget.dart';
 import '../../widgets/modern_notification.dart';
 import './create_campaign_screen.dart'; // Added for navigation to edit
+import 'campaign_wizard_step1_screen.dart';
 import 'campaign_detail_screen.dart';
 import '../agent/agent_touring_task_list_screen.dart';
 
@@ -442,13 +443,12 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
                           // If the CampaignsListScreenState is no longer mounted, we shouldn't proceed.
                           if (!mounted) return;
 
-                          // If the BuildContext of the CampaignCard is still mounted, show the success SnackBar.
+                          // If the BuildContext of the CampaignCard is still mounted, show the success notification.
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(AppLocalizations.of(context)!.campaignDeleted(campaign.name)),
-                                backgroundColor: successColor,
-                              ),
+                            ModernNotification.success(
+                              context,
+                              message: 'Campaign deleted successfully',
+                              subtitle: campaign.name,
                             );
                           }
                           refreshAll();
@@ -456,13 +456,12 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
                           // If the CampaignsListScreenState is no longer mounted, we shouldn't proceed.
                           if (!mounted) return;
 
-                          // If the BuildContext of the CampaignCard is still mounted, show the error SnackBar.
+                          // If the BuildContext of the CampaignCard is still mounted, show the error notification.
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(AppLocalizations.of(context)!.errorDeletingCampaign(e.toString())),
-                                backgroundColor: errorColor,
-                              ),
+                            ModernNotification.error(
+                              context,
+                              message: 'Failed to delete campaign',
+                              subtitle: e.toString(),
                             );
                           }
                         }
@@ -484,7 +483,7 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
           onPressed: () async {
             final result = await Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (context) => const CreateCampaignScreen(),
+                builder: (context) => const CampaignWizardStep1Screen(),
               ),
             );
             if (result == true && mounted) {

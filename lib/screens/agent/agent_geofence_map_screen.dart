@@ -145,6 +145,79 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
         }
       }
 
+      // Get touring task assignments for this agent (standalone touring tasks)
+      final touringTaskAssignmentsResponse = await supabase
+          .from('touring_task_assignments')
+          .select('''
+            touring_task_id,
+            status,
+            touring_tasks!inner(id, title, description, geofence_area_wkt, campaign_id)
+          ''')
+          .eq('agent_id', userId)
+          .inFilter('status', ['assigned', 'in_progress', 'completed']);
+      
+      debugPrint('[AgentGeofenceMap] Found ${touringTaskAssignmentsResponse.length} touring task assignments');
+
+      // Add standalone touring task zones
+      for (final assignment in touringTaskAssignmentsResponse) {
+        final touringTaskInfo = assignment['touring_tasks'] as Map<String, dynamic>;
+        final assignmentStatus = assignment['status'] as String;
+        final wkt = touringTaskInfo['geofence_area_wkt'] as String?;
+        
+        if (wkt != null && wkt.isNotEmpty) {
+          final points = _parseWktPolygon(wkt);
+          if (points.isNotEmpty) {
+            final statusIndicator = assignmentStatus == 'completed' ? ' ✓' : '';
+            final campaignId = touringTaskInfo['campaign_id'] as String?;
+            final typeLabel = campaignId != null ? 'Campaign Touring' : 'Standalone Touring';
+            
+            zones.add(GeofenceZone(
+              id: 'touring_${touringTaskInfo['id']}',
+              title: '$typeLabel: ${touringTaskInfo['title'] ?? 'Unnamed Task'}$statusIndicator',
+              description: '${touringTaskInfo['description'] ?? ''}\nStatus: ${assignmentStatus.toUpperCase()}\nType: Touring Task',
+              points: points,
+            ));
+          }
+        }
+      }
+
+      // Get touring tasks from campaigns that the agent is assigned to
+      if (campaignAgentsResponse.isNotEmpty) {
+        final campaignIds = campaignAgentsResponse
+            .map((item) => item['campaign_id'] as String)
+            .toList();
+
+        // Get touring tasks for campaigns the agent is assigned to
+        final campaignTouringTasksResponse = await supabase
+            .from('touring_tasks')
+            .select('id, title, description, geofence_area_wkt, campaign_id, status')
+            .inFilter('campaign_id', campaignIds)
+            .eq('status', 'active');
+        
+        debugPrint('[AgentGeofenceMap] Found ${campaignTouringTasksResponse.length} campaign touring tasks');
+
+        // Add campaign touring task zones
+        for (final touringTask in campaignTouringTasksResponse) {
+          final wkt = touringTask['geofence_area_wkt'] as String?;
+          
+          if (wkt != null && wkt.isNotEmpty) {
+            final points = _parseWktPolygon(wkt);
+            if (points.isNotEmpty) {
+              // Check if agent has completed this touring task
+              final hasCompleted = await _checkTouringTaskCompletion(userId, touringTask['id'] as String);
+              final statusIndicator = hasCompleted ? ' ✓' : '';
+              
+              zones.add(GeofenceZone(
+                id: 'campaign_touring_${touringTask['id']}',
+                title: 'Campaign Touring: ${touringTask['title'] ?? 'Unnamed Task'}$statusIndicator',
+                description: '${touringTask['description'] ?? ''}\nType: Campaign Touring Task\nStatus: ${hasCompleted ? 'COMPLETED' : 'AVAILABLE'}',
+                points: points,
+              ));
+            }
+          }
+        }
+      }
+
       debugPrint('[AgentGeofenceMap] Final zones count: ${zones.length}');
       for (final zone in zones) {
         debugPrint('[AgentGeofenceMap] Zone: ${zone.id} - ${zone.title}');
@@ -162,6 +235,22 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
     } catch (e) {
       debugPrint('Error loading agent geofences: $e');
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<bool> _checkTouringTaskCompletion(String userId, String touringTaskId) async {
+    try {
+      final response = await supabase
+          .from('touring_task_assignments')
+          .select('status')
+          .eq('agent_id', userId)
+          .eq('touring_task_id', touringTaskId)
+          .eq('status', 'completed');
+      
+      return response.isNotEmpty;
+    } catch (e) {
+      debugPrint('Error checking touring task completion: $e');
+      return false;
     }
   }
 
@@ -191,14 +280,18 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
       final zone = _geofenceZones[i];
       final isSelected = i == _currentZoneIndex;
       final isTask = zone.id.startsWith('task_');
+      final isTouringTask = zone.id.startsWith('touring_');
+      final isCampaignTouringTask = zone.id.startsWith('campaign_touring_');
       final isCompleted = zone.title.contains('✓'); // Check for checkmark
       
-      // Use different colors for campaigns vs tasks vs completed tasks
+      // Use different colors for campaigns vs tasks vs touring tasks vs completed
       Color baseColor;
       if (isCompleted) {
         baseColor = Colors.grey; // Completed tasks in grey
+      } else if (isTouringTask || isCampaignTouringTask) {
+        baseColor = Colors.purple; // Touring tasks in purple
       } else if (isTask) {
-        baseColor = secondaryColor; // Active tasks in secondary color
+        baseColor = secondaryColor; // Regular tasks in secondary color
       } else {
         baseColor = primaryColor; // Campaigns in primary color
       }
@@ -356,11 +449,17 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
                                 right: 0,
                                 child: _buildZoneCarousel(),
                               ),
-                              // Zone counter at top
+                              // Legend at top right
+                              Positioned(
+                                top: 16,
+                                right: 16,
+                                child: _buildLegend(),
+                              ),
+                              // Zone counter at top left
                               if (_geofenceZones.length > 1)
                                 Positioned(
                                   top: 16,
-                                  right: 16,
+                                  left: 16,
                                   child: _buildZoneCounter(),
                                 ),
                             ],
@@ -567,6 +666,70 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildLegend() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Zone Types',
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 8),
+          _buildLegendItem('Campaigns', primaryColor),
+          const SizedBox(height: 4),
+          _buildLegendItem('Tasks', secondaryColor),
+          const SizedBox(height: 4),
+          _buildLegendItem('Touring', Colors.purple),
+          const SizedBox(height: 4),
+          _buildLegendItem('Completed', Colors.grey),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.2),
+            border: Border.all(color: color, width: 2),
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 10,
+            color: Colors.black87,
+          ),
+        ),
+      ],
     );
   }
 }

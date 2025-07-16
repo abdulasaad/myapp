@@ -17,6 +17,9 @@ class TouringTaskService {
     required int movementTimeoutSeconds,
     required double minMovementThreshold,
     required int points,
+    bool? useSchedule,
+    String? dailyStartTime,
+    String? dailyEndTime,
   }) async {
     final response = await supabase.rpc('create_touring_task', params: {
       'p_campaign_id': campaignId,
@@ -27,6 +30,9 @@ class TouringTaskService {
       'p_movement_timeout_seconds': movementTimeoutSeconds,
       'p_min_movement_threshold': minMovementThreshold,
       'p_points': points,
+      'p_use_schedule': useSchedule ?? false,
+      'p_daily_start_time': dailyStartTime,
+      'p_daily_end_time': dailyEndTime,
     });
 
     if (response == null) {
@@ -314,6 +320,9 @@ class TouringTaskService {
     double? minMovementThreshold,
     int? points,
     String? status,
+    bool? useSchedule,
+    String? dailyStartTime,
+    String? dailyEndTime,
   }) async {
     final updateData = <String, dynamic>{};
     
@@ -324,6 +333,9 @@ class TouringTaskService {
     if (minMovementThreshold != null) updateData['min_movement_threshold'] = minMovementThreshold;
     if (points != null) updateData['points'] = points;
     if (status != null) updateData['status'] = status;
+    if (useSchedule != null) updateData['use_schedule'] = useSchedule;
+    if (dailyStartTime != null) updateData['daily_start_time'] = dailyStartTime;
+    if (dailyEndTime != null) updateData['daily_end_time'] = dailyEndTime;
 
     final response = await supabase
         .from('touring_tasks')

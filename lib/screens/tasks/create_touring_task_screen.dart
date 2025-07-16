@@ -29,6 +29,11 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
   final _movementTimeoutController = TextEditingController(text: '60');
   final _movementThresholdController = TextEditingController(text: '5.0');
   final _pointsController = TextEditingController(text: '10');
+  
+  // Schedule fields
+  bool _useSchedule = false;
+  TimeOfDay _startTime = const TimeOfDay(hour: 8, minute: 0);
+  TimeOfDay _endTime = const TimeOfDay(hour: 18, minute: 0);
 
   final CampaignGeofenceService _geofenceService = CampaignGeofenceService();
   final TouringTaskService _touringTaskService = TouringTaskService();
@@ -51,6 +56,27 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
       _movementTimeoutController.text = widget.touringTask!.movementTimeoutSeconds.toString();
       _movementThresholdController.text = widget.touringTask!.minMovementThreshold.toString();
       _pointsController.text = widget.touringTask!.points.toString();
+      
+      // Load schedule fields
+      _useSchedule = widget.touringTask!.useSchedule;
+      if (widget.touringTask!.dailyStartTime != null) {
+        final startTimeParts = widget.touringTask!.dailyStartTime!.split(':');
+        if (startTimeParts.length == 2) {
+          _startTime = TimeOfDay(
+            hour: int.parse(startTimeParts[0]),
+            minute: int.parse(startTimeParts[1]),
+          );
+        }
+      }
+      if (widget.touringTask!.dailyEndTime != null) {
+        final endTimeParts = widget.touringTask!.dailyEndTime!.split(':');
+        if (endTimeParts.length == 2) {
+          _endTime = TimeOfDay(
+            hour: int.parse(endTimeParts[0]),
+            minute: int.parse(endTimeParts[1]),
+          );
+        }
+      }
     }
   }
 
@@ -106,6 +132,9 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
       final TouringTask task;
       final bool isEditing = widget.touringTask != null;
       
+      final dailyStartTime = _useSchedule ? '${_startTime.hour.toString().padLeft(2, '0')}:${_startTime.minute.toString().padLeft(2, '0')}' : null;
+      final dailyEndTime = _useSchedule ? '${_endTime.hour.toString().padLeft(2, '0')}:${_endTime.minute.toString().padLeft(2, '0')}' : null;
+      
       if (isEditing) {
         // Update existing task
         task = await _touringTaskService.updateTouringTask(
@@ -116,6 +145,9 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
           movementTimeoutSeconds: int.parse(_movementTimeoutController.text),
           minMovementThreshold: double.parse(_movementThresholdController.text),
           points: int.parse(_pointsController.text),
+          useSchedule: _useSchedule,
+          dailyStartTime: dailyStartTime,
+          dailyEndTime: dailyEndTime,
         );
       } else {
         // Create new task
@@ -128,6 +160,9 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
           movementTimeoutSeconds: int.parse(_movementTimeoutController.text),
           minMovementThreshold: double.parse(_movementThresholdController.text),
           points: int.parse(_pointsController.text),
+          useSchedule: _useSchedule,
+          dailyStartTime: dailyStartTime,
+          dailyEndTime: dailyEndTime,
         );
       }
 
@@ -187,6 +222,8 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
                     _buildMovementSection(),
                     const SizedBox(height: 24),
                     _buildPointsSection(),
+                    const SizedBox(height: 24),
+                    _buildScheduleSection(),
                     const SizedBox(height: 32),
                     _buildCreateButton(),
                   ],
@@ -579,6 +616,167 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildScheduleSection() {
+    return _buildSection(
+      title: 'Daily Schedule',
+      icon: Icons.schedule,
+      children: [
+        SwitchListTile(
+          title: const Text('Use daily schedule'),
+          subtitle: Text(
+            _useSchedule 
+                ? 'Task will only be available during specified hours'
+                : 'Task will be available all day',
+            style: const TextStyle(fontSize: 12),
+          ),
+          value: _useSchedule,
+          onChanged: (value) {
+            setState(() {
+              _useSchedule = value;
+            });
+          },
+        ),
+        
+        if (_useSchedule) ...[
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: InkWell(
+                  onTap: () => _selectTime(context, true),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Start Time',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: textSecondaryColor,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Icons.access_time, size: 16, color: primaryColor),
+                            const SizedBox(width: 8),
+                            Text(
+                              _startTime.format(context),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: InkWell(
+                  onTap: () => _selectTime(context, false),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'End Time',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: textSecondaryColor,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Icons.access_time_filled, size: 16, color: primaryColor),
+                            const SizedBox(width: 8),
+                            Text(
+                              _endTime.format(context),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.blue.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.info_outline, size: 16, color: Colors.blue[600]),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Schedule Info',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.blue[600],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '• Agents can only start the task during the specified hours\n'
+                  '• The task will be available every day during campaign dates\n'
+                  '• Time is based on device local time',
+                  style: TextStyle(fontSize: 12, color: Colors.blue[600]),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Future<void> _selectTime(BuildContext context, bool isStartTime) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: isStartTime ? _startTime : _endTime,
+    );
+    
+    if (picked != null) {
+      setState(() {
+        if (isStartTime) {
+          _startTime = picked;
+        } else {
+          _endTime = picked;
+        }
+      });
+    }
   }
 
   Widget _buildCreateButton() {

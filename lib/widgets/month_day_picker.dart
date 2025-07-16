@@ -7,6 +7,8 @@ class MonthDayPicker extends StatefulWidget {
   final DateTime? initialMonth;
   final Function(Set<DateTime>) onDaysSelected;
   final String? title;
+  final bool enableTimeSelection;
+  final Function(Map<DateTime, Map<String, TimeOfDay>>)? onDaysWithTimesSelected;
 
   const MonthDayPicker({
     super.key,
@@ -14,6 +16,8 @@ class MonthDayPicker extends StatefulWidget {
     required this.onDaysSelected,
     this.initialMonth,
     this.title,
+    this.enableTimeSelection = false,
+    this.onDaysWithTimesSelected,
   });
 
   @override
@@ -23,12 +27,23 @@ class MonthDayPicker extends StatefulWidget {
 class _MonthDayPickerState extends State<MonthDayPicker> {
   late DateTime _currentMonth;
   late Set<DateTime> _selectedDays;
+  Map<DateTime, Map<String, TimeOfDay>> _selectedDayTimes = {};
 
   @override
   void initState() {
     super.initState();
     _currentMonth = widget.initialMonth ?? DateTime.now();
     _selectedDays = Set.from(widget.initialSelectedDays);
+    
+    // Initialize default times for selected days
+    if (widget.enableTimeSelection) {
+      for (final day in _selectedDays) {
+        _selectedDayTimes[day] = {
+          'start': const TimeOfDay(hour: 8, minute: 0),
+          'end': const TimeOfDay(hour: 18, minute: 0),
+        };
+      }
+    }
   }
 
   void _changeMonth(int delta) {
@@ -37,15 +52,124 @@ class _MonthDayPickerState extends State<MonthDayPicker> {
     });
   }
 
-  void _toggleDay(DateTime day) {
-    setState(() {
-      if (_selectedDays.contains(day)) {
+  void _toggleDay(DateTime day) async {
+    if (_selectedDays.contains(day)) {
+      // Remove day
+      setState(() {
         _selectedDays.remove(day);
-      } else {
-        _selectedDays.add(day);
+        _selectedDayTimes.remove(day);
+      });
+      widget.onDaysSelected(_selectedDays);
+      if (widget.enableTimeSelection && widget.onDaysWithTimesSelected != null) {
+        widget.onDaysWithTimesSelected!(_selectedDayTimes);
       }
-    });
-    widget.onDaysSelected(_selectedDays);
+    } else {
+      // Add day
+      if (widget.enableTimeSelection) {
+        // Show time selection dialog
+        final timeResult = await _showTimeSelectionDialog(day);
+        if (timeResult != null) {
+          setState(() {
+            _selectedDays.add(day);
+            _selectedDayTimes[day] = timeResult;
+          });
+          widget.onDaysSelected(_selectedDays);
+          if (widget.onDaysWithTimesSelected != null) {
+            widget.onDaysWithTimesSelected!(_selectedDayTimes);
+          }
+        }
+      } else {
+        setState(() {
+          _selectedDays.add(day);
+        });
+        widget.onDaysSelected(_selectedDays);
+      }
+    }
+  }
+
+  Future<Map<String, TimeOfDay>?> _showTimeSelectionDialog(DateTime day) async {
+    TimeOfDay startTime = const TimeOfDay(hour: 8, minute: 0);
+    TimeOfDay endTime = const TimeOfDay(hour: 18, minute: 0);
+
+    return showDialog<Map<String, TimeOfDay>>(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: Text('Set Time for ${DateFormat.MMMd().format(day)}'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.access_time),
+                    title: const Text('Start Time'),
+                    subtitle: Text(startTime.format(context)),
+                    onTap: () async {
+                      final TimeOfDay? picked = await showTimePicker(
+                        context: context,
+                        initialTime: startTime,
+                      );
+                      if (picked != null) {
+                        setDialogState(() {
+                          startTime = picked;
+                        });
+                      }
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.access_time_filled),
+                    title: const Text('End Time'),
+                    subtitle: Text(endTime.format(context)),
+                    onTap: () async {
+                      final TimeOfDay? picked = await showTimePicker(
+                        context: context,
+                        initialTime: endTime,
+                      );
+                      if (picked != null) {
+                        setDialogState(() {
+                          endTime = picked;
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop({
+                      'start': startTime,
+                      'end': endTime,
+                    });
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _editTimeForDay(DateTime day) async {
+    final currentTimes = _selectedDayTimes[day];
+    if (currentTimes == null) return;
+
+    final timeResult = await _showTimeSelectionDialog(day);
+    if (timeResult != null) {
+      setState(() {
+        _selectedDayTimes[day] = timeResult;
+      });
+      if (widget.onDaysWithTimesSelected != null) {
+        widget.onDaysWithTimesSelected!(_selectedDayTimes);
+      }
+    }
   }
 
   List<DateTime> _getDaysInMonth() {
@@ -164,6 +288,9 @@ class _MonthDayPickerState extends State<MonthDayPicker> {
                     padding: const EdgeInsets.all(2),
                     child: InkWell(
                       onTap: () => _toggleDay(day),
+                      onLongPress: isSelected && widget.enableTimeSelection 
+                          ? () => _editTimeForDay(day)
+                          : null,
                       borderRadius: BorderRadius.circular(8),
                       child: Container(
                         decoration: BoxDecoration(
@@ -177,20 +304,43 @@ class _MonthDayPickerState extends State<MonthDayPicker> {
                               ? Border.all(color: Theme.of(context).primaryColor)
                               : null,
                         ),
-                        child: Center(
-                          child: Text(
-                            day.day.toString(),
-                            style: TextStyle(
-                              color: isSelected 
-                                  ? Colors.white
-                                  : isToday
-                                      ? Theme.of(context).primaryColor
-                                      : null,
-                              fontWeight: isSelected || isToday 
-                                  ? FontWeight.bold 
-                                  : null,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              day.day.toString(),
+                              style: TextStyle(
+                                color: isSelected 
+                                    ? Colors.white
+                                    : isToday
+                                        ? Theme.of(context).primaryColor
+                                        : null,
+                                fontWeight: isSelected || isToday 
+                                    ? FontWeight.bold 
+                                    : null,
+                              ),
                             ),
-                          ),
+                            if (isSelected && widget.enableTimeSelection && _selectedDayTimes.containsKey(day))
+                              Column(
+                                children: [
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    _selectedDayTimes[day]!['start']!.format(context),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 8,
+                                    ),
+                                  ),
+                                  Text(
+                                    _selectedDayTimes[day]!['end']!.format(context),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 8,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          ],
                         ),
                       ),
                     ),
@@ -215,6 +365,16 @@ class _MonthDayPickerState extends State<MonthDayPicker> {
                       AppLocalizations.of(context)!.selectedDaysCount(_selectedDays.length),
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
+                    if (widget.enableTimeSelection && _selectedDayTimes.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Long press to edit times',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    ],
                     if (_selectedDays.length <= 5) ...[
                       const SizedBox(height: 4),
                       Text(

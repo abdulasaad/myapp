@@ -1,5 +1,7 @@
 // lib/models/touring_task.dart
 
+import 'package:flutter/material.dart';
+
 class TouringTask {
   final String id;
   final String campaignId;
@@ -14,6 +16,11 @@ class TouringTask {
   final DateTime createdAt;
   final DateTime? updatedAt;
   final String? createdBy;
+  
+  // Schedule fields
+  final String? dailyStartTime; // Format: "HH:MM"
+  final String? dailyEndTime; // Format: "HH:MM"
+  final bool useSchedule; // Whether to use daily schedule or be available all day
 
   TouringTask({
     required this.id,
@@ -29,6 +36,9 @@ class TouringTask {
     required this.createdAt,
     this.updatedAt,
     this.createdBy,
+    this.dailyStartTime,
+    this.dailyEndTime,
+    this.useSchedule = false,
   });
 
   factory TouringTask.fromJson(Map<String, dynamic> json) {
@@ -46,6 +56,9 @@ class TouringTask {
       createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : DateTime.now(),
       updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at']) : null,
       createdBy: json['created_by'],
+      dailyStartTime: json['daily_start_time'],
+      dailyEndTime: json['daily_end_time'],
+      useSchedule: json['use_schedule'] ?? false,
     );
   }
 
@@ -64,6 +77,9 @@ class TouringTask {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
       'created_by': createdBy,
+      'daily_start_time': dailyStartTime,
+      'daily_end_time': dailyEndTime,
+      'use_schedule': useSchedule,
     };
   }
 
@@ -81,6 +97,9 @@ class TouringTask {
     DateTime? createdAt,
     DateTime? updatedAt,
     String? createdBy,
+    String? dailyStartTime,
+    String? dailyEndTime,
+    bool? useSchedule,
   }) {
     return TouringTask(
       id: id ?? this.id,
@@ -96,6 +115,9 @@ class TouringTask {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       createdBy: createdBy ?? this.createdBy,
+      dailyStartTime: dailyStartTime ?? this.dailyStartTime,
+      dailyEndTime: dailyEndTime ?? this.dailyEndTime,
+      useSchedule: useSchedule ?? this.useSchedule,
     );
   }
 
@@ -137,4 +159,68 @@ class TouringTask {
   bool get isActive => status == 'active';
   bool get isPending => status == 'pending';
   bool get isCompleted => status == 'completed';
+
+  // Schedule helper methods
+  bool isAvailableAtTime(DateTime dateTime) {
+    if (!useSchedule || dailyStartTime == null || dailyEndTime == null) {
+      return true; // Available all day if no schedule is set
+    }
+    
+    final currentTime = TimeOfDay.fromDateTime(dateTime);
+    final startTime = _parseTimeString(dailyStartTime!);
+    final endTime = _parseTimeString(dailyEndTime!);
+    
+    if (startTime == null || endTime == null) {
+      return true; // Default to available if parsing fails
+    }
+    
+    return _isTimeInRange(currentTime, startTime, endTime);
+  }
+  
+  TimeOfDay? _parseTimeString(String timeString) {
+    try {
+      final parts = timeString.split(':');
+      if (parts.length != 2) return null;
+      
+      final hour = int.parse(parts[0]);
+      final minute = int.parse(parts[1]);
+      
+      return TimeOfDay(hour: hour, minute: minute);
+    } catch (e) {
+      return null;
+    }
+  }
+  
+  bool _isTimeInRange(TimeOfDay current, TimeOfDay start, TimeOfDay end) {
+    final currentMinutes = current.hour * 60 + current.minute;
+    final startMinutes = start.hour * 60 + start.minute;
+    final endMinutes = end.hour * 60 + end.minute;
+    
+    if (startMinutes <= endMinutes) {
+      // Same day range
+      return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+    } else {
+      // Crosses midnight
+      return currentMinutes >= startMinutes || currentMinutes <= endMinutes;
+    }
+  }
+  
+  String get scheduleDisplayText {
+    if (!useSchedule || dailyStartTime == null || dailyEndTime == null) {
+      return 'Available all day';
+    }
+    
+    final start = _parseTimeString(dailyStartTime!);
+    final end = _parseTimeString(dailyEndTime!);
+    
+    if (start == null || end == null) {
+      return 'Available all day';
+    }
+    
+    // Format times for display
+    final startFormatted = '${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}';
+    final endFormatted = '${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}';
+    
+    return '$startFormatted - $endFormatted';
+  }
 }

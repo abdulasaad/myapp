@@ -590,6 +590,29 @@ class _AgentTouringTaskListScreenState extends State<AgentTouringTaskListScreen>
             
             const SizedBox(height: 12),
             
+            // Location name and agent count
+            Row(
+              children: [
+                Expanded(
+                  child: _buildCompactInfoItem(
+                    Icons.location_on,
+                    geofence.name,
+                    Colors.green,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildCompactInfoItem(
+                    Icons.group,
+                    '${geofence.maxAgents} agents',
+                    Colors.deepOrange,
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 8),
+            
             // Task details in compact form
             Row(
               children: [

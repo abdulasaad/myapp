@@ -9,6 +9,7 @@ import '../tasks/standalone_tasks_screen.dart';
 import 'user_management_screen.dart';
 import '../reporting/location_history_screen.dart';
 import 'send_notification_screen.dart';
+import 'agents_earnings_management_screen.dart';
 import '../../l10n/app_localizations.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
@@ -743,7 +744,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
               ),
               const SizedBox(width: 16),
-              Expanded(child: Container()), // Empty space
+              Expanded(
+                child: _buildAdminActionCard(
+                  title: AppLocalizations.of(context)!.agentsEarningsManagement,
+                  icon: Icons.account_balance_wallet,
+                  color: Colors.green,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const AgentsEarningsManagementScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ),
               const SizedBox(width: 16),
               Expanded(child: Container()), // Empty space
             ],
