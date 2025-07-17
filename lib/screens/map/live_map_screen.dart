@@ -1,6 +1,7 @@
 // lib/screens/map/live_map_screen.dart
 
 import 'dart:async';
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -83,8 +84,81 @@ class GeofenceInfo {
   final String id;
   final String name;
   final List<LatLng> points;
+  final String type; // 'campaign' or 'touring_task'
+  final Color color;
+  final String? campaignId;
+  final String? campaignName;
+  final String? touringTaskId;
+  final String? touringTaskTitle;
+  final String? touringTasksInfo;
+  final bool isActive;
 
-  GeofenceInfo({required this.id, required this.name, required this.points});
+  GeofenceInfo({
+    required this.id,
+    required this.name,
+    required this.points,
+    required this.type,
+    required this.color,
+    this.campaignId,
+    this.campaignName,
+    this.touringTaskId,
+    this.touringTaskTitle,
+    this.touringTasksInfo,
+    this.isActive = true,
+  });
+
+  factory GeofenceInfo.fromJson(Map<String, dynamic> data) {
+    final wkt = data['geofence_area_wkt'] as String?;
+    if (wkt == null) {
+      throw ArgumentError('geofence_area_wkt is required');
+    }
+
+    // Parse color from hex string
+    final colorString = data['geofence_color'] as String? ?? 'FFA500';
+    final colorValue = int.tryParse(colorString, radix: 16) ?? 0xFFA500;
+    final color = Color(0xFF000000 | colorValue);
+
+    return GeofenceInfo(
+      id: data['geofence_id'] ?? 'unknown_id',
+      name: data['geofence_name'] ?? 'Unnamed Zone',
+      points: _parseWktPolygon(wkt),
+      type: data['geofence_type'] ?? 'campaign',
+      color: color,
+      campaignId: data['campaign_id'],
+      campaignName: data['campaign_name'],
+      touringTaskId: data['touring_task_id'],
+      touringTaskTitle: data['touring_task_title'],
+      touringTasksInfo: data['touring_tasks_info'],
+      isActive: data['is_active'] ?? true,
+    );
+  }
+
+  static List<LatLng> _parseWktPolygon(String wkt) {
+    try {
+      final pointsList = <LatLng>[];
+      final content = wkt.substring(wkt.indexOf('((') + 2, wkt.lastIndexOf('))'));
+      final pairs = content.split(',');
+      debugPrint('🔍 DEBUG: Parsing WKT with ${pairs.length} coordinate pairs');
+      
+      for (var pair in pairs) {
+        final coords = pair.trim().split(' ');
+        if (coords.length == 2) {
+          // Your WKT data has coordinates in "latitude longitude" format
+          // So coords[0] is latitude, coords[1] is longitude
+          final lat = double.parse(coords[0]);
+          final lng = double.parse(coords[1]);
+          pointsList.add(LatLng(lat, lng));
+          debugPrint('🔍 DEBUG: Added point: lat=$lat, lng=$lng');
+        }
+      }
+      debugPrint('🔍 DEBUG: Successfully parsed ${pointsList.length} points');
+      return pointsList;
+    } catch (e) {
+      debugPrint("❌ DEBUG: Failed to parse WKT Polygon: $e");
+      debugPrint("❌ DEBUG: WKT content: $wkt");
+      return [];
+    }
+  }
 }
 
 
@@ -308,16 +382,39 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
 
       final geofenceResponse = responses[1] as List;
       final newGeofenceData = <GeofenceInfo>[];
+      final geofenceMap = <String, GeofenceInfo>{};
+      
+      debugPrint('🔍 DEBUG: Received ${geofenceResponse.length} geofences from database');
+      debugPrint('🔍 DEBUG: Raw geofence response: $geofenceResponse');
+      
       for (final data in geofenceResponse) {
-        final wkt = data['geofence_area_wkt'] as String?;
-        if (wkt != null) {
-          newGeofenceData.add(GeofenceInfo(
-            id: data['geofence_id'],
-            name: data['geofence_name'] ?? 'Unnamed Zone',
-            points: _parseWktPolygon(wkt),
-          ));
+        try {
+          debugPrint('🔍 DEBUG: Processing geofence data: ${data['geofence_name']} - WKT: ${data['geofence_area_wkt']?.toString().substring(0, 50)}...');
+          debugPrint('🔍 DEBUG: Full geofence data: $data');
+          
+          final geofence = GeofenceInfo.fromJson(data.cast<String, dynamic>());
+          debugPrint('🔍 DEBUG: Parsed geofence ${geofence.name} with ${geofence.points.length} points');
+          debugPrint('🔍 DEBUG: Geofence active: ${geofence.isActive}, Points: ${geofence.points}');
+          
+          if (geofence.isActive && geofence.points.isNotEmpty) {
+            // Only add unique geofences (avoid duplicates from touring tasks)
+            if (!geofenceMap.containsKey(geofence.id)) {
+              geofenceMap[geofence.id] = geofence;
+              debugPrint('✅ DEBUG: Added geofence ${geofence.name} to map');
+            } else {
+              debugPrint('⚠️ DEBUG: Geofence ${geofence.name} already exists, skipping duplicate');
+            }
+          } else {
+            debugPrint('❌ DEBUG: Skipped geofence ${geofence.name} - Active: ${geofence.isActive}, Points: ${geofence.points.length}');
+          }
+        } catch (e) {
+          debugPrint('❌ DEBUG: Error parsing geofence data: $e');
+          debugPrint('❌ DEBUG: Raw data: $data');
         }
       }
+      
+      newGeofenceData.addAll(geofenceMap.values);
+      debugPrint('🔍 DEBUG: Final geofence count: ${newGeofenceData.length}');
 
       setState(() {
         _agents.clear();
@@ -326,7 +423,34 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
         _geofences.addAll(newGeofenceData);
 
         if (_selectAllAgents) _visibleAgentIds = _agents.keys.toSet();
-        if (_selectAllGeofences) _visibleGeofenceIds = _geofences.map((g) => g.id).toSet();
+        // Always refresh visible geofence IDs to match current geofences
+        final allGeofenceIds = _geofences.map((g) => g.id).toSet();
+        
+        if (_visibleGeofenceIds.isEmpty) {
+          // If no geofences are visible, show all geofences (initial state)
+          _visibleGeofenceIds = allGeofenceIds;
+          _selectAllGeofences = true;
+          debugPrint('🔍 DEBUG: Initial state - set all geofences visible: $_visibleGeofenceIds');
+        } else {
+          // Keep only existing visible geofences that are still valid
+          _visibleGeofenceIds = _visibleGeofenceIds.where((id) => allGeofenceIds.contains(id)).toSet();
+          
+          // If after filtering we have no geofences visible, show all
+          if (_visibleGeofenceIds.isEmpty) {
+            _visibleGeofenceIds = allGeofenceIds;
+            _selectAllGeofences = true;
+            debugPrint('🔍 DEBUG: No valid geofences after filtering - set all visible: $_visibleGeofenceIds');
+          } else {
+            // Update select all state based on actual visibility
+            _selectAllGeofences = _visibleGeofenceIds.length == allGeofenceIds.length;
+            debugPrint('🔍 DEBUG: Filtered visible geofence IDs: $_visibleGeofenceIds');
+          }
+        }
+        
+        // Debug: Show all geofence IDs for comparison
+        debugPrint('🔍 DEBUG: All geofence IDs: ${_geofences.map((g) => g.id).toList()}');
+        debugPrint('🔍 DEBUG: All geofence names: ${_geofences.map((g) => g.name).toList()}');
+        debugPrint('🔍 DEBUG: Select all geofences: $_selectAllGeofences');
         
         // Debug: Log agent data updates
         for (final agent in _agents.values) {
@@ -337,6 +461,11 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
         
         _updateMarkers();
         _updatePolygons();
+        
+        // Auto-center map on geofences if available
+        if (_geofences.isNotEmpty && _visibleGeofenceIds.isNotEmpty) {
+          _centerMapOnGeofences();
+        }
         
         // Auto-track the tracked agent if one is selected
         if (_trackedAgentId != null) {
@@ -445,42 +574,41 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
   
   void _updatePolygons() {
     _polygons.clear();
+    debugPrint('🔍 DEBUG: Updating polygons for ${_geofences.length} geofences');
+    debugPrint('🔍 DEBUG: Visible geofence IDs: $_visibleGeofenceIds');
+    
     for (final geofence in _geofences) {
+      debugPrint('🔍 DEBUG: Checking geofence ${geofence.name} (ID: ${geofence.id})');
+      debugPrint('🔍 DEBUG: Is visible: ${_visibleGeofenceIds.contains(geofence.id)}');
+      
       if (_visibleGeofenceIds.contains(geofence.id)) {
-        _polygons.add(Polygon(
+        debugPrint('🔍 DEBUG: Creating polygon for ${geofence.name} with ${geofence.points.length} points');
+        debugPrint('🔍 DEBUG: First point: ${geofence.points.isNotEmpty ? geofence.points.first : 'No points'}');
+        
+        final polygon = Polygon(
           polygonId: PolygonId(geofence.id),
           points: geofence.points,
-          strokeColor: Colors.amber,
+          strokeColor: geofence.color,
           strokeWidth: 2,
-          // ===================================================================
-          // THE FIX: Replaced deprecated withOpacity with withAlpha
-          // ===================================================================
-          fillColor: Colors.amber.withAlpha(38), // 0.15 opacity
-        ));
+          fillColor: geofence.color.withAlpha(38), // 0.15 opacity
+        );
+        _polygons.add(polygon);
+        
+        // Debug: Log polygon details
+        debugPrint('🔍 DEBUG: Polygon created with color: ${geofence.color}');
+        debugPrint('🔍 DEBUG: Polygon bounds: ${geofence.points.map((p) => '(${p.latitude}, ${p.longitude})').join(', ')}');
+        
+        debugPrint('✅ DEBUG: Added polygon ${geofence.id} to map');
+      } else {
+        debugPrint('❌ DEBUG: Geofence ${geofence.name} (ID: ${geofence.id}) not visible (not in visible set)');
       }
     }
+    
+    debugPrint('🔍 DEBUG: Total polygons created: ${_polygons.length}');
     setState(() {});
   }
 
-  List<LatLng> _parseWktPolygon(String wkt) {
-    try {
-      final pointsList = <LatLng>[];
-      final content = wkt.substring(wkt.indexOf('((') + 2, wkt.lastIndexOf('))'));
-      final pairs = content.split(',');
-      for (var pair in pairs) {
-        final coords = pair.trim().split(' ');
-        if (coords.length == 2) {
-          final lng = double.parse(coords[0]);
-          final lat = double.parse(coords[1]);
-          pointsList.add(LatLng(lat, lng));
-        }
-      }
-      return pointsList;
-    } catch (e) {
-      debugPrint("Failed to parse WKT Polygon: $e");
-      return [];
-    }
-  }
+
 
   Future<void> _onAgentTapped(AgentMapInfo agent) async {
     setState(() {
@@ -520,6 +648,46 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
         context.showSnackBar('${agent.fullName} has no location on record.', isError: true);
       }
     }
+  }
+
+  Future<void> _centerMapOnGeofences() async {
+    final controller = await _mapController.future;
+    
+    // Get all visible geofence points
+    final allPoints = <LatLng>[];
+    for (final geofence in _geofences) {
+      if (_visibleGeofenceIds.contains(geofence.id)) {
+        allPoints.addAll(geofence.points);
+      }
+    }
+    
+    if (allPoints.isEmpty) return;
+    
+    // Calculate bounds
+    double minLat = allPoints.first.latitude;
+    double maxLat = allPoints.first.latitude;
+    double minLng = allPoints.first.longitude;
+    double maxLng = allPoints.first.longitude;
+    
+    for (final point in allPoints) {
+      minLat = math.min(minLat, point.latitude);
+      maxLat = math.max(maxLat, point.latitude);
+      minLng = math.min(minLng, point.longitude);
+      maxLng = math.max(maxLng, point.longitude);
+    }
+    
+    // Animate camera to show all geofences
+    controller.animateCamera(
+      CameraUpdate.newLatLngBounds(
+        LatLngBounds(
+          southwest: LatLng(minLat, minLng),
+          northeast: LatLng(maxLat, maxLng),
+        ),
+        100, // padding
+      ),
+    );
+    
+    debugPrint('🔍 DEBUG: Centered map on geofences - bounds: ($minLat, $minLng) to ($maxLat, $maxLng)');
   }
 
   Future<void> _autoTrackAgent() async {
@@ -1064,9 +1232,6 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
           borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), bottomLeft: Radius.circular(20)),
           child: Container(
             decoration: BoxDecoration(
-              // ===================================================================
-              // THE FIX: Replaced deprecated withOpacity with withAlpha
-              // ===================================================================
               color: Theme.of(context).scaffoldBackgroundColor.withAlpha(242), // 0.95 opacity
               borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), bottomLeft: Radius.circular(20)),
             ),
@@ -1076,6 +1241,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                   child: Text('Geofences', style: Theme.of(context).textTheme.titleLarge),
                 ),
+                
                 CheckboxListTile(
                   title: const Text('Select All'),
                   value: _selectAllGeofences,
@@ -1085,14 +1251,31 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
                       _selectAllGeofences = value ?? false;
                       if (_selectAllGeofences) {
                         _visibleGeofenceIds = _geofences.map((g) => g.id).toSet();
+                        debugPrint('🔍 DEBUG: Select All checked - showing all geofences: $_visibleGeofenceIds');
                       } else {
                         _visibleGeofenceIds.clear();
+                        debugPrint('🔍 DEBUG: Select All unchecked - hiding all geofences');
                       }
                       _updatePolygons();
                     });
                   },
                 ),
+                
+                if (_visibleGeofenceIds.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: ElevatedButton.icon(
+                      onPressed: _centerMapOnGeofences,
+                      icon: const Icon(Icons.center_focus_strong),
+                      label: const Text('Center on Geofences'),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(36),
+                      ),
+                    ),
+                  ),
+                
                 const Divider(height: 1, indent: 16, endIndent: 16),
+                
                 Expanded(
                   child: _geofences.isEmpty
                       ? const Center(child: Text('No geofences found.'))
@@ -1101,23 +1284,49 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
                           itemCount: _geofences.length,
                           itemBuilder: (context, index) {
                             final geofence = _geofences[index];
+                            final isVisible = _visibleGeofenceIds.contains(geofence.id);
+                            
                             return CheckboxListTile(
-                              secondary: Icon(Icons.layers_outlined, color: Colors.amber[700]),
-                              title: Text(geofence.name, style: const TextStyle(fontSize: 14)),
-                              value: _visibleGeofenceIds.contains(geofence.id),
+                              secondary: Icon(
+                                geofence.touringTasksInfo?.isNotEmpty == true ? Icons.tour : Icons.layers_outlined,
+                                color: geofence.color,
+                              ),
+                              title: Text(
+                                geofence.name,
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (geofence.campaignName != null)
+                                    Text(
+                                      'Campaign: ${geofence.campaignName}',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  if (geofence.touringTasksInfo?.isNotEmpty == true)
+                                    Text(
+                                      'Touring Tasks: ${geofence.touringTasksInfo}',
+                                      style: TextStyle(fontSize: 12, color: Colors.purple[600]),
+                                    ),
+                                ],
+                              ),
+                              value: isVisible,
                               controlAffinity: ListTileControlAffinity.leading,
                               onChanged: (bool? value) {
                                 setState(() {
                                   if (value == true) {
                                     _visibleGeofenceIds.add(geofence.id);
+                                    debugPrint('🔍 DEBUG: Added geofence ${geofence.name} to visible set');
                                   } else {
                                     _visibleGeofenceIds.remove(geofence.id);
+                                    debugPrint('🔍 DEBUG: Removed geofence ${geofence.name} from visible set');
                                   }
-                                  if (_visibleGeofenceIds.length < _geofences.length) {
-                                    _selectAllGeofences = false;
-                                  } else {
-                                    _selectAllGeofences = true;
-                                  }
+                                  
+                                  // Update select all state
+                                  _selectAllGeofences = _visibleGeofenceIds.length == _geofences.length;
+                                  debugPrint('🔍 DEBUG: Updated select all state to: $_selectAllGeofences');
+                                  debugPrint('🔍 DEBUG: Visible geofences: $_visibleGeofenceIds');
+                                  
                                   _updatePolygons();
                                 });
                               },
