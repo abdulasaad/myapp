@@ -750,8 +750,18 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   }
 
   Future<void> _editTouringTask(TouringTask task) async {
-    // TODO: Implement edit touring task dialog
-    context.showSnackBar('Edit touring task - Coming soon!');
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CreateTouringTaskScreen(
+          campaign: widget.campaign,
+          touringTask: task,
+        ),
+      ),
+    );
+    
+    if (result != null) {
+      _refreshAll();
+    }
   }
 
   Future<void> _deleteTouringTask(TouringTask task) async {

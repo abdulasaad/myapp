@@ -6,8 +6,8 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../../models/campaign.dart';
 import '../../models/campaign_geofence.dart';
 import '../../services/campaign_geofence_service.dart';
+import '../../services/location_service.dart';
 import '../../utils/constants.dart';
-import '../../l10n/app_localizations.dart';
 import '../../widgets/modern_notification.dart';
 import 'campaign_wizard_step2_screen.dart';
 import 'dart:async';
@@ -30,9 +30,14 @@ class CampaignGeofenceManagementScreen extends StatefulWidget {
 
 class _CampaignGeofenceManagementScreenState extends State<CampaignGeofenceManagementScreen> {
   final CampaignGeofenceService _geofenceService = CampaignGeofenceService();
+  final LocationService _locationService = LocationService();
   final Completer<GoogleMapController> _mapController = Completer<GoogleMapController>();
   
   late Future<List<CampaignGeofence>> _geofencesFuture;
+  CameraPosition _initialCameraPosition = const CameraPosition(
+    target: LatLng(24.7136, 46.6753), // Default to Riyadh, Saudi Arabia
+    zoom: 10,
+  );
   
   Set<Polygon> _polygons = {};
   Set<Marker> _markers = {};
@@ -51,6 +56,7 @@ class _CampaignGeofenceManagementScreenState extends State<CampaignGeofenceManag
   void initState() {
     super.initState();
     _loadGeofences();
+    _getCurrentLocationAndUpdateCamera();
   }
 
   @override
@@ -59,6 +65,31 @@ class _CampaignGeofenceManagementScreenState extends State<CampaignGeofenceManag
     _descriptionController.dispose();
     _maxAgentsController.dispose();
     super.dispose();
+  }
+
+  Future<void> _getCurrentLocationAndUpdateCamera() async {
+    try {
+      final position = await _locationService.getCurrentLocation();
+      if (position != null) {
+        setState(() {
+          _initialCameraPosition = CameraPosition(
+            target: LatLng(position.latitude, position.longitude),
+            zoom: 15,
+          );
+        });
+        
+        // If map is already loaded, animate to the new position
+        if (_mapController.isCompleted) {
+          final controller = await _mapController.future;
+          controller.animateCamera(
+            CameraUpdate.newCameraPosition(_initialCameraPosition),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error getting current location: $e');
+      // Keep the default location if unable to get current location
+    }
   }
 
   void _loadGeofences() {
@@ -529,10 +560,7 @@ class _CampaignGeofenceManagementScreenState extends State<CampaignGeofenceManag
               onTap: _onMapTapped,
               polygons: _polygons,
               markers: _markers,
-              initialCameraPosition: const CameraPosition(
-                target: LatLng(24.7136, 46.6753), // Riyadh, Saudi Arabia
-                zoom: 10,
-              ),
+              initialCameraPosition: _initialCameraPosition,
               mapType: MapType.normal,
             ),
           ),

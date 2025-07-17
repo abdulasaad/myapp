@@ -294,50 +294,65 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
       final userRole = userRoleResponse['role'] as String;
 
       if (userRole == 'admin') {
-        // Admins can see all agents (excluding managers and other admins)
-        final response = await supabase
-            .from('profiles')
-            .select('''
-              id,
-              full_name,
-              role,
-              status,
-              last_heartbeat,
-              last_location:active_agents!left(last_location, last_seen)
-            ''')
-            .eq('role', 'agent')
-            .eq('status', 'active');
         
-        // Transform the response to match the expected format
-        return response.map((profile) {
-          final Map<String, dynamic> result = Map.from(profile);
+        // Use the new RPC function that bypasses RLS policies
+        try {
+          final response = await supabase.rpc('get_all_agents_with_location_for_admin', params: {
+            'requesting_user_id': currentUser.id,
+          });
           
-          // Handle active_agents data
-          if (profile['last_location'] != null && profile['last_location'].isNotEmpty) {
-            final activeAgentData = profile['last_location'][0];
-            result['last_location'] = activeAgentData['last_location'];
-            result['last_seen'] = activeAgentData['last_seen'];
+          if (response != null && response.isNotEmpty) {
+            return response;
           }
+        } catch (e) {
+          debugPrint('RPC call failed: $e');
+        }
+        
+        // Fallback: Try the previous approach if RPC fails
+        try {
+          final allAgentsResponse = await supabase
+              .from('profiles')
+              .select('id, full_name, role, status, last_heartbeat')
+              .eq('role', 'agent')
+              .order('full_name');
           
-          // Calculate connection status
-          if (result['last_heartbeat'] != null) {
-            final lastHeartbeat = DateTime.parse(result['last_heartbeat']);
-            final now = DateTime.now();
-            final diff = now.difference(lastHeartbeat);
+          if (allAgentsResponse.isNotEmpty) {
+            final List<Map<String, dynamic>> agentsWithLocation = [];
             
-            if (diff.inSeconds < 45) {
-              result['connection_status'] = 'active';
-            } else if (diff.inMinutes < 10) {
-              result['connection_status'] = 'away';
-            } else {
-              result['connection_status'] = 'offline';
+            for (final profile in allAgentsResponse) {
+              final Map<String, dynamic> result = Map.from(profile);
+              
+              // Calculate connection status based on last_heartbeat
+              if (result['last_heartbeat'] != null) {
+                try {
+                  final lastHeartbeat = DateTime.parse(result['last_heartbeat']);
+                  final now = DateTime.now();
+                  final diff = now.difference(lastHeartbeat);
+                  
+                  if (diff.inSeconds < 45) {
+                    result['connection_status'] = 'active';
+                  } else if (diff.inMinutes < 10) {
+                    result['connection_status'] = 'away';
+                  } else {
+                    result['connection_status'] = 'offline';
+                  }
+                } catch (e) {
+                  result['connection_status'] = 'offline';
+                }
+              } else {
+                result['connection_status'] = 'offline';
+              }
+              
+              agentsWithLocation.add(result);
             }
-          } else {
-            result['connection_status'] = 'offline';
+            
+            return agentsWithLocation;
           }
-          
-          return result;
-        }).toList();
+        } catch (e) {
+          debugPrint('Fallback approach failed: $e');
+        }
+        
+        return [];
       } else if (userRole == 'manager') {
         // Managers can see agents in their groups (including those without heartbeats)
         return await supabase.rpc('get_agents_in_manager_groups', params: {
@@ -348,7 +363,8 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
         return [];
       }
     } catch (e) {
-      debugPrint('Error filtering agent locations: $e');
+      debugPrint('❌ ADMIN DEBUG: Error filtering agent locations: $e');
+      debugPrint('❌ ADMIN DEBUG: Error stack trace: ${StackTrace.current}');
       // Return empty list on error rather than throwing
       return [];
     }
@@ -374,6 +390,7 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
       if (!mounted) return;
       
       final agentResponse = responses[0] as List;
+      
       final newAgentData = <String, AgentMapInfo>{};
       for (final data in agentResponse) {
         final agent = AgentMapInfo.fromJson(data.cast<String, dynamic>());
