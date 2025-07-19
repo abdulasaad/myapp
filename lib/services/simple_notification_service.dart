@@ -11,6 +11,8 @@ class NotificationModel {
   final String type;
   final String title;
   final String message;
+  final String? titleAr;
+  final String? messageAr;
   final Map<String, dynamic> data;
   final DateTime? readAt;
   final DateTime createdAt;
@@ -23,6 +25,8 @@ class NotificationModel {
     required this.type,
     required this.title,
     required this.message,
+    this.titleAr,
+    this.messageAr,
     required this.data,
     this.readAt,
     required this.createdAt,
@@ -37,6 +41,8 @@ class NotificationModel {
       type: json['type'],
       title: json['title'],
       message: json['message'],
+      titleAr: json['title_ar'], // Will be null if column doesn't exist
+      messageAr: json['message_ar'], // Will be null if column doesn't exist
       data: json['data'] as Map<String, dynamic>? ?? {},
       readAt: json['read_at'] != null ? DateTime.parse(json['read_at']) : null,
       createdAt: DateTime.parse(json['created_at']),
@@ -46,6 +52,68 @@ class NotificationModel {
 
   bool get isRead => readAt != null;
   bool get isUnread => readAt == null;
+
+  // Get localized title based on current locale
+  String getLocalizedTitle(Locale locale) {
+    if (locale.languageCode == 'ar' && titleAr != null && titleAr!.isNotEmpty) {
+      return titleAr!;
+    }
+    
+    // Fallback: translate common English notification titles to Arabic
+    if (locale.languageCode == 'ar') {
+      switch (title) {
+        case 'New Task Assigned':
+          return 'تم تعيين مهمة جديدة';
+        case 'Campaign Assignment':
+          return 'تعيين حملة';
+        case 'Task Assignment':
+          return 'تعيين مهمة';
+        case 'Route Assignment':
+          return 'تعيين طريق';
+        case 'Evidence Review':
+          return 'مراجعة الأدلة';
+        case 'Task Completion':
+          return 'إكمال المهمة';
+        default:
+          return title;
+      }
+    }
+    
+    return title;
+  }
+
+  // Get localized message based on current locale
+  String getLocalizedMessage(Locale locale) {
+    if (locale.languageCode == 'ar' && messageAr != null && messageAr!.isNotEmpty) {
+      return messageAr!;
+    }
+    
+    // Fallback: translate common English notification messages to Arabic
+    if (locale.languageCode == 'ar') {
+      // Handle campaign assignment messages
+      if (message.contains('You have been assigned to campaign')) {
+        final campaignName = message.split('"')[1];
+        return 'تم تعيينك للحملة "$campaignName"';
+      }
+      
+      // Handle task assignment messages
+      if (message.contains('You have been assigned a new task:')) {
+        final taskName = message.split(':')[1].trim();
+        return 'تم تعيينك لمهمة جديدة: $taskName';
+      }
+      
+      // Handle other common patterns
+      if (message.contains('Task completed successfully')) {
+        return 'تم إكمال المهمة بنجاح';
+      }
+      
+      if (message.contains('Evidence reviewed')) {
+        return 'تم مراجعة الأدلة';
+      }
+    }
+    
+    return message;
+  }
 
   // Get notification icon based on type
   IconData get icon {
@@ -111,13 +179,24 @@ class SimpleNotificationService {
   void showInAppNotification(BuildContext context, {
     required String title,
     required String message,
+    String? titleAr,
+    String? messageAr,
     NotificationType type = NotificationType.info,
   }) {
+    // Get current locale and use appropriate language
+    final locale = Localizations.localeOf(context);
+    final localizedTitle = (locale.languageCode == 'ar' && titleAr != null && titleAr.isNotEmpty) 
+        ? titleAr 
+        : title;
+    final localizedMessage = (locale.languageCode == 'ar' && messageAr != null && messageAr.isNotEmpty) 
+        ? messageAr 
+        : message;
+    
     ModernNotification.show(
       context,
-      message: message,
+      message: localizedMessage,
       type: type,
-      subtitle: title,
+      subtitle: localizedTitle,
       duration: const Duration(seconds: 5),
     );
   }
@@ -193,6 +272,8 @@ class SimpleNotificationService {
     required String type,
     required String title,
     required String message,
+    String? titleAr,
+    String? messageAr,
     Map<String, dynamic>? data,
   }) async {
     try {
@@ -206,6 +287,9 @@ class SimpleNotificationService {
         'p_message': message,
         'p_sender_id': supabase.auth.currentUser?.id,
         'p_data': data ?? {},
+        // Arabic parameters temporarily disabled until migration is applied
+        // 'p_title_ar': titleAr,
+        // 'p_message_ar': messageAr,
       });
       
       debugPrint('Notification created successfully. Result: $result');

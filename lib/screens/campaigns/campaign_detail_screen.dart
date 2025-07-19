@@ -310,6 +310,9 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
           recipientId: agentId,
           title: AppLocalizations.of(context)!.campaignAssignment,
           message: 'You have been assigned to campaign "${widget.campaign.name}"',
+          // Arabic parameters temporarily disabled until migration is applied
+          // titleAr: 'تعيين حملة',
+          // messageAr: 'تم تعيينك للحملة "${widget.campaign.name}"',
           type: 'campaign_assignment',
           data: {
             'campaign_id': widget.campaign.id,

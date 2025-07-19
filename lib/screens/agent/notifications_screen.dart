@@ -85,6 +85,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         backgroundColor: backgroundColor,
         elevation: 0,
         scrolledUnderElevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black87),
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
@@ -263,7 +264,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         children: [
                           Expanded(
                             child: Text(
-                              notification.title,
+                              notification.getLocalizedTitle(Localizations.localeOf(context)),
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: notification.isUnread ? FontWeight.bold : FontWeight.w600,
@@ -286,7 +287,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                       
                       // Message
                       Text(
-                        notification.message,
+                        notification.getLocalizedMessage(Localizations.localeOf(context)),
                         style: TextStyle(
                           fontSize: 14,
                           color: notification.isUnread ? textPrimaryColor : Colors.grey[700],
