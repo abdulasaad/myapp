@@ -720,9 +720,9 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
 
   Widget _buildClientNav(int currentIndex, List<BottomNavigationBarItem> navItems) {
     return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
+      bottom: 16,
+      left: 32,
+      right: 32,
       child: Container(
         height: 80,
         decoration: BoxDecoration(
@@ -1195,7 +1195,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
                       color: const Color(0xFF6366F1),
                       onTap: () async {
                         Navigator.pop(context);
-                        final result = await Navigator.of(context).push(
+                        await Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => const TemplateCategoriesScreen(),
                           ),
@@ -1214,7 +1214,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
                       color: const Color(0xFF10B981),
                       onTap: () async {
                         Navigator.pop(context);
-                        final result = await Navigator.of(context).push(
+                        await Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (context) => const CreateEvidenceTaskScreen(),
                           ),
@@ -1372,13 +1372,6 @@ class _TasksTab extends StatelessWidget {
   }
 }
 
-// Map Tab
-class _MapTab extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return const LiveMapScreen();
-  }
-}
 
 // Agent Dashboard Tab
 class _AgentDashboardTab extends StatefulWidget {
@@ -2485,123 +2478,6 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
     );
   }
 
-  // Location Status Card
-  Widget _buildLocationStatusCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: _isLocationEnabled
-              ? [primaryColor, primaryColor.withValues(alpha: 0.8)]
-              : [Colors.orange, Colors.orange.withValues(alpha: 0.8)],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: (_isLocationEnabled ? primaryColor : Colors.orange)
-                .withValues(alpha: 0.3),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              _isLocationEnabled ? Icons.location_on : Icons.location_off,
-              color: Colors.white,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  AppLocalizations.of(context)!.locationService,
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: Colors.white.withValues(alpha: 0.9),
-                  ),
-                ),
-                Text(
-                  _currentLocationStatus ?? AppLocalizations.of(context)!.checking,
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (!_isLocationEnabled)
-            TextButton(
-              onPressed: () async {
-                try {
-                  setState(() {
-                    _currentLocationStatus = AppLocalizations.of(context)!.requestingPermission;
-                  });
-                  
-                  final locationService = LocationService();
-                  final permissionGranted = await locationService.requestLocationPermission();
-                  
-                  if (permissionGranted) {
-                    if (mounted) {
-                      setState(() {
-                        _isLocationEnabled = true;
-                        _currentLocationStatus = AppLocalizations.of(context)!.starting;
-                      });
-                      context.showSnackBar(AppLocalizations.of(context)!.locationEnabledSuccess);
-                      // Restart location tracking with new permissions
-                      _startSmartLocationTracking();
-                      _refreshDashboard(); // Refresh the dashboard data
-                    }
-                  } else {
-                    if (mounted) {
-                      setState(() {
-                        _currentLocationStatus = AppLocalizations.of(context)!.permissionDenied;
-                      });
-                      context.showSnackBar(
-                        AppLocalizations.of(context)!.locationPermissionDeniedMessage,
-                        isError: true,
-                      );
-                    }
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    setState(() {
-                      _currentLocationStatus = AppLocalizations.of(context)!.errorOccurred;
-                    });
-                    context.showSnackBar(
-                      '${AppLocalizations.of(context)!.failedToEnableLocation}: $e',
-                      isError: true,
-                    );
-                  }
-                }
-              },
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.white.withValues(alpha: 0.2),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: Text(AppLocalizations.of(context)!.enable),
-            ),
-        ],
-      ),
-    );
-  }
 
   // Today's Activity Overview
   Widget _buildPerformanceOverview(AgentDashboardData data) {
@@ -3903,45 +3779,6 @@ class _ProfileTab extends StatelessWidget {
     );
   }
 
-  Future<bool> _checkFCMTokenStatus() async {
-    try {
-      final currentUserId = supabase.auth.currentUser?.id;
-      if (currentUserId == null) return false;
-      
-      final response = await supabase
-          .from('profiles')
-          .select('fcm_token')
-          .eq('id', currentUserId)
-          .single();
-      
-      final fcmToken = response['fcm_token'] as String?;
-      return fcmToken != null && fcmToken.isNotEmpty && fcmToken.length > 100;
-    } catch (e) {
-      debugPrint('Error checking FCM token status: $e');
-      return false;
-    }
-  }
-
-  Future<void> _refreshFCMToken(BuildContext context) async {
-    try {
-      context.showSnackBar('Refreshing notification token...');
-      
-      final newToken = await NotificationService().forceRefreshFCMToken();
-      
-      if (newToken != null && newToken.isNotEmpty) {
-        context.showSnackBar('Notification token refreshed successfully!');
-        
-        // Trigger rebuild to update the UI
-        if (context.mounted) {
-          (context.findAncestorStateOfType<_ModernHomeScreenState>())?.setState(() {});
-        }
-      } else {
-        context.showSnackBar('Failed to refresh notification token', isError: true);
-      }
-    } catch (e) {
-      context.showSnackBar('Error refreshing notification token: $e', isError: true);
-    }
-  }
 
   Future<void> _handleSignOut(BuildContext context) async {
     try {

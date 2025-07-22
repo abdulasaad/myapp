@@ -7,6 +7,7 @@ import '../../utils/constants.dart';
 import '../../models/campaign.dart';
 import '../map/live_map_screen.dart';
 import '../campaigns/campaign_detail_screen.dart';
+import 'client_campaigns_list_screen.dart';
 
 class ClientDashboardScreen extends StatefulWidget {
   const ClientDashboardScreen({super.key});
@@ -19,11 +20,36 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
   ClientDashboardData? _dashboardData;
   bool _hasError = false;
   bool _isLoading = true;
+  final GlobalKey _campaignsKey = GlobalKey();
+  bool _highlightActiveCampaigns = false;
 
   @override
   void initState() {
     super.initState();
     _loadDashboardData();
+  }
+
+  void _scrollToCampaigns() {
+    if (_campaignsKey.currentContext != null) {
+      setState(() {
+        _highlightActiveCampaigns = true;
+      });
+      
+      Scrollable.ensureVisible(
+        _campaignsKey.currentContext!,
+        duration: const Duration(milliseconds: 800),
+        curve: Curves.easeInOut,
+      );
+      
+      // Reset highlight after 3 seconds
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() {
+            _highlightActiveCampaigns = false;
+          });
+        }
+      });
+    }
   }
 
   Future<void> _loadDashboardData() async {
@@ -74,6 +100,20 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
         debugPrint('❌ CLIENT DEBUG: Error running test_client_access: $e');
       }
 
+      // Load user profile information
+      debugPrint('🔍 CLIENT DEBUG: Loading user profile for ID: ${currentUser.id}');
+      final userProfile = await supabase
+          .from('profiles')
+          .select('full_name, role, email')
+          .eq('id', currentUser.id)
+          .single();
+      
+      final userName = userProfile['full_name'] as String? ?? 'User';
+      final userRole = userProfile['role'] as String? ?? 'client';
+      final userEmail = userProfile['email'] as String? ?? currentUser.email;
+      
+      debugPrint('🔍 CLIENT DEBUG: User profile loaded: $userName ($userRole)');
+
       // Load client's campaigns
       debugPrint('🔍 CLIENT DEBUG: Loading campaigns for client ID: ${currentUser.id}');
       final campaignsResponse = await supabase
@@ -105,6 +145,9 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
         completedTasks: stats['completedTasks'] ?? 0,
         activeAgents: stats['activeAgents'] ?? 0,
         recentActivity: recentActivity,
+        userName: userName,
+        userRole: userRole,
+        userEmail: userEmail,
       );
     } catch (e) {
       debugPrint('Error loading client dashboard: $e');
@@ -131,21 +174,84 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
           .where((task) => task['status'] == 'completed')
           .length;
 
-      // Get active agents for these campaigns
-      final agentsResponse = await supabase
-          .from('task_assignments')
-          .select('agent_id')
-          .inFilter('task_id', tasksResponse.map((t) => t['id']).toList());
-
-      final uniqueAgents = agentsResponse
-          .map((assignment) => assignment['agent_id'])
-          .toSet()
-          .length;
+      // Count ALL active agents accessible to this client (not just assigned ones)
+      int activeAgentsCount = 0;
+      
+      try {
+        // Method 1: Query all active agents accessible to client (matches live map scope)
+        debugPrint('🔍 CLIENT DEBUG: Checking all accessible active agents for client');
+        
+        final activeAgentsResponse = await supabase
+            .from('active_agents')
+            .select('user_id, connection_status, last_heartbeat, last_seen');
+        
+        debugPrint('🔍 CLIENT DEBUG: All active agents response: ${activeAgentsResponse.length} records');
+        
+        // Count agents that are truly active (same logic as live map)
+        activeAgentsCount = activeAgentsResponse.where((agent) {
+          final connectionStatus = agent['connection_status'];
+          final lastSeen = agent['last_seen'];
+          
+          debugPrint('🔍 CLIENT DEBUG: Agent ${agent['user_id']}: status=$connectionStatus, lastSeen=$lastSeen');
+          
+          // Use connection_status if available
+          if (connectionStatus != null) {
+            return connectionStatus == 'active';
+          }
+          
+          // Fallback: check last_seen timestamp (same as live map)
+          if (lastSeen != null) {
+            final lastSeenTime = DateTime.parse(lastSeen);
+            final timeSinceLastSeen = DateTime.now().difference(lastSeenTime);
+            return timeSinceLastSeen.inMinutes < 15; // Match live map logic
+          }
+          
+          return false;
+        }).length;
+        
+        debugPrint('🔍 CLIENT DEBUG: Found $activeAgentsCount truly active agents total');
+        
+      } catch (e) {
+        debugPrint('❌ CLIENT DEBUG: Error querying active_agents, falling back to profiles: $e');
+        
+        // Method 2: Fallback to profiles table with connection_status
+        try {
+          final profilesResponse = await supabase
+              .from('profiles')
+              .select('id, connection_status, last_heartbeat');
+          
+          activeAgentsCount = profilesResponse.where((profile) {
+            final connectionStatus = profile['connection_status'];
+            final lastHeartbeat = profile['last_heartbeat'];
+            
+            // Use connection_status if available
+            if (connectionStatus != null) {
+              return connectionStatus == 'active';
+            }
+            
+            // Fallback: check last_heartbeat timestamp
+            if (lastHeartbeat != null) {
+              final lastHeartbeatTime = DateTime.parse(lastHeartbeat);
+              final timeSinceHeartbeat = DateTime.now().difference(lastHeartbeatTime);
+              return timeSinceHeartbeat.inSeconds < 45; // Active threshold from live map
+            }
+            
+            return false;
+          }).length;
+          
+          debugPrint('🔍 CLIENT DEBUG: Fallback found $activeAgentsCount active agents from profiles');
+          
+        } catch (e2) {
+          debugPrint('❌ CLIENT DEBUG: Fallback also failed: $e2, returning 0');
+          // Final fallback: return 0
+          activeAgentsCount = 0;
+        }
+      }
 
       return {
         'totalTasks': totalTasks,
         'completedTasks': completedTasks,
-        'activeAgents': uniqueAgents,
+        'activeAgents': activeAgentsCount,
       };
     } catch (e) {
       debugPrint('Error getting campaign stats: $e');
@@ -189,7 +295,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text('Client Dashboard'),
+        title: Text(l10n.dashboard),
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         actions: [
@@ -237,8 +343,12 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Welcome Card
+            _buildWelcomeCard(context, data),
+            const SizedBox(height: 24),
+            
             // Stats Cards
-            _buildStatsSection(context, data),
+            _buildStatsSection(context, data, l10n),
             const SizedBox(height: 24),
             
             // Quick Actions
@@ -257,20 +367,133 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
     );
   }
 
-  Widget _buildStatsSection(BuildContext context, ClientDashboardData data) {
+  Widget _buildWelcomeCard(BuildContext context, ClientDashboardData data) {
+    final l10n = AppLocalizations.of(context)!;
+    final now = DateTime.now();
+    final hour = now.hour;
+    
+    String greeting;
+    IconData greetingIcon;
+    
+    if (hour < 12) {
+      greeting = l10n.goodMorning;
+      greetingIcon = Icons.wb_sunny;
+    } else if (hour < 17) {
+      greeting = l10n.goodAfternoon;
+      greetingIcon = Icons.wb_sunny_outlined;
+    } else {
+      greeting = l10n.goodEvening;
+      greetingIcon = Icons.nightlight_round;
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            primaryColor,
+            primaryColor.withValues(alpha: 0.8),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                greetingIcon,
+                color: Colors.white.withValues(alpha: 0.9),
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                greeting,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.9),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '${l10n.welcomeBack}, ${data.userName}!',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.verified_user,
+                  color: Colors.white.withValues(alpha: 0.9),
+                  size: 16,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '${data.userRole.toUpperCase()} ACCOUNT',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Track your campaigns, monitor agent progress, and stay updated on all your projects.',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.8),
+              fontSize: 14,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsSection(BuildContext context, ClientDashboardData data, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Overview',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        Text(
+          l10n.overview,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
               child: _buildStatCard(
-                'Total Campaigns',
+                l10n.totalCampaigns,
                 data.totalCampaigns.toString(),
                 Icons.campaign,
                 primaryColor,
@@ -279,10 +502,21 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: _buildStatCard(
-                'Active Campaigns',
+                l10n.activeCampaigns,
                 data.activeCampaigns.toString(),
                 Icons.play_circle_filled,
                 successColor,
+                onTap: data.activeCampaigns > 0 ? () {
+                  _scrollToCampaigns();
+                  // Show feedback to user
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Showing ${data.activeCampaigns} active campaigns'),
+                      duration: const Duration(seconds: 2),
+                      backgroundColor: successColor,
+                    ),
+                  );
+                } : null,
               ),
             ),
           ],
@@ -292,7 +526,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
           children: [
             Expanded(
               child: _buildStatCard(
-                'Total Tasks',
+                l10n.totalTasks,
                 data.totalTasks.toString(),
                 Icons.task_alt,
                 warningColor,
@@ -301,10 +535,27 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: _buildStatCard(
-                'Active Agents',
+                l10n.agents,
                 data.activeAgents.toString(),
                 Icons.people,
                 Colors.blue,
+                onTap: data.activeAgents > 0 ? () {
+                  // Navigate to Live Map to show agent locations
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LiveMapScreen(),
+                    ),
+                  );
+                  // Show feedback to user
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Showing ${data.activeAgents} online agents on live map'),
+                      duration: const Duration(seconds: 2),
+                      backgroundColor: Colors.blue,
+                    ),
+                  );
+                } : null,
               ),
             ),
           ],
@@ -313,20 +564,22 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+  Widget _buildStatCard(String title, String value, IconData icon, Color color, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -358,6 +611,7 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -365,16 +619,16 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Quick Actions',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        Text(
+          l10n.quickActions,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
               child: _buildActionCard(
-                'Live Map',
+                l10n.liveMap,
                 'Track agent locations',
                 Icons.map,
                 primaryColor,
@@ -389,12 +643,18 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: _buildActionCard(
-                'Campaigns',
+                l10n.campaigns,
                 'View all campaigns',
                 Icons.campaign,
                 successColor,
                 () {
-                  // Navigate to campaigns list (filtered for client)
+                  // Navigate to client campaigns list screen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ClientCampaignsListScreen(campaigns: _dashboardData?.campaigns ?? []),
+                    ),
+                  );
                 },
               ),
             ),
@@ -453,14 +713,15 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
 
   Widget _buildCampaignsSection(BuildContext context, ClientDashboardData data, AppLocalizations l10n) {
     return Column(
+      key: _campaignsKey,  // Add key for scrolling
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'My Campaigns',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Text(
+              l10n.campaigns,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             if (data.campaigns.length > 3)
               TextButton(
@@ -499,16 +760,25 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
             ? Colors.blue 
             : warningColor;
 
-    return Container(
+    final isActive = campaign.status == 'active';
+    final shouldHighlight = _highlightActiveCampaigns && isActive;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: shouldHighlight ? successColor.withValues(alpha: 0.1) : Colors.white,
         borderRadius: BorderRadius.circular(12),
+        border: shouldHighlight 
+            ? Border.all(color: successColor, width: 2)
+            : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
+            color: shouldHighlight 
+                ? successColor.withValues(alpha: 0.3)
+                : Colors.black.withValues(alpha: 0.1),
+            blurRadius: shouldHighlight ? 12 : 8,
             offset: const Offset(0, 2),
           ),
         ],
@@ -588,9 +858,9 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Recent Activity',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        Text(
+          'Recent Activity', // Using custom text as recentSystemActivity is too specific
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         if (data.recentActivity.isEmpty)
@@ -600,10 +870,10 @@ class _ClientDashboardScreenState extends State<ClientDashboardScreen> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Center(
+            child: Center(
               child: Text(
-                'No recent activity',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                l10n.noRecentActivity,
+                style: const TextStyle(fontSize: 16, color: Colors.grey),
               ),
             ),
           )
@@ -659,6 +929,10 @@ class ClientDashboardData {
   final int completedTasks;
   final int activeAgents;
   final List<ClientActivityItem> recentActivity;
+  // User information
+  final String userName;
+  final String userRole;
+  final String? userEmail;
 
   ClientDashboardData({
     required this.campaigns,
@@ -669,6 +943,9 @@ class ClientDashboardData {
     required this.completedTasks,
     required this.activeAgents,
     required this.recentActivity,
+    required this.userName,
+    required this.userRole,
+    this.userEmail,
   });
 }
 

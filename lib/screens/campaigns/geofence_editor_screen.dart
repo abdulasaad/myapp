@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:uuid/uuid.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../models/campaign.dart';
 import '../../models/task.dart';
 import '../../utils/constants.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/location_service.dart';
 
 // A Dart model to represent a single, editable geofence zone.
 class GeofenceZone {
@@ -46,9 +48,13 @@ class _GeofenceEditorScreenState extends State<GeofenceEditorScreen> {
   // --- State Management ---
   bool _isLoading = true;
   bool _isSaving = false;
+  bool _isLocationLoading = false;
   List<GeofenceZone> _zones = [];
   final List<String> _deletedZoneIds = [];
   String? _selectedZoneId;
+  
+  // Location service for getting manager location
+  final LocationService _locationService = LocationService();
 
   GeofenceZone? get _selectedZone {
     if (_selectedZoneId == null) return null;
@@ -63,6 +69,17 @@ class _GeofenceEditorScreenState extends State<GeofenceEditorScreen> {
   void initState() {
     super.initState();
     _loadGeofences();
+    _initializeLocationService();
+  }
+
+  // Initialize location service for getting manager location
+  Future<void> _initializeLocationService() async {
+    try {
+      // Request location permissions
+      await _locationService.requestLocationPermission();
+    } catch (e) {
+      debugPrint('Failed to initialize location service: $e');
+    }
   }
 
   // --- Data Loading ---
@@ -182,6 +199,52 @@ class _GeofenceEditorScreenState extends State<GeofenceEditorScreen> {
     setState(() => _selectedZone!.points[pointIndex] = newPosition);
   }
 
+  // --- Location Management ---
+  Future<void> _centerOnManagerLocation() async {
+    setState(() => _isLocationLoading = true);
+    
+    try {
+      // Get current position
+      final Position? position = await _locationService.getCurrentLocation();
+      
+      if (position != null && mounted) {
+        // Get map controller and animate to current location
+        final GoogleMapController controller = await _mapController.future;
+        
+        final newPosition = CameraPosition(
+          target: LatLng(position.latitude, position.longitude),
+          zoom: 16.0, // Zoom in to show detailed view of manager's location
+        );
+        
+        await controller.animateCamera(CameraUpdate.newCameraPosition(newPosition));
+        
+        if (mounted) {
+          context.showSnackBar(
+            'Centered on your location',
+          );
+        }
+      } else {
+        if (mounted) {
+          context.showSnackBar(
+            'Could not get your location. Please check location permissions.',
+            isError: true,
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        context.showSnackBar(
+          'Failed to get location: ${e.toString()}',
+          isError: true,
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLocationLoading = false);
+      }
+    }
+  }
+
   // --- Data Saving ---
   Future<void> _saveGeofences() async {
     setState(() => _isSaving = true);
@@ -241,19 +304,60 @@ class _GeofenceEditorScreenState extends State<GeofenceEditorScreen> {
               ],
             ),
       floatingActionButton: _selectedZoneId == null
-          ? FloatingActionButton.extended(
-              onPressed: _addNewZone,
-              label: Text(AppLocalizations.of(context)!.newZone),
-              icon: const Icon(Icons.add_location_alt_outlined),
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FloatingActionButton(
+                  heroTag: "centerLocation",
+                  onPressed: _centerOnManagerLocation,
+                  backgroundColor: Colors.blueAccent,
+                  child: _isLocationLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Icon(Icons.my_location, color: Colors.white),
+                  tooltip: 'Center on my location',
+                ),
+                const SizedBox(height: 16),
+                FloatingActionButton.extended(
+                  heroTag: "addZone",
+                  onPressed: _addNewZone,
+                  label: Text(AppLocalizations.of(context)!.newZone),
+                  icon: const Icon(Icons.add_location_alt_outlined),
+                ),
+              ],
             )
-          : null,
+          : FloatingActionButton(
+              heroTag: "centerLocation",
+              onPressed: _centerOnManagerLocation,
+              backgroundColor: Colors.blueAccent,
+              child: _isLocationLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Icon(Icons.my_location, color: Colors.white),
+              tooltip: 'Center on my location',
+            ),
     );
   }
 
   // --- Widget Builders ---
   Widget _buildGoogleMap() {
     return GoogleMap(
-      initialCameraPosition: const CameraPosition(target: LatLng(33.3152, 44.3661), zoom: 11),
+      initialCameraPosition: const CameraPosition(
+        target: LatLng(33.2232, 43.6793), // Center of Iraq
+        zoom: 6.5, // Zoom level to show entire Iraq
+      ),
       onMapCreated: (controller) => _mapController.complete(controller),
       onTap: _onMapTapped,
       polygons: _zones.map((zone) {

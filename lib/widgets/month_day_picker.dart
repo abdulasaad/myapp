@@ -173,7 +173,6 @@ class _MonthDayPickerState extends State<MonthDayPicker> {
   }
 
   List<DateTime> _getDaysInMonth() {
-    final firstDay = DateTime(_currentMonth.year, _currentMonth.month, 1);
     final lastDay = DateTime(_currentMonth.year, _currentMonth.month + 1, 0);
     
     List<DateTime> days = [];

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:geocoding/geocoding.dart';
 import '../../models/campaign.dart';
 import '../../models/campaign_geofence.dart';
 import '../../services/campaign_geofence_service.dart';
@@ -35,8 +36,8 @@ class _CampaignGeofenceManagementScreenState extends State<CampaignGeofenceManag
   
   late Future<List<CampaignGeofence>> _geofencesFuture;
   CameraPosition _initialCameraPosition = const CameraPosition(
-    target: LatLng(24.7136, 46.6753), // Default to Riyadh, Saudi Arabia
-    zoom: 10,
+    target: LatLng(33.2232, 43.6793), // Center of Iraq
+    zoom: 6.5, // Show entire Iraq
   );
   
   Set<Polygon> _polygons = {};
@@ -44,6 +45,7 @@ class _CampaignGeofenceManagementScreenState extends State<CampaignGeofenceManag
   List<LatLng> _currentPolygonPoints = [];
   bool _isDrawingMode = false;
   bool _isSaving = false;
+  bool _isLocationLoading = false;
   CampaignGeofence? _selectedGeofence;
 
   // Form controllers for creating/editing geofences
@@ -70,26 +72,119 @@ class _CampaignGeofenceManagementScreenState extends State<CampaignGeofenceManag
   Future<void> _getCurrentLocationAndUpdateCamera() async {
     try {
       final position = await _locationService.getCurrentLocation();
-      if (position != null) {
-        setState(() {
-          _initialCameraPosition = CameraPosition(
-            target: LatLng(position.latitude, position.longitude),
-            zoom: 15,
-          );
-        });
+      if (position != null && mounted) {
         
-        // If map is already loaded, animate to the new position
+        // Get city information from coordinates
+        final cityInfo = await _getCityInfoFromLocation(position.latitude, position.longitude);
+        
+        // Create camera position for the city (not exact coordinates)
+        final cityCameraPosition = CameraPosition(
+          target: cityInfo['coordinates'] as LatLng,
+          zoom: cityInfo['zoom'] as double,
+        );
+        
+        // If map is already loaded, animate to the city
         if (_mapController.isCompleted) {
           final controller = await _mapController.future;
           controller.animateCamera(
-            CameraUpdate.newCameraPosition(_initialCameraPosition),
+            CameraUpdate.newCameraPosition(cityCameraPosition),
           );
+          
+          // Show notification with city name
+          if (mounted) {
+            ModernNotification.info(
+              context,
+              message: 'Map centered on ${cityInfo['city']}',
+              subtitle: 'Create geofences around your city',
+            );
+          }
+        } else {
+          // Update initial position if map not loaded yet
+          setState(() {
+            _initialCameraPosition = cityCameraPosition;
+          });
         }
       }
     } catch (e) {
       debugPrint('Error getting current location: $e');
-      // Keep the default location if unable to get current location
+      // Keep the default Iraq location if unable to get manager location
     }
+  }
+
+  // Get city information and optimal map view for the location
+  Future<Map<String, dynamic>> _getCityInfoFromLocation(double latitude, double longitude) async {
+    try {
+      // Reverse geocoding to get address information
+      final placemarks = await placemarkFromCoordinates(latitude, longitude);
+      
+      if (placemarks.isNotEmpty) {
+        final placemark = placemarks.first;
+        final cityName = placemark.locality ?? 
+                        placemark.subAdministrativeArea ?? 
+                        placemark.administrativeArea ?? 
+                        'Unknown City';
+        
+        debugPrint('🏙️ Detected city: $cityName');
+        
+        // Get optimized city view based on known Iraqi cities
+        return _getOptimizedCityView(cityName, latitude, longitude);
+      }
+    } catch (e) {
+      debugPrint('Error in reverse geocoding: $e');
+    }
+    
+    // Fallback to exact coordinates with moderate zoom
+    return {
+      'city': 'Your Location',
+      'coordinates': LatLng(latitude, longitude),
+      'zoom': 14.0,
+    };
+  }
+
+  // Get optimized map view for major Iraqi cities
+  Map<String, dynamic> _getOptimizedCityView(String cityName, double lat, double lng) {
+    // Iraqi cities with their optimal center coordinates and zoom levels
+    final cityMap = <String, Map<String, dynamic>>{
+      // Major cities
+      'Baghdad': {'lat': 33.3152, 'lng': 44.3661, 'zoom': 11.0},
+      'Basra': {'lat': 30.5088, 'lng': 47.7804, 'zoom': 12.0},
+      'Mosul': {'lat': 36.3489, 'lng': 43.1189, 'zoom': 12.0},
+      'Erbil': {'lat': 36.1900, 'lng': 44.0092, 'zoom': 12.0},
+      'Sulaymaniyah': {'lat': 35.5528, 'lng': 45.4334, 'zoom': 12.0},
+      'Kirkuk': {'lat': 35.4681, 'lng': 44.3922, 'zoom': 13.0},
+      'Najaf': {'lat': 32.0000, 'lng': 44.3333, 'zoom': 13.0},
+      'Karbala': {'lat': 32.6160, 'lng': 44.0242, 'zoom': 13.0},
+      'Nasiriyah': {'lat': 31.0439, 'lng': 46.2593, 'zoom': 13.0},
+      'Amarah': {'lat': 31.8365, 'lng': 47.1448, 'zoom': 13.0},
+      'Diwaniyah': {'lat': 31.9929, 'lng': 44.9249, 'zoom': 13.0},
+      'Kut': {'lat': 32.5126, 'lng': 45.8183, 'zoom': 13.0},
+      'Hillah': {'lat': 32.4637, 'lng': 44.4199, 'zoom': 13.0},
+      'Ramadi': {'lat': 33.4206, 'lng': 43.3058, 'zoom': 13.0},
+      'Fallujah': {'lat': 33.3506, 'lng': 43.7881, 'zoom': 13.0},
+      'Tikrit': {'lat': 34.5975, 'lng': 43.6817, 'zoom': 13.0},
+      'Samarra': {'lat': 34.1989, 'lng': 43.8742, 'zoom': 13.0},
+      'Dohuk': {'lat': 36.8617, 'lng': 42.9783, 'zoom': 13.0},
+      'Zakho': {'lat': 37.1433, 'lng': 42.6838, 'zoom': 14.0},
+    };
+    
+    // Check for exact city match (case insensitive)
+    for (final entry in cityMap.entries) {
+      if (cityName.toLowerCase().contains(entry.key.toLowerCase()) || 
+          entry.key.toLowerCase().contains(cityName.toLowerCase())) {
+        return {
+          'city': entry.key,
+          'coordinates': LatLng(entry.value['lat']!, entry.value['lng']!),
+          'zoom': entry.value['zoom']!,
+        };
+      }
+    }
+    
+    // If no specific city found, use a moderate zoom level on user coordinates
+    return {
+      'city': cityName,
+      'coordinates': LatLng(lat, lng),
+      'zoom': 13.0, // Good zoom level for most Iraqi cities
+    };
   }
 
   void _loadGeofences() {
@@ -486,6 +581,85 @@ class _CampaignGeofenceManagementScreenState extends State<CampaignGeofenceManag
     });
   }
 
+  Widget _buildFloatingActionButton() {
+    // Calculate responsive bottom position based on panel height
+    final screenHeight = MediaQuery.of(context).size.height;
+    final maxHeight = screenHeight * 0.3;
+    final minHeight = 160.0;
+    final bottomHeight = maxHeight.clamp(minHeight, 200.0);
+    
+    return Positioned(
+      bottom: bottomHeight + 16, // Position above the bottom panel with padding
+      right: 16,
+      child: FloatingActionButton(
+        onPressed: _centerOnManagerLocation,
+        backgroundColor: Colors.blueAccent,
+        child: _isLocationLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : const Icon(Icons.my_location, color: Colors.white),
+        tooltip: 'Center on my location',
+      ),
+    );
+  }
+
+  Future<void> _centerOnManagerLocation() async {
+    setState(() => _isLocationLoading = true);
+    
+    try {
+      final position = await _locationService.getCurrentLocation();
+      
+      if (position != null && mounted) {
+        // Get city information from coordinates
+        final cityInfo = await _getCityInfoFromLocation(position.latitude, position.longitude);
+        
+        final controller = await _mapController.future;
+        
+        // Create camera position for the city view
+        final cityPosition = CameraPosition(
+          target: cityInfo['coordinates'] as LatLng,
+          zoom: cityInfo['zoom'] as double,
+        );
+        
+        await controller.animateCamera(CameraUpdate.newCameraPosition(cityPosition));
+        
+        if (mounted) {
+          ModernNotification.success(
+            context,
+            message: 'Centered on ${cityInfo['city']}',
+            subtitle: 'Perfect view for creating city geofences',
+          );
+        }
+      } else {
+        if (mounted) {
+          ModernNotification.error(
+            context,
+            message: 'Could not get your location',
+            subtitle: 'Please check location permissions',
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ModernNotification.error(
+          context,
+          message: 'Failed to get location',
+          subtitle: e.toString(),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLocationLoading = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -509,71 +683,84 @@ class _CampaignGeofenceManagementScreenState extends State<CampaignGeofenceManag
           ],
         ],
       ),
-      body: Column(
-        children: [
-          if (_isDrawingMode)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.1),
-                border: Border(bottom: BorderSide(color: Colors.blue.withValues(alpha: 0.2))),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.touch_app, color: Colors.blue[700]),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Tap on the map to draw your work zone',
-                          style: TextStyle(
-                            color: Colors.blue[700], 
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                          ),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Column(
+              children: [
+                if (_isDrawingMode)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.1),
+                      border: Border(bottom: BorderSide(color: Colors.blue.withValues(alpha: 0.2))),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.touch_app, color: Colors.blue[700]),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Tap on the map to draw your work zone',
+                                style: TextStyle(
+                                  color: Colors.blue[700], 
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.info_outline, color: Colors.blue[600], size: 16),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Points: ${_currentPolygonPoints.length} (need at least 3 to create zone)',
-                          style: TextStyle(color: Colors.blue[600], fontSize: 14),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(Icons.info_outline, color: Colors.blue[600], size: 16),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Points: ${_currentPolygonPoints.length} (need at least 3 to create zone)',
+                                style: TextStyle(color: Colors.blue[600], fontSize: 14),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                Expanded(
+                  child: GoogleMap(
+                    onMapCreated: (GoogleMapController controller) {
+                      _mapController.complete(controller);
+                    },
+                    onTap: _onMapTapped,
+                    polygons: _polygons,
+                    markers: _markers,
+                    initialCameraPosition: _initialCameraPosition,
+                    mapType: MapType.normal,
+                  ),
+                ),
+                _buildGeofencesList(),
+              ],
             ),
-          Expanded(
-            child: GoogleMap(
-              onMapCreated: (GoogleMapController controller) {
-                _mapController.complete(controller);
-              },
-              onTap: _onMapTapped,
-              polygons: _polygons,
-              markers: _markers,
-              initialCameraPosition: _initialCameraPosition,
-              mapType: MapType.normal,
-            ),
-          ),
-          _buildGeofencesList(),
-        ],
+            _buildFloatingActionButton(),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildGeofencesList() {
+    // Calculate responsive height - max 30% of screen height
+    final screenHeight = MediaQuery.of(context).size.height;
+    final maxHeight = screenHeight * 0.3;
+    final minHeight = 160.0; // Minimum height for usability
+    final bottomHeight = maxHeight.clamp(minHeight, 200.0);
+    
     return Container(
-      height: 200,
-      padding: const EdgeInsets.all(16),
+      height: bottomHeight,
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8), // Reduced bottom padding
       decoration: const BoxDecoration(
         color: cardBackgroundColor,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),

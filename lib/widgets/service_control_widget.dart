@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import '../services/persistent_service_manager.dart';
 import '../l10n/app_localizations.dart';
 import '../utils/constants.dart';
-import '../l10n/app_localizations.dart';
 
 class ServiceControlWidget extends StatefulWidget {
   final bool isCompact;
@@ -166,8 +165,8 @@ class _ServiceControlWidgetState extends State<ServiceControlWidget> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: _isServiceRunning 
-                        ? Colors.green.withOpacity(0.1)
-                        : Colors.grey.withOpacity(0.1),
+                        ? Colors.green.withValues(alpha: 0.1)
+                        : Colors.grey.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -219,10 +218,10 @@ class _ServiceControlWidgetState extends State<ServiceControlWidget> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: Colors.blue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: Colors.blue.withOpacity(0.3),
+                    color: Colors.blue.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Row(
@@ -305,19 +304,19 @@ class _ServiceControlWidgetState extends State<ServiceControlWidget> {
           end: Alignment.bottomRight,
           colors: _isServiceRunning
               ? [
-                  Colors.green.withOpacity(0.1),
-                  Colors.green.withOpacity(0.05),
+                  Colors.green.withValues(alpha: 0.1),
+                  Colors.green.withValues(alpha: 0.05),
                 ]
               : [
-                  Colors.grey.withOpacity(0.1),
-                  Colors.grey.withOpacity(0.05),
+                  Colors.grey.withValues(alpha: 0.1),
+                  Colors.grey.withValues(alpha: 0.05),
                 ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: _isServiceRunning 
-              ? Colors.green.withOpacity(0.3)
-              : Colors.grey.withOpacity(0.3),
+              ? Colors.green.withValues(alpha: 0.3)
+              : Colors.grey.withValues(alpha: 0.3),
         ),
       ),
       child: Padding(
@@ -329,8 +328,8 @@ class _ServiceControlWidgetState extends State<ServiceControlWidget> {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: _isServiceRunning 
-                    ? Colors.green.withOpacity(0.2)
-                    : Colors.grey.withOpacity(0.2),
+                    ? Colors.green.withValues(alpha: 0.2)
+                    : Colors.grey.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(

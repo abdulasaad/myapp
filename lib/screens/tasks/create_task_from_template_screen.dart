@@ -362,6 +362,8 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
         return Icons.email;
       case TemplateFieldType.phone:
         return Icons.phone;
+      default:
+        return Icons.help_outline;
     }
   }
 
@@ -1181,6 +1183,7 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
       case TemplateFieldType.time:
         return _buildTimeFieldWidget(field);
       case TemplateFieldType.boolean:
+        return _buildBooleanFieldWidget(field);
       case TemplateFieldType.checkbox:
         return _buildBooleanFieldWidget(field);
       case TemplateFieldType.radio:
@@ -1188,9 +1191,6 @@ class _CreateTaskFromTemplateScreenState extends State<CreateTaskFromTemplateScr
         return _buildSelectFieldWidget(field);
       case TemplateFieldType.multiselect:
         return _buildMultiSelectFieldWidget(field);
-      default:
-        // Fallback for any unknown field types
-        return _buildTextFieldWidget(field);
     }
   }
 

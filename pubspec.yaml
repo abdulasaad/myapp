@@ -19,6 +19,7 @@ dependencies:
   supabase_flutter: any
   logger: ^2.5.0
   geolocator: ^12.0.0
+  geocoding: ^3.0.0
   google_maps_flutter: ^2.5.0
   image_picker: ^1.1.2
   file_picker: ^8.1.2
@@ -54,6 +55,11 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^5.0.0
   flutter_launcher_icons: ^0.13.1
+  mockito: ^5.4.4
+  build_runner: ^2.4.8
+  mocktail: ^1.0.3
+  integration_test:
+    sdk: flutter
 
 flutter:
   uses-material-design: true
