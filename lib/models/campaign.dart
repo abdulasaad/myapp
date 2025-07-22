@@ -9,6 +9,8 @@ class Campaign {
   final DateTime endDate;
   final String status;
   final String packageType;
+  final String? clientId;
+  final String? assignedManagerId;
 
   Campaign({
     required this.id,
@@ -19,6 +21,8 @@ class Campaign {
     required this.endDate,
     required this.status,
     required this.packageType,
+    this.clientId,
+    this.assignedManagerId,
   });
 
   // Factory constructor to create a Campaign from a JSON object (Map)
@@ -32,6 +36,8 @@ class Campaign {
       endDate: DateTime.parse(json['end_date']),
       status: json['status'],
       packageType: json['package_type'],
+      clientId: json['client_id'],
+      assignedManagerId: json['assigned_manager_id'],
     );
   }
 }

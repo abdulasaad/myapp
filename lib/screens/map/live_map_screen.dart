@@ -358,6 +358,9 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
         return await supabase.rpc('get_agents_in_manager_groups', params: {
           'manager_user_id': currentUser.id,
         });
+      } else if (userRole == 'client') {
+        // Clients can see agents assigned to campaigns they monitor
+        return await _getAgentsForClientCampaigns(currentUser.id);
       } else {
         // Other roles (agents) typically don't access live map
         return [];
@@ -366,6 +369,164 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
       debugPrint('❌ ADMIN DEBUG: Error filtering agent locations: $e');
       debugPrint('❌ ADMIN DEBUG: Error stack trace: ${StackTrace.current}');
       // Return empty list on error rather than throwing
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _getAgentsForClientCampaigns(String clientId) async {
+    try {
+      debugPrint('🎯 CLIENT DEBUG: Loading agents for client campaigns...');
+      
+      // Step 1: Get campaigns assigned to this client
+      final campaignsResponse = await supabase
+          .from('campaigns')
+          .select('id, name')
+          .eq('client_id', clientId);
+      
+      debugPrint('🎯 CLIENT DEBUG: Found ${campaignsResponse.length} campaigns for client');
+      
+      if (campaignsResponse.isEmpty) {
+        debugPrint('🎯 CLIENT DEBUG: No campaigns found for client');
+        return [];
+      }
+      
+      final campaignIds = campaignsResponse.map((c) => c['id'] as String).toList();
+      debugPrint('🎯 CLIENT DEBUG: Campaign IDs: $campaignIds');
+      
+      // Step 2: Get agents assigned to these campaigns
+      final campaignAgentsResponse = await supabase
+          .from('campaign_agents')
+          .select('agent_id')
+          .inFilter('campaign_id', campaignIds);
+      
+      debugPrint('🎯 CLIENT DEBUG: Found ${campaignAgentsResponse.length} campaign agents');
+      
+      if (campaignAgentsResponse.isEmpty) {
+        debugPrint('🎯 CLIENT DEBUG: No agents assigned to campaigns');
+        return [];
+      }
+      
+      // Step 3: Get unique agent IDs
+      final agentIds = campaignAgentsResponse
+          .map((ca) => ca['agent_id'] as String)
+          .toSet()
+          .toList();
+      
+      debugPrint('🎯 CLIENT DEBUG: Agent IDs: $agentIds');
+      
+      // Step 4: Get agent profiles and locations
+      final agentsResponse = await supabase
+          .from('profiles')
+          .select('id, full_name, email, status')
+          .inFilter('id', agentIds)
+          .eq('role', 'agent');
+      
+      debugPrint('🎯 CLIENT DEBUG: Found ${agentsResponse.length} active agents');
+      
+      // Step 5: Get agent profiles with their location data
+      final List<Map<String, dynamic>> agentsWithLocation = [];
+      
+      debugPrint('🎯 CLIENT DEBUG: Starting location data lookup...');
+      debugPrint('🎯 CLIENT DEBUG: Agent profile data: $agentsResponse');
+      
+      // Try to get agents with location data using the same approach as admin/manager
+      try {
+        // First try using active_agents table if it exists
+        debugPrint('🎯 CLIENT DEBUG: Querying active_agents table with agent IDs: $agentIds');
+        final activeAgentsResponse = await supabase
+            .from('active_agents')
+            .select('*')
+            .inFilter('user_id', agentIds);
+        
+        debugPrint('🎯 CLIENT DEBUG: Active agents raw response: $activeAgentsResponse');
+        debugPrint('🎯 CLIENT DEBUG: Found ${activeAgentsResponse.length} active agents with location');
+        
+        // Build a map of agent locations
+        final Map<String, dynamic> agentLocations = {};
+        for (final activeAgent in activeAgentsResponse) {
+          debugPrint('🎯 CLIENT DEBUG: Processing active agent: $activeAgent');
+          // Map updated_at to last_heartbeat for consistency
+          if (activeAgent['updated_at'] != null) {
+            activeAgent['last_heartbeat'] = activeAgent['updated_at'];
+          }
+          agentLocations[activeAgent['user_id']] = activeAgent;
+        }
+        
+        debugPrint('🎯 CLIENT DEBUG: Agent locations map: $agentLocations');
+        
+        // Combine profile data with location data
+        for (final profile in agentsResponse) {
+          final agentId = profile['id'] as String;
+          debugPrint('🎯 CLIENT DEBUG: Processing profile for agent $agentId: $profile');
+          
+          final Map<String, dynamic> result = {
+            'id': profile['id'],
+            'full_name': profile['full_name'],
+            'email': profile['email'],
+            'status': profile['status'],
+            'role': 'agent',
+          };
+          
+          // Add location data if available
+          final locationData = agentLocations[agentId];
+          debugPrint('🎯 CLIENT DEBUG: Location data for $agentId: $locationData');
+          
+          if (locationData != null) {
+            debugPrint('🎯 CLIENT DEBUG: Adding location data for ${profile['full_name']}');
+            
+            // Convert latitude/longitude to POINT format expected by AgentMapInfo.fromJson
+            if (locationData['latitude'] != null && locationData['longitude'] != null) {
+              final lat = locationData['latitude'];
+              final lng = locationData['longitude'];
+              result['last_location'] = 'POINT($lng $lat)';
+              debugPrint('🎯 CLIENT DEBUG: Created last_location POINT: ${result['last_location']}');
+            }
+            
+            // Add last_seen timestamp
+            if (locationData['last_heartbeat'] != null) {
+              result['last_seen'] = locationData['last_heartbeat'];
+            }
+            
+            // Add other fields
+            result.addAll({
+              'accuracy': locationData['accuracy'],
+              'last_heartbeat': locationData['last_heartbeat'],
+              'battery_level': locationData['battery_level'],
+              'connection_status': locationData['connection_status'],
+            });
+            debugPrint('🎯 CLIENT DEBUG: Result with location: $result');
+          } else {
+            debugPrint('🎯 CLIENT DEBUG: No location data found for ${profile['full_name']}');
+          }
+          
+          agentsWithLocation.add(result);
+          debugPrint('🎯 CLIENT DEBUG: Added agent to final list: ${result['full_name']}');
+        }
+      } catch (e) {
+        debugPrint('❌ CLIENT DEBUG: Error getting agent locations from active_agents: $e');
+        debugPrint('❌ CLIENT DEBUG: Error stack: ${StackTrace.current}');
+        debugPrint('🎯 CLIENT DEBUG: Falling back to profiles only');
+        
+        // If active_agents doesn't exist or fails, just return profile data
+        for (final profile in agentsResponse) {
+          final profileResult = {
+            'id': profile['id'],
+            'full_name': profile['full_name'],
+            'email': profile['email'],
+            'status': profile['status'],
+            'role': 'agent',
+          };
+          agentsWithLocation.add(profileResult);
+          debugPrint('🎯 CLIENT DEBUG: Added agent (no location): ${profileResult['full_name']}');
+        }
+      }
+      
+      debugPrint('🎯 CLIENT DEBUG: Final agents list: $agentsWithLocation');
+      debugPrint('🎯 CLIENT DEBUG: Returning ${agentsWithLocation.length} agents with location data');
+      return agentsWithLocation;
+      
+    } catch (e) {
+      debugPrint('❌ CLIENT DEBUG: Error getting agents for client campaigns: $e');
       return [];
     }
   }

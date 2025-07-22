@@ -54,20 +54,36 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
     // Validate session immediately when loading campaigns
     SessionService().validateSessionImmediately();
     
+    // Ensure profile is loaded before checking permissions
+    _initializeWithProfile();
+  }
+  
+  Future<void> _initializeWithProfile() async {
+    // Load profile first to ensure we have the user's role
+    await ProfileService.instance.loadProfile();
+    
     // Initialize data fetching based on user role
-    if (ProfileService.instance.canManageCampaigns) {
-      _managerCampaignsFuture = _fetchManagerCampaigns();
-    } else {
-      // For agents, fetch both campaigns and tasks concurrently
-      _agentDataFuture = Future.wait([
-        _fetchAgentCampaigns(),
-        _fetchAgentStandaloneTasks(),
-      ]);
-      // Subscribe to geofence status updates
-      _geofenceStatusSubscription =
-          widget.locationService.geofenceStatusStream.listen((status) {
-        if (mounted) {
-          setState(() => _geofenceStatuses[status.campaignId] = status.isInside);
+    print('🔍 PROFILE DEBUG: Current user role: ${ProfileService.instance.role}');
+    print('🔍 PROFILE DEBUG: canManageCampaigns: ${ProfileService.instance.canManageCampaigns}');
+    
+    if (mounted) {
+      setState(() {
+        if (ProfileService.instance.canManageCampaigns) {
+          print('🔍 PROFILE DEBUG: Loading manager/admin campaigns');
+          _managerCampaignsFuture = _fetchManagerCampaigns();
+        } else {
+          // For agents, fetch both campaigns and tasks concurrently
+          _agentDataFuture = Future.wait([
+            _fetchAgentCampaigns(),
+            _fetchAgentStandaloneTasks(),
+          ]);
+          // Subscribe to geofence status updates
+          _geofenceStatusSubscription =
+              widget.locationService.geofenceStatusStream.listen((status) {
+            if (mounted) {
+              setState(() => _geofenceStatuses[status.campaignId] = status.isInside);
+            }
+          });
         }
       });
     }
@@ -97,9 +113,14 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
 
   Future<List<Campaign>> _fetchManagerCampaigns() async {
     final currentUser = supabase.auth.currentUser;
-    if (currentUser == null) return [];
+    if (currentUser == null) {
+      print('🔴 ADMIN CAMPAIGN DEBUG: No current user');
+      return [];
+    }
 
     try {
+      print('🔍 ADMIN CAMPAIGN DEBUG: Fetching campaigns for user ${currentUser.id}');
+      
       // Get current user's role
       final userRoleResponse = await supabase
           .from('profiles')
@@ -108,13 +129,19 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
           .single();
       
       final userRole = userRoleResponse['role'] as String;
+      print('🔍 ADMIN CAMPAIGN DEBUG: User role: $userRole');
 
       if (userRole == 'admin') {
+        print('🔍 ADMIN CAMPAIGN DEBUG: Admin detected, fetching all campaigns...');
+        
         // Admins can see all campaigns
         final response = await supabase
             .from('campaigns')
             .select('*, created_at')
             .order('created_at', ascending: false);
+        
+        print('🔍 ADMIN CAMPAIGN DEBUG: Found ${response.length} campaigns');
+        
         return response.map((json) => Campaign.fromJson(json)).toList();
       } else if (userRole == 'manager') {
         // Managers can see:
@@ -191,6 +218,7 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
         return [];
       }
     } catch (e) {
+      print('🔴 ADMIN CAMPAIGN DEBUG: Error filtering manager campaigns: $e');
       debugPrint('Error filtering manager campaigns: $e');
       // Return empty list on error rather than throwing
       return [];
@@ -477,26 +505,29 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
           ),
         ],
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 80),
-        child: FloatingActionButton.extended(
-          onPressed: () async {
-            final result = await Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const CampaignWizardStep1Screen(),
+      // Hide floating action button for client users (read-only access)
+      floatingActionButton: ProfileService.instance.canEditData 
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 80),
+              child: FloatingActionButton.extended(
+                onPressed: () async {
+                  final result = await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const CampaignWizardStep1Screen(),
+                    ),
+                  );
+                  if (result == true && mounted) {
+                    refreshAll();
+                  }
+                },
+                icon: const Icon(Icons.add),
+                label: Text(AppLocalizations.of(context)!.campaign),
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                elevation: 4,
               ),
-            );
-            if (result == true && mounted) {
-              refreshAll();
-            }
-          },
-          icon: const Icon(Icons.add),
-          label: Text(AppLocalizations.of(context)!.campaign),
-          backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
-          elevation: 4,
-        ),
-        ),
+            )
+          : null, // Hide for clients
       ),
     );
   }

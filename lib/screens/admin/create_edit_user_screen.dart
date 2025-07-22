@@ -37,6 +37,7 @@ class _CreateEditUserScreenState extends State<CreateEditUserScreen> {
   bool _isLoading = false;
   bool _isLoadingGroups = false;
   bool _obscurePassword = true;
+  bool _requireEmailConfirmation = true; // Default to requiring email confirmation
 
   @override
   void initState() {
@@ -214,6 +215,7 @@ class _CreateEditUserScreenState extends State<CreateEditUserScreen> {
           password: _passwordController.text,
           agentCreationLimit: _selectedRole == 'manager' ? int.tryParse(_agentCreationLimitController.text) : null,
           groupIds: _selectedGroupIds,
+          requireEmailConfirmation: _requireEmailConfirmation,
         );
 
         if (mounted) {
@@ -435,6 +437,7 @@ class _CreateEditUserScreenState extends State<CreateEditUserScreen> {
             DropdownMenuItem(value: 'agent', child: Text('Agent')),
             DropdownMenuItem(value: 'manager', child: Text('Manager')),
             DropdownMenuItem(value: 'admin', child: Text('Admin')),
+            DropdownMenuItem(value: 'client', child: Text('Client')),
           ],
           onChanged: widget.isEditing ? null : (value) {
             setState(() {
@@ -448,6 +451,40 @@ class _CreateEditUserScreenState extends State<CreateEditUserScreen> {
             });
           },
           validator: (value) => value == null ? 'Please select a role' : null,
+        ),
+        const SizedBox(height: 16),
+        // Email Confirmation Toggle
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.grey[50],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey[300]!),
+          ),
+          child: SwitchListTile(
+            title: const Text(
+              'Require Email Confirmation',
+              style: TextStyle(fontWeight: FontWeight.w500),
+            ),
+            subtitle: Text(
+              _requireEmailConfirmation 
+                ? 'User must verify email before accessing the system'
+                : 'User can access immediately after creation',
+              style: TextStyle(
+                color: _requireEmailConfirmation ? Colors.orange[700] : Colors.green[700],
+                fontSize: 12,
+              ),
+            ),
+            value: _requireEmailConfirmation,
+            onChanged: widget.isEditing ? null : (value) {
+              setState(() {
+                _requireEmailConfirmation = value;
+              });
+            },
+            secondary: Icon(
+              _requireEmailConfirmation ? Icons.email : Icons.email_outlined,
+              color: _requireEmailConfirmation ? Colors.orange : Colors.green,
+            ),
+          ),
         ),
       ],
     );

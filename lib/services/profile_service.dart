@@ -33,10 +33,27 @@ class ProfileService {
     return _currentUser?.role == 'admin' || _currentUser?.role == 'manager';
   }
 
+  bool get canViewCampaigns {
+    return _currentUser?.role == 'admin' || _currentUser?.role == 'manager' || _currentUser?.role == 'client';
+  }
+
+  bool get isClient {
+    return _currentUser?.role == 'client';
+  }
+
+  bool get canEditData {
+    return _currentUser?.role == 'admin' || _currentUser?.role == 'manager';
+  }
+
   // Fetches the profile from Supabase and stores it locally
   Future<void> loadProfile() async {
     final userId = supabase.auth.currentUser?.id;
-    if (userId == null) return;
+    print('🔍 PROFILE SERVICE DEBUG: Loading profile for user ID: $userId');
+    
+    if (userId == null) {
+      print('🔴 PROFILE SERVICE DEBUG: No user ID found');
+      return;
+    }
 
     try {
       final response = await supabase
@@ -51,7 +68,10 @@ class ProfileService {
         role: response['role'],
         status: response['status'], // <-- Store status
       );
+      
+      print('🔍 PROFILE SERVICE DEBUG: Profile loaded successfully - Role: ${_currentUser!.role}, Name: ${_currentUser!.fullName}');
     } catch (e) {
+      print('🔴 PROFILE SERVICE DEBUG: Error loading profile: $e');
       final logger = Logger();
       logger.e('Error loading profile', error: e);
       _currentUser = null;

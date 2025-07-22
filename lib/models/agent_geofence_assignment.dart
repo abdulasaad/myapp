@@ -90,14 +90,14 @@ class AgentGeofenceAssignment {
   static Duration? _parseDuration(String durationStr) {
     try {
       // Parse PostgreSQL interval format (e.g., "02:30:45" or "1 day 02:30:45")
-      final regex = RegExp(r'(\d+)\s*days?\s*)?(\d{2}):(\d{2}):(\d{2})');
+      final regex = RegExp(r'((\d+)\s*days?\s*)?(\d{2}):(\d{2}):(\d{2})');
       final match = regex.firstMatch(durationStr);
       
       if (match != null) {
-        final days = int.tryParse(match.group(1) ?? '0') ?? 0;
-        final hours = int.parse(match.group(2)!);
-        final minutes = int.parse(match.group(3)!);
-        final seconds = int.parse(match.group(4)!);
+        final days = int.tryParse(match.group(2) ?? '0') ?? 0;
+        final hours = int.parse(match.group(3)!);
+        final minutes = int.parse(match.group(4)!);
+        final seconds = int.parse(match.group(5)!);
         
         return Duration(
           days: days,

@@ -32,6 +32,11 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
   List<AppUser> _managers = [];
   bool _isAdmin = false;
   bool _managersLoaded = false;
+  
+  // Client assignment (for admin/manager)
+  String? _selectedClientId;
+  List<AppUser> _clients = [];
+  bool _clientsLoaded = false;
 
   bool get _isEditing => widget.campaignToEdit != null;
 
@@ -42,6 +47,15 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
       final campaign = widget.campaignToEdit!;
       _nameController.text = campaign.name;
       _descriptionController.text = campaign.description ?? '';
+      
+      // Load client assignment if it exists
+      _selectedClientId = campaign.clientId;
+      debugPrint('📝 Editing campaign: Loading existing client assignment: ${campaign.clientId}');
+      
+      // Load manager assignment if it exists
+      _selectedManagerId = campaign.assignedManagerId;
+      debugPrint('📝 Editing campaign: Loading existing manager assignment: ${campaign.assignedManagerId}');
+      
       // Convert start/end dates to selected days for backward compatibility
       if (campaign.startDate != null && campaign.endDate != null) {
         final start = campaign.startDate!;
@@ -54,19 +68,24 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
       }
     }
     
-    // Check if current user is admin and load managers
-    _checkUserRoleAndLoadManagers();
+    // Check if current user is admin and load managers and clients
+    _checkUserRoleAndLoadUsersForAssignment();
   }
 
-  Future<void> _checkUserRoleAndLoadManagers() async {
+  Future<void> _checkUserRoleAndLoadUsersForAssignment() async {
     try {
       final userRole = await UserManagementService().getCurrentUserRole();
       final isAdmin = userRole == 'admin';
+      final canAssignUsers = userRole == 'admin' || userRole == 'manager';
+      
+      debugPrint('👤 Current user role: $userRole');
+      debugPrint('🔑 isAdmin: $isAdmin, canAssignUsers: $canAssignUsers');
       
       setState(() {
         _isAdmin = isAdmin;
       });
       
+      // Load managers if admin
       if (isAdmin) {
         await _loadManagers();
       } else {
@@ -74,10 +93,22 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
           _managersLoaded = true;
         });
       }
+      
+      // Load clients if admin or manager
+      if (canAssignUsers) {
+        debugPrint('🎯 User can assign clients, loading client list...');
+        await _loadClients();
+      } else {
+        debugPrint('❌ User cannot assign clients');
+        setState(() {
+          _clientsLoaded = true;
+        });
+      }
     } catch (e) {
       debugPrint('Error checking user role: $e');
       setState(() {
         _managersLoaded = true;
+        _clientsLoaded = true;
       });
     }
   }
@@ -97,6 +128,42 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
       debugPrint('Error loading managers: $e');
       setState(() {
         _managersLoaded = true;
+      });
+    }
+  }
+
+  Future<void> _loadClients() async {
+    try {
+      debugPrint('🔍 Loading clients for campaign assignment...');
+      
+      // Debug: Try direct query first
+      try {
+        final directQuery = await supabase
+            .from('profiles')
+            .select('id, full_name, role, email')
+            .eq('role', 'client');
+        debugPrint('🔍 Direct query result: $directQuery');
+      } catch (e) {
+        debugPrint('❌ Direct query failed: $e');
+      }
+      
+      final clients = await UserManagementService().getUsers(
+        roleFilter: 'client',
+        statusFilter: 'active',
+      );
+      
+      debugPrint('📋 Found ${clients.length} client(s): ${clients.map((c) => c.fullName).join(', ')}');
+      
+      setState(() {
+        _clients = clients;
+        _clientsLoaded = true;
+      });
+      
+      debugPrint('✅ Client loading completed. _clientsLoaded: $_clientsLoaded, _clients.length: ${_clients.length}');
+    } catch (e) {
+      debugPrint('❌ Error loading clients: $e');
+      setState(() {
+        _clientsLoaded = true;
       });
     }
   }
@@ -135,16 +202,25 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
         final startDate = sortedDays.first;
         final endDate = sortedDays.last;
 
-        final campaignData = {
+        final campaignData = <String, dynamic>{
           'name': _nameController.text.trim(),
           'description': _descriptionController.text.trim(),
           'start_date': startDate.toIso8601String(),
           'end_date': endDate.toIso8601String(),
         };
 
-        // Add assigned manager if admin selected one
-        if (_isAdmin && _selectedManagerId != null) {
-          campaignData['assigned_manager_id'] = _selectedManagerId!;
+        // Add assigned manager if admin selected one or preserve existing assignment
+        if (_isAdmin) {
+          // Admin can set/change/clear manager assignment
+          campaignData['assigned_manager_id'] = _selectedManagerId; // Can be null to clear
+        } else if (_isEditing && widget.campaignToEdit!.assignedManagerId != null) {
+          // Non-admin editing: preserve existing manager assignment
+          campaignData['assigned_manager_id'] = widget.campaignToEdit!.assignedManagerId!;
+        }
+
+        // Add assigned client if admin/manager selected one
+        if (_selectedClientId != null) {
+          campaignData['client_id'] = _selectedClientId!;
         }
 
         if (_isEditing) {
@@ -163,7 +239,18 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
         } else {
           final userId = supabase.auth.currentUser!.id;
           campaignData['created_by'] = userId; // Add created_by only for new campaigns
-          await supabase.from('campaigns').insert(campaignData);
+          
+          debugPrint('🎯 CAMPAIGN DEBUG: Attempting to create campaign...');
+          debugPrint('🎯 CAMPAIGN DEBUG: User ID: $userId');
+          debugPrint('🎯 CAMPAIGN DEBUG: Campaign data: $campaignData');
+          
+          try {
+            await supabase.from('campaigns').insert(campaignData);
+            debugPrint('✅ CAMPAIGN DEBUG: Campaign created successfully');
+          } catch (e) {
+            debugPrint('❌ CAMPAIGN DEBUG: Campaign creation failed: $e');
+            rethrow;
+          }
           if (mounted) {
             ModernNotification.success(
               context,
@@ -299,6 +386,7 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
                           const SizedBox(height: 16),
                           DropdownButtonFormField<String>(
                             value: _selectedManagerId,
+                            isExpanded: true,
                             decoration: InputDecoration(
                               labelText: AppLocalizations.of(context)!.assignToManager,
                               hintText: AppLocalizations.of(context)!.selectManagerToOversee,
@@ -316,7 +404,10 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
                               ..._managers.map((manager) {
                                 return DropdownMenuItem<String>(
                                   value: manager.id,
-                                  child: Text(manager.fullName),
+                                  child: Text(
+                                    manager.fullName,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 );
                               }),
                             ],
@@ -329,13 +420,15 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
                           if (_selectedManagerId != null) ...[
                             const SizedBox(height: 8),
                             Container(
-                              padding: const EdgeInsets.all(8),
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 color: Colors.blue[50],
-                                borderRadius: BorderRadius.circular(4),
+                                borderRadius: BorderRadius.circular(8),
                                 border: Border.all(color: Colors.blue[200]!),
                               ),
                               child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Icon(Icons.info_outline, size: 16, color: Colors.blue[700]),
                                   const SizedBox(width: 8),
@@ -345,7 +438,83 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
                                       style: TextStyle(
                                         color: Colors.blue[700],
                                         fontSize: 12,
+                                        height: 1.3,
                                       ),
+                                      maxLines: 3,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                        // Client Assignment Section (Admin/Manager only)
+                        if (_clientsLoaded && _clients.isNotEmpty) ...[
+                          // This will only build if condition is true
+                          Builder(builder: (context) {
+                            debugPrint('🎨 UI: Client assignment section is building! _clientsLoaded=$_clientsLoaded, _clients.length=${_clients.length}');
+                            return const SizedBox.shrink();
+                          }),
+                          const SizedBox(height: 16),
+                          DropdownButtonFormField<String>(
+                            value: _selectedClientId,
+                            isExpanded: true,
+                            decoration: InputDecoration(
+                              labelText: 'Assign to Client',
+                              hintText: 'Select client who will monitor this campaign',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              filled: true,
+                              fillColor: backgroundColor,
+                            ),
+                            items: [
+                              const DropdownMenuItem<String>(
+                                value: null,
+                                child: Text('No specific client'),
+                              ),
+                              ..._clients.map((client) {
+                                return DropdownMenuItem<String>(
+                                  value: client.id,
+                                  child: Text(
+                                    client.fullName,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                );
+                              }),
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedClientId = value;
+                              });
+                            },
+                          ),
+                          if (_selectedClientId != null) ...[
+                            const SizedBox(height: 8),
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.green[50],
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.green[200]!),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Icon(Icons.info_outline, size: 16, color: Colors.green[700]),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'Client will monitor campaign progress and agent locations (read-only).',
+                                      style: TextStyle(
+                                        color: Colors.green[700],
+                                        fontSize: 12,
+                                        height: 1.3,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                 ],

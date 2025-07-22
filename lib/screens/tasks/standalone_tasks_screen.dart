@@ -9,7 +9,8 @@ import './standalone_task_detail_screen.dart';
 import './create_evidence_task_screen.dart';
 import './template_categories_screen.dart';
 import '../../l10n/app_localizations.dart';
-import '../../widgets/modern_notification.dart'; 
+import '../../widgets/modern_notification.dart';
+import '../../services/profile_service.dart'; 
 
 class StandaloneTasksScreen extends StatefulWidget {
   const StandaloneTasksScreen({super.key});
@@ -556,17 +557,20 @@ class _StandaloneTasksScreenState extends State<StandaloneTasksScreen> {
           ),
         ],
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(bottom: 80),
-        child: FloatingActionButton.extended(
-          onPressed: _showCreateTaskMenu,
-          icon: const Icon(Icons.add),
-          label: Text(AppLocalizations.of(context)!.newTask),
-          backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
-          elevation: 4,
-        ),
-        ),
+      // Hide floating action button for client users (read-only access)
+      floatingActionButton: ProfileService.instance.canEditData 
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 80),
+              child: FloatingActionButton.extended(
+                onPressed: _showCreateTaskMenu,
+                icon: const Icon(Icons.add),
+                label: Text(AppLocalizations.of(context)!.newTask),
+                backgroundColor: primaryColor,
+                foregroundColor: Colors.white,
+                elevation: 4,
+              ),
+            )
+          : null, // Hide for clients
       ),
     );
   }

@@ -33,6 +33,7 @@ import 'tasks/standalone_tasks_screen.dart';
 import 'map/live_map_screen.dart';
 import 'admin/enhanced_manager_dashboard_screen.dart';
 import 'admin/admin_dashboard_screen.dart';
+import 'client/client_dashboard_screen.dart';
 import 'agent/agent_standalone_tasks_screen.dart';
 import 'login_screen.dart';
 import 'admin/settings_screen.dart';
@@ -293,9 +294,13 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
   List<Widget> _getScreens() {
     if (_currentUser == null) return [_buildLoadingScreen()];
 
-    final isAdmin = _currentUser!.role == 'admin' || _currentUser!.role == 'manager';
-    
-    if (isAdmin) {
+    if (_currentUser!.role == 'client') {
+      // Client users only get Dashboard and Profile tabs
+      return [
+        _DashboardTab(user: _currentUser!),
+        _ProfileTab(user: _currentUser!),
+      ];
+    } else if (_currentUser!.role == 'admin' || _currentUser!.role == 'manager') {
       return [
         _DashboardTab(user: _currentUser!),
         _CampaignsTab(),
@@ -315,9 +320,19 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
   List<BottomNavigationBarItem> _getNavItems() {
     if (_currentUser == null) return [];
 
-    final isAdmin = _currentUser!.role == 'admin' || _currentUser!.role == 'manager';
-    
-    if (isAdmin) {
+    if (_currentUser!.role == 'client') {
+      // Client users only get Dashboard and Profile navigation items
+      return [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.dashboard),
+          label: AppLocalizations.of(context)!.dashboard,
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person),
+          label: AppLocalizations.of(context)!.profile,
+        ),
+      ];
+    } else if (_currentUser!.role == 'admin' || _currentUser!.role == 'manager') {
       return [
         BottomNavigationBarItem(
           icon: Icon(Icons.dashboard),
@@ -410,7 +425,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
       body: Stack(
         children: [
           // Main content
-          _currentUser!.role == 'admin' || _currentUser!.role == 'manager'
+          _currentUser!.role == 'admin' || _currentUser!.role == 'manager' || _currentUser!.role == 'client'
               ? IndexedStack(
                   index: safeIndex,
                   children: screens,
@@ -447,8 +462,8 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
             bottom: 16,
             left: 16,
             right: 16,
-            height: _currentUser!.role == 'admin' || _currentUser!.role == 'manager' ? 120 : 80, // Extended height for admin button
-            child: _currentUser!.role == 'admin' || _currentUser!.role == 'manager'
+            height: _currentUser!.role == 'admin' || _currentUser!.role == 'manager' || _currentUser!.role == 'client' ? 120 : 80, // Extended height for admin button
+            child: _currentUser!.role == 'admin' || _currentUser!.role == 'manager' || _currentUser!.role == 'client'
                 ? _buildFloatingAdminNav(safeIndex, navItems)
                 : _buildAgentBottomNavWithButton(),
           ),
@@ -458,6 +473,13 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
   }
 
   Widget _buildFloatingAdminNav(int currentIndex, List<BottomNavigationBarItem> navItems) {
+    // Handle different layouts based on number of navigation items
+    if (navItems.length == 2) {
+      // Client layout - only Dashboard and Profile, centered
+      return _buildClientNav(currentIndex, navItems);
+    }
+    
+    // Admin/Manager layout - 4 tabs with central + button
     return Stack(
       children: [
         // Main navigation bar positioned at bottom
@@ -696,7 +718,62 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
     );
   }
 
+  Widget _buildClientNav(int currentIndex, List<BottomNavigationBarItem> navItems) {
+    return Positioned(
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        height: 80,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.95),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.15),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Add spacing to center the 2 items
+            const Spacer(),
+            // Dashboard tab
+            Expanded(
+              flex: 2,
+              child: _buildAdminNavItem(
+                (navItems[0].icon as Icon).icon ?? Icons.dashboard,
+                navItems[0].label ?? '',
+                0,
+                currentIndex == 0,
+              ),
+            ),
+            const Spacer(),
+            // Profile tab  
+            Expanded(
+              flex: 2,
+              child: _buildAdminNavItem(
+                (navItems[1].icon as Icon).icon ?? Icons.person,
+                navItems[1].label ?? '',
+                1,
+                currentIndex == 1,
+              ),
+            ),
+            const Spacer(),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildAdminAddButton() {
+    // Hide the + button for client users (read-only access)
+    if (_currentUser?.role == 'client') {
+      return const SizedBox.shrink(); // Hide for clients
+    }
+    
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1270,6 +1347,8 @@ class _DashboardTab extends StatelessWidget {
       return const AdminDashboardScreen();
     } else if (user.role == 'manager') {
       return const EnhancedManagerDashboardScreen();
+    } else if (user.role == 'client') {
+      return const ClientDashboardScreen();
     } else {
       // This shouldn't happen as agents use _AgentDashboardTab, but fallback to manager dashboard
       return const EnhancedManagerDashboardScreen();

@@ -102,9 +102,15 @@ class UserManagementService {
       final response = await query.order('created_at', ascending: false);
       List<AppUser> allUsers = response.map<AppUser>((json) => AppUser.fromJson(json)).toList();
       
+      debugPrint('🗂️ Before filtering: Found ${allUsers.length} users with role filter "$roleFilter"');
+      debugPrint('📝 Users found: ${allUsers.map((u) => '${u.fullName}(${u.role})').join(', ')}');
+      
       // Apply group isolation at application level
       if (currentUserRole == 'manager') {
+        debugPrint('👨‍💼 Applying manager group filtering...');
         allUsers = await _filterUsersBySharedGroups(allUsers);
+        debugPrint('✅ After filtering: ${allUsers.length} users remain');
+        debugPrint('📝 Remaining users: ${allUsers.map((u) => '${u.fullName}(${u.role})').join(', ')}');
       }
       // Admins see all users, no filtering needed
       
@@ -162,6 +168,12 @@ class UserManagementService {
       return users.where((user) {
         // Always include the current user
         if (user.id == supabase.auth.currentUser?.id) return true;
+        
+        // Always include clients (managers should be able to assign any client)
+        if (user.role == 'client') {
+          debugPrint('✅ Including client: ${user.fullName} (bypassing group filter)');
+          return true;
+        }
         
         final userGroups = userToGroups[user.id] ?? <String>{};
         return userGroups.any((groupId) => userGroupIds.contains(groupId));
@@ -243,6 +255,7 @@ class UserManagementService {
     String? password,
     int? agentCreationLimit,
     List<String>? groupIds,
+    bool requireEmailConfirmation = true,
   }) async {
     try {
       // Validate required fields based on role
@@ -264,6 +277,7 @@ class UserManagementService {
           if (username != null) 'usernameForProfile': username,
           'emailForProfile': email,
           if (agentCreationLimit != null) 'agentCreationLimit': agentCreationLimit,
+          'requireEmailConfirmation': requireEmailConfirmation,
         },
       );
 

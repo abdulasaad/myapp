@@ -60,24 +60,36 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
 
   // --- DATA FETCHING ---
   Future<List<AppUser>> _fetchAssignedAgents() async {
+    print('🔍 ASSIGNED AGENTS DEBUG: Fetching agents for campaign ${widget.campaign.id}');
+    
     final agentIdsResponse = await supabase
         .from('campaign_agents')
         .select('agent_id')
         .eq('campaign_id', widget.campaign.id);
 
+    print('🔍 ASSIGNED AGENTS DEBUG: Found ${agentIdsResponse.length} agent assignments');
+
     final agentIds =
         agentIdsResponse.map((map) => map['agent_id'] as String).toList();
+    
+    print('🔍 ASSIGNED AGENTS DEBUG: Agent IDs: $agentIds');
 
     if (agentIds.isEmpty) {
+      print('🔴 ASSIGNED AGENTS DEBUG: No agents assigned to this campaign');
       return [];
     }
     
     // ========== THE DEFINITIVE FIX IS HERE: Use the correct 'in' filter ==========
     final agentsResponse = await supabase
         .from('profiles')
-        .select('id, full_name')
+        .select('id, full_name, role, status')
         .filter('id', 'in', '(${agentIds.join(',')})');
     // =========================================================================
+    
+    print('🔍 ASSIGNED AGENTS DEBUG: Found ${agentsResponse.length} agent profiles');
+    for (final agent in agentsResponse) {
+      print('🔍 ASSIGNED AGENTS DEBUG: Agent - ${agent['full_name']} (${agent['role']})');
+    }
 
     return agentsResponse.map((json) => AppUser.fromJson(json)).toList();
   }
@@ -542,10 +554,11 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(title, style: Theme.of(context).textTheme.headlineSmall),
-        TextButton.icon(
-            onPressed: onPressed,
-            icon: const Icon(Icons.add),
-            label: Text(buttonLabel)),
+        if (ProfileService.instance.canManageCampaigns)
+          TextButton.icon(
+              onPressed: onPressed,
+              icon: const Icon(Icons.add),
+              label: Text(buttonLabel)),
       ],
     );
   }
@@ -1007,7 +1020,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                         
                         if (role == 'agent') {
                           return _buildAgentGeofenceButton();
-                        } else {
+                        } else if (ProfileService.instance.canManageCampaigns) {
                           return ElevatedButton(
                             onPressed: () async {
                               await Navigator.of(context).push(MaterialPageRoute(
@@ -1029,6 +1042,26 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
                                 Text(
                                   'Manage',
                                   style: const TextStyle(fontSize: 14),
+                                ),
+                              ],
+                            ),
+                          );
+                        } else {
+                          // Clients get read-only view, no management button
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.visibility, size: 18, color: Colors.grey[600]),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'View Only',
+                                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                                 ),
                               ],
                             ),

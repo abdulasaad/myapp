@@ -23,6 +23,7 @@ import 'tasks/standalone_tasks_screen.dart';
 import 'map/live_map_screen.dart';
 import 'admin/enhanced_manager_dashboard_screen.dart';
 import 'admin/admin_dashboard_screen.dart';
+import 'client/client_dashboard_screen.dart';
 import 'agent/agent_standalone_tasks_screen.dart';
 import 'agent/earnings_screen.dart';
 import 'login_screen.dart';
@@ -145,7 +146,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
   List<Widget> _getScreens() {
     if (_currentUser == null) return [_buildLoadingScreen()];
 
-    final isAdmin = _currentUser!.role == 'admin' || _currentUser!.role == 'manager';
+    final isAdmin = _currentUser!.role == 'admin' || _currentUser!.role == 'manager' || _currentUser!.role == 'client';
     
     if (isAdmin) {
       return [
@@ -168,7 +169,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
   List<BottomNavigationBarItem> _getNavItems() {
     if (_currentUser == null) return [];
 
-    final isAdmin = _currentUser!.role == 'admin' || _currentUser!.role == 'manager';
+    final isAdmin = _currentUser!.role == 'admin' || _currentUser!.role == 'manager' || _currentUser!.role == 'client';
     
     if (isAdmin) {
       return const [
@@ -267,7 +268,7 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
       body: Stack(
         children: [
           // Main content
-          _currentUser!.role == 'admin' || _currentUser!.role == 'manager'
+          _currentUser!.role == 'admin' || _currentUser!.role == 'manager' || _currentUser!.role == 'client'
               ? IndexedStack(
                   index: safeIndex,
                   children: screens,
@@ -343,6 +344,8 @@ class _DashboardTab extends StatelessWidget {
       return const AdminDashboardScreen();
     } else if (user.role == 'manager') {
       return const EnhancedManagerDashboardScreen();
+    } else if (user.role == 'client') {
+      return const ClientDashboardScreen();
     } else {
       // This shouldn't happen as agents use _AgentDashboardTab, but fallback to manager dashboard
       return const EnhancedManagerDashboardScreen();
