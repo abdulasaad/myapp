@@ -19,7 +19,7 @@ def get_credentials():
     
     return service_account.Credentials.from_service_account_info(
         creds_dict,
-        scopes=['https://www.googleapis.com/auth/drive.file']
+        scopes=['https://www.googleapis.com/auth/drive']
     )
 
 def upload_to_drive(file_path, folder_id):
@@ -51,14 +51,22 @@ def upload_to_drive(file_path, folder_id):
     
     print(f"Uploading {file_name} to Google Drive...")
     
-    file = service.files().create(
-        body=file_metadata,
-        media_body=media,
-        fields='id'
-    ).execute()
-    
-    print(f"Upload complete! File ID: {file.get('id')}")
-    return file.get('id')
+    try:
+        file = service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields='id'
+        ).execute()
+        
+        print(f"Upload complete! File ID: {file.get('id')}")
+        return file.get('id')
+    except Exception as e:
+        print(f"Upload failed with error: {e}")
+        print(f"Error type: {type(e)}")
+        if hasattr(e, 'resp'):
+            print(f"HTTP Status: {e.resp.status}")
+            print(f"Response: {e.content}")
+        raise
 
 def main():
     folder_id = os.environ.get('GOOGLE_DRIVE_FOLDER_ID')
