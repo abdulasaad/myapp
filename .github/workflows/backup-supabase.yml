@@ -7,7 +7,6 @@ on:
   workflow_dispatch: # Allow manual trigger
 
 env:
-  SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
   SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
   SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
   GOOGLE_DRIVE_CREDENTIALS: ${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}
@@ -24,7 +23,7 @@ jobs:
         run: chmod +x .github/scripts/*.sh
 
       - name: Run database backup
-        run: .github/scripts/backup-database.sh
+        run: .github/scripts/backup-database-api.sh
 
       - name: Upload database backup artifact
         uses: actions/upload-artifact@v4
