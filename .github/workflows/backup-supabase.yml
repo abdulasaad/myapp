@@ -73,6 +73,9 @@ jobs:
           pip install google-auth google-auth-oauthlib google-auth-httplib2
           pip install google-api-python-client
 
+      - name: Test Google Drive access
+        run: python .github/scripts/test-drive-access.py
+
       - name: Download database backup
         uses: actions/download-artifact@v4
         with:
