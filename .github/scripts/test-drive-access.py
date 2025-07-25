@@ -3,10 +3,12 @@ import os
 import json
 import base64
 from google.oauth2 import service_account
+from google.auth.transport.requests import Request
+from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
 def get_credentials():
-    """Get Google service account credentials"""
+    """Get Google credentials (OAuth or Service Account)"""
     creds_base64 = os.environ.get('GOOGLE_DRIVE_CREDENTIALS')
     if not creds_base64:
         raise ValueError("GOOGLE_DRIVE_CREDENTIALS not found in environment")
@@ -14,10 +16,39 @@ def get_credentials():
     creds_json = base64.b64decode(creds_base64).decode('utf-8')
     creds_dict = json.loads(creds_json)
     
-    return service_account.Credentials.from_service_account_info(
-        creds_dict,
-        scopes=['https://www.googleapis.com/auth/drive']
-    )
+    # Check if this is OAuth credentials (has client_id) or service account (has client_email)
+    if 'client_id' in creds_dict and 'client_secret' in creds_dict:
+        # OAuth credentials - for GitHub Actions, we'll use a different approach
+        print("OAuth credentials detected - using service account fallback for automation")
+        # For automated scripts, we still need service account. OAuth requires interactive auth.
+        # Let's try the service account approach but with better error handling
+        raise ValueError("OAuth credentials require interactive authentication. Please add your email as a test user in the OAuth consent screen, or use service account with domain delegation.")
+    
+    elif 'client_email' in creds_dict:
+        # Service account credentials
+        print("Service account credentials detected")
+        credentials = service_account.Credentials.from_service_account_info(
+            creds_dict,
+            scopes=[
+                'https://www.googleapis.com/auth/drive',
+                'https://www.googleapis.com/auth/drive.file',
+                'https://www.googleapis.com/auth/drive.metadata'
+            ]
+        )
+        
+        # Try domain delegation if possible
+        user_email = os.environ.get('GOOGLE_DRIVE_USER_EMAIL', 'abdulasaad95@gmail.com')
+        try:
+            delegated_credentials = credentials.with_subject(user_email)
+            print(f"Using delegated credentials for {user_email}")
+            return delegated_credentials
+        except Exception as e:
+            print(f"Domain delegation not available: {e}")
+            print("Using service account directly (may have storage limitations)")
+            return credentials
+    
+    else:
+        raise ValueError("Credentials format not recognized. Expected OAuth or service account JSON.")
 
 def test_drive_access():
     """Test Google Drive access and folder permissions"""
