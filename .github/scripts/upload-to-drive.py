@@ -54,10 +54,27 @@ def main():
     if not folder_id:
         raise ValueError("GOOGLE_DRIVE_FOLDER_ID not found in environment")
     
+    print("Looking for backup files...")
+    backup_files = []
+    
     # Upload all backup files
     for file_name in os.listdir('.'):
         if file_name.endswith('.tar.gz'):
+            backup_files.append(file_name)
+            print(f"Found backup file: {file_name}")
+    
+    if not backup_files:
+        print("No backup files found! Listing all files:")
+        for file_name in os.listdir('.'):
+            print(f"  {file_name}")
+        raise ValueError("No .tar.gz backup files found to upload")
+    
+    # Upload each backup file
+    for file_name in backup_files:
+        if os.path.exists(file_name):
             upload_to_drive(file_name, folder_id)
+        else:
+            print(f"Warning: File {file_name} not found, skipping")
 
 if __name__ == '__main__':
     main()
