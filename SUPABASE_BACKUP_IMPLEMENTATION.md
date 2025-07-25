@@ -83,10 +83,10 @@ This guide provides a complete implementation plan for automated Supabase backup
 
 ### Required Information
 - [x] Supabase database connection string
-- [x] Supabase project ID: `jnuzpixgfskjcoqmgkxb`
+- [x] Supabase project ID: `YOUR_PROJECT_ID`
 - [x] Supabase service role key (for storage backup)
 - [x] Repository secrets access in GitHub
-- [x] Supabase URL: `https://jnuzpixgfskjcoqmgkxb.supabase.co`
+- [x] Supabase URL: `https://YOUR_PROJECT_ID.supabase.co`
 
 ## Implementation Steps
 
@@ -143,20 +143,20 @@ This guide provides a complete implementation plan for automated Supabase backup
 
 **SUPABASE_DB_URL**
 ```
-postgresql://postgres.jnuzpixgfskjcoqmgkxb:Abdulasaad16$@aws-0-us-west-1.pooler.supabase.com:5432/postgres
+postgresql://postgres.PROJECT_ID:YOUR_DATABASE_PASSWORD@aws-0-us-west-1.pooler.supabase.com:5432/postgres
 ```
-⚠️ **Note**: You'll need to get the database password from your Supabase dashboard under Settings → Database
+⚠️ **Note**: Replace PROJECT_ID and YOUR_DATABASE_PASSWORD with your actual values from Supabase dashboard
 
 **SUPABASE_PROJECT_ID**
 ```
-jnuzpixgfskjcoqmgkxb
+YOUR_PROJECT_ID
 ```
 
 **SUPABASE_SERVICE_ROLE_KEY**
 ```
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpudXpwaXhnZnNramNvcW1na3hiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0OTI4Mjg1OSwiZXhwIjoyMDY0ODU4ODU5fQ.0LZcT2iqYvn1mRB-ZGoH4tWp0jlaTlQETRJAxDvXT7o
+YOUR_SERVICE_ROLE_KEY_FROM_SUPABASE_DASHBOARD
 ```
-⚠️ **Security Warning**: After implementation, regenerate this key from Supabase dashboard
+⚠️ **Security Warning**: Get this from your Supabase dashboard under Settings → API
 
 **GOOGLE_DRIVE_CREDENTIALS**
 
@@ -195,9 +195,9 @@ ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsCiAgInByb2plY3RfaWQiOiAi...
 
 **GOOGLE_DRIVE_FOLDER_ID**
 ```
-1xz0uICAi2IJsWzqIgB1xdjSxsNjgRuxE
+YOUR_GOOGLE_DRIVE_FOLDER_ID
 ```
-✅ This is extracted from your URL: `https://drive.google.com/drive/folders/1xz0uICAi2IJsWzqIgB1xdjSxsNjgRuxE`
+✅ Extract this from your Google Drive folder URL: `https://drive.google.com/drive/folders/YOUR_FOLDER_ID`
 
 ### Phase 3: Create Backup Scripts
 
@@ -207,7 +207,7 @@ ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsCiAgInByb2plY3RfaWQiOiAi...
 ├── workflows/
 │   └── backup-supabase.yml
 └── scripts/
-    ├── backup-database.sh
+    ├── backup-database.sh	
     ├── backup-storage.sh
     └── upload-to-drive.py
 ```
@@ -316,7 +316,7 @@ print("Storage backup completed!")
 EOF
 
 # Run the download script
-export SUPABASE_URL="https://jnuzpixgfskjcoqmgkxb.supabase.co"
+export SUPABASE_URL="https://YOUR_PROJECT_ID.supabase.co"
 python download_storage.py
 
 # Compress backup
@@ -673,7 +673,7 @@ gpg --symmetric --cipher-algo AES256 --batch --passphrase "$BACKUP_ENCRYPTION_KE
 3. **Test Database Connection**
    ```bash
    # Using your project URL
-   psql postgresql://postgres.jnuzpixgfskjcoqmgkxb:[YOUR-DATABASE-PASSWORD]@aws-0-us-west-1.pooler.supabase.com:5432/postgres -c "SELECT version();"
+   psql postgresql://postgres.YOUR_PROJECT_ID:[YOUR-DATABASE-PASSWORD]@aws-0-us-west-1.pooler.supabase.com:5432/postgres -c "SELECT version();"
    ```
 
 ### Recovery Procedures
@@ -818,8 +818,8 @@ supabase --version
 ## Important Notes for Al-Tijwal Project
 
 ### Project-Specific Details
-- **Project ID**: `jnuzpixgfskjcoqmgkxb`
-- **Project URL**: `https://jnuzpixgfskjcoqmgkxb.supabase.co`
+- **Project ID**: `YOUR_PROJECT_ID`
+- **Project URL**: `https://YOUR_PROJECT_ID.supabase.co`
 - **Region**: US West 1 (AWS)
 - **Database Host**: `aws-0-us-west-1.pooler.supabase.com`
 
