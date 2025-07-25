@@ -1,4 +1,4 @@
-name: Supabase Backup to Google Drive
+name: Supabase Backup to OneDrive
 
 on:
   schedule:
@@ -9,8 +9,9 @@ on:
 env:
   SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
   SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-  GOOGLE_DRIVE_CREDENTIALS: ${{ secrets.GOOGLE_DRIVE_CREDENTIALS }}
-  GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
 
 jobs:
   backup-database:
@@ -56,7 +57,7 @@ jobs:
           path: storage-backup-*.tar.gz
           retention-days: 1
 
-  upload-to-drive:
+  upload-to-onedrive:
     needs: [backup-database, backup-storage]
     runs-on: ubuntu-latest
     steps:
@@ -70,11 +71,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install google-auth google-auth-oauthlib google-auth-httplib2
-          pip install google-api-python-client
+          pip install requests
 
-      - name: Test Google Drive access
-        run: python .github/scripts/test-drive-access.py
+      - name: Test OneDrive access
+        run: python .github/scripts/test-onedrive-access.py
 
       - name: Download database backup
         uses: actions/download-artifact@v4
@@ -86,20 +86,17 @@ jobs:
         with:
           name: storage-backup
 
-      - name: Upload to Google Drive
-        run: python .github/scripts/upload-to-drive.py
-
-      - name: Cleanup old backups
-        run: python .github/scripts/cleanup-old-backups.py
+      - name: Upload to OneDrive
+        run: python .github/scripts/upload-to-onedrive.py
 
   notify:
-    needs: upload-to-drive
+    needs: upload-to-onedrive
     runs-on: ubuntu-latest
     if: always()
     steps:
       - name: Send notification
         run: |
-          if [ "${{ needs.upload-to-drive.result }}" == "success" ]; then
+          if [ "${{ needs.upload-to-onedrive.result }}" == "success" ]; then
             echo "✅ Backup completed successfully"
           else
             echo "❌ Backup failed - check logs"
