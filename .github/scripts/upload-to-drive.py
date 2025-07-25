@@ -27,14 +27,25 @@ def upload_to_drive(file_path, folder_id):
     credentials = get_credentials()
     service = build('drive', 'v3', credentials=credentials)
     
-    file_name = os.path.basename(file_path)
+    # Get absolute path and verify file exists
+    abs_file_path = os.path.abspath(file_path)
+    file_name = os.path.basename(abs_file_path)
+    
+    print(f"Preparing to upload: {file_name}")
+    print(f"Full path: {abs_file_path}")
+    print(f"File exists: {os.path.exists(abs_file_path)}")
+    print(f"File size: {os.path.getsize(abs_file_path) if os.path.exists(abs_file_path) else 'N/A'} bytes")
+    
+    if not os.path.exists(abs_file_path):
+        raise FileNotFoundError(f"Backup file not found: {abs_file_path}")
+    
     file_metadata = {
         'name': file_name,
         'parents': [folder_id]
     }
     
     media = MediaFileUpload(
-        file_path,
+        abs_file_path,
         resumable=True
     )
     
