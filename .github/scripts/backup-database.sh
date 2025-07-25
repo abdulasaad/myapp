@@ -8,8 +8,11 @@ BACKUP_DIR="backup-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$BACKUP_DIR"
 
 # Install Supabase CLI
+echo "Installing Supabase CLI..."
+cd /tmp
 wget -qO- https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz | tar xvz
 sudo mv supabase /usr/local/bin
+cd -
 
 # Dump database structure
 echo "Dumping database schema..."

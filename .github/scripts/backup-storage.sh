@@ -24,9 +24,18 @@ supabase = create_client(url, key)
 
 # List all buckets
 buckets = supabase.storage.list_buckets()
+print(f"Found {len(buckets)} storage buckets")
+
+if not buckets:
+    print("No storage buckets found. Skipping storage backup.")
+    exit(0)
 
 for bucket in buckets:
-    bucket_name = bucket['name']
+    # Handle both dict and object formats
+    if hasattr(bucket, 'name'):
+        bucket_name = bucket.name
+    else:
+        bucket_name = bucket['name']
     print(f"Backing up bucket: {bucket_name}")
     
     # Create bucket directory
