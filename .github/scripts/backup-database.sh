@@ -9,10 +9,12 @@ mkdir -p "$BACKUP_DIR"
 
 # Install Supabase CLI
 echo "Installing Supabase CLI..."
-cd /tmp
-wget -qO- https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz | tar xvz
+TEMP_DIR=$(mktemp -d)
+cd "$TEMP_DIR"
+wget -qO- https://github.com/supabase/cli/releases/latest/download/supabase_linux_amd64.tar.gz | tar xz
 sudo mv supabase /usr/local/bin
 cd -
+rm -rf "$TEMP_DIR"
 
 # Dump database structure
 echo "Dumping database schema..."
