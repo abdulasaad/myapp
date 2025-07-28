@@ -3849,4 +3849,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get failedToCreateTouringTask => 'Failed to create touring task';
+
+  @override
+  String get backgroundServicesRequiredDescription =>
+      'Background services must be enabled to view and participate in campaigns. Please enable them from the Dashboard.';
 }

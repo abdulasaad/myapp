@@ -217,12 +217,12 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
   }
 
   Widget _buildLoadingScreen() {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(),
-          SizedBox(height: 16),
+          const CircularProgressIndicator(),
+          const SizedBox(height: 16),
           Text(AppLocalizations.of(context)!.loading),
         ],
       ),

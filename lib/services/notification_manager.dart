@@ -152,7 +152,6 @@ class NotificationManager {
     debugPrint('✅ Notification polling setup completed');
   }
 
-  DateTime? _lastNotificationCheck;
   Timer? _pollingTimer;
   Set<String> _processedNotificationIds = {};
 
@@ -294,33 +293,6 @@ class NotificationManager {
     }
   }
 
-  void _handleRealtimeNotification(PostgresChangePayload payload) {
-    debugPrint('🔥 REALTIME NOTIFICATION RECEIVED!');
-    debugPrint('Payload: ${payload.newRecord}');
-    
-    final notification = payload.newRecord;
-    final title = notification['title'] ?? 'New Notification';
-    final message = notification['message'] ?? '';
-    final type = notification['type'] ?? 'general';
-    
-    debugPrint('📱 Processing notification: $title - $message');
-    
-    // Show local notification
-    _showLocalNotification(title, message, type);
-    
-    // Trigger callback for in-app notification (only for non-assignment types)
-    if (_onNotificationReceived != null && _shouldShowModernNotification(type)) {
-      debugPrint('🎯 Triggering in-app notification callback');
-      _onNotificationReceived!(title, message, type);
-    } else if (!_shouldShowModernNotification(type)) {
-      debugPrint('📱 Assignment notification - showing only system notification (no modern popup)');
-    } else {
-      debugPrint('❌ No in-app notification callback set');
-    }
-    
-    // Update badge count
-    _updateBadgeCount();
-  }
 
   Future<void> _showLocalNotification(String title, String body, String type) async {
     try {

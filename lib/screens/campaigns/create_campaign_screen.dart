@@ -57,15 +57,13 @@ class _CreateCampaignScreenState extends State<CreateCampaignScreen> {
       debugPrint('📝 Editing campaign: Loading existing manager assignment: ${campaign.assignedManagerId}');
       
       // Convert start/end dates to selected days for backward compatibility
-      if (campaign.startDate != null && campaign.endDate != null) {
-        final start = campaign.startDate!;
-        final end = campaign.endDate!;
-        final days = <DateTime>{};
-        for (DateTime day = start; day.isBefore(end) || day.isAtSameMomentAs(end); day = day.add(const Duration(days: 1))) {
-          days.add(DateTime(day.year, day.month, day.day));
-        }
-        _selectedDays = days;
+      final start = campaign.startDate;
+      final end = campaign.endDate;
+      final days = <DateTime>{};
+      for (DateTime day = start; day.isBefore(end) || day.isAtSameMomentAs(end); day = day.add(const Duration(days: 1))) {
+        days.add(DateTime(day.year, day.month, day.day));
       }
+      _selectedDays = days;
     }
     
     // Check if current user is admin and load managers and clients

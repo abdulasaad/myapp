@@ -6874,7 +6874,7 @@ abstract class AppLocalizations {
   /// **'This task ended on {date}'**
   String taskEndedOn(DateTime date);
 
-  /// Background services required title
+  /// Title for background services required message
   ///
   /// In en, this message translates to:
   /// **'Background Services Required'**
@@ -7083,6 +7083,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to create touring task'**
   String get failedToCreateTouringTask;
+
+  /// Description for background services required message
+  ///
+  /// In en, this message translates to:
+  /// **'Background services must be enabled to view and participate in campaigns. Please enable them from the Dashboard.'**
+  String get backgroundServicesRequiredDescription;
 }
 
 class _AppLocalizationsDelegate

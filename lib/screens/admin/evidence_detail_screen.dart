@@ -842,58 +842,6 @@ class _EvidenceDetailScreenState extends State<EvidenceDetailScreen> {
     );
   }
 
-  Widget _buildReviewInfo(EvidenceDetail evidence) {
-    return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Review Information',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildInfoRow('Status', evidence.status.toUpperCase()),
-            if (evidence.reviewedAt != null)
-              _buildInfoRow('Reviewed At', DateFormat.yMMMd().add_jms().format(evidence.reviewedAt!)),
-            if (evidence.rejectionReason != null) ...[
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Rejection Reason:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.red,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      evidence.rejectionReason!,
-                      style: TextStyle(color: Colors.red[700]),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildInfoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),

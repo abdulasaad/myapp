@@ -6,7 +6,6 @@ import '../../l10n/app_localizations.dart';
 import '../../utils/constants.dart';
 import '../../models/place_visit.dart';
 import '../../models/route_assignment.dart';
-import '../../models/app_user.dart';
 
 class RouteVisitAnalyticsScreen extends StatefulWidget {
   const RouteVisitAnalyticsScreen({super.key});

@@ -8,7 +8,6 @@ import '../../models/touring_task.dart';
 import '../../models/campaign_geofence.dart';
 import '../../services/touring_task_movement_service.dart';
 import '../../utils/constants.dart';
-import '../../l10n/app_localizations.dart';
 import '../../widgets/modern_notification.dart';
 
 class TouringTaskExecutionScreen extends StatefulWidget {

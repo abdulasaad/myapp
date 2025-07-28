@@ -56,7 +56,7 @@ class TimezoneUsageExample {
   // Example: Location tracking with timezone
   static Future<void> saveLocationWithTimezone(double lat, double lng) async {
     // Save to database in UTC
-    final timestamp = TimezoneService.instance.toUtcIsoString(
+    TimezoneService.instance.toUtcIsoString(
       TimezoneService.instance.now()
     );
     

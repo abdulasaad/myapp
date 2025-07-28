@@ -109,43 +109,63 @@ class LocationHistoryService {
     int limit = 1000,
   }) async {
     try {
-      // Use the RPC function to get location history with converted coordinates
+      // Use the app-format view directly (more reliable than RPC)
+      _logger.i('Fetching location history for agent $agentId from $startDate to $endDate');
       final adjustedStartDate = DateTime(startDate.year, startDate.month, startDate.day);
       final adjustedEndDate = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+      _logger.i('Adjusted date range: $adjustedStartDate to $adjustedEndDate');
 
-      final response = await supabase.rpc('get_agent_location_history', params: {
-        'p_agent_id': agentId,
-        'p_start_date': adjustedStartDate.toIso8601String(),
-        'p_end_date': adjustedEndDate.toIso8601String(),
-        'p_limit': limit,
-      });
+      final response = await supabase
+          .from('location_history_app_format')
+          .select('*')
+          .eq('user_id', agentId)
+          .gte('created_at', adjustedStartDate.toIso8601String())
+          .lte('created_at', adjustedEndDate.toIso8601String())
+          .order('created_at', ascending: false)
+          .limit(limit);
 
-      return response
+      _logger.i('Found ${response.length} location entries for agent $agentId');
+      
+      // Debug: Log the first few entries to see what we're getting
+      if (response.isNotEmpty) {
+        _logger.i('Sample location data:');
+        for (int i = 0; i < response.length && i < 3; i++) {
+          final entry = response[i];
+          _logger.i('Entry $i: lat=${entry['latitude']}, lng=${entry['longitude']}, date=${entry['created_at']}');
+        }
+      }
+      
+      final results = response
           .map<LocationHistoryEntry>((json) => LocationHistoryEntry.fromRpcResult(json))
           .toList();
+          
+      _logger.i('Parsed ${results.length} location entries successfully');
+      if (results.isNotEmpty) {
+        _logger.i('Date range in results: ${results.last.timestamp} to ${results.first.timestamp}');
+      }
+      
+      return results;
     } catch (e) {
       _logger.e('Failed to fetch location history for agent $agentId: $e');
       
-      // Fallback: try direct table access with recorded_at column
+      // Fallback: try RPC function if view fails
       try {
-        _logger.i('Trying fallback method...');
+        _logger.i('Trying RPC function as fallback...');
         final adjustedStartDate = DateTime(startDate.year, startDate.month, startDate.day);
         final adjustedEndDate = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
 
-        final response = await supabase
-            .from('location_history')
-            .select('*')
-            .eq('user_id', agentId)
-            .gte('recorded_at', adjustedStartDate.toIso8601String())
-            .lte('recorded_at', adjustedEndDate.toIso8601String())
-            .order('recorded_at', ascending: false)
-            .limit(limit);
+        final response = await supabase.rpc('get_agent_location_history', params: {
+          'p_agent_id': agentId,
+          'p_start_date': adjustedStartDate.toIso8601String(),
+          'p_end_date': adjustedEndDate.toIso8601String(),
+          'p_limit': limit,
+        });
 
         return response
-            .map<LocationHistoryEntry>((json) => LocationHistoryEntry.fromJson(json))
+            .map<LocationHistoryEntry>((json) => LocationHistoryEntry.fromRpcResult(json))
             .toList();
       } catch (fallbackError) {
-        _logger.e('Fallback also failed: $fallbackError');
+        _logger.e('RPC fallback also failed: $fallbackError');
         throw Exception('Failed to load location history: $e');
       }
     }

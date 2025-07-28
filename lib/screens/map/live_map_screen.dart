@@ -668,21 +668,6 @@ class _LiveMapScreenState extends State<LiveMapScreen> {
     }
   }
 
-  bool _isAgentOnline(AgentMapInfo agent) {
-    // Use new connection status if available
-    if (agent.connectionStatus != null) {
-      return agent.connectionStatus == 'active';
-    }
-    
-    // Fallback to checking last seen timestamp
-    if (agent.lastSeen == null) return false;
-    
-    final now = DateTime.now();
-    final timeSinceLastSeen = now.difference(agent.lastSeen!);
-    
-    // Consider online if seen within last 15 minutes
-    return timeSinceLastSeen.inMinutes < 15;
-  }
 
   String _getAgentStatus(AgentMapInfo agent) {
     // Use new connection status if available

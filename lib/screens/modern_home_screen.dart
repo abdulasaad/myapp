@@ -30,7 +30,6 @@ import '../widgets/update_dialog.dart';
 import 'package:logger/logger.dart';
 import 'campaigns/campaigns_list_screen.dart';
 import 'tasks/standalone_tasks_screen.dart';
-import 'map/live_map_screen.dart';
 import 'admin/enhanced_manager_dashboard_screen.dart';
 import 'admin/admin_dashboard_screen.dart';
 import 'client/client_dashboard_screen.dart';

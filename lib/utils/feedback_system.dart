@@ -217,7 +217,7 @@ class ValidationHelper {
 
 /// Visual loading states and animations
 class LoadingStates {
-  static Widget buildLoadingCard() {
+  static Widget buildLoadingCard(BuildContext context) {
     return Card(
       child: Container(
         padding: const EdgeInsets.all(20),
@@ -236,7 +236,7 @@ class LoadingStates {
     );
   }
 
-  static Widget buildErrorCard(String message, VoidCallback? onRetry) {
+  static Widget buildErrorCard(BuildContext context, String message, VoidCallback? onRetry) {
     return Card(
       child: Container(
         padding: const EdgeInsets.all(20),

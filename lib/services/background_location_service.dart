@@ -13,8 +13,6 @@ final logger = Logger();
 
 @pragma('vm:entry-point')
 class BackgroundLocationService {
-  static const String _channelId = 'al_tijwal_persistent_service'; // Use same channel as PersistentServiceManager
-  static const String _channelName = 'Al-Tijwal Service';
 
   @pragma('vm:entry-point')
   static Future<void> initialize() async {
@@ -24,8 +22,11 @@ class BackgroundLocationService {
       androidConfiguration: AndroidConfiguration(
         onStart: onStart,
         autoStart: false,
-        isForegroundMode: false,  // Disable foreground mode to prevent notification
+        isForegroundMode: true,  // ✅ Enable foreground mode for background location
         autoStartOnBoot: false,
+        initialNotificationTitle: 'AL-Tijwal Location Tracking',
+        initialNotificationContent: 'Tracking location in background',
+        foregroundServiceNotificationId: 888,
       ),
       iosConfiguration: IosConfiguration(
         autoStart: false,

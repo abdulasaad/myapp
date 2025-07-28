@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import '../../l10n/app_localizations.dart';
 import '../../utils/constants.dart';
 import 'evidence_list_screen.dart';
@@ -290,34 +289,6 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
     }
   }
 
-  // Get agent status using new connection status system
-  String _getAgentStatus(Map<String, dynamic> agent) {
-    // Use new connection status if available
-    final connectionStatus = agent['connection_status'] as String?;
-    if (connectionStatus != null) {
-      switch (connectionStatus) {
-        case 'active':
-          return 'Active';
-        case 'away':
-          return 'Away';
-        case 'offline':
-          return 'Offline';
-        default:
-          return 'Unknown';
-      }
-    }
-    
-    // Fallback to calculated status based on location timestamp
-    final lastSeenStr = agent['last_seen'] as String?;
-    if (lastSeenStr == null) return 'Offline';
-    
-    try {
-      final lastSeen = DateTime.parse(lastSeenStr);
-      return _getCalculatedStatus(lastSeen);
-    } catch (e) {
-      return 'Offline';
-    }
-  }
 
   // Fallback calculated status logic
   String _getCalculatedStatus(DateTime? lastSeen) {
@@ -357,124 +328,8 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
     );
   }
 
-  Future<EvidenceReviewQueue> _getEvidenceReviewQueue() async {
-    try {
-      final evidenceResponse = await supabase
-          .from('evidence')
-          .select('status, created_at, priority')
-          .order('created_at', ascending: false);
-      
-      int pending = 0, approved = 0, rejected = 0, urgent = 0;
-    
-      for (final evidence in evidenceResponse) {
-        final status = evidence['status'] as String? ?? 'pending';
-        
-        switch (status) {
-          case 'pending':
-            pending++;
-            // Check priority field or use time-based urgency
-            final priority = evidence['priority'] as String? ?? 'normal';
-            if (priority == 'urgent') {
-              urgent++;
-            } else {
-              // Consider recent pending items as urgent (last 24 hours)
-              final createdAt = DateTime.parse(evidence['created_at']);
-              final hoursSinceCreated = DateTime.now().difference(createdAt).inHours;
-              if (hoursSinceCreated > 24) urgent++;
-            }
-            break;
-          case 'approved':
-            approved++;
-            break;
-          case 'rejected':
-            rejected++;
-            break;
-        }
-      }
-      
-      return EvidenceReviewQueue(
-        pending: pending,
-        approved: approved,
-        rejected: rejected,
-        urgent: urgent,
-      );
-    } catch (e) {
-      debugPrint('Error loading evidence review queue: $e');
-      // Return empty queue on error
-      return EvidenceReviewQueue(
-        pending: 0,
-        approved: 0,
-        rejected: 0,
-        urgent: 0,
-      );
-    }
-  }
 
-  Future<List<ManagerActivityItem>> _getRecentManagerActivity() async {
-    final activities = <ManagerActivityItem>[];
-    
-    // Get recent task creations
-    final recentTasks = await supabase
-        .from('tasks')
-        .select('title, created_at')
-        .order('created_at', ascending: false)
-        .limit(5);
-    
-    for (final task in recentTasks) {
-      activities.add(ManagerActivityItem(
-        type: 'task_created',
-        title: 'Created task: ${task['title']}',
-        timestamp: DateTime.parse(task['created_at']),
-        icon: Icons.add_task,
-        color: primaryColor,
-      ));
-    }
-    
-    // Get recent evidence approvals - only if there are any reviewed evidence
-    try {
-      final recentEvidence = await supabase
-          .from('evidence')
-          .select('title, status, created_at')
-          .not('status', 'eq', 'pending')
-          .order('created_at', ascending: false)
-          .limit(3);
-      
-      for (final evidence in recentEvidence) {
-        final status = evidence['status'] as String;
-        activities.add(ManagerActivityItem(
-          type: 'evidence_reviewed',
-          title: '${status == 'approved' ? 'Approved' : 'Rejected'}: ${evidence['title'] ?? 'Evidence'}',
-          timestamp: DateTime.parse(evidence['created_at']),
-          icon: status == 'approved' ? Icons.check_circle : Icons.cancel,
-          color: status == 'approved' ? successColor : errorColor,
-        ));
-      }
-    } catch (e) {
-      debugPrint('No reviewed evidence found: $e');
-      // Continue without adding evidence activities
-    }
-    
-    activities.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-    return activities.take(6).toList();
-  }
   
-  Future<List<UpcomingDeadline>> _getUpcomingDeadlines() async {
-    final now = DateTime.now();
-    final weekFromNow = now.add(const Duration(days: 7));
-    
-    final campaigns = await supabase
-        .from('campaigns')
-        .select('name, end_date')
-        .gte('end_date', now.toIso8601String())
-        .lte('end_date', weekFromNow.toIso8601String())
-        .order('end_date');
-    
-    return campaigns.map((campaign) => UpcomingDeadline(
-      title: campaign['name'],
-      deadline: DateTime.parse(campaign['end_date']),
-      type: 'campaign',
-    )).toList();
-  }
 
   Future<GroupStats> _getGroupStats() async {
     try {
@@ -582,24 +437,6 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
     );
   }
 
-  Widget _buildInfoChip(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-    );
-  }
 
   Widget _buildManagerWelcomeSection() {
     return Container(
@@ -1242,22 +1079,6 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
     );
   }
 
-  String _formatRelativeTime(DateTime dateTime) {
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
-
-    if (difference.inMinutes < 1) {
-      return 'Just now';
-    } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
-    } else {
-      return DateFormat.MMMd().format(dateTime);
-    }
-  }
 
   Future<Map<String, dynamic>> _getManagerProfile() async {
     final user = supabase.auth.currentUser;

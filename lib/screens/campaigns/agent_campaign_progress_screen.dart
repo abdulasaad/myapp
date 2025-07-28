@@ -34,8 +34,6 @@ class _AgentCampaignProgressScreenState
   final TouringTaskService _touringTaskService = TouringTaskService();
   Timer? _refreshTimer;
   List<Map<String, dynamic>> _touringTaskProgress = [];
-  Map<String, TouringTaskSession?> _activeSessions = {};
-  bool _hasRegularTasks = false;
 
   bool _isImageUrl(String url) {
     final lowerUrl = url.toLowerCase();
@@ -161,7 +159,6 @@ class _AgentCampaignProgressScreenState
       if (mounted) {
         setState(() {
           _touringTaskProgress = progressList;
-          _activeSessions = sessions;
         });
       }
     } catch (e) {

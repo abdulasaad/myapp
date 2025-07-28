@@ -1,9 +1,0 @@
-CREATE INDEX idx_touring_tasks_campaign_id ON touring_tasks(campaign_id);
-CREATE INDEX idx_touring_tasks_geofence_id ON touring_tasks(geofence_id);
-CREATE INDEX idx_touring_tasks_status ON touring_tasks(status);
-CREATE INDEX idx_touring_task_sessions_touring_task_id ON touring_task_sessions(touring_task_id);
-CREATE INDEX idx_touring_task_sessions_agent_id ON touring_task_sessions(agent_id);
-CREATE INDEX idx_touring_task_sessions_active ON touring_task_sessions(is_active, is_completed);
-CREATE INDEX idx_touring_task_assignments_touring_task_id ON touring_task_assignments(touring_task_id);
-CREATE INDEX idx_touring_task_assignments_agent_id ON touring_task_assignments(agent_id);
-CREATE INDEX idx_touring_task_assignments_status ON touring_task_assignments(status);

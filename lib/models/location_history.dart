@@ -22,6 +22,24 @@ class LocationHistoryEntry {
 
   // Factory for RPC function results (coordinates already converted)
   factory LocationHistoryEntry.fromRpcResult(Map<String, dynamic> json) {
+    // Try different timestamp column names for compatibility
+    DateTime timestamp;
+    try {
+      if (json['recorded_at'] != null) {
+        timestamp = DateTime.parse(json['recorded_at']);
+      } else if (json['created_at'] != null) {
+        timestamp = DateTime.parse(json['created_at']);
+      } else if (json['timestamp_field'] != null) {
+        timestamp = DateTime.parse(json['timestamp_field']);
+      } else {
+        // Use debugPrint for development, silent in production
+        timestamp = DateTime.now();
+      }
+    } catch (e) {
+      // Use debugPrint for development, silent in production
+      timestamp = DateTime.now();
+    }
+
     return LocationHistoryEntry(
       id: json['id']?.toString() ?? '',
       userId: json['user_id']?.toString() ?? '',
@@ -29,7 +47,7 @@ class LocationHistoryEntry {
         (json['latitude'] ?? 0.0).toDouble(),
         (json['longitude'] ?? 0.0).toDouble(),
       ),
-      timestamp: DateTime.parse(json['recorded_at']),
+      timestamp: timestamp,
       accuracy: (json['accuracy'] ?? 0.0).toDouble(),
       speed: json['speed']?.toDouble(),
     );

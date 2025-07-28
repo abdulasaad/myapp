@@ -5,7 +5,6 @@ import '../../l10n/app_localizations.dart';
 import '../../utils/constants.dart';
 import '../../models/place.dart';
 import '../../models/route_place.dart';
-import '../../widgets/month_day_picker.dart';
 
 class CreateRouteScreen extends StatefulWidget {
   const CreateRouteScreen({super.key});

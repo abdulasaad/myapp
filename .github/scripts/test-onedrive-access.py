@@ -45,12 +45,30 @@ def test_onedrive_access():
             'Content-Type': 'application/json'
         }
         
-        # Test 2: List user's OneDrive
+        # Test 2: Try accessing personal OneDrive directly
         print("\n2. Testing OneDrive access...")
-        # For application permissions, we need to access a specific user's drive
-        # Let's try to list available drives first
-        drives_url = "https://graph.microsoft.com/v1.0/drives"
-        response = requests.get(drives_url, headers=headers)
+        # Try the me/drive endpoint first (for personal accounts)
+        me_drive_url = "https://graph.microsoft.com/v1.0/me/drive"
+        response = requests.get(me_drive_url, headers=headers)
+        
+        if response.status_code == 401:
+            print("❌ Personal account access failed, trying application permissions...")
+            # Fallback to application permissions (requires specific user)
+            drives_url = "https://graph.microsoft.com/v1.0/drives"
+            response = requests.get(drives_url, headers=headers)
+        
+        elif response.status_code == 200:
+            print("✅ Personal OneDrive access successful")
+            drive_info = response.json()
+            drive_id = drive_info['id']
+            print(f"   Drive ID: {drive_id}")
+            
+            # Test folder operations on personal drive
+            return test_folder_operations(access_token, drive_id)
+            
+        else:
+            print(f"❌ Unexpected response: {response.status_code} - {response.text}")
+            return False
         
         if response.status_code == 200:
             drives = response.json()

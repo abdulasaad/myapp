@@ -23,7 +23,7 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
 
   List<AgentInfo> _agents = [];
   AgentInfo? _selectedAgent;
-  DateTime _startDate = DateTime.now().subtract(const Duration(days: 7));
+  DateTime _startDate = DateTime.now().subtract(const Duration(days: 30)); // Show last 30 days instead of 7
   DateTime _endDate = DateTime.now();
 
   List<LocationHistoryEntry> _locationHistory = [];
@@ -88,6 +88,14 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
         _locationHistory = history;
         _statistics = stats;
       });
+      
+      print('📍 Location history loaded: ${history.length} entries');
+      if (history.isNotEmpty) {
+        print('📍 Date range: ${history.last.timestamp} to ${history.first.timestamp}');
+        print('📍 First location: ${history.first.location.latitude}, ${history.first.location.longitude}');
+        print('📍 Sample dates: ${history.take(5).map((e) => e.timestamp.toString()).join(', ')}');
+      }
+      
       _updateMapData();
     } catch (e) {
       if (mounted) {
@@ -241,6 +249,7 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
       _endDate = DateTime.now();
       _startDate = _endDate.subtract(Duration(days: days));
     });
+    print('🗓️ Preset button clicked: $days days - Date range: $_startDate to $_endDate');
     _loadLocationHistory();
   }
 
@@ -405,9 +414,16 @@ class _LocationHistoryScreenState extends State<LocationHistoryScreen>
                             _selectedAgent = newValue;
                             _locationHistory.clear();
                             _statistics = null;
+                            // Reset to 30-day default when agent is selected
+                            _startDate = DateTime.now().subtract(const Duration(days: 30));
+                            _endDate = DateTime.now();
                           });
+                          print('🗓️ Agent selected: ${newValue?.fullName} - Date range set to: $_startDate to $_endDate');
                           if (newValue != null) {
-                            _loadLocationHistory();
+                            // Auto-apply 30-day range after a brief delay to ensure UI is updated
+                            Future.delayed(const Duration(milliseconds: 100), () {
+                              _setPresetDateRange(30);
+                            });
                           }
                         },
                       ),

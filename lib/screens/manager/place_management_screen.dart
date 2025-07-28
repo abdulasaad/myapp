@@ -1351,7 +1351,6 @@ class PlaceMapViewScreen extends StatefulWidget {
 }
 
 class _PlaceMapViewScreenState extends State<PlaceMapViewScreen> {
-  GoogleMapController? _mapController;
   bool _isEditing = false;
   LatLng? _newLocation;
   bool _isLoading = false;
@@ -1478,9 +1477,6 @@ class _PlaceMapViewScreenState extends State<PlaceMapViewScreen> {
       body: Stack(
         children: [
           GoogleMap(
-            onMapCreated: (GoogleMapController controller) {
-              _mapController = controller;
-            },
             initialCameraPosition: CameraPosition(
               target: displayLocation,
               zoom: 16.0,

@@ -2997,8 +2997,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'اضغط على \'تعيين للوكلاء\' للبدء';
 
   @override
-  String get agentHasntStartedVisitingPlaces =>
-      'Agent hasn\'t started visiting places';
+  String get agentHasntStartedVisitingPlaces => 'العميل لم يبدأ بزيارة الأماكن';
 
   @override
   String get progressDetails => 'تفاصيل التقدم';
@@ -3011,7 +3010,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get onceActivatedItWillBeAvailableForAgentAssignment =>
-      'Once activated, it will be available for agent assignment';
+      'بمجرد التفعيل، سيكون متاحاً لتعيين العملاء';
 
   @override
   String get routeActivatedSuccessfully => 'تم تفعيل المسار بنجاح';
@@ -3021,76 +3020,76 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get areYouSureYouWantToPermanentlyDelete =>
-      'Are you sure you want to permanently delete';
+      'هل أنت متأكد من الحذف النهائي';
 
   @override
   String get thisRouteHasNoAssignmentsOrVisitHistoryAndCanBeSafelyDeleted =>
-      'This route has no assignments or visit history and can be safely deleted';
+      'هذا المسار لا يحتوي على تعيينات أو سجل زيارات ويمكن حذفه بأمان';
 
   @override
-  String get thisActionCannotBeUndoneTheRouteAndAllItsPlacesWillBePermanentlyDeleted =>
-      'This action cannot be undone. The route and all its places will be permanently deleted';
+  String
+      get thisActionCannotBeUndoneTheRouteAndAllItsPlacesWillBePermanentlyDeleted =>
+          'لا يمكن التراجع عن هذا الإجراء. سيتم حذف المسار وجميع أماكنه نهائياً';
 
   @override
-  String get deletePermanently => 'Delete Permanently';
+  String get deletePermanently => 'حذف نهائي';
 
   @override
-  String get noAgentsFoundInYourGroups => 'No agents found in your groups';
+  String get noAgentsFoundInYourGroups => 'لم يتم العثور على عملاء في مجموعاتك';
 
   @override
-  String get noAgentsAvailableForAssignment =>
-      'No agents available for assignment';
+  String get noAgentsAvailableForAssignment => 'لا يوجد عملاء متاحون للتعيين';
 
   @override
-  String get errorLoadingAgents => 'Error loading agents';
+  String get errorLoadingAgents => 'خطأ في تحميل العملاء';
 
   @override
-  String get assign => 'Assign';
+  String get assign => 'تعيين';
 
   @override
-  String get to => 'to';
+  String get to => 'إلى';
 
   @override
-  String get agents => 'Agents';
+  String get agents => 'العملاء';
 
   @override
-  String get currentlyAssigned => 'Currently Assigned';
+  String get currentlyAssigned => 'مُعين حالياً';
 
   @override
-  String get moreAgents => 'More Agents';
+  String get moreAgents => 'المزيد من العملاء';
 
   @override
-  String get allAgentsAreAlreadyAssigned => 'All agents are already assigned';
+  String get allAgentsAreAlreadyAssigned => 'جميع العملاء مُعينون بالفعل';
 
   @override
-  String get noAdditionalAgentsAvailable => 'No additional agents available';
+  String get noAdditionalAgentsAvailable => 'لا يوجد عملاء إضافيون متاحون';
 
   @override
-  String get assignTo => 'Assign to';
+  String get assignTo => 'تعيين إلى';
 
   @override
   String get allSelectedAgentsAreAlreadyAssignedToThisRoute =>
-      'All selected agents are already assigned to this route';
+      'جميع العملاء المختارين مُعينون بالفعل لهذا المسار';
 
   @override
-  String get newRouteAssigned => 'New Route Assigned';
+  String get newRouteAssigned => 'تم تعيين مسار جديد';
 
   @override
-  String get youHaveBeenAssignedToRoute => 'You have been assigned to route';
+  String get youHaveBeenAssignedToRoute => 'تم تعيينك للمسار';
 
   @override
-  String get newAgents => 'new agents';
+  String get newAgents => 'عملاء جدد';
 
   @override
-  String get wereAlreadyAssigned => 'were already assigned';
+  String get wereAlreadyAssigned => 'مُعينون بالفعل';
 
   @override
   String routeAssignedToAgentsSuccessfully(String count) {
-    return 'Route assigned to $count agents successfully';
+    return 'تم تعيين المسار إلى $count عملاء بنجاح';
   }
 
   @override
-  String get errorAssigningRoute => 'Error assigning route';
+  String get errorAssigningRoute => 'خطأ في تعيين المسار';
 
   @override
   String get pleaseSelectFile => 'يرجى اختيار ملف';
@@ -3525,154 +3524,151 @@ class AppLocalizationsAr extends AppLocalizations {
   String get unknownTask => 'مهمة غير معروفة';
 
   @override
-  String get selectCampaignDays => 'Select Campaign Days';
+  String get selectCampaignDays => 'اختر أيام الحملة';
 
   @override
-  String get campaignDays => 'Campaign Days';
+  String get campaignDays => 'أيام الحملة';
 
   @override
-  String get pleaseSelectCampaignDays => 'Please select campaign days';
+  String get pleaseSelectCampaignDays => 'يرجى اختيار أيام الحملة';
 
   @override
-  String get selectTaskDays => 'Select Task Days';
+  String get selectTaskDays => 'اختر أيام المهمة';
 
   @override
-  String get taskDays => 'Task Days';
+  String get taskDays => 'أيام المهمة';
 
   @override
-  String get pleaseSelectTaskDays => 'Please select task days';
+  String get pleaseSelectTaskDays => 'يرجى اختيار أيام المهمة';
 
   @override
-  String get selectHistoryDays => 'Select History Days';
+  String get selectHistoryDays => 'اختر أيام السجل';
 
   @override
-  String get selectGeofence => 'Select Geofence';
+  String get selectGeofence => 'اختر منطقة جغرافية';
 
   @override
   String get selectGeofenceInstructions =>
-      'Choose a work area to start tracking your location and progress';
+      'اختر منطقة عمل لبدء تتبع موقعك وتقدمك';
 
   @override
-  String get noCurrentAssignment => 'No Current Assignment';
+  String get noCurrentAssignment => 'لا يوجد تعيين حالي';
 
   @override
-  String get selectGeofenceToStart =>
-      'Select a geofence below to start working';
+  String get selectGeofenceToStart => 'اختر منطقة جغرافية أدناه لبدء العمل';
 
   @override
-  String get currentAssignment => 'Current Assignment';
+  String get currentAssignment => 'التعيين الحالي';
 
   @override
-  String get currentlyInside => 'Currently inside';
+  String get currentlyInside => 'موجود حالياً داخل';
 
   @override
-  String get availableGeofences => 'Available Geofences';
+  String get availableGeofences => 'المناطق الجغرافية المتاحة';
 
   @override
-  String get errorLoadingGeofences => 'Error loading geofences';
+  String get errorLoadingGeofences => 'خطأ في تحميل المناطق الجغرافية';
 
   @override
-  String get noGeofencesAvailable => 'No geofences available';
+  String get noGeofencesAvailable => 'لا توجد مناطق جغرافية متاحة';
 
   @override
   String get contactManagerForGeofences =>
-      'Contact your manager to create geofences for this campaign';
+      'تواصل مع المدير لإنشاء مناطق جغرافية لهذه الحملة';
 
   @override
-  String get geofenceIsFull => 'Geofence is full';
+  String get geofenceIsFull => 'المنطقة الجغرافية ممتلئة';
 
   @override
-  String get assignedToGeofence => 'Assigned to geofence';
+  String get assignedToGeofence => 'مُعين للمنطقة الجغرافية';
 
   @override
-  String get assignmentFailed => 'Assignment failed';
+  String get assignmentFailed => 'فشل التعيين';
 
   @override
-  String get cancelAssignment => 'Cancel Assignment';
+  String get cancelAssignment => 'إلغاء التعيين';
 
   @override
   String get cancelAssignmentConfirmation =>
-      'Are you sure you want to cancel your current geofence assignment?';
+      'هل أنت متأكد من إلغاء تعيين المنطقة الجغرافية الحالي؟';
 
   @override
-  String get assignmentCancelled => 'Assignment cancelled successfully';
+  String get assignmentCancelled => 'تم إلغاء التعيين بنجاح';
 
   @override
-  String get cancellationFailed => 'Cancellation Failed';
+  String get cancellationFailed => 'فشل الإلغاء';
 
   @override
-  String get geofenceTracking => 'Geofence Tracking';
+  String get geofenceTracking => 'تتبع المنطقة الجغرافية';
 
   @override
-  String get selectZone => 'Select Zone';
+  String get selectZone => 'اختر منطقة';
 
   @override
-  String get geofenceZones => 'Geofence Zones';
+  String get geofenceZones => 'مناطق جغرافية';
 
   @override
-  String get noGeofencesCreated => 'No geofences created yet';
+  String get noGeofencesCreated => 'لم يتم إنشاء مناطق جغرافية بعد';
 
   @override
-  String get createFirstGeofence => 'Create your first geofence to get started';
+  String get createFirstGeofence => 'أنشئ منطقتك الجغرافية الأولى للبدء';
 
   @override
-  String get enteredGeofence => 'Entered geofence';
+  String get enteredGeofence => 'دخل المنطقة الجغرافية';
 
   @override
-  String get leftGeofence => 'Left geofence';
+  String get leftGeofence => 'غادر المنطقة الجغرافية';
 
   @override
-  String get returnToAssignedArea => 'Return to your assigned area';
+  String get returnToAssignedArea => 'عد إلى منطقتك المُعينة';
 
   @override
-  String get trackingActive => 'Tracking active';
+  String get trackingActive => 'التتبع نشط';
 
   @override
-  String get trackingStopped => 'Tracking stopped';
+  String get trackingStopped => 'تم إيقاف التتبع';
 
   @override
-  String get startTracking => 'Start Tracking';
+  String get startTracking => 'بدء التتبع';
 
   @override
-  String get stopTracking => 'Stop Tracking';
+  String get stopTracking => 'إيقاف التتبع';
 
   @override
-  String get completeAssignment => 'Complete Assignment';
+  String get completeAssignment => 'إنجاز التعيين';
 
   @override
-  String get assignmentCompletedSuccessfully =>
-      'Assignment completed successfully';
+  String get assignmentCompletedSuccessfully => 'تم إنجاز التعيين بنجاح';
 
   @override
-  String get failedToCompleteAssignment => 'Failed to complete assignment';
+  String get failedToCompleteAssignment => 'فشل في إنجاز التعيين';
 
   @override
-  String get accuracy => 'Accuracy';
+  String get accuracy => 'دقة الموقع';
 
   @override
-  String get timeInside => 'Time Inside';
+  String get timeInside => 'الوقت في الداخل';
 
   @override
-  String get noActiveAssignment => 'No Active Assignment';
+  String get noActiveAssignment => 'لا يوجد تعيين نشط';
 
   @override
-  String get selectGeofenceToStartTracking =>
-      'Select a geofence to start tracking';
+  String get selectGeofenceToStartTracking => 'اختر منطقة جغرافية لبدء التتبع';
 
   @override
-  String get changeGeofence => 'Change Geofence';
+  String get changeGeofence => 'تغيير المنطقة الجغرافية';
 
   @override
-  String get currentlyAssignedTo => 'Currently assigned to';
+  String get currentlyAssignedTo => 'مُعين حالياً إلى';
 
   @override
-  String get availableSlots => 'Available slots';
+  String get availableSlots => 'الأماكن المتاحة';
 
   @override
-  String get full => 'Full';
+  String get full => 'ممتلئ';
 
   @override
-  String get geofences => 'Geofences';
+  String get geofences => 'مناطق جغرافية';
 
   @override
   String workZoneLabel(String name) {
@@ -3812,4 +3808,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get failedToCreateTouringTask => 'فشل في إنشاء مهمة الجولة';
+
+  @override
+  String get backgroundServicesRequiredDescription =>
+      'يجب تفعيل الخدمات الخلفية لعرض والمشاركة في الحملات. يرجى تفعيلها من لوحة التحكم.';
 }

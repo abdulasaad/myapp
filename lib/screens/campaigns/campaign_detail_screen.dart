@@ -8,7 +8,6 @@ import '../../models/app_user.dart';
 import '../../models/campaign.dart';
 import '../../models/campaign_geofence.dart';
 import '../../models/agent_geofence_assignment.dart';
-import '../../models/task.dart';
 import '../../models/touring_task.dart';
 import '../../services/touring_task_service.dart';
 import '../../services/profile_service.dart';
@@ -30,7 +29,6 @@ class CampaignDetailScreen extends StatefulWidget {
 
 class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   late Future<List<AppUser>> _assignedAgentsFuture;
-  late Future<List<Task>> _tasksFuture;
   late Future<List<TouringTask>> _touringTasksFuture;
   late Future<List<CampaignGeofence>> _geofencesFuture;
   late Future<AgentGeofenceAssignment?> _currentAssignmentFuture;
@@ -42,7 +40,6 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   void initState() {
     super.initState();
     _assignedAgentsFuture = _fetchAssignedAgents();
-    _tasksFuture = _fetchTasks();
     _touringTasksFuture = _fetchTouringTasks();
     _geofencesFuture = _fetchGeofences();
     _currentAssignmentFuture = _fetchCurrentAssignment();
@@ -51,8 +48,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   void _refreshAll() {
     setState(() {
       _assignedAgentsFuture = _fetchAssignedAgents();
-      _tasksFuture = _fetchTasks();
-      _touringTasksFuture = _fetchTouringTasks();
+        _touringTasksFuture = _fetchTouringTasks();
       _geofencesFuture = _fetchGeofences();
       _currentAssignmentFuture = _fetchCurrentAssignment();
     });
@@ -94,14 +90,6 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     return agentsResponse.map((json) => AppUser.fromJson(json)).toList();
   }
 
-  Future<List<Task>> _fetchTasks() async {
-    final response = await supabase
-        .from('tasks')
-        .select()
-        .eq('campaign_id', widget.campaign.id)
-        .order('created_at', ascending: true);
-    return response.map((json) => Task.fromJson(json)).toList();
-  }
 
   Future<List<TouringTask>> _fetchTouringTasks() async {
     try {
@@ -139,67 +127,6 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
   // --- All other functions and build methods in this file are correct ---
   // --- No other changes are needed below this line for this file ---
 
-  Future<void> _addTask(
-      {required String title, String? description, required int points}) async {
-    try {
-      // Create the task
-      final taskResponse = await supabase.from('tasks').insert({
-        'campaign_id': widget.campaign.id,
-        'title': title,
-        'description': description,
-        'points': points,
-        'created_by': supabase.auth.currentUser!.id,
-      }).select().single();
-      
-      final taskId = taskResponse['id'];
-      
-      // Get all agents assigned to this campaign
-      final campaignAgents = await supabase
-          .from('campaign_agents')
-          .select('agent_id')
-          .eq('campaign_id', widget.campaign.id);
-      
-      // Auto-assign the task to all campaign agents
-      for (final agent in campaignAgents) {
-        try {
-          await supabase.from('task_assignments').insert({
-            'task_id': taskId,
-            'agent_id': agent['agent_id'],
-            'status': 'assigned',
-            'created_at': DateTime.now().toIso8601String(),
-          });
-          
-          // Send notification to agent about task assignment
-          try {
-            await supabase.from('notifications').insert({
-              'recipient_id': agent['agent_id'],
-              'title': AppLocalizations.of(context)!.newTaskAssigned,
-              'message': 'You have been assigned a new task: $title',
-              'type': 'task_assignment',
-              'data': {
-                'task_id': taskId,
-                'campaign_id': widget.campaign.id,
-                'campaign_name': widget.campaign.name,
-              },
-              'created_at': DateTime.now().toIso8601String(),
-            });
-            Logger().i('Task assignment notification sent to agent: ${agent['agent_id']}');
-          } catch (notificationError) {
-            Logger().e('Failed to send task assignment notification: $notificationError');
-          }
-        } catch (e) {
-          Logger().e('Failed to assign task to agent ${agent['agent_id']}: $e');
-        }
-      }
-      
-      if (mounted) {
-        context.showSnackBar(AppLocalizations.of(context)!.taskAddedSuccess);
-        _refreshAll();
-      }
-    } catch (e) {
-      if (mounted) context.showSnackBar(AppLocalizations.of(context)!.taskAddFailed(e.toString()), isError: true);
-    }
-  }
 
   Future<void> _showAddTouringTaskDialog() async {
     final result = await Navigator.of(context).push(
@@ -213,66 +140,12 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     }
   }
 
-  Future<void> _showAddTaskDialog() async {
-    final formKey = GlobalKey<FormState>();
-    final titleController = TextEditingController();
-    final descriptionController = TextEditingController();
-    final pointsController = TextEditingController();
-
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.addNewTask),
-        content: Form(
-          key: formKey,
-          child: SingleChildScrollView(
-            child: Column(mainAxisSize: MainAxisSize.min, children: [
-              TextFormField(
-                  controller: titleController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.taskTitle),
-                  validator: (v) =>
-                      (v == null || v.isEmpty) ? AppLocalizations.of(context)!.requiredField : null),
-              formSpacer,
-              TextFormField(
-                  controller: descriptionController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.description)),
-              formSpacer,
-              TextFormField(
-                  controller: pointsController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.points),
-                  keyboardType: TextInputType.number,
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return AppLocalizations.of(context)!.requiredField;
-                    if (int.tryParse(v) == null) return AppLocalizations.of(context)!.mustBeNumber;
-                    return null;
-                  }),
-            ]),
-          ),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(AppLocalizations.of(context)!.cancel)),
-          ElevatedButton(
-            onPressed: () {
-              if (formKey.currentState!.validate()) {
-                _addTask(
-                    title: titleController.text,
-                    description: descriptionController.text,
-                    points: int.parse(pointsController.text));
-                Navigator.of(context).pop();
-              }
-            },
-            child: Text(AppLocalizations.of(context)!.addTask),
-          )
-        ],
-      ),
-    );
-  }
 
   Future<void> _assignAgent(String agentId) async {
     try {
       final currentUserId = supabase.auth.currentUser!.id;
+      final localizations = AppLocalizations.of(context)!;
+      final campaignAssignmentTitle = localizations.campaignAssignment;
       await supabase.from('campaign_agents').upsert({
         'campaign_id': widget.campaign.id,
         'agent_id': agentId,
@@ -320,7 +193,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
         Logger().i('Sending notification to agent: $agentId for campaign: ${widget.campaign.name}');
         await _notificationService.createNotification(
           recipientId: agentId,
-          title: AppLocalizations.of(context)!.campaignAssignment,
+          title: campaignAssignmentTitle,
           message: 'You have been assigned to campaign "${widget.campaign.name}"',
           // Arabic parameters temporarily disabled until migration is applied
           // titleAr: 'تعيين حملة',
@@ -351,135 +224,7 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     }
   }
 
-  Future<void> _editTask(Task task) async {
-    final formKey = GlobalKey<FormState>();
-    final titleController = TextEditingController(text: task.title);
-    final descriptionController = TextEditingController(text: task.description ?? '');
-    final pointsController = TextEditingController(text: task.points.toString());
 
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.editTask),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: titleController,
-                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.title),
-                validator: (v) => v!.isEmpty ? AppLocalizations.of(context)!.requiredField : null,
-              ),
-              TextFormField(
-                controller: descriptionController,
-                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.description),
-                maxLines: 3,
-              ),
-              TextFormField(
-                controller: pointsController,
-                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.points),
-                keyboardType: TextInputType.number,
-                validator: (v) {
-                  if (v!.isEmpty) return AppLocalizations.of(context)!.requiredField;
-                  if (int.tryParse(v) == null) return AppLocalizations.of(context)!.mustBeNumber;
-                  return null;
-                },
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                Navigator.of(context).pop(); // Close dialog first
-                
-                try {
-                  await supabase.from('tasks').update({
-                    'title': titleController.text,
-                    'description': descriptionController.text.isEmpty ? null : descriptionController.text,
-                    'points': int.parse(pointsController.text),
-                  }).eq('id', task.id);
-                  
-                  if (mounted) {
-                    context.showSnackBar(AppLocalizations.of(context)!.taskUpdatedSuccess);
-                    _refreshAll();
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    context.showSnackBar(AppLocalizations.of(context)!.taskUpdateFailed(e.toString()), isError: true);
-                  }
-                }
-              }
-            },
-            child: Text(AppLocalizations.of(context)!.update),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _deleteTask(Task task) async {
-    final shouldDelete = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.deleteTask),
-        content: Text('Are you sure you want to delete "${task.title}"? This will also remove all assignments and evidence for this task.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(AppLocalizations.of(context)!.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: Text(AppLocalizations.of(context)!.delete),
-          ),
-        ],
-      ),
-    );
-
-    if (shouldDelete == true) {
-      try {
-        // Get all task assignment IDs for this task
-        final assignmentIds = await supabase
-            .from('task_assignments')
-            .select('id')
-            .eq('task_id', task.id);
-        
-        // Delete evidence for each assignment
-        for (final assignment in assignmentIds) {
-          await supabase.from('evidence').delete().eq('task_assignment_id', assignment['id']);
-        }
-        
-        // Delete task assignments
-        await supabase.from('task_assignments').delete().eq('task_id', task.id);
-        
-        // Delete geofences associated with this task
-        await supabase.from('geofences').delete().eq('task_id', task.id);
-        
-        // Delete the task itself
-        await supabase.from('tasks').delete().eq('id', task.id);
-        
-        if (mounted) {
-          context.showSnackBar(AppLocalizations.of(context)!.taskDeletedSuccess);
-          _refreshAll();
-        }
-      } catch (e) {
-        if (mounted) {
-          context.showSnackBar(AppLocalizations.of(context)!.taskDeleteFailed(e.toString()), isError: true);
-        }
-      }
-    }
-  }
 
   Future<void> _showAssignAgentDialog() async {
     final allAgentsResponse =
@@ -818,85 +563,6 @@ class _CampaignDetailScreenState extends State<CampaignDetailScreen> {
     }
   }
 
-  Widget _buildTasksList() {
-    return FutureBuilder<List<Task>>(
-      future: _tasksFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) return preloader;
-        if (snapshot.hasError) return Text('Error: ${snapshot.error}');
-        final tasks = snapshot.data!;
-        if (tasks.isEmpty) {
-          return Center(
-              child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(AppLocalizations.of(context)!.noTasksCreated)));
-        }
-        return ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: tasks.length,
-          itemBuilder: (context, index) {
-            final task = tasks[index];
-            return Card(
-              margin: const EdgeInsets.symmetric(vertical: 4),
-              child: ListTile(
-                leading: const Icon(Icons.check_box_outline_blank),
-                title: Text(task.title),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (task.description != null && task.description!.isNotEmpty)
-                      Text(task.description!),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${task.points} points',
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                trailing: ProfileService.instance.canManageCampaigns
-                    ? PopupMenuButton<String>(
-                        onSelected: (value) {
-                          if (value == 'edit') {
-                            _editTask(task);
-                          } else if (value == 'delete') {
-                            _deleteTask(task);
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: 'edit',
-                            child: Row(
-                              children: [
-                                Icon(Icons.edit, size: 18),
-                                SizedBox(width: 8),
-                                Text(AppLocalizations.of(context)!.editTask),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'delete',
-                            child: Row(
-                              children: [
-                                Icon(Icons.delete, size: 18, color: Colors.red),
-                                SizedBox(width: 8),
-                                Text(AppLocalizations.of(context)!.deleteTask, style: TextStyle(color: Colors.red)),
-                              ],
-                            ),
-                          ),
-                        ],
-                      )
-                    : null,
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
 
   Widget _buildAssignedAgentsList() {
     return FutureBuilder<List<AppUser>>(

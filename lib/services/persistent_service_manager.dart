@@ -15,6 +15,7 @@ class PersistentServiceManager {
   static const int _notificationId = 999;
   
   static final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
+  static bool _hasRequestedNotificationThisSession = false;
   
   // Initialize the persistent service
   static Future<void> initialize() async {
@@ -111,8 +112,14 @@ class PersistentServiceManager {
       }
       
       // Check notification permission (Android 13+)
-      if (await Permission.notification.isDenied) {
-        await Permission.notification.request();
+      // Only request if not permanently denied to avoid repeated prompts
+      final notificationStatus = await Permission.notification.status;
+      if (notificationStatus.isDenied && !notificationStatus.isPermanentlyDenied) {
+        // Only request once per session
+        if (!_hasRequestedNotificationThisSession) {
+          _hasRequestedNotificationThisSession = true;
+          await Permission.notification.request();
+        }
       }
       
       // Show persistent notification

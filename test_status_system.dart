@@ -21,7 +21,7 @@ void main() async {
   // Test 1: Check database functions exist
   print('\n📋 Test 1: Checking database functions...');
   try {
-    final response = await supabase.rpc('update_user_heartbeat', params: {
+    await supabase.rpc('update_user_heartbeat', params: {
       'user_id': '00000000-0000-0000-0000-000000000000', // dummy UUID
       'status': 'active',
     });

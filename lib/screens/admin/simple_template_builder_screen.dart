@@ -841,14 +841,6 @@ class _SimpleTemplateBuilderScreenState extends State<SimpleTemplateBuilderScree
     }
   }
 
-  String _getLocalizedStepTitle(String title) {
-    switch (title) {
-      case 'Basic Info': return AppLocalizations.of(context)!.basicInfo;
-      case 'Requirements': return AppLocalizations.of(context)!.requirements;
-      case 'Review & Create': return AppLocalizations.of(context)!.reviewAndCreate;
-      default: return title;
-    }
-  }
 
   IconData _getEvidenceTypeIcon(EvidenceType type) {
     switch (type) {
