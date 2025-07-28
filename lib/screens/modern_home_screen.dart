@@ -89,8 +89,27 @@ class _ModernHomeScreenState extends State<ModernHomeScreen> with WidgetsBinding
       
       // Restore persistent notification if services are already running
       await PersistentServiceManager.restoreNotificationIfNeeded();
+      
+      // Auto-start location services for agents
+      await _autoStartLocationService();
     } catch (e) {
       debugPrint('Failed to initialize user status: $e');
+    }
+  }
+
+  Future<void> _autoStartLocationService() async {
+    try {
+      final isRunning = await PersistentServiceManager.areServicesRunning();
+      if (!isRunning) {
+        // Auto-start for agents only
+        final user = ProfileService.instance.currentUser;
+        if (user?.role == 'agent') {
+          await PersistentServiceManager.startAllServices(context);
+          debugPrint('✅ Auto-started location services for agent');
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Failed to auto-start services: $e');
     }
   }
 
@@ -1393,6 +1412,53 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
   String? _currentLocationStatus;
   int _unreadNotificationCount = 0;
 
+  // Check if background services are enabled, show warning if not
+  Future<bool> _checkBackgroundServicesEnabled(BuildContext context) async {
+    try {
+      final isRunning = await PersistentServiceManager.areServicesRunning();
+      if (!isRunning) {
+        if (context.mounted) {
+          await showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => AlertDialog(
+              icon: Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.orange,
+                size: 48,
+              ),
+              title: Text(
+                'Background Services Required',
+                style: GoogleFonts.poppins(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              content: Text(
+                'Background services must be enabled to perform this action. Please enable background services from the dashboard.',
+                style: GoogleFonts.poppins(fontSize: 14),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    'OK',
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        return false;
+      }
+      return true;
+    } catch (e) {
+      // If we can't check, allow the action to proceed
+      return true;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -2308,52 +2374,158 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                   colors: [
-                                    primaryColor.withValues(alpha: 0.1),
-                                    secondaryColor.withValues(alpha: 0.05),
+                                    primaryColor.withValues(alpha: 0.15),
+                                    secondaryColor.withValues(alpha: 0.1),
+                                    primaryColor.withValues(alpha: 0.05),
                                   ],
+                                  stops: const [0.0, 0.5, 1.0],
                                 ),
                               ),
                               child: SafeArea(
                                 child: Padding(
-                                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 60),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                      Row(
                                         children: [
-                                          Text(
-                                            AppLocalizations.of(context)!.welcomeBack,
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 14,
-                                              color: textSecondaryColor,
+                                          // Profile Avatar
+                                          Container(
+                                            width: 40,
+                                            height: 40,
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [
+                                                  primaryColor,
+                                                  primaryColor.withValues(alpha: 0.8),
+                                                ],
+                                              ),
+                                              borderRadius: BorderRadius.circular(20),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: primaryColor.withValues(alpha: 0.3),
+                                                  blurRadius: 6,
+                                                  offset: const Offset(0, 3),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Icon(
+                                              Icons.person,
+                                              color: Colors.white,
+                                              size: 22,
                                             ),
                                           ),
-                                          Text(
-                                            widget.user.fullName ?? AppLocalizations.of(context)!.agent,
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 24,
-                                              fontWeight: FontWeight.bold,
-                                              color: textPrimaryColor,
+                                          const SizedBox(width: 10),
+                                          
+                                          // Agent Info
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                // Greeting with time-based message
+                                                Text(
+                                                  _getTimeBasedGreeting(),
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 11,
+                                                    color: textSecondaryColor,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 1),
+                                                
+                                                // Agent Name
+                                                Text(
+                                                  widget.user.fullName ?? AppLocalizations.of(context)!.agent,
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: textPrimaryColor,
+                                                    height: 1.1,
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ],
                                             ),
+                                          ),
+                                          
+                                          // Action Buttons Row
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              // Notification Button
+                                              _buildHeaderIconButton(
+                                                icon: Icons.notifications_outlined,
+                                                hasNotification: _unreadNotificationCount > 0,
+                                                onTap: () {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) => const NotificationsScreen(),
+                                                    ),
+                                                  ).then((_) {
+                                                    // Refresh notification count when returning
+                                                    _loadNotificationCount();
+                                                  });
+                                                },
+                                              ),
+                                              const SizedBox(width: 6),
+                                              
+                                              // App Health Button
+                                              Container(
+                                                width: 36,
+                                                height: 36,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white.withValues(alpha: 0.9),
+                                                  borderRadius: BorderRadius.circular(18),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.black.withValues(alpha: 0.1),
+                                                      blurRadius: 6,
+                                                      offset: const Offset(0, 2),
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: IconButton(
+                                                  onPressed: () {
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (context) => const AppHealthScreen(),
+                                                      ),
+                                                    );
+                                                  },
+                                                  icon: Icon(
+                                                    Icons.health_and_safety_outlined,
+                                                    color: primaryColor,
+                                                    size: 18,
+                                                  ),
+                                                  padding: EdgeInsets.zero,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ],
                                       ),
-                                      // Notification only (removed settings for agents)
-                                      _buildHeaderIconButton(
-                                        icon: Icons.notifications_outlined,
-                                        hasNotification: _unreadNotificationCount > 0,
-                                        onTap: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => const NotificationsScreen(),
+                                      const SizedBox(height: 8),
+                                      
+                                      // Time Row
+                                      Row(
+                                        children: [
+                                          const Spacer(),
+                                          
+                                          // Time display
+                                          Text(
+                                            _getCurrentTime(),
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w500,
+                                              color: textSecondaryColor,
                                             ),
-                                          ).then((_) {
-                                            // Refresh notification count when returning
-                                            _loadNotificationCount();
-                                          });
-                                        },
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
@@ -2634,6 +2806,31 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
         ],
       ),
     );
+  }
+
+  // Get time-based greeting message
+  String _getTimeBasedGreeting() {
+    final now = DateTime.now();
+    final hour = now.hour;
+    
+    if (hour >= 5 && hour < 12) {
+      return AppLocalizations.of(context)!.goodMorning;
+    } else if (hour >= 12 && hour < 17) {
+      return AppLocalizations.of(context)!.goodAfternoon; 
+    } else if (hour >= 17 && hour < 21) {
+      return AppLocalizations.of(context)!.goodEvening;
+    } else {
+      return AppLocalizations.of(context)!.goodEvening; // Use good evening for night
+    }
+  }
+
+  String _getCurrentTime() {
+    // Baghdad timezone (UTC+3)
+    final now = DateTime.now().toUtc().add(const Duration(hours: 3));
+    final hour12 = now.hour > 12 ? now.hour - 12 : (now.hour == 0 ? 12 : now.hour);
+    final minute = now.minute.toString().padLeft(2, '0');
+    final period = now.hour >= 12 ? 'PM' : 'AM';
+    return '$hour12:$minute $period';
   }
 
   // Get today's status based on activity
@@ -3121,18 +3318,26 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
               icon: Icons.add_location_alt,
               label: AppLocalizations.of(context)!.suggest,
               color: Colors.indigo,
-              onTap: () => _suggestNewPlace(context),
+              onTap: () async {
+                if (await _checkBackgroundServicesEnabled(context)) {
+                  _suggestNewPlace(context);
+                }
+              },
             ),
             _buildQuickActionItem(
               icon: Icons.map,
               label: AppLocalizations.of(context)!.map,
               color: Colors.teal,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AgentGeofenceMapScreen(),
-                ),
-              ),
+              onTap: () async {
+                if (await _checkBackgroundServicesEnabled(context)) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AgentGeofenceMapScreen(),
+                    ),
+                  );
+                }
+              },
             ),
           ],
         ),
@@ -3510,18 +3715,150 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
 }
 
 // Agent Campaigns Tab
-class _AgentCampaignsTab extends StatelessWidget {
+class _AgentCampaignsTab extends StatefulWidget {
+  @override
+  State<_AgentCampaignsTab> createState() => _AgentCampaignsTabState();
+}
+
+class _AgentCampaignsTabState extends State<_AgentCampaignsTab> {
   @override
   Widget build(BuildContext context) {
-    return CampaignsListScreen(locationService: LocationService());
+    return FutureBuilder<bool>(
+      future: _checkBackgroundServices(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        
+        if (snapshot.data == false) {
+          return _buildServiceRequiredView();
+        }
+        
+        return CampaignsListScreen(locationService: LocationService());
+      },
+    );
+  }
+  
+  Future<bool> _checkBackgroundServices() async {
+    try {
+      return await PersistentServiceManager.areServicesRunning();
+    } catch (e) {
+      return true; // Allow access if check fails
+    }
+  }
+  
+  Widget _buildServiceRequiredView() {
+    return Container(
+      color: backgroundColor,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.settings_backup_restore,
+                size: 80,
+                color: Colors.orange,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                AppLocalizations.of(context)!.backgroundServicesRequired,
+                style: GoogleFonts.poppins(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: textPrimaryColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                AppLocalizations.of(context)!.backgroundServicesRequiredDescription,
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  color: textSecondaryColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
 // Agent Tasks Tab
-class _AgentTasksTab extends StatelessWidget {
+class _AgentTasksTab extends StatefulWidget {
+  @override
+  State<_AgentTasksTab> createState() => _AgentTasksTabState();
+}
+
+class _AgentTasksTabState extends State<_AgentTasksTab> {
   @override
   Widget build(BuildContext context) {
-    return const AgentStandaloneTasksScreen();
+    return FutureBuilder<bool>(
+      future: _checkBackgroundServices(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        
+        if (snapshot.data == false) {
+          return _buildServiceRequiredView();
+        }
+        
+        return const AgentStandaloneTasksScreen();
+      },
+    );
+  }
+  
+  Future<bool> _checkBackgroundServices() async {
+    try {
+      return await PersistentServiceManager.areServicesRunning();
+    } catch (e) {
+      return true; // Allow access if check fails
+    }
+  }
+  
+  Widget _buildServiceRequiredView() {
+    return Container(
+      color: backgroundColor,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.assignment_late,
+                size: 80,
+                color: Colors.orange,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Background Services Required',
+                style: GoogleFonts.poppins(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: textPrimaryColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Background services must be enabled to view and complete tasks. Please enable them from the Dashboard.',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  color: textSecondaryColor,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

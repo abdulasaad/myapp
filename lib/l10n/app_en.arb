@@ -7427,5 +7427,15 @@
   "failedToCreateTouringTask": "Failed to create touring task",
   "@failedToCreateTouringTask": {
     "description": "Error message when touring task creation fails"
+  },
+
+  "backgroundServicesRequired": "Background Services Required",
+  "@backgroundServicesRequired": {
+    "description": "Title for background services required message"
+  },
+
+  "backgroundServicesRequiredDescription": "Background services must be enabled to view and participate in campaigns. Please enable them from the Dashboard.",
+  "@backgroundServicesRequiredDescription": {
+    "description": "Description for background services required message"
   }
 }

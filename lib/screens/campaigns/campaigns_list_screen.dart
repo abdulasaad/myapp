@@ -40,8 +40,8 @@ class CampaignsListScreen extends StatefulWidget {
 
 class CampaignsListScreenState extends State<CampaignsListScreen> {
   // Use specific futures for clarity
-  late Future<List<dynamic>> _agentDataFuture;
-  late Future<List<Campaign>> _managerCampaignsFuture;
+  Future<List<dynamic>>? _agentDataFuture;
+  Future<List<Campaign>>? _managerCampaignsFuture;
 
   // Geofence status tracking
   StreamSubscription<GeofenceStatus>? _geofenceStatusSubscription;
@@ -310,7 +310,7 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
           const SizedBox(height: 24),
           Expanded(
             child: FutureBuilder<List<Campaign>>(
-              future: _managerCampaignsFuture,
+              future: _managerCampaignsFuture ?? Future.value([]),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -563,7 +563,7 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
           const SizedBox(height: 24),
           Expanded(
             child: FutureBuilder<List<dynamic>>(
-              future: _agentDataFuture,
+              future: _agentDataFuture ?? Future.value([<Campaign>[], <AgentStandaloneTask>[]]),
               builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -597,7 +597,9 @@ class CampaignsListScreenState extends State<CampaignsListScreen> {
             );
           }
           
-          final List<Campaign> campaigns = snapshot.data?[0] ?? [];
+          final campaigns = snapshot.data != null && snapshot.data!.isNotEmpty
+              ? (snapshot.data![0] as List<Campaign>)
+              : <Campaign>[];
           
           // Handle the case where there are no campaigns
           if (campaigns.isEmpty) {
