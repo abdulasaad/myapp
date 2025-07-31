@@ -7,7 +7,6 @@ import 'package:geolocator/geolocator.dart';
 import '../models/agent_geofence_assignment.dart';
 import '../models/campaign_geofence.dart';
 import '../services/campaign_geofence_service.dart';
-import '../utils/constants.dart';
 
 class GeofenceLocationTracker {
   static final GeofenceLocationTracker _instance = GeofenceLocationTracker._internal();

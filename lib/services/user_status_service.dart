@@ -1,7 +1,6 @@
 // lib/services/user_status_service.dart
 
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import '../utils/constants.dart';
 import 'connectivity_service.dart';

@@ -38,7 +38,7 @@ class _GeofenceTrackingScreenState extends State<GeofenceTrackingScreen> {
   Timer? _timeTimer;
 
   Set<maps.Polygon> _polygons = {};
-  Set<maps.Marker> _markers = {};
+  final Set<maps.Marker> _markers = {};
   Set<maps.Circle> _circles = {};
 
   @override

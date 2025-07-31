@@ -6,7 +6,6 @@ import 'package:myapp/services/profile_service.dart';
 import 'package:myapp/services/session_service.dart';
 import 'package:myapp/services/connectivity_service.dart';
 import 'package:myapp/services/update_service.dart';
-import 'package:myapp/services/notification_service.dart';
 import 'package:myapp/services/background_notification_manager.dart';
 import 'package:myapp/widgets/update_dialog.dart';
 import 'modern_home_screen.dart';
