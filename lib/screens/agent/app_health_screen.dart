@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io' show Platform;
 import '../../utils/constants.dart';
 
@@ -14,17 +15,52 @@ class AppHealthScreen extends StatefulWidget {
 
 class _AppHealthScreenState extends State<AppHealthScreen> {
   bool _isLoading = true;
+  bool _batteryOptimizationManuallyConfigured = false;
+  bool _batterySettingsHasBeenOpened = false;
   Map<String, bool> _healthStatus = {
     'gps': false,
     'notifications': false,
     'background': false,
+    'battery_optimization': false,
     'internet': false,
   };
 
   @override
   void initState() {
     super.initState();
-    _checkAppHealth();
+    _loadStoredSettings();
+  }
+
+  Future<void> _loadStoredSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        _batteryOptimizationManuallyConfigured = prefs.getBool('battery_optimization_manually_configured') ?? false;
+        _batterySettingsHasBeenOpened = prefs.getBool('battery_settings_has_been_opened') ?? false;
+      });
+      _checkAppHealth();
+    } catch (e) {
+      debugPrint('Error loading stored settings: $e');
+      _checkAppHealth();
+    }
+  }
+
+  Future<void> _saveBatteryOptimizationSetting(bool isConfigured) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('battery_optimization_manually_configured', isConfigured);
+    } catch (e) {
+      debugPrint('Error saving battery optimization setting: $e');
+    }
+  }
+
+  Future<void> _saveBatterySettingsOpenedFlag() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('battery_settings_has_been_opened', true);
+    } catch (e) {
+      debugPrint('Error saving battery settings opened flag: $e');
+    }
   }
 
   Future<void> _checkAppHealth() async {
@@ -40,6 +76,9 @@ class _AppHealthScreenState extends State<AppHealthScreen> {
       // Check background app refresh/battery optimization
       final backgroundStatus = await _checkBackgroundStatus();
       
+      // Check battery optimization status
+      final batteryOptimizationStatus = await _checkBatteryOptimization();
+      
       // Check internet connectivity
       final internetStatus = await _checkInternetStatus();
 
@@ -48,6 +87,7 @@ class _AppHealthScreenState extends State<AppHealthScreen> {
           'gps': gpsStatus,
           'notifications': notificationStatus,
           'background': backgroundStatus,
+          'battery_optimization': batteryOptimizationStatus,
           'internet': internetStatus,
         };
         _isLoading = false;
@@ -126,6 +166,32 @@ class _AppHealthScreenState extends State<AppHealthScreen> {
       // This is a simplified check - actual implementation may vary by platform
       return true; // Assuming background is working for now
     } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> _checkBatteryOptimization() async {
+    try {
+      // Only check battery optimization on Android
+      if (!Platform.isAndroid) {
+        return true; // iOS doesn't have battery optimization settings like Android
+      }
+
+      // If user has manually marked it as configured, respect that
+      if (_batteryOptimizationManuallyConfigured) {
+        return true;
+      }
+
+      // Check if the app is ignoring battery optimizations
+      final status = await Permission.ignoreBatteryOptimizations.status;
+      debugPrint('Battery optimization status: $status');
+      
+      // Return true if the app is allowed to ignore battery optimizations
+      // This means the app won't be killed by Android's battery optimization
+      return status == PermissionStatus.granted;
+    } catch (e) {
+      debugPrint('Error checking battery optimization: $e');
+      // If there's an error checking, assume it's not optimized (safer assumption)
       return false;
     }
   }
@@ -214,6 +280,103 @@ class _AppHealthScreenState extends State<AppHealthScreen> {
     }
   }
 
+  Future<void> _requestBatteryOptimizationExemption() async {
+    try {
+      // Only relevant for Android
+      if (!Platform.isAndroid) {
+        _checkAppHealth(); // Refresh status for iOS
+        return;
+      }
+
+      // Show helpful dialog with conditional manual override option
+      if (mounted) {
+        final result = await showDialog<String>(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Battery Optimization'),
+              content: Text(
+                'To ensure the app works properly in the background:\n\n'
+                '1. Select "Unrestricted" if available\n'
+                '2. Or turn OFF "Optimized" setting\n'
+                '3. This prevents Android from killing the app\n\n'
+                'Would you like to open the battery settings?'
+                '${_batterySettingsHasBeenOpened 
+                    ? '\n\nIf you\'ve already configured this but the app still shows it as not configured, you can mark it as "Already Configured".' 
+                    : ''}'
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop('cancel'),
+                  child: const Text('Cancel'),
+                ),
+                if (_batterySettingsHasBeenOpened)
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop('configured'),
+                    child: const Text('Already Configured'),
+                  ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop('settings'),
+                  child: const Text('Open Settings'),
+                ),
+              ],
+            );
+          },
+        );
+
+        if (result == 'configured') {
+          // User confirms they have configured it manually
+          setState(() {
+            _batteryOptimizationManuallyConfigured = true;
+          });
+          await _saveBatteryOptimizationSetting(true);
+          _checkAppHealth();
+          return;
+        } else if (result != 'settings') {
+          return; // User cancelled
+        }
+      }
+
+      // Check current status first
+      final currentStatus = await Permission.ignoreBatteryOptimizations.status;
+      debugPrint('Current battery optimization status: $currentStatus');
+
+      // Try to request permission first
+      try {
+        final status = await Permission.ignoreBatteryOptimizations.request();
+        debugPrint('Battery optimization status after request: $status');
+        
+        if (status == PermissionStatus.granted) {
+          _checkAppHealth();
+          return;
+        }
+      } catch (e) {
+        debugPrint('Permission request failed: $e');
+      }
+
+      // Mark that settings have been opened and save it
+      setState(() {
+        _batterySettingsHasBeenOpened = true;
+      });
+      await _saveBatterySettingsOpenedFlag();
+      
+      // Always open app settings for manual configuration
+      // This is more reliable on modern Android devices
+      await openAppSettings();
+      
+      _checkAppHealth(); // Refresh status
+    } catch (e) {
+      debugPrint('Error requesting battery optimization exemption: $e');
+      // If there's an error, try to open app settings as fallback
+      try {
+        await openAppSettings();
+      } catch (settingsError) {
+        debugPrint('Error opening settings: $settingsError');
+      }
+      _checkAppHealth();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -276,6 +439,19 @@ class _AppHealthScreenState extends State<AppHealthScreen> {
                           : 'Enable background app refresh for continuous tracking',
                     ),
                     const SizedBox(height: 16),
+                    if (Platform.isAndroid) ...[
+                      _buildHealthCard(
+                        title: 'Battery Optimization',
+                        subtitle: 'App not optimized by Android',
+                        icon: Icons.battery_saver,
+                        isHealthy: _healthStatus['battery_optimization']!,
+                        onTap: _healthStatus['battery_optimization']! ? null : _requestBatteryOptimizationExemption,
+                        description: _healthStatus['battery_optimization']!
+                            ? 'App is exempt from battery optimization'
+                            : 'Disable battery optimization for background operation',
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     _buildHealthCard(
                       title: 'Internet Connection',
                       subtitle: 'Network connectivity',
@@ -459,6 +635,8 @@ class _AppHealthScreenState extends State<AppHealthScreen> {
             _buildTip('Keep location services enabled for accurate tracking'),
             _buildTip('Allow notifications to receive important updates'),
             _buildTip('Enable background app refresh for continuous operation'),
+            if (Platform.isAndroid)
+              _buildTip('Disable battery optimization to prevent app from being killed'),
             _buildTip('Maintain stable internet connection for data sync'),
           ],
         ),
