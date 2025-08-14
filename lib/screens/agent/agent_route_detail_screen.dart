@@ -1179,6 +1179,9 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
 
         debugPrint('Route assignment marked as completed');
         
+        // Award points for route completion
+        await _awardRouteCompletionPoints();
+        
         if (mounted) {
           ModernNotification.success(
             context,
@@ -1189,6 +1192,39 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
       }
     } catch (e) {
       debugPrint('Error checking route completion: $e');
+    }
+  }
+
+  Future<void> _awardRouteCompletionPoints() async {
+    try {
+      final currentUser = supabase.auth.currentUser;
+      if (currentUser == null) return;
+
+      // Get the route details to check points
+      final route = widget.routeAssignment.route;
+      if (route == null || route.points <= 0) {
+        debugPrint('No points configured for this route or route is null');
+        return;
+      }
+
+      final points = route.points;
+      debugPrint('Awarding $points points for route completion');
+
+      // Insert earnings record for route completion
+      await supabase.from('agent_earnings').insert({
+        'agent_id': currentUser.id,
+        'source_type': 'route',
+        'source_id': route.id,
+        'points_earned': points,
+        'earned_at': DateTime.now().toIso8601String(),
+        'status': 'earned',
+        'description': 'Route completion: ${route.name}',
+      });
+
+      debugPrint('Points awarded successfully for route completion');
+
+    } catch (e) {
+      debugPrint('Error awarding route completion points: $e');
     }
   }
 

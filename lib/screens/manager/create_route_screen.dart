@@ -28,6 +28,7 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
   // Time input controllers for estimated duration
   final _estimatedHoursController = TextEditingController();
   final _estimatedMinutesController = TextEditingController();
+  final _pointsController = TextEditingController();
 
   @override
   void initState() {
@@ -41,6 +42,7 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
     _descriptionController.dispose();
     _estimatedHoursController.dispose();
     _estimatedMinutesController.dispose();
+    _pointsController.dispose();
     super.dispose();
   }
 
@@ -199,6 +201,27 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                 border: const OutlineInputBorder(),
               ),
               maxLines: 3,
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _pointsController,
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.pointsAwarded,
+                hintText: AppLocalizations.of(context)!.pointsAwardedHint,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.stars),
+              ),
+              keyboardType: TextInputType.number,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return null; // Points are optional
+                }
+                final points = int.tryParse(value.trim());
+                if (points == null || points < 0) {
+                  return 'Please enter a valid number (0 or greater)';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             Container(
@@ -825,6 +848,7 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
           final totalHours = hours + (minutes / 60.0);
           return totalHours > 0 ? totalHours.ceil() : null;
         })(),
+        'points': int.tryParse(_pointsController.text) ?? 0,
         'status': 'active', // Create as active, bypassing draft
       }).select().single();
 

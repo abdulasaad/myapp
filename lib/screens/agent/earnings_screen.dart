@@ -38,15 +38,34 @@ class StandaloneTaskEarning {
   });
 }
 
+// ===================================================================
+// NEW: A model to hold the detailed earnings for route completion.
+// ===================================================================
+class RouteEarning {
+  final String routeName;
+  final int pointsEarned;
+  final int pointsPaid;
+  final int outstandingBalance;
 
-// The summary now holds two lists: one for campaigns and one for tasks.
+  RouteEarning({
+    required this.routeName,
+    required this.pointsEarned,
+    required this.pointsPaid,
+    required this.outstandingBalance,
+  });
+}
+
+
+// The summary now holds three lists: campaigns, tasks, and routes.
 class EarningsSummary {
   final List<CampaignEarnings> campaignEarnings;
   final List<StandaloneTaskEarning> standaloneTaskEarnings;
+  final List<RouteEarning> routeEarnings;
 
   EarningsSummary({
     required this.campaignEarnings,
     required this.standaloneTaskEarnings,
+    required this.routeEarnings,
   });
 }
 
@@ -75,7 +94,7 @@ class _EarningsScreenState extends State<EarningsScreen> {
   Future<EarningsSummary> _fetchEarningsData() async {
     final userId = supabase.auth.currentUser?.id;
     if (userId == null) {
-      return EarningsSummary(campaignEarnings: [], standaloneTaskEarnings: []);
+      return EarningsSummary(campaignEarnings: [], standaloneTaskEarnings: [], routeEarnings: []);
     }
 
     // --- Step 1: Fetch Campaign Earnings (logic is unchanged) ---
@@ -138,10 +157,48 @@ class _EarningsScreenState extends State<EarningsScreen> {
       ));
     }
 
+    // --- Step 3: Fetch Route Completions ---
+    final routeEarningsResponse = await supabase
+        .from('agent_earnings')
+        .select('source_id, points_earned, description')
+        .eq('agent_id', userId)
+        .eq('source_type', 'route')
+        .eq('status', 'earned');
+
+    final routeEarningsList = <RouteEarning>[];
+    for (final item in routeEarningsResponse) {
+      final routeId = item['source_id'] as String;
+      final pointsEarned = item['points_earned'] as int;
+      final routeName = item['description'] as String? ?? 'Unknown Route';
+      
+      // Extract route name from description (format: "Route completion: Route Name")
+      final cleanRouteName = routeName.startsWith('Route completion: ') 
+          ? routeName.substring('Route completion: '.length)
+          : routeName;
+
+      // Check for payments for this route (if payments system exists for routes)
+      final paymentsResponse = await supabase
+          .from('payments')
+          .select('amount')
+          .eq('agent_id', userId)
+          .eq('route_id', routeId);
+      
+      final pointsPaid = paymentsResponse.fold<int>(0, (sum, payment) => sum + (payment['amount'] as int));
+      final outstandingBalance = pointsEarned - pointsPaid;
+      
+      routeEarningsList.add(RouteEarning(
+        routeName: cleanRouteName,
+        pointsEarned: pointsEarned,
+        pointsPaid: pointsPaid,
+        outstandingBalance: outstandingBalance,
+      ));
+    }
+
     // --- Step 4: Return the complete summary ---
     return EarningsSummary(
       campaignEarnings: campaignEarningsList,
       standaloneTaskEarnings: standaloneEarningsList,
+      routeEarnings: routeEarningsList,
     );
   }
 
@@ -160,18 +217,20 @@ class _EarningsScreenState extends State<EarningsScreen> {
           }
           
           final summary = snapshot.data;
-          if (summary == null || (summary.campaignEarnings.isEmpty && summary.standaloneTaskEarnings.isEmpty)) {
+          if (summary == null || (summary.campaignEarnings.isEmpty && summary.standaloneTaskEarnings.isEmpty && summary.routeEarnings.isEmpty)) {
             return Center(child: Text(AppLocalizations.of(context)!.noEarningsDataFound));
           }
 
-          // Calculate overall totals from both lists
+          // Calculate overall totals from all three lists
           final totalCampaignEarned = summary.campaignEarnings.fold<int>(0, (sum, e) => sum + e.totalEarned);
           final totalTaskEarned = summary.standaloneTaskEarnings.fold<int>(0, (sum, e) => sum + e.pointsEarned);
-          final overallTotal = totalCampaignEarned + totalTaskEarned;
+          final totalRouteEarned = summary.routeEarnings.fold<int>(0, (sum, e) => sum + e.pointsEarned);
+          final overallTotal = totalCampaignEarned + totalTaskEarned + totalRouteEarned;
           
           final totalCampaignOutstanding = summary.campaignEarnings.fold<int>(0, (sum, e) => sum + e.outstandingBalance);
           final totalTaskOutstanding = summary.standaloneTaskEarnings.fold<int>(0, (sum, e) => sum + e.outstandingBalance);
-          final overallOutstanding = totalCampaignOutstanding + totalTaskOutstanding;
+          final totalRouteOutstanding = summary.routeEarnings.fold<int>(0, (sum, e) => sum + e.outstandingBalance);
+          final overallOutstanding = totalCampaignOutstanding + totalTaskOutstanding + totalRouteOutstanding;
 
 
           return RefreshIndicator(
@@ -204,6 +263,10 @@ class _EarningsScreenState extends State<EarningsScreen> {
                       // List of earnings per standalone task
                       ...summary.standaloneTaskEarnings.map((earning) =>
                         _buildTaskEarningCard(context, earning)
+                      ),
+                      // List of earnings per route completion
+                      ...summary.routeEarnings.map((earning) =>
+                        _buildRouteEarningCard(context, earning)
                       )
                     ],
                   ),
@@ -261,6 +324,38 @@ class _EarningsScreenState extends State<EarningsScreen> {
     );
   }
 
+  Widget _buildRouteEarningCard(BuildContext context, RouteEarning earning) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.route, color: Colors.orange),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    earning.routeName,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _buildEarningRow(AppLocalizations.of(context)!.pointsEarned, earning.pointsEarned.toString()),
+            _buildEarningRow(AppLocalizations.of(context)!.pointsPaid, earning.pointsPaid.toString()),
+            const Divider(height: 20),
+            _buildEarningRow(AppLocalizations.of(context)!.outstandingBalance, earning.outstandingBalance.toString(), isBold: true),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildSummaryCard(BuildContext context, String title, String value, Color color) {
     return Expanded(

@@ -16,6 +16,7 @@ class Route {
   final DateTime? endDate;
   final String status; // 'draft', 'active', 'completed', 'archived'
   final int? estimatedDurationHours;
+  final int points; // Points awarded for completing this route
   final Map<String, dynamic>? metadata;
   
   // Optional expanded data when joined
@@ -35,6 +36,7 @@ class Route {
     this.endDate,
     required this.status,
     this.estimatedDurationHours,
+    this.points = 0,
     this.metadata,
     this.createdByUser,
     this.assignedManagerUser,
@@ -65,6 +67,7 @@ class Route {
         estimatedDurationHours: json['estimated_duration_hours'] is int 
             ? json['estimated_duration_hours'] 
             : null,
+        points: json['points'] is int ? json['points'] : 0,
         metadata: json['metadata'] != null && json['metadata'] is Map 
             ? Map<String, dynamic>.from(json['metadata']) 
             : null,
@@ -106,6 +109,7 @@ class Route {
       'end_date': endDate?.toIso8601String(),
       'status': status,
       'estimated_duration_hours': estimatedDurationHours,
+      'points': points,
       'metadata': metadata,
     };
   }
@@ -135,6 +139,7 @@ class Route {
     DateTime? endDate,
     String? status,
     int? estimatedDurationHours,
+    int? points,
     Map<String, dynamic>? metadata,
     AppUser? createdByUser,
     AppUser? assignedManagerUser,
@@ -152,6 +157,7 @@ class Route {
       endDate: endDate ?? this.endDate,
       status: status ?? this.status,
       estimatedDurationHours: estimatedDurationHours ?? this.estimatedDurationHours,
+      points: points ?? this.points,
       metadata: metadata ?? this.metadata,
       createdByUser: createdByUser ?? this.createdByUser,
       assignedManagerUser: assignedManagerUser ?? this.assignedManagerUser,
