@@ -10,6 +10,7 @@ import '../../widgets/route_evidence_upload_dialog.dart';
 import '../../widgets/modern_notification.dart';
 import '../../services/location_service.dart';
 import '../../l10n/app_localizations.dart';
+import 'agent_route_map_screen.dart';
 
 class AgentRouteDetailScreen extends StatefulWidget {
   final RouteAssignment routeAssignment;
@@ -260,6 +261,14 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          if (_routePlaces.isNotEmpty)
+            IconButton(
+              onPressed: _showRouteMap,
+              icon: const Icon(Icons.map),
+              tooltip: 'View route map',
+            ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -1044,8 +1053,8 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
         place.longitude,
       );
 
-      // Check if agent is within 50 meters of the place (you can adjust this threshold)
-      const double maxDistanceMeters = 50.0;
+      // Check if agent is within 100 meters of the place (GPS accuracy consideration)
+      const double maxDistanceMeters = 100.0;
       
       if (distanceInMeters > maxDistanceMeters) {
         if (mounted) {
@@ -1216,5 +1225,18 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
       await _loadEvidenceCounts();
       setState(() {}); // Trigger rebuild to show updated evidence counts
     }
+  }
+
+  void _showRouteMap() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AgentRouteMapScreen(
+          routePlaces: _routePlaces,
+          routeAssignment: widget.routeAssignment,
+          placeVisits: _placeVisits,
+        ),
+      ),
+    );
   }
 }

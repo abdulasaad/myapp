@@ -1147,16 +1147,57 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
     if (places.isEmpty) {
       return Card(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(16),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.location_off, size: 48, color: Colors.grey[400]),
-              const SizedBox(height: 8),
-              Text(
-                AppLocalizations.of(context)!.noPlacesInThisRoute,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
+              // Header with Add Place button
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${AppLocalizations.of(context)!.route} ${AppLocalizations.of(context)!.places}',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: textPrimaryColor,
+                      ),
+                    ),
+                  ),
+                  if (_route.status != 'archived')
+                    ElevatedButton.icon(
+                      onPressed: _addPlaceToRoute,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                      icon: const Icon(Icons.add_location, size: 16),
+                      label: Text(
+                        '${AppLocalizations.of(context)!.add} ${AppLocalizations.of(context)!.place}',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Empty state content
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  child: Column(
+                    children: [
+                      Icon(Icons.location_off, size: 48, color: Colors.grey[400]),
+                      const SizedBox(height: 8),
+                      Text(
+                        AppLocalizations.of(context)!.noPlacesInThisRoute,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

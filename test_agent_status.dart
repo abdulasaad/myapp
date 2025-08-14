@@ -35,7 +35,7 @@ void main() {
   print('\nTest 6: null timestamp (should be Offline)');
   print('Status: ${getCalculatedStatus(null)}');
   
-  print('\n' + '=' * 50);
+  print('\n${'=' * 50}');
   print('Common Issues:');
   print('1. RPC function using created_at instead of recorded_at');
   print('2. Agent device clock ahead of server time');

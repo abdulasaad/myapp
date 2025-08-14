@@ -311,6 +311,7 @@ class _GeofenceEditorScreenState extends State<GeofenceEditorScreen> {
                   heroTag: "centerLocation",
                   onPressed: _centerOnManagerLocation,
                   backgroundColor: Colors.blueAccent,
+                  tooltip: 'Center on my location',
                   child: _isLocationLoading
                       ? const SizedBox(
                           width: 20,
@@ -321,7 +322,6 @@ class _GeofenceEditorScreenState extends State<GeofenceEditorScreen> {
                           ),
                         )
                       : const Icon(Icons.my_location, color: Colors.white),
-                  tooltip: 'Center on my location',
                 ),
                 const SizedBox(height: 16),
                 FloatingActionButton.extended(
@@ -336,6 +336,7 @@ class _GeofenceEditorScreenState extends State<GeofenceEditorScreen> {
               heroTag: "centerLocation",
               onPressed: _centerOnManagerLocation,
               backgroundColor: Colors.blueAccent,
+              tooltip: 'Center on my location',
               child: _isLocationLoading
                   ? const SizedBox(
                       width: 20,
@@ -346,7 +347,6 @@ class _GeofenceEditorScreenState extends State<GeofenceEditorScreen> {
                       ),
                     )
                   : const Icon(Icons.my_location, color: Colors.white),
-              tooltip: 'Center on my location',
             ),
     );
   }
