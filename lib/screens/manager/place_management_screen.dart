@@ -43,44 +43,35 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
       final currentUser = supabase.auth.currentUser;
       if (currentUser == null) return;
 
+      // Always include the current manager's places
+      List<String> agentIds = [currentUser.id];
+
       // Get manager's groups
       final managerGroups = await supabase
           .from('user_groups')
           .select('group_id')
           .eq('user_id', currentUser.id);
 
-      if (managerGroups.isEmpty) {
-        setState(() {
-          _pendingPlaces = [];
-          _approvedPlaces = [];
-          _rejectedPlaces = [];
-          _isLoading = false;
-        });
-        return;
+      // If manager has groups, also include agents from those groups
+      if (managerGroups.isNotEmpty) {
+        final groupIds = managerGroups.map((g) => g['group_id']).toList();
+
+        // Get agents in manager's groups
+        final agentsInGroups = await supabase
+            .from('user_groups')
+            .select('user_id')
+            .inFilter('group_id', groupIds);
+
+        if (agentsInGroups.isNotEmpty) {
+          final additionalAgentIds = agentsInGroups.map((a) => a['user_id'] as String).toList();
+          // Add unique agent IDs (avoid duplicates)
+          for (final agentId in additionalAgentIds) {
+            if (!agentIds.contains(agentId)) {
+              agentIds.add(agentId);
+            }
+          }
+        }
       }
-
-      final groupIds = managerGroups.map((g) => g['group_id']).toList();
-
-      // Get agents in manager's groups
-      final agentsInGroups = await supabase
-          .from('user_groups')
-          .select('user_id')
-          .inFilter('group_id', groupIds);
-
-      if (agentsInGroups.isEmpty) {
-        setState(() {
-          _pendingPlaces = [];
-          _approvedPlaces = [];
-          _rejectedPlaces = [];
-          _isLoading = false;
-        });
-        return;
-      }
-
-      final agentIds = agentsInGroups.map((a) => a['user_id'] as String).toList();
-
-      // Add current manager to the list to include their own places
-      agentIds.add(currentUser.id);
 
       // Get places created by agents in manager's groups or by the manager
       final placesResponse = await supabase

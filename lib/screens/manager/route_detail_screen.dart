@@ -206,6 +206,44 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+          if (_route.status != 'archived')
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                switch (value) {
+                  case 'delete':
+                    _deleteRoute();
+                    break;
+                  case 'archive':
+                    _archiveRoute();
+                    break;
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem<String>(
+                  value: 'archive',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.archive, size: 20),
+                      const SizedBox(width: 8),
+                      Text(AppLocalizations.of(context)!.archive),
+                    ],
+                  ),
+                ),
+                PopupMenuItem<String>(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.delete, size: 20, color: Colors.red),
+                      const SizedBox(width: 8),
+                      Text(
+                        AppLocalizations.of(context)!.delete,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
       body: _isLoading
@@ -225,32 +263,6 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
                 ],
               ),
             ),
-      floatingActionButton: _route.status != 'archived'
-          ? Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Add Place FAB
-                FloatingActionButton(
-                  onPressed: _addPlaceToRoute,
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  heroTag: "add_place",
-                  child: const Icon(Icons.add_location),
-                ),
-                const SizedBox(height: 10),
-                // Assign Agents FAB (only for active routes)
-                if (_route.status == 'active')
-                  FloatingActionButton.extended(
-                    onPressed: _assignToAgents,
-                    backgroundColor: primaryColor,
-                    foregroundColor: Colors.white,
-                    heroTag: "assign_agents",
-                    icon: const Icon(Icons.person_add),
-                    label: Text('${AppLocalizations.of(context)!.assignTo} ${AppLocalizations.of(context)!.agents}'),
-                  ),
-              ],
-            )
-          : null,
     );
   }
 
@@ -594,13 +606,29 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
               children: [
                 Icon(Icons.people, color: primaryColor),
                 const SizedBox(width: 8),
-                Text(
-                  '${AppLocalizations.of(context)!.assignedAgents} (${_assignedAgents.length})',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    '${AppLocalizations.of(context)!.assignedAgents} (${_assignedAgents.length})',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
+                if (_route.status == 'active' && _route.status != 'archived')
+                  ElevatedButton.icon(
+                    onPressed: _assignToAgents,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                    icon: const Icon(Icons.person_add, size: 16),
+                    label: Text(
+                      AppLocalizations.of(context)!.assign,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
               ],
             ),
             const SizedBox(height: 16),
@@ -685,78 +713,108 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         border: Border.all(color: Colors.grey[300]!),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: statusColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(statusIcon, color: statusColor, size: 24),
-        ),
-        title: Text(
-          agent['agent_name'] as String,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text(
-              '${AppLocalizations.of(context)!.status}: ${assignmentStatus.toUpperCase()}',
-              style: TextStyle(
-                color: statusColor,
-                fontWeight: FontWeight.w500,
-                fontSize: 12,
+      child: Stack(
+        children: [
+          ListTile(
+            contentPadding: const EdgeInsets.fromLTRB(16, 16, 50, 16), // Extra right padding for remove button
+            leading: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(statusIcon, color: statusColor, size: 24),
+            ),
+            title: Text(
+              agent['agent_name'] as String,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
               ),
             ),
-            const SizedBox(height: 8),
-            // Progress bar
-            Row(
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: LinearProgressIndicator(
-                    value: progressPercentage / 100,
-                    backgroundColor: Colors.grey[300],
-                    valueColor: AlwaysStoppedAnimation<Color>(statusColor),
-                  ),
-                ),
-                const SizedBox(width: 8),
+                const SizedBox(height: 4),
                 Text(
-                  '$progressPercentage%',
-                  style: const TextStyle(
+                  '${AppLocalizations.of(context)!.status}: ${assignmentStatus.toUpperCase()}',
+                  style: TextStyle(
+                    color: statusColor,
+                    fontWeight: FontWeight.w500,
                     fontSize: 12,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
+                const SizedBox(height: 8),
+                // Progress bar
+                Row(
+                  children: [
+                    Expanded(
+                      child: LinearProgressIndicator(
+                        value: progressPercentage / 100,
+                        backgroundColor: Colors.grey[300],
+                        valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$progressPercentage%',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(Icons.location_on, size: 14, color: Colors.grey[600]),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$completedVisits/$totalPlaces ${AppLocalizations.of(context)!.places}',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                    const SizedBox(width: 16),
+                    Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${(totalTimeSpent / 60).floor()}h ${totalTimeSpent % 60}m',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
               ],
             ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.location_on, size: 14, color: Colors.grey[600]),
-                const SizedBox(width: 4),
-                Text(
-                  '$completedVisits/$totalPlaces ${AppLocalizations.of(context)!.places}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () => _showAgentProgressDetails(agent),
+          ),
+          // Remove button positioned in top-right corner
+          if (_route.status != 'archived')
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => _removeAgentFromRoute(agent),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      size: 16,
+                      color: Colors.red,
+                    ),
+                  ),
                 ),
-                const SizedBox(width: 16),
-                Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
-                const SizedBox(width: 4),
-                Text(
-                  '${(totalTimeSpent / 60).floor()}h ${totalTimeSpent % 60}m',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-              ],
+              ),
             ),
-          ],
-        ),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: () => _showAgentProgressDetails(agent),
+        ],
       ),
     );
   }
@@ -1116,13 +1174,33 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '${AppLocalizations.of(context)!.route} ${AppLocalizations.of(context)!.places}',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: textPrimaryColor,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${AppLocalizations.of(context)!.route} ${AppLocalizations.of(context)!.places}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: textPrimaryColor,
+                    ),
+                  ),
+                ),
+                if (_route.status != 'archived')
+                  ElevatedButton.icon(
+                    onPressed: _addPlaceToRoute,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    ),
+                    icon: const Icon(Icons.add_location, size: 16),
+                    label: Text(
+                      '${AppLocalizations.of(context)!.add} ${AppLocalizations.of(context)!.place}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 16),
             ListView.separated(
@@ -1614,7 +1692,7 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
         }
         
         // Reload the assigned agents list
-        _loadAssignedAgents();
+        _refreshAssignedAgents();
       }
 
     } catch (e) {
@@ -2052,6 +2130,260 @@ class _RouteDetailScreenState extends State<RouteDetailScreen> {
           ModernNotification.error(context, message: AppLocalizations.of(context)!.errorArchivingRoute, subtitle: e.toString());
         }
       }
+    }
+  }
+
+  Future<void> _removeAgentFromRoute(Map<String, dynamic> agent) async {
+    final agentName = agent['agent_name'] as String;
+    final assignmentId = agent['assignment_id'] as String;
+    final assignmentStatus = agent['assignment_status'] as String;
+    final hasVisits = (agent['visits'] as List).isNotEmpty;
+    final completedVisits = agent['completed_visits'] as int;
+
+    // Determine warning based on progress
+    String warningMessage;
+    Color warningColor;
+    IconData warningIcon;
+
+    if (assignmentStatus == 'completed') {
+      warningMessage = 'This agent has completed the route. Removing will preserve their work but they will no longer be assigned.';
+      warningColor = Colors.blue;
+      warningIcon = Icons.info_outline;
+    } else if (hasVisits && completedVisits > 0) {
+      warningMessage = 'This agent has partial progress. Removing will preserve their visit history but stop further work.';
+      warningColor = Colors.orange;
+      warningIcon = Icons.warning;
+    } else if (assignmentStatus == 'in_progress') {
+      warningMessage = 'This agent is currently working on the route. Removing will stop their active work.';
+      warningColor = Colors.red;
+      warningIcon = Icons.warning;
+    } else {
+      warningMessage = 'This agent has not started working on the route yet and can be safely removed.';
+      warningColor = Colors.green;
+      warningIcon = Icons.check_circle;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('${AppLocalizations.of(context)!.remove} $agentName'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('${AppLocalizations.of(context)!.areYouSureYouWantToRemove} "$agentName" ${AppLocalizations.of(context)!.fromThisRoute}?'),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: warningColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: warningColor.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(warningIcon, color: warningColor, size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      warningMessage,
+                      style: TextStyle(fontSize: 12, color: warningColor),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (hasVisits) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Agent Progress:',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '• Completed visits: $completedVisits',
+                      style: const TextStyle(fontSize: 11),
+                    ),
+                    Text(
+                      '• Total time spent: ${(agent['total_time_spent_minutes'] as int) ~/ 60}h ${(agent['total_time_spent_minutes'] as int) % 60}m',
+                      style: const TextStyle(fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(AppLocalizations.of(context)!.removeAgent),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _performAgentRemoval(assignmentId, agentName);
+    }
+  }
+
+  Future<void> _performAgentRemoval(String assignmentId, String agentName) async {
+    try {
+      setState(() => _isLoading = true);
+
+      // Remove the route assignment
+      await supabase
+          .from('route_assignments')
+          .delete()
+          .eq('id', assignmentId);
+
+      // Send notification to the agent about removal
+      final agentData = _assignedAgents.firstWhere((agent) => agent['assignment_id'] == assignmentId);
+      final agentId = agentData['agent_id'] as String;
+      
+      try {
+        await supabase.from('notifications').insert({
+          'recipient_id': agentId,
+          'title': 'Route Assignment Removed',
+          'message': 'You have been removed from route: ${_route.name}',
+          'type': 'route_unassignment',
+          'data': {
+            'route_id': _route.id,
+            'route_name': _route.name,
+          },
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      } catch (notificationError) {
+        debugPrint('Failed to send removal notification: $notificationError');
+      }
+
+      if (mounted) {
+        ModernNotification.success(context, message: AppLocalizations.of(context)!.agentRemovedSuccess);
+        // Reload the assigned agents list without affecting main loading state
+        await _refreshAssignedAgents();
+      }
+
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ModernNotification.error(context, message: AppLocalizations.of(context)!.agentRemoveFailed(e.toString()));
+      }
+    }
+  }
+
+  Future<void> _refreshAssignedAgents() async {
+    try {
+      await _loadAssignedAgents();
+      setState(() => _isLoading = false);
+    } catch (e) {
+      setState(() => _isLoading = false);
+      debugPrint('Error refreshing assigned agents: $e');
+    }
+  }
+
+  Future<void> _deleteRoute() async {
+    // Check comprehensive route usage
+    final usageDetails = await _checkRouteUsageDetails(_route.id);
+    final hasUsage = usageDetails['hasAssignments'] as bool || usageDetails['hasVisits'] as bool;
+    
+    if (hasUsage) {
+      if (mounted) {
+        _showRouteUsageDialog(usageDetails);
+      }
+      return;
+    }
+
+    // For routes with no usage, show simple confirmation
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('${AppLocalizations.of(context)!.delete} ${AppLocalizations.of(context)!.route}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('${AppLocalizations.of(context)!.areYouSureYouWantToPermanentlyDelete} "${_route.name}"?'),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green[200]!),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.green[700], size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      AppLocalizations.of(context)!.thisRouteHasNoAssignmentsOrVisitHistoryAndCanBeSafelyDeleted,
+                      style: TextStyle(fontSize: 12, color: Colors.green[700]),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red[200]!),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.warning, color: Colors.red[700], size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      AppLocalizations.of(context)!.thisActionCannotBeUndoneTheRouteAndAllItsPlacesWillBePermanentlyDeleted,
+                      style: TextStyle(fontSize: 12, color: Colors.red[700]),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(AppLocalizations.of(context)!.deletePermanently),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _performRouteDelete();
     }
   }
 

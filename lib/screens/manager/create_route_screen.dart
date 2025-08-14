@@ -18,7 +18,8 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   
-  Set<DateTime> _selectedDays = {};
+  DateTime? _startDate;
+  DateTime? _endDate;
   List<Place> _availablePlaces = [];
   List<RoutePlace> _selectedPlaces = [];
   bool _isLoading = false;
@@ -50,35 +51,35 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
       final currentUser = supabase.auth.currentUser;
       if (currentUser == null) return;
 
+      // Always include the current manager's places
+      List<String> agentIds = [currentUser.id];
+
       // Get manager's groups
       final managerGroups = await supabase
           .from('user_groups')
           .select('group_id')
           .eq('user_id', currentUser.id);
 
-      if (managerGroups.isEmpty) {
-        setState(() {
-          _availablePlaces = [];
-          _isLoadingPlaces = false;
-        });
-        return;
+      // If manager has groups, also include agents from those groups
+      if (managerGroups.isNotEmpty) {
+        final groupIds = managerGroups.map((g) => g['group_id']).toList();
+
+        // Get agents in manager's groups
+        final agentsInGroups = await supabase
+            .from('user_groups')
+            .select('user_id')
+            .inFilter('group_id', groupIds);
+
+        if (agentsInGroups.isNotEmpty) {
+          final additionalAgentIds = agentsInGroups.map((a) => a['user_id'] as String).toList();
+          // Add unique agent IDs (avoid duplicates)
+          for (final agentId in additionalAgentIds) {
+            if (!agentIds.contains(agentId)) {
+              agentIds.add(agentId);
+            }
+          }
+        }
       }
-
-      final groupIds = managerGroups.map((g) => g['group_id']).toList();
-
-      // Get agents in manager's groups
-      final agentsInGroups = await supabase
-          .from('user_groups')
-          .select('user_id')
-          .inFilter('group_id', groupIds);
-
-      List<String> agentIds = [];
-      if (agentsInGroups.isNotEmpty) {
-        agentIds = agentsInGroups.map((a) => a['user_id'] as String).toList();
-      }
-
-      // Add current manager to the list to include their own places
-      agentIds.add(currentUser.id);
 
       // Get approved places created by agents in manager's groups or by manager
       final placesResponse = await supabase
@@ -302,12 +303,12 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                                   ),
                                 ),
                                 Text(
-                                  _selectedDays.isNotEmpty
-                                      ? '${_selectedDays.length} ${AppLocalizations.of(context)!.daysSelected}'
+                                  _startDate != null
+                                      ? '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}'
                                       : AppLocalizations.of(context)!.selectDays,
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: _selectedDays.isNotEmpty ? textPrimaryColor : Colors.grey,
+                                    color: _startDate != null ? textPrimaryColor : Colors.grey,
                                   ),
                                 ),
                               ],
@@ -344,12 +345,12 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
                                   ),
                                 ),
                                 Text(
-                                  _selectedDays.isNotEmpty
-                                      ? '${_selectedDays.length} ${AppLocalizations.of(context)!.daysSelected}'
+                                  _endDate != null
+                                      ? '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}'
                                       : AppLocalizations.of(context)!.selectDays,
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: _selectedDays.isNotEmpty ? textPrimaryColor : Colors.grey,
+                                    color: _endDate != null ? textPrimaryColor : Colors.grey,
                                   ),
                                 ),
                               ],
@@ -497,18 +498,28 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
   }
 
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
-    // Show month/day picker for selecting multiple days
-    // For now, just show a simple date picker
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
+      initialDate: isStartDate 
+          ? (_startDate ?? DateTime.now())
+          : (_endDate ?? _startDate ?? DateTime.now()),
+      firstDate: isStartDate 
+          ? DateTime.now() 
+          : (_startDate ?? DateTime.now()),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     
     if (picked != null) {
       setState(() {
-        _selectedDays.add(DateTime(picked.year, picked.month, picked.day));
+        if (isStartDate) {
+          _startDate = DateTime(picked.year, picked.month, picked.day);
+          // If end date is before start date, clear it
+          if (_endDate != null && _endDate!.isBefore(_startDate!)) {
+            _endDate = null;
+          }
+        } else {
+          _endDate = DateTime(picked.year, picked.month, picked.day);
+        }
       });
     }
   }
@@ -806,8 +817,8 @@ class _CreateRouteScreenState extends State<CreateRouteScreen> {
             : null,
         'created_by': currentUser.id,
         'assigned_manager_id': currentUser.id,
-        'start_date': _selectedDays.isNotEmpty ? _selectedDays.first.toIso8601String().split('T')[0] : null,
-        'end_date': _selectedDays.isNotEmpty ? _selectedDays.last.toIso8601String().split('T')[0] : null,
+        'start_date': _startDate?.toIso8601String().split('T')[0],
+        'end_date': _endDate?.toIso8601String().split('T')[0],
         'estimated_duration_hours': (() {
           final hours = int.tryParse(_estimatedHoursController.text) ?? 0;
           final minutes = int.tryParse(_estimatedMinutesController.text) ?? 0;
