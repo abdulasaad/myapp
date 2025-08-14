@@ -1,6 +1,7 @@
 // lib/screens/agent/agent_geofence_map_screen.dart
 
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -218,6 +219,93 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
         }
       }
 
+      // Get route assignments and their place geofences
+      final routeAssignmentsResponse = await supabase
+          .from('route_assignments')
+          .select('route_id, status')
+          .eq('agent_id', userId)
+          .inFilter('status', ['assigned', 'in_progress', 'completed']);
+      
+      debugPrint('[AgentGeofenceMap] Found ${routeAssignmentsResponse.length} route assignments');
+
+      if (routeAssignmentsResponse.isNotEmpty) {
+        final routeIds = routeAssignmentsResponse
+            .map((item) => item['route_id'] as String)
+            .toList();
+        
+        // Create a map of route assignment statuses
+        final routeStatuses = <String, String>{};
+        for (final assignment in routeAssignmentsResponse) {
+          routeStatuses[assignment['route_id'] as String] = assignment['status'] as String;
+        }
+
+        // Get route details and their places
+        final routesResponse = await supabase
+            .from('routes')
+            .select('id, name, description')
+            .inFilter('id', routeIds);
+
+        // Get places for these routes
+        final routePlacesResponse = await supabase
+            .from('route_places')
+            .select('''
+              route_id,
+              place_id,
+              visit_order,
+              places!inner(id, name, description, latitude, longitude, geofence_radius)
+            ''')
+            .inFilter('route_id', routeIds)
+            .order('visit_order');
+
+        debugPrint('[AgentGeofenceMap] Found ${routePlacesResponse.length} route places');
+
+        // Group route places by route
+        final placesByRoute = <String, List<Map<String, dynamic>>>{};
+        for (final routePlace in routePlacesResponse) {
+          final routeId = routePlace['route_id'] as String;
+          placesByRoute.putIfAbsent(routeId, () => []).add(routePlace);
+        }
+
+        // Create route information map
+        final routeInfoMap = <String, Map<String, dynamic>>{};
+        for (final route in routesResponse) {
+          routeInfoMap[route['id'] as String] = route;
+        }
+
+        // Add geofences for each place in each route
+        for (final routeId in routeIds) {
+          final routePlaces = placesByRoute[routeId] ?? [];
+          final routeInfo = routeInfoMap[routeId];
+          final routeStatus = routeStatuses[routeId] ?? 'assigned';
+          
+          if (routePlaces.isNotEmpty && routeInfo != null) {
+            for (int i = 0; i < routePlaces.length; i++) {
+              final routePlace = routePlaces[i];
+              final placeInfo = routePlace['places'] as Map<String, dynamic>;
+              final visitOrder = routePlace['visit_order'] as int;
+              
+              // Create circular geofence around place location
+              final lat = placeInfo['latitude'] as double;
+              final lng = placeInfo['longitude'] as double;
+              final radius = (placeInfo['geofence_radius'] as num?)?.toDouble() ?? 50.0;
+              
+              // Generate circle points
+              final circlePoints = _generateCirclePoints(LatLng(lat, lng), radius);
+              
+              if (circlePoints.isNotEmpty) {
+                final statusIndicator = routeStatus == 'completed' ? ' ✓' : '';
+                zones.add(GeofenceZone(
+                  id: 'route_${routeId}_place_${placeInfo['id']}',
+                  title: 'Route: ${routeInfo['name'] ?? 'Unnamed Route'}$statusIndicator',
+                  description: 'Place $visitOrder: ${placeInfo['name'] ?? 'Unnamed Place'}\n${placeInfo['description'] ?? ''}\nRadius: ${radius.toInt()}m\nRoute Status: ${routeStatus.toUpperCase()}',
+                  points: circlePoints,
+                ));
+              }
+            }
+          }
+        }
+      }
+
       debugPrint('[AgentGeofenceMap] Final zones count: ${zones.length}');
       for (final zone in zones) {
         debugPrint('[AgentGeofenceMap] Zone: ${zone.id} - ${zone.title}');
@@ -282,14 +370,17 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
       final isTask = zone.id.startsWith('task_');
       final isTouringTask = zone.id.startsWith('touring_');
       final isCampaignTouringTask = zone.id.startsWith('campaign_touring_');
+      final isRoute = zone.id.startsWith('route_');
       final isCompleted = zone.title.contains('✓'); // Check for checkmark
       
-      // Use different colors for campaigns vs tasks vs touring tasks vs completed
+      // Use different colors for campaigns vs tasks vs touring tasks vs routes vs completed
       Color baseColor;
       if (isCompleted) {
         baseColor = Colors.grey; // Completed tasks in grey
       } else if (isTouringTask || isCampaignTouringTask) {
         baseColor = Colors.purple; // Touring tasks in purple
+      } else if (isRoute) {
+        baseColor = Colors.orange; // Route places in orange
       } else if (isTask) {
         baseColor = secondaryColor; // Regular tasks in secondary color
       } else {
@@ -702,6 +793,8 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
           const SizedBox(height: 4),
           _buildLegendItem('Touring', Colors.purple),
           const SizedBox(height: 4),
+          _buildLegendItem('Routes', Colors.orange),
+          const SizedBox(height: 4),
           _buildLegendItem('Completed', Colors.grey),
         ],
       ),
@@ -731,6 +824,33 @@ class _AgentGeofenceMapScreenState extends State<AgentGeofenceMapScreen> {
         ),
       ],
     );
+  }
+
+  List<LatLng> _generateCirclePoints(LatLng center, double radiusInMeters) {
+    const int numberOfPoints = 32; // Number of points to create a smooth circle
+    final List<LatLng> points = [];
+    
+    // Earth's radius in meters (approximately)
+    const double earthRadius = 6371000.0;
+    
+    // Convert radius to radians
+    final double radiusInRadians = radiusInMeters / earthRadius;
+    
+    for (int i = 0; i <= numberOfPoints; i++) {
+      final double angle = (i * 2 * math.pi) / numberOfPoints;
+      
+      // Calculate offset in radians
+      final double deltaLat = radiusInRadians * math.cos(angle);
+      final double deltaLng = radiusInRadians * math.sin(angle) / math.cos(center.latitude * math.pi / 180);
+      
+      // Convert back to degrees
+      final double lat = center.latitude + (deltaLat * 180 / math.pi);
+      final double lng = center.longitude + (deltaLng * 180 / math.pi);
+      
+      points.add(LatLng(lat, lng));
+    }
+    
+    return points;
   }
 }
 
