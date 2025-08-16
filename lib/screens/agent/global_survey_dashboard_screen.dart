@@ -5,7 +5,6 @@ import '../../services/global_survey_service.dart';
 import '../../models/global_survey.dart';
 import '../../models/survey_field.dart';
 import '../../models/global_survey_submission.dart';
-import '../../services/location_service.dart';
 import '../../utils/constants.dart';
 import '../../widgets/modern_notification.dart';
 
@@ -139,7 +138,6 @@ class _AgentGlobalSurveyFillScreen extends StatefulWidget {
 
 class _AgentGlobalSurveyFillScreenState extends State<_AgentGlobalSurveyFillScreen> {
   final _service = GlobalSurveyService();
-  final _locationService = LocationService();
   bool _loading = true;
   List<SurveyField> _fields = [];
   final _formKey = GlobalKey<FormState>();
@@ -164,12 +162,9 @@ class _AgentGlobalSurveyFillScreenState extends State<_AgentGlobalSurveyFillScre
     if (!_formKey.currentState!.validate()) return;
     setState(() => _submitting = true);
     try {
-      final pos = await _locationService.getCurrentLocation().catchError((_) => null);
       final res = await _service.submitResponse(
         surveyId: widget.survey.id,
         submissionData: _data,
-        latitude: pos?.latitude,
-        longitude: pos?.longitude,
       );
       if (mounted) {
         if (res != null) {

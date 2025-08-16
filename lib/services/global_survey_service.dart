@@ -223,8 +223,6 @@ class GlobalSurveyService {
   Future<GlobalSurveySubmission?> submitResponse({
     required String surveyId,
     required Map<String, dynamic> submissionData,
-    double? latitude,
-    double? longitude,
   }) async {
     try {
       final currentUser = supabase.auth.currentUser;
@@ -235,8 +233,6 @@ class GlobalSurveyService {
             'survey_id': surveyId,
             'agent_id': currentUser.id,
             'submission_data': submissionData,
-            'latitude': latitude,
-            'longitude': longitude,
           })
           .select()
           .single();

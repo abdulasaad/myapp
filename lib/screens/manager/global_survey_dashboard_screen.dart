@@ -12,7 +12,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'dart:io';
 import 'package:excel/excel.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:open_file/open_file.dart';
 
 class GlobalSurveyDashboardScreen extends StatefulWidget {
   const GlobalSurveyDashboardScreen({super.key});
@@ -95,13 +96,27 @@ class _GlobalSurveyDashboardScreenState extends State<GlobalSurveyDashboardScree
 
   Future<void> _exportSurveyToExcel(GlobalSurvey survey) async {
     try {
-      // Show loading indicator
+      // Check storage permission for Android
+      if (Platform.isAndroid) {
+        final permission = await Permission.manageExternalStorage.status;
+        if (!permission.isGranted) {
+          final result = await Permission.manageExternalStorage.request();
+          if (!result.isGranted) {
+            if (mounted) {
+              ModernNotification.error(context, message: 'Storage permission required to download files');
+            }
+            return;
+          }
+        }
+      }
+
+      if (!mounted) return;
+
+      // Show simple loading dialog
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
+        builder: (context) => const _LoadingDialog(message: 'Exporting to Excel...'),
       );
 
       // Get submissions and survey fields
@@ -109,8 +124,10 @@ class _GlobalSurveyDashboardScreenState extends State<GlobalSurveyDashboardScree
       final fields = await _service.getSurveyFields(survey.id);
 
       if (submissions.isEmpty) {
-        Navigator.pop(context); // Close loading
-        ModernNotification.error(context, message: 'No submissions to export');
+        if (mounted) {
+          Navigator.pop(context); // Close loading
+          ModernNotification.error(context, message: 'No submissions to export');
+        }
         return;
       }
 
@@ -126,11 +143,7 @@ class _GlobalSurveyDashboardScreenState extends State<GlobalSurveyDashboardScree
         headers.add(field.fieldLabel);
       }
       
-      // Add location headers if any submission has coordinates
-      final hasLocation = submissions.any((s) => s.latitude != null && s.longitude != null);
-      if (hasLocation) {
-        headers.addAll(['Latitude', 'Longitude']);
-      }
+      // No location headers needed
 
       // Set headers
       for (int i = 0; i < headers.length; i++) {
@@ -160,38 +173,109 @@ class _GlobalSurveyDashboardScreenState extends State<GlobalSurveyDashboardScree
           sheet.cell(CellIndex.indexByColumnRow(columnIndex: colIndex++, rowIndex: excelRowIndex))
               .value = TextCellValue(value);
         }
-        
-        // Location data
-        if (hasLocation) {
-          sheet.cell(CellIndex.indexByColumnRow(columnIndex: colIndex++, rowIndex: excelRowIndex))
-              .value = TextCellValue(submission.latitude?.toString() ?? '');
-          sheet.cell(CellIndex.indexByColumnRow(columnIndex: colIndex++, rowIndex: excelRowIndex))
-              .value = TextCellValue(submission.longitude?.toString() ?? '');
-        }
       }
 
-      // Save file
-      final directory = await getApplicationDocumentsDirectory();
-      final fileName = 'survey_${survey.title.replaceAll(RegExp(r'[^\w\s-]'), '')}_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+      // Save file to Downloads directory
+      late Directory directory;
+      String fileName = 'survey_${survey.title.replaceAll(RegExp(r'[^\w\s-]'), '')}_${DateTime.now().millisecondsSinceEpoch}.xlsx';
+      
+      if (Platform.isAndroid) {
+        // For Android, try multiple download locations
+        List<String> downloadPaths = [
+          '/storage/emulated/0/Download',
+          '/storage/emulated/0/Downloads',
+          '/sdcard/Download',
+          '/sdcard/Downloads',
+        ];
+        
+        Directory? downloadsDir;
+        for (String path in downloadPaths) {
+          final testDir = Directory(path);
+          if (await testDir.exists()) {
+            downloadsDir = testDir;
+            break;
+          }
+        }
+        
+        if (downloadsDir != null) {
+          directory = downloadsDir;
+        } else {
+          // Fallback to external storage
+          final externalDir = await getExternalStorageDirectory();
+          if (externalDir != null) {
+            // Create Downloads folder in external storage
+            final downloadsFolder = Directory('${externalDir.path}/Downloads');
+            if (!await downloadsFolder.exists()) {
+              await downloadsFolder.create(recursive: true);
+            }
+            directory = downloadsFolder;
+          } else {
+            throw Exception('Could not access external storage');
+          }
+        }
+      } else {
+        // For iOS, use documents directory
+        directory = await getApplicationDocumentsDirectory();
+      }
+      
       final filePath = '${directory.path}/$fileName';
       final file = File(filePath);
       
       await file.writeAsBytes(excel.encode()!);
 
-      Navigator.pop(context); // Close loading
-
-      // Share the file
-      await Share.shareXFiles(
-        [XFile(filePath)],
-        text: 'Survey Results: ${survey.title}',
-      );
-
       if (mounted) {
-        ModernNotification.success(context, message: 'Excel file exported successfully');
+        Navigator.pop(context); // Close loading
+        
+        // Show success dialog with option to open file
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            icon: Icon(Icons.check_circle, color: Colors.green, size: 48),
+            title: const Text('Export Successful'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Excel file saved successfully!'),
+                const SizedBox(height: 8),
+                Text(
+                  fileName,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  Platform.isAndroid 
+                    ? (directory.path.contains('Download') 
+                        ? 'Location: Downloads folder'
+                        : 'Location: ${directory.path}')
+                    : 'Location: Documents folder',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
+              ElevatedButton.icon(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await OpenFile.open(filePath);
+                },
+                icon: const Icon(Icons.open_in_new),
+                label: const Text('Open File'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        );
       }
     } catch (e) {
-      Navigator.pop(context); // Close loading if still open
       if (mounted) {
+        Navigator.pop(context); // Close loading if still open
         ModernNotification.error(context, message: 'Export failed: $e');
       }
     }
@@ -1171,19 +1255,6 @@ class _ManagerSurveyResultsListState extends State<_ManagerSurveyResultsList> {
                               );
                             }),
                           ],
-                          if (submission.latitude != null && submission.longitude != null) ...[
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Icon(Icons.location_on, size: 16, color: primaryColor),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'Location: ${submission.latitude!.toStringAsFixed(6)}, ${submission.longitude!.toStringAsFixed(6)}',
-                                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                                ),
-                              ],
-                            ),
-                          ],
                         ],
                       ),
                     ),
@@ -1198,3 +1269,33 @@ class _ManagerSurveyResultsListState extends State<_ManagerSurveyResultsList> {
   }
 }
 
+
+
+class _LoadingDialog extends StatelessWidget {
+  final String message;
+  
+  const _LoadingDialog({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              style: const TextStyle(fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
