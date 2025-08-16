@@ -900,7 +900,7 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                                                 ),
                                               ),
                                               Text(
-                                                widget.user.fullName?.split(' ').first ?? 'Agent',
+                                                widget.user.fullName.split(' ').first ?? 'Agent',
                                                 style: GoogleFonts.poppins(
                                                   fontSize: 24,
                                                   fontWeight: FontWeight.bold,
@@ -2123,7 +2123,7 @@ class _ProfileTab extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
-              user.role?.toUpperCase() ?? 'AGENT',
+              user.role.toUpperCase() ?? 'AGENT',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,

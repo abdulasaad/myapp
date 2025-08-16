@@ -29,8 +29,8 @@ class _AgentTouringTaskListScreenState extends State<AgentTouringTaskListScreen>
   final TouringTaskService _touringTaskService = TouringTaskService();
   late Future<List<Map<String, dynamic>>> _assignmentsFuture;
   bool _backgroundServicesRunning = false;
-  Map<String, bool> _dailyCompletionStatus = {}; // Track completion status for each task
-  Set<DateTime> _expandedDays = {}; // Track which day cards are expanded
+  final Map<String, bool> _dailyCompletionStatus = {}; // Track completion status for each task
+  final Set<DateTime> _expandedDays = {}; // Track which day cards are expanded
   List<Map<String, dynamic>> _allAssignments = []; // Cache all assignments for task lookup
 
   @override

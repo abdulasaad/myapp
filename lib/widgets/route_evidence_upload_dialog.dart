@@ -89,7 +89,7 @@ class _RouteEvidenceUploadDialogState extends State<RouteEvidenceUploadDialog> {
                           ),
                         ),
                         Text(
-                          '${widget.routePlace.place?.name ?? AppLocalizations.of(context)!.unknownPlace}',
+                          widget.routePlace.place?.name ?? AppLocalizations.of(context)!.unknownPlace,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: textSecondaryColor,
                           ),

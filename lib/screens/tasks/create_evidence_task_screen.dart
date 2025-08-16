@@ -13,7 +13,7 @@ import '../../widgets/custom_field_editor.dart';
 import '../../widgets/month_day_picker.dart';
 import '../../widgets/modern_notification.dart';
 import './task_geofence_editor_screen.dart';
-import './standalone_tasks_screen.dart'; // Added import for navigation
+// Added import for navigation
 
 class CreateEvidenceTaskScreen extends StatefulWidget {
   final Task? task;

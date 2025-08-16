@@ -42,7 +42,7 @@ class _CampaignGeofenceManagementScreenState extends State<CampaignGeofenceManag
   
   Set<Polygon> _polygons = {};
   Set<Marker> _markers = {};
-  List<LatLng> _currentPolygonPoints = [];
+  final List<LatLng> _currentPolygonPoints = [];
   bool _isDrawingMode = false;
   bool _isSaving = false;
   bool _isLocationLoading = false;
@@ -594,6 +594,7 @@ class _CampaignGeofenceManagementScreenState extends State<CampaignGeofenceManag
       child: FloatingActionButton(
         onPressed: _centerOnManagerLocation,
         backgroundColor: Colors.blueAccent,
+        tooltip: 'Center on my location',
         child: _isLocationLoading
             ? const SizedBox(
                 width: 20,
@@ -604,7 +605,6 @@ class _CampaignGeofenceManagementScreenState extends State<CampaignGeofenceManag
                 ),
               )
             : const Icon(Icons.my_location, color: Colors.white),
-        tooltip: 'Center on my location',
       ),
     );
   }

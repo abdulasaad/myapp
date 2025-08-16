@@ -10,6 +10,7 @@ import '../../widgets/route_evidence_upload_dialog.dart';
 import '../../widgets/modern_notification.dart';
 import '../../services/location_service.dart';
 import '../../l10n/app_localizations.dart';
+import '../../utils/navigation_helper.dart';
 import 'agent_route_map_screen.dart';
 
 class AgentRouteDetailScreen extends StatefulWidget {
@@ -803,6 +804,22 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
             
             const SizedBox(height: 16),
             
+            // Navigate button - always available
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _navigateToPlace(routePlace),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: primaryColor,
+                  side: BorderSide(color: primaryColor),
+                ),
+                icon: const Icon(Icons.navigation),
+                label: const Text('Navigate'),
+              ),
+            ),
+            
+            const SizedBox(height: 12),
+            
             if (canCheckIn)
               SizedBox(
                 width: double.infinity,
@@ -1274,5 +1291,43 @@ class _AgentRouteDetailScreenState extends State<AgentRouteDetailScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _navigateToPlace(RoutePlace routePlace) async {
+    final place = routePlace.place;
+    if (place == null) {
+      if (mounted) {
+        ModernNotification.error(
+          context,
+          message: 'Navigation unavailable',
+          subtitle: 'Place location data is not available',
+        );
+      }
+      return;
+    }
+
+    try {
+      final success = await NavigationHelper.navigateToLocation(
+        latitude: place.latitude,
+        longitude: place.longitude,
+        placeName: place.name,
+      );
+
+      if (!success && mounted) {
+        ModernNotification.warning(
+          context,
+          message: 'Unable to open navigation',
+          subtitle: 'Please ensure you have a maps app installed',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ModernNotification.error(
+          context,
+          message: 'Navigation error',
+          subtitle: e.toString(),
+        );
+      }
+    }
   }
 }

@@ -11,6 +11,7 @@ import '../reporting/location_history_screen.dart';
 import '../../services/group_service.dart';
 import '../manager/team_members_screen.dart';
 import '../manager/route_management_screen.dart';
+import '../manager/global_survey_dashboard_screen.dart';
 import '../manager/place_management_screen.dart';
 import '../manager/route_visit_analytics_screen.dart';
 import '../map/live_map_screen.dart';
@@ -879,7 +880,19 @@ class _EnhancedManagerDashboardScreenState extends State<EnhancedManagerDashboar
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Container(), // Placeholder for future manager feature
+                child: _buildActionCard(
+                  title: 'Surveys',
+                  subtitle: 'Create, edit, view results',
+                  icon: Icons.quiz,
+                  color: Colors.purple,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const GlobalSurveyDashboardScreen(),
+                      ),
+                    );
+                  },
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(

@@ -43,6 +43,8 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
       final currentUser = supabase.auth.currentUser;
       if (currentUser == null) return;
 
+      debugPrint('Loading places for user: ${currentUser.id}');
+
       // Always include the current manager's places
       List<String> agentIds = [currentUser.id];
 
@@ -51,6 +53,8 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
           .from('user_groups')
           .select('group_id')
           .eq('user_id', currentUser.id);
+
+      debugPrint('Manager groups: ${managerGroups.length}');
 
       // If manager has groups, also include agents from those groups
       if (managerGroups.isNotEmpty) {
@@ -73,6 +77,8 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
         }
       }
 
+      debugPrint('Loading places for ${agentIds.length} users: $agentIds');
+
       // Get places created by agents in manager's groups or by the manager
       final placesResponse = await supabase
           .from('places')
@@ -84,20 +90,34 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
           .inFilter('created_by', agentIds)
           .order('created_at', ascending: false);
 
+      debugPrint('Loaded ${placesResponse.length} places from database');
       final places = placesResponse.map((json) => Place.fromJson(json)).toList();
 
+      final pendingPlaces = places.where((p) => p.approvalStatus == 'pending').toList();
+      final approvedPlaces = places.where((p) => p.approvalStatus == 'approved' && p.status == 'active').toList();
+      final rejectedPlaces = places.where((p) => p.approvalStatus == 'rejected').toList();
+      final inactivePlaces = places.where((p) => p.status == 'inactive').toList();
+      
+      debugPrint('Places breakdown: Pending=${pendingPlaces.length}, Approved=${approvedPlaces.length}, Rejected=${rejectedPlaces.length}, Inactive=${inactivePlaces.length}');
+
       setState(() {
-        _pendingPlaces = places.where((p) => p.approvalStatus == 'pending').toList();
-        _approvedPlaces = places.where((p) => p.approvalStatus == 'approved' && p.status == 'active').toList();
-        _rejectedPlaces = places.where((p) => p.approvalStatus == 'rejected').toList();
-        _inactivePlaces = places.where((p) => p.status == 'inactive').toList();
+        _pendingPlaces = pendingPlaces;
+        _approvedPlaces = approvedPlaces;
+        _rejectedPlaces = rejectedPlaces;
+        _inactivePlaces = inactivePlaces;
         _isLoading = false;
       });
 
     } catch (e) {
       setState(() => _isLoading = false);
+      debugPrint('Error loading places: $e');
       if (mounted) {
-        context.showSnackBar('Error loading places: $e', isError: true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading places: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -934,11 +954,24 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
   }
 
   Future<void> _deletePlace(Place place) async {
+    debugPrint('=== PLACE DELETION STARTED ===');
+    debugPrint('Place ID: ${place.id}');
+    debugPrint('Place Name: ${place.name}');
+    
     // Check comprehensive place usage
+    debugPrint('Checking place usage...');
     final usageDetails = await _checkPlaceUsageDetails(place.id);
     final hasUsage = usageDetails['inRoutes'] as bool || usageDetails['inVisits'] as bool;
     
+    debugPrint('Usage check results:');
+    debugPrint('- Has usage: $hasUsage');
+    debugPrint('- In routes: ${usageDetails['inRoutes']}');
+    debugPrint('- In visits: ${usageDetails['inVisits']}');
+    debugPrint('- Route count: ${usageDetails['routeCount']}');
+    debugPrint('- Visit count: ${usageDetails['visitCount']}');
+    
     if (hasUsage) {
+      debugPrint('Place has usage - showing usage dialog');
       if (mounted) {
         showDialog(
           context: context,
@@ -1071,14 +1104,14 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
               if (usageDetails['inRoutes'] as bool)
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.pop(context); // Go back to previous screen
+                    debugPrint('USER CLICKED UNDERSTOOD - Closing dialog only');
+                    Navigator.pop(context); // Only close the dialog, don't navigate away
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
                     foregroundColor: Colors.white,
                   ),
-                  child: Text('${AppLocalizations.of(context)!.goTo} ${AppLocalizations.of(context)!.routes}'),
+                  child: Text(AppLocalizations.of(context)!.ok),
                 ),
               if (usageDetails['inVisits'] as bool && !(usageDetails['inRoutes'] as bool))
                 ElevatedButton(
@@ -1100,6 +1133,9 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
     }
 
     // For places with no usage, show simple confirmation
+    debugPrint('Place has no usage - showing confirmation dialog');
+    if (!mounted) return;
+    
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -1170,26 +1206,70 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
       ),
     );
 
+    debugPrint('Confirmation dialog result: $confirmed');
+    
     if (confirmed == true) {
+      debugPrint('User confirmed deletion - proceeding with database delete');
       try {
         // Delete the place from the database
-        await supabase.from('places').delete().eq('id', place.id);
-
+        debugPrint('Attempting to delete place with ID: ${place.id}');
+        final deleteResponse = await supabase
+            .from('places')
+            .delete()
+            .eq('id', place.id)
+            .select(); // Add select() to get response details
+        
+        debugPrint('Delete response: $deleteResponse');
+        
+        // Verify the deletion by checking if place still exists
+        final verificationResponse = await supabase
+            .from('places')
+            .select('id')
+            .eq('id', place.id)
+            .maybeSingle();
+            
+        if (verificationResponse != null) {
+          debugPrint('WARNING: Place still exists after deletion attempt!');
+          if (mounted) {
+            context.showSnackBar('Error: Place was not removed. It may be protected by database constraints.', isError: true);
+          }
+          return;
+        }
+        
+        debugPrint('Place successfully deleted and verified');
         if (mounted) {
           context.showSnackBar('Place removed successfully.');
           _loadPlaces(); // Refresh the list
         }
 
       } catch (e) {
+        debugPrint('Error during place deletion: $e');
         if (mounted) {
-          context.showSnackBar('Error removing place: $e', isError: true);
+          String errorMessage = 'Error removing place: $e';
+          
+          // Provide more specific error messages for common issues
+          if (e.toString().contains('foreign key constraint')) {
+            errorMessage = 'Cannot remove place: it is still referenced in routes or visits. Please remove from routes first.';
+          } else if (e.toString().contains('RLS policy')) {
+            errorMessage = 'Permission denied: you do not have rights to remove this place.';
+          } else if (e.toString().contains('violates check constraint')) {
+            errorMessage = 'Cannot remove place: it violates database constraints.';
+          }
+          
+          context.showSnackBar(errorMessage, isError: true);
         }
       }
+    } else {
+      debugPrint('User cancelled place deletion');
     }
+    
+    debugPrint('=== PLACE DELETION ENDED ===');
   }
 
   Future<Map<String, dynamic>> _checkPlaceUsageDetails(String placeId) async {
     try {
+      debugPrint('Checking usage details for place ID: $placeId');
+      
       // Check all possible usages of the place
       final results = {
         'inRoutes': false,
@@ -1199,11 +1279,14 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
         'routeNames': <String>[],
       };
 
-      // Check route_places
+      // Check route_places - places used in routes
+      debugPrint('Checking route_places table...');
       final routePlacesResponse = await supabase
           .from('route_places')
           .select('route_id, routes!inner(name, status)')
           .eq('place_id', placeId);
+      
+      debugPrint('Found ${routePlacesResponse.length} route_places entries for place');
 
       if (routePlacesResponse.isNotEmpty) {
         results['inRoutes'] = true;
@@ -1211,28 +1294,72 @@ class _PlaceManagementScreenState extends State<PlaceManagementScreen> with Tick
         results['routeNames'] = routePlacesResponse
             .map((rp) => rp['routes']['name'] as String)
             .toList();
+        debugPrint('Place is used in routes: ${results['routeNames']}');
       }
 
-      // Check place_visits
+      // Check place_visits - historical visit records
+      debugPrint('Checking place_visits table...');
       final placeVisitsResponse = await supabase
           .from('place_visits')
           .select('id')
           .eq('place_id', placeId);
+      
+      debugPrint('Found ${placeVisitsResponse.length} place_visits entries for place');
 
       if (placeVisitsResponse.isNotEmpty) {
         results['inVisits'] = true;
         results['visitCount'] = placeVisitsResponse.length;
       }
 
+      // Additional checks for other possible references
+      debugPrint('Checking for additional references...');
+      
+      // Check if place is referenced in campaigns (if there's a direct relationship)
+      try {
+        final campaignPlacesResponse = await supabase
+            .from('campaign_places')
+            .select('campaign_id')
+            .eq('place_id', placeId);
+        
+        if (campaignPlacesResponse.isNotEmpty) {
+          debugPrint('WARNING: Place is also referenced in campaign_places table');
+          results['inCampaigns'] = true;
+          results['campaignCount'] = campaignPlacesResponse.length;
+        }
+      } catch (e) {
+        // campaign_places table might not exist, that's fine
+        debugPrint('campaign_places table check failed (table may not exist): $e');
+      }
+      
+      // Check task assignments that might reference this place
+      try {
+        final taskAssignmentsResponse = await supabase
+            .from('task_assignments')
+            .select('id, tasks!inner(place_id)')
+            .eq('tasks.place_id', placeId);
+            
+        if (taskAssignmentsResponse.isNotEmpty) {
+          debugPrint('WARNING: Place is referenced in task_assignments through tasks');
+          results['inTaskAssignments'] = true;
+          results['taskAssignmentCount'] = taskAssignmentsResponse.length;
+        }
+      } catch (e) {
+        debugPrint('task_assignments check failed: $e');
+      }
+
+      debugPrint('Usage check complete. Results: $results');
       return results;
+      
     } catch (e) {
       debugPrint('Error checking place usage: $e');
+      // Return conservative result - assume usage if we can't check
       return {
         'inRoutes': true,
         'inVisits': true,
         'routeCount': 0,
         'visitCount': 0,
         'routeNames': <String>[],
+        'error': e.toString(),
       };
     }
   }

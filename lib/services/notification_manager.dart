@@ -153,7 +153,7 @@ class NotificationManager {
   }
 
   Timer? _pollingTimer;
-  Set<String> _processedNotificationIds = {};
+  final Set<String> _processedNotificationIds = {};
 
   void _startNotificationPolling() {
     // Initialize processed IDs with existing read notifications

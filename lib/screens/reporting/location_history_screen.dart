@@ -8,7 +8,6 @@ import '../../models/location_history.dart';
 import '../../services/location_history_service.dart';
 import '../../utils/constants.dart';
 import '../../l10n/app_localizations.dart';
-import '../../widgets/month_day_picker.dart';
 
 class LocationHistoryScreen extends StatefulWidget {
   const LocationHistoryScreen({super.key});

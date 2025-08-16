@@ -23,7 +23,7 @@ class _RouteManagementScreenState extends State<RouteManagementScreen> with Tick
   List<route_model.Route> _completedRoutes = [];
   
   // Store place counts for each route
-  Map<String, int> _routePlaceCounts = {};
+  final Map<String, int> _routePlaceCounts = {};
 
   @override
   void initState() {

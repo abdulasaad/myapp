@@ -27,7 +27,7 @@ class MonthDayPicker extends StatefulWidget {
 class _MonthDayPickerState extends State<MonthDayPicker> {
   late DateTime _currentMonth;
   late Set<DateTime> _selectedDays;
-  Map<DateTime, Map<String, TimeOfDay>> _selectedDayTimes = {};
+  final Map<DateTime, Map<String, TimeOfDay>> _selectedDayTimes = {};
 
   @override
   void initState() {

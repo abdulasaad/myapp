@@ -215,7 +215,7 @@ class BackgroundLocationService {
           // Try to restore session from stored refresh token
           try {
             final session = await supabase.auth.refreshSession();
-            if (session?.user == null) {
+            if (session.user == null) {
               logger.w('💓 No user session for heartbeat');
               return;
             }

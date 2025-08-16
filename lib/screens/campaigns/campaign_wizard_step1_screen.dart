@@ -22,7 +22,7 @@ class CampaignWizardStep1Screen extends StatefulWidget {
 
 class _CampaignWizardStep1ScreenState extends State<CampaignWizardStep1Screen> {
   final _formKey = GlobalKey<FormState>();
-  bool _isLoading = false;
+  final bool _isLoading = false;
 
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();

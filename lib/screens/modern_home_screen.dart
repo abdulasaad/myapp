@@ -38,10 +38,10 @@ import 'login_screen.dart';
 import 'admin/settings_screen.dart';
 import 'admin/group_management_screen.dart';
 import 'agent/agent_geofence_map_screen.dart';
+import 'agent/global_survey_dashboard_screen.dart';
 import 'agent/notifications_screen.dart';
 import 'manager/map_location_picker_screen.dart';
 import 'manager/create_route_screen.dart';
-import 'campaigns/create_campaign_screen.dart';
 import 'campaigns/campaign_wizard_step1_screen.dart';
 import 'tasks/create_evidence_task_screen.dart';
 import 'tasks/template_categories_screen.dart';
@@ -3336,6 +3336,19 @@ class _AgentDashboardTabState extends State<_AgentDashboardTab> with WidgetsBind
                     ),
                   );
                 }
+              },
+            ),
+            _buildQuickActionItem(
+              icon: Icons.quiz,
+              label: 'Surveys',
+              color: Colors.purple,
+              onTap: () async {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AgentGlobalSurveyDashboardScreen(),
+                  ),
+                );
               },
             ),
           ],

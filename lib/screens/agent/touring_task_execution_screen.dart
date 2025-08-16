@@ -6,9 +6,13 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../models/touring_task.dart';
 import '../../models/campaign_geofence.dart';
+import '../../models/touring_survey.dart';
+import '../../models/survey_field.dart';
 import '../../services/touring_task_movement_service.dart';
+import '../../services/survey_service.dart';
 import '../../utils/constants.dart';
 import '../../widgets/modern_notification.dart';
+import 'touring_survey_screen.dart';
 
 class TouringTaskExecutionScreen extends StatefulWidget {
   final TouringTask task;
@@ -29,8 +33,10 @@ class TouringTaskExecutionScreen extends StatefulWidget {
 class _TouringTaskExecutionScreenState extends State<TouringTaskExecutionScreen> {
   final Completer<GoogleMapController> _mapController = Completer<GoogleMapController>();
   TouringTaskMovementService? _movementService;
+  final _surveyService = SurveyService();
   bool _isInitializing = false;
   bool _hasStarted = false;
+  TouringSurvey? _availableSurvey;
 
   @override
   void initState() {
@@ -38,6 +44,73 @@ class _TouringTaskExecutionScreenState extends State<TouringTaskExecutionScreen>
     _movementService = Provider.of<TouringTaskMovementService>(context, listen: false);
     _setupCompletionListener();
     _checkExistingSession();
+    _loadAvailableSurvey();
+  }
+  
+  Future<void> _loadAvailableSurvey() async {
+    try {
+      debugPrint('🔍 Loading survey for task: ${widget.task.id}');
+      
+      // First, let's check if there are any surveys at all for this task
+      try {
+        final response = await supabase
+            .from('touring_task_surveys')
+            .select('*')
+            .eq('touring_task_id', widget.task.id);
+        debugPrint('🗄️ Direct DB query result: $response');
+      } catch (e) {
+        debugPrint('🗄️ Direct DB query failed: $e');
+      }
+      
+      // Check all surveys in the system for debugging
+      try {
+        final allSurveys = await supabase
+            .from('touring_task_surveys')
+            .select('*');
+        debugPrint('🗄️ All surveys in database: ${allSurveys.length}');
+        for (var survey in allSurveys) {
+          debugPrint('🗄️ Survey: ${survey['id']} for task: ${survey['touring_task_id']}');
+        }
+      } catch (e) {
+        debugPrint('🗄️ Failed to get all surveys: $e');
+      }
+      
+      // Check if agent is assigned to the campaign
+      try {
+        final currentUser = supabase.auth.currentUser;
+        if (currentUser != null) {
+          final campaignAssignment = await supabase
+              .from('campaign_agents')
+              .select('*')
+              .eq('agent_id', currentUser.id);
+          debugPrint('🗄️ Agent campaign assignments: $campaignAssignment');
+          
+          // Also check the campaign ID for this task
+          final taskInfo = await supabase
+              .from('touring_tasks')
+              .select('campaign_id')
+              .eq('id', widget.task.id)
+              .single();
+          debugPrint('🗄️ Task campaign ID: ${taskInfo['campaign_id']}');
+        }
+      } catch (e) {
+        debugPrint('🗄️ Failed to check campaign assignment: $e');
+      }
+      
+      final survey = await _surveyService.getSurveyWithFieldsByTouringTask(widget.task.id);
+      debugPrint('📋 Survey found: ${survey?.title ?? 'null'}');
+      debugPrint('📝 Survey has fields: ${survey?.hasFields ?? false}');
+      debugPrint('🔢 Field count: ${survey?.fieldCount ?? 0}');
+      
+      if (mounted) {
+        setState(() {
+          _availableSurvey = survey;
+        });
+        debugPrint('✅ Survey state updated. Available: ${_availableSurvey != null}');
+      }
+    } catch (e) {
+      debugPrint('❌ Error loading survey: $e');
+    }
   }
 
   // Check if there's already an active session for this task
@@ -160,6 +233,87 @@ class _TouringTaskExecutionScreenState extends State<TouringTaskExecutionScreen>
         ],
       ),
     );
+  }
+
+  Future<void> _createTestSurvey() async {
+    try {
+      debugPrint('🧪 Creating test survey for task: ${widget.task.id}');
+      
+      final survey = await _surveyService.createSurvey(
+        touringTaskId: widget.task.id,
+        title: 'Test Survey',
+        description: 'Test survey for debugging',
+        isRequired: false,
+      );
+      
+      if (survey != null) {
+        // Create a test field
+        await _surveyService.createSurveyField(
+          surveyId: survey.id,
+          fieldName: 'test_feedback',
+          fieldType: SurveyFieldType.text,
+          fieldLabel: 'How was your experience?',
+          fieldPlaceholder: 'Enter your feedback...',
+          isRequired: false,
+          fieldOrder: 0,
+        );
+        
+        debugPrint('✅ Test survey created successfully: ${survey.id}');
+        
+        // Reload the survey
+        await _loadAvailableSurvey();
+      } else {
+        debugPrint('❌ Failed to create test survey');
+      }
+    } catch (e) {
+      debugPrint('❌ Error creating test survey: $e');
+    }
+  }
+
+  Future<void> _openSurvey(TouringSurvey survey) async {
+    try {
+      final currentUser = supabase.auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Check if agent has already submitted this survey
+      final existingSubmission = await _surveyService.getAgentSurveySubmission(
+        surveyId: survey.id,
+        agentId: currentUser.id,
+      );
+
+      if (!mounted) return;
+
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => TouringSurveyScreen(
+            survey: survey,
+            touringTaskId: widget.task.id,
+            sessionId: null, // Will be handled by the survey service
+            existingSubmission: existingSubmission,
+          ),
+        ),
+      );
+
+      if (mounted && result != null) {
+        // Survey was completed
+        ModernNotification.success(
+          context,
+          message: 'Survey Completed',
+          subtitle: 'Thank you for your feedback!',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ModernNotification.error(
+          context,
+          message: 'Error opening survey',
+          subtitle: e.toString(),
+        );
+      }
+    }
   }
 
   Widget _buildCompletionStats() {
@@ -355,10 +509,10 @@ class _TouringTaskExecutionScreenState extends State<TouringTaskExecutionScreen>
           children: [
             _buildTimerCard(service),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(child: _buildStatusCard(service)),
-                const SizedBox(width: 8),
+                Row(
+                  children: [
+                    Expanded(child: _buildStatusCard(service)),
+                    const SizedBox(width: 8),
                 Expanded(child: _buildMovementCard(service)),
               ],
             ),
@@ -531,6 +685,66 @@ class _TouringTaskExecutionScreenState extends State<TouringTaskExecutionScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSurveyCard() {
+    return GestureDetector(
+      onTap: () => _openSurvey(_availableSurvey!),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: cardBackgroundColor,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.quiz,
+                  size: 16,
+                  color: Colors.purple[700],
+                ),
+                const SizedBox(width: 4),
+                const Text(
+                  'Survey',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: textSecondaryColor,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Available',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.purple[700],
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '${_availableSurvey!.fieldCount} questions',
+              style: const TextStyle(
+                fontSize: 10,
+                color: textSecondaryColor,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

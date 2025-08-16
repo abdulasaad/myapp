@@ -51,6 +51,9 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
   CampaignGeofence? _selectedGeofence;
   bool _isLoading = false;
   bool _isCreating = false;
+  
+  // Survey fields
+  // Survey creation moved out of campaign flow
 
   @override
   void initState() {
@@ -86,8 +89,12 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
           );
         }
       }
+      
+      // Surveys are now managed globally via dashboard; nothing to load here
     }
   }
+  
+  // Surveys are now managed globally; no per-task survey loader
 
   @override
   void dispose() {
@@ -241,6 +248,8 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
             dailyEndTime: dailyEndTime,
           );
         }
+
+        // Surveys are now decoupled from campaigns. No survey creation here.
 
         if (mounted) {
           ModernNotification.success(
@@ -839,6 +848,8 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
     );
   }
 
+  // Survey section removed — surveys are managed globally via dashboard
+
   Future<void> _selectTime(BuildContext context, bool isStartTime) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -855,6 +866,8 @@ class _CreateTouringTaskScreenState extends State<CreateTouringTaskScreen> {
       });
     }
   }
+
+  // Survey actions removed
 
   Widget _buildCreateButton() {
     return SizedBox(

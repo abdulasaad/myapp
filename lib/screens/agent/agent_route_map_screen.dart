@@ -10,6 +10,7 @@ import '../../models/place_visit.dart';
 import '../../models/route_place.dart';
 import '../../services/location_service.dart';
 import '../../widgets/modern_notification.dart';
+import '../../utils/navigation_helper.dart';
 
 class AgentRouteMapScreen extends StatefulWidget {
   final List<RoutePlace> routePlaces;
@@ -428,16 +429,41 @@ class _AgentRouteMapScreenState extends State<AgentRouteMapScreen> {
     );
   }
 
-  void _navigateToPlace(RoutePlace routePlace) {
-    if (routePlace.place == null) return;
-    
-    final place = routePlace.place!;
-    
-    // Show coordinates for navigation
-    ModernNotification.info(
-      context,
-      message: 'Navigate to ${place.name}',
-      subtitle: 'Lat: ${place.latitude.toStringAsFixed(6)}, Lng: ${place.longitude.toStringAsFixed(6)}',
-    );
+  Future<void> _navigateToPlace(RoutePlace routePlace) async {
+    final place = routePlace.place;
+    if (place == null) {
+      if (mounted) {
+        ModernNotification.error(
+          context,
+          message: 'Navigation unavailable',
+          subtitle: 'Place location data is not available',
+        );
+      }
+      return;
+    }
+
+    try {
+      final success = await NavigationHelper.navigateToLocation(
+        latitude: place.latitude,
+        longitude: place.longitude,
+        placeName: place.name,
+      );
+
+      if (!success && mounted) {
+        ModernNotification.warning(
+          context,
+          message: 'Unable to open navigation',
+          subtitle: 'Please ensure you have a maps app installed',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ModernNotification.error(
+          context,
+          message: 'Navigation error',
+          subtitle: e.toString(),
+        );
+      }
+    }
   }
 }
